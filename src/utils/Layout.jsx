@@ -5,11 +5,17 @@ import ScrollToTop from "./ScrollToTop.jsx";
 
 export const Layout = () => {
     return (
-        <main className="w-screen h-screen">
+        <main className="flex flex-col w-full h-screen">
             <ScrollToTop />
-            <NavigationBar />
-            <Outlet />
-            <Footer />
+            <div className="flex-none">
+                <NavigationBar />
+            </div>
+            <div className="flex-auto">
+                <Outlet />
+            </div>
+            <div className="flex-none">
+                <Footer />
+            </div>
         </main>
     );
 };

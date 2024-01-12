@@ -14,7 +14,7 @@ export default function NavigationBar() {
             >
                 <div className="flex lg:flex-1">
                     <NavLink to="/" className="-m-1.5 p-1.5">
-                        <span className="">Based Math Game</span>
+                        <span className="">a very based math game</span>
                     </NavLink>
                 </div>
                 <div className="flex lg:hidden">
@@ -45,7 +45,7 @@ export default function NavigationBar() {
                     <div className="p-6">
                         <div className="flex items-center justify-between">
                             <NavLink to="/" className="-m-1.5 p-1.5">
-                                <span className="">Based Math Game</span>
+                                <span className="">a very based math game</span>
                             </NavLink>
                             <button
                                 type="button"
