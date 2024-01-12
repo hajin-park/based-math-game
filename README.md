@@ -1,6 +1,7 @@
 # Based Math Game
 
-to help me pass my computer architectures class
+inspired by [zetamac](https://arithmetic.zetamac.com) to help me pass my
+computer architectures class
 
 ### Made with
 
