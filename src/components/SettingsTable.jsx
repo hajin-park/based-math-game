@@ -11,7 +11,7 @@ export default function SettingsTable({ settings }) {
                 {settings.map((setting) => (
                     <>
                         <div key={setting} className="text-sm">
-                            {setting}
+                            {setting.from} to {setting.to}
                         </div>
                         <Separator className="my-2" />
                     </>

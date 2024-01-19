@@ -8,9 +8,9 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 
-export default function DurationSelect() {
+export default function DurationSelect({ setDuration }) {
     return (
-        <Select defaultValue={120}>
+        <Select onValueChange={setDuration} defaultValue={120}>
             <p className="text-sm text-muted-foreground mr-4">Duration</p>
             <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Select a duration" />
