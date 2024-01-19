@@ -1,7 +1,7 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 
-export default function SettingsTable({ settings }) {
+export default function SettingTable({ settings }) {
     return (
         <ScrollArea className="h-72 w-full rounded-md border">
             <div className="p-4">
