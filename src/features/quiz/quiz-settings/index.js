@@ -1,5 +1,6 @@
-export { default as SettingsHeader } from "./Settings-Header.component.jsx";
-export { default as BaseSelect } from "./Base-Select.component.jsx";
-export { default as RangeInput } from "./Range-Input.component.jsx";
-export { default as ChosenSettingsTable } from "./Chosen-Settings-Table.component.jsx";
-export { default as DurationSelect } from "./Duration-Select.component.jsx";
+export { default as SettingsHeader } from "./Settings-Header.component";
+export { default as SettingsFooter } from "./Settings-Footer.component";
+export { default as BaseSelect } from "./Base-Select.component";
+export { default as RangeInput } from "./Range-Input.component";
+export { default as ChosenSettingsTable } from "./Chosen-Settings-Table.component";
+export { default as DurationSelect } from "./Duration-Select.component";

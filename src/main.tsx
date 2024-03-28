@@ -1,13 +1,13 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import { Layout } from "./utils/Layout.jsx";
-import Error from "./pages/Error.jsx";
-import Usage from "./pages/Usage.jsx";
-import Tutorials from "./pages/Tutorials.jsx";
-import Settings from "./pages/Settings.jsx";
-import Quiz from "./pages/Quiz.jsx";
-import Results from "./pages/Results.jsx";
+import { Layout } from "./utils/Layout";
+import Error from "./pages/Error";
+import Usage from "./pages/Usage";
+import Tutorials from "./pages/Tutorials";
+import Settings from "./pages/Settings";
+import Quiz from "./pages/Quiz";
+import Results from "./pages/Results";
 import "./index.css";
 
 const router = createBrowserRouter([
@@ -40,7 +40,7 @@ const router = createBrowserRouter([
     },
 ]);
 
-ReactDOM.createRoot(document.getElementById("root")).render(
+ReactDOM.createRoot(document.getElementById("root")!).render(
     <React.StrictMode>
         <RouterProvider router={router} />
     </React.StrictMode>

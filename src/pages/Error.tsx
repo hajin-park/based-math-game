@@ -14,7 +14,7 @@ const Error = () => {
                 Sorry, an unexpected error has occurred.
             </p>
             <p className="font-normal text-lg">
-                <i>{error.statusText || error.message}</i>
+                <i>{(error as Error).message}</i>
             </p>
             <NavLink
                 to="/"

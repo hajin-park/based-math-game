@@ -6,7 +6,7 @@ export default function SettingsHeader() {
             <CardTitle>Based Math Game</CardTitle>
             <CardDescription>
                 The Base Math Game is a practice tool for converting between
-                different bases.
+                different bases and number representations.
             </CardDescription>
         </CardHeader>
     );
