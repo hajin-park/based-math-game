@@ -1,6 +1,6 @@
 import { CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-export default function QuizSettings() {
+export default function SettingsHeader() {
     return (
         <CardHeader>
             <CardTitle>Based Math Game</CardTitle>

@@ -7,6 +7,7 @@ import Usage from "./pages/Usage.jsx";
 import Tutorials from "./pages/Tutorials.jsx";
 import Settings from "./pages/Settings.jsx";
 import Quiz from "./pages/Quiz.jsx";
+import Results from "./pages/Results.jsx";
 import "./index.css";
 
 const router = createBrowserRouter([
@@ -22,6 +23,10 @@ const router = createBrowserRouter([
             {
                 path: "/quiz",
                 element: <Quiz />,
+            },
+            {
+                path: "/results",
+                element: <Results />,
             },
             {
                 path: "/how-to-play",

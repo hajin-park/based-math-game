@@ -1,5 +1,12 @@
-import { QuizQuestion } from "@features/quiz";
+import { QuizScore, QuizTimer, QuizPrompt, QuizInput } from "@features/quiz";
 
 export default function Quiz() {
-    return <QuizQuestion />;
+    return (
+        <>
+            <QuizScore />
+            <QuizTimer />
+            <QuizPrompt />
+            <QuizInput />
+        </>
+    );
 }

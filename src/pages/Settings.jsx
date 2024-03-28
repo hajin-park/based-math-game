@@ -1,5 +1,19 @@
-import { QuizSettings } from "@features/quiz";
+import {
+    SettingsHeader,
+    BaseSelect,
+    RangeInput,
+    ChosenSettingsTable,
+    DurationSelect,
+} from "@features/quiz";
 
 export default function Settings() {
-    return <QuizSettings />;
+    return (
+        <>
+            <SettingsHeader />
+            <BaseSelect />
+            <RangeInput />
+            <ChosenSettingsTable />
+            <DurationSelect />
+        </>
+    );
 }
