@@ -33,7 +33,7 @@ const statuses = [
     },
 ];
 
-export default function DropDown({ option, setBase }) {
+export default function BasesDropDown({ option, setBase }) {
     const [open, setOpen] = useState(false);
     const [selectedStatus, setSelectedStatus] = useState(null);
 
@@ -49,7 +49,7 @@ export default function DropDown({ option, setBase }) {
                         {selectedStatus ? (
                             <>{selectedStatus.label}</>
                         ) : (
-                            <>+ Set base</>
+                            <i>Set base</i>
                         )}
                     </Button>
                 </PopoverTrigger>

@@ -1,6 +1,5 @@
 import { Outlet } from "react-router-dom";
-import NavigationBar from "../components/NavigationBar.jsx";
-import Footer from "../components/Footer.jsx";
+import { NavigationBar, Footer } from "@features/ui";
 import ScrollToTop from "./ScrollToTop.jsx";
 
 export const Layout = () => {

@@ -1,6 +1,6 @@
 import { Input } from "@/components/ui/input";
 
-export default function Range({ option }) {
+export default function IntRangeInput({ option }) {
     return (
         <div className="flex items-center space-x-4">
             <p className="text-sm text-muted-foreground">{option}</p>

@@ -7,8 +7,8 @@ export default function NavigationBar() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     return (
-        <header className="bg-white">
-            <nav
+        <nav className="bg-white">
+            <div
                 className="mx-auto flex items-center justify-between py-4 px-6 lg:px-8"
                 aria-label="Global"
             >
@@ -45,7 +45,7 @@ export default function NavigationBar() {
                 >
                     Home
                 </NavLink>
-            </nav>
+            </div>
             <Dialog
                 as="div"
                 className="lg:hidden"
@@ -77,6 +77,6 @@ export default function NavigationBar() {
                     </div>
                 </Dialog.Panel>
             </Dialog>
-        </header>
+        </nav>
     );
 }

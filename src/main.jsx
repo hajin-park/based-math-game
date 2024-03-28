@@ -3,7 +3,10 @@ import ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { Layout } from "./utils/Layout.jsx";
 import Error from "./pages/Error.jsx";
-import Home from "./pages/Home.jsx";
+import Usage from "./pages/Usage.jsx";
+import Tutorials from "./pages/Tutorials.jsx";
+import Settings from "./pages/Settings.jsx";
+import Quiz from "./pages/Quiz.jsx";
 import "./index.css";
 
 const router = createBrowserRouter([
@@ -14,7 +17,19 @@ const router = createBrowserRouter([
         children: [
             {
                 path: "/",
-                element: <Home />,
+                element: <Settings />,
+            },
+            {
+                path: "/quiz",
+                element: <Quiz />,
+            },
+            {
+                path: "/how-to-play",
+                element: <Usage />,
+            },
+            {
+                path: "/tutorials",
+                element: <Tutorials />,
             },
         ],
     },
