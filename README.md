@@ -1,11 +1,10 @@
 # Based Math Game
 
-inspired by [zetamac](https://arithmetic.zetamac.com) to help me pass my
-computer architectures class
+Practice converting between different bases and representations. Inspired by [zetamac](https://arithmetic.zetamac.com).
 
-### Made with
+### Stack
 
 -   Vite + React
 -   Tailwind CSS
--   shadcn ui
+-   shadcn UI
 -   Firebase
