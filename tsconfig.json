@@ -21,6 +21,8 @@
         "noFallthroughCasesInSwitch": true,
         "noImplicitAny": false,
         "useUnknownInCatchVariables": false,
+        "checkJs": false,
+        "noEmitOnError": false,
 
         /* shadcn resolve paths */
         "baseUrl": ".",

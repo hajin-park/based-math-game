@@ -1,8 +1,12 @@
+import { useState } from "react";
 import { Outlet } from "react-router-dom";
 import { NavigationBar, Footer } from "@features/ui";
 import ScrollToTop from "./ScrollToTop.jsx";
+import { QuizContext } from "@/Contexts.js";
 
 export const Layout = () => {
+    const [settings, setSettings] = useState([]);
+
     return (
         <main className="flex flex-col w-full h-screen">
             <ScrollToTop />
@@ -10,7 +14,9 @@ export const Layout = () => {
                 <NavigationBar />
             </div>
             <div className="flex-auto">
-                <Outlet />
+                <QuizContext.Provider value={{ settings, setSettings }}>
+                    <Outlet />
+                </QuizContext.Provider>
             </div>
             <div className="flex-none">
                 <Footer />
