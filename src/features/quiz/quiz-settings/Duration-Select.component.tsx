@@ -25,10 +25,7 @@ export default function DurationSelect({ form, name, label, durations }) {
             render={({ field }) => (
                 <FormItem>
                     <FormLabel>{label}</FormLabel>
-                    <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                    >
+                    <Select onValueChange={field.onChange} defaultValue="60">
                         <FormControl>
                             <SelectTrigger>
                                 <SelectValue placeholder="Select quiz duration" />

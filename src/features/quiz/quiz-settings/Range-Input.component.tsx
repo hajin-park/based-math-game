@@ -18,18 +18,20 @@ export default function RangeInput({ form, name, label, setRange }) {
             name={name}
             render={({ field }) => (
                 <FormItem>
-                    <div className="flex space-x-4">
+                    <div className="grid grid-rows-1 grid-cols-5">
                         <FormLabel className="my-auto">{label}</FormLabel>
-                        <FormControl>
-                            <Input
-                                onChangeCapture={(e) =>
-                                    handleOnChange(e.currentTarget.value)
-                                }
-                                type="number"
-                                placeholder="0"
-                                {...field}
-                            />
-                        </FormControl>
+                        <div className="sm:col-span-3 col-span-4">
+                            <FormControl>
+                                <Input
+                                    onChangeCapture={(e) =>
+                                        handleOnChange(e.currentTarget.value)
+                                    }
+                                    type="number"
+                                    placeholder="0"
+                                    {...field}
+                                />
+                            </FormControl>
+                        </div>
                     </div>
                     <FormMessage />
                 </FormItem>

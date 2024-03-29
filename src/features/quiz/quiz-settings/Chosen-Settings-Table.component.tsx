@@ -15,8 +15,8 @@ export default function ChosenSettingsTable({
     }
 
     return (
-        <ScrollArea className="h-36 w-full rounded-md border p-4">
-            <h4 className="mb-4 text-sm font-medium leading-none">Settings</h4>
+        <ScrollArea className="h-36 w-full rounded-md border p-2 bg-muted">
+            <h4 className="text-sm font-medium leading-none">Settings</h4>
             {chosenSettings.map(
                 (
                     setting: [
@@ -28,8 +28,11 @@ export default function ChosenSettingsTable({
                     index: number
                 ) => (
                     <>
-                        <div key={index} className="flex w-full">
-                            <div className="text-sm">
+                        <div
+                            key={index}
+                            className="flex items-center w-full px-4"
+                        >
+                            <div className="text-sm text-center">
                                 {setting[0]} to {setting[1]} [{setting[2]},{" "}
                                 {setting[3]}]
                             </div>

@@ -2,8 +2,8 @@ import { AiFillGithub } from "react-icons/ai";
 
 export default function Footer() {
     return (
-        <footer className="bg-white mx-auto max-w-7xl px-6 py-4 md:flex md:items-center md:justify-center lg:px-8">
-            <div className="mt-8 md:order-1 mt-0">
+        <footer className="bg-white mx-auto max-w-7xl pb-4 px-6 md:flex md:items-start md:justify-center lg:px-8">
+            <div className="md:order-1 mt-0">
                 <p className="text-center text-xs leading-5 text-gray-500">
                     Inspired by{" "}
                     <a href={"https://arithmetic.zetamac.com"}>
