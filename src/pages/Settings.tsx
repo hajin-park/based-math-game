@@ -2,12 +2,12 @@
 
 import { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { Card, CardContent } from "@/components/ui/card";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import {
     SettingsHeader,
     // SettingsFooter,
@@ -56,6 +56,7 @@ export default function Settings() {
             }),
         })
     );
+
     // @ts-ignore
     const { settings, setSettings } = useContext(QuizContext);
     const navigate = useNavigate();
@@ -81,6 +82,11 @@ export default function Settings() {
         );
     }, [rangeLower]);
 
+    // Keep persistent settings between games
+    useEffect(() => {
+        setChosenSettings(settings.questions || []);
+    }, []);
+
     // Update fromBaseOptions to prevent fromBase and toBase from having the same value
     useEffect(() => {
         const newBases = BASE_OPTIONS.filter((base) => base !== toBase);
@@ -105,7 +111,7 @@ export default function Settings() {
     const startForm = useForm<z.infer<typeof StartFormSchema>>({
         resolver: zodResolver(StartFormSchema),
         defaultValues: {
-            duration: 60,
+            duration: settings.duration,
         },
     });
 
@@ -206,6 +212,7 @@ export default function Settings() {
                             name="duration"
                             label="Select Duration"
                             durations={DURATION_OPTIONS}
+                            settings={settings}
                         />
                         <Button disabled={!chosenSettings.length} type="submit">
                             Submit

@@ -17,7 +17,13 @@ import {
     SelectGroup,
 } from "@/components/ui/select";
 
-export default function DurationSelect({ form, name, label, durations }) {
+export default function DurationSelect({
+    form,
+    name,
+    label,
+    durations,
+    settings,
+}) {
     return (
         <FormField
             control={form.control}
@@ -25,7 +31,10 @@ export default function DurationSelect({ form, name, label, durations }) {
             render={({ field }) => (
                 <FormItem>
                     <FormLabel>{label}</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue="60">
+                    <Select
+                        onValueChange={field.onChange}
+                        defaultValue={`${settings.duration}`}
+                    >
                         <FormControl>
                             <SelectTrigger>
                                 <SelectValue placeholder="Select quiz duration" />
@@ -39,7 +48,7 @@ export default function DurationSelect({ form, name, label, durations }) {
                                         key={duration}
                                         value={duration.toString()}
                                     >
-                                        {duration}
+                                        {duration} seconds
                                     </SelectItem>
                                 ))}
                             </SelectGroup>

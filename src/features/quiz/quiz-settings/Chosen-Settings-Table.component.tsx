@@ -29,7 +29,7 @@ export default function ChosenSettingsTable({
                 ) => (
                     <>
                         <div
-                            key={index}
+                            key={crypto.randomUUID()}
                             className="flex items-center w-full px-4"
                         >
                             <div className="text-sm text-center">
