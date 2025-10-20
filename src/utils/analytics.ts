@@ -10,7 +10,7 @@ export interface GameEvent {
   score?: number;
   duration?: number;
   timestamp: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 class Analytics {

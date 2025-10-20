@@ -22,8 +22,9 @@ export default function Login() {
     try {
       await signInWithEmail(email, password);
       navigate('/');
-    } catch (error: any) {
-      setError(error.message || 'Failed to sign in');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to sign in';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -36,8 +37,9 @@ export default function Login() {
     try {
       await signInWithGoogle();
       navigate('/');
-    } catch (error: any) {
-      setError(error.message || 'Failed to sign in with Google');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to sign in with Google';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

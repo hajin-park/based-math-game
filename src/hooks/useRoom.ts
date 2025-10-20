@@ -157,7 +157,7 @@ export function useRoom() {
           throw new Error('Only host can start the game');
         }
 
-        const allReady = Object.values(room.players).every((p: any) => p.ready);
+        const allReady = Object.values(room.players).every((p) => (p as RoomPlayer).ready);
         if (!allReady) {
           throw new Error('All players must be ready');
         }
@@ -200,7 +200,7 @@ export function useRoom() {
         const snapshot = await get(roomRef);
         const room = snapshot.val();
 
-        const allFinished = Object.values(room.players).every((p: any) => p.finished);
+        const allFinished = Object.values(room.players).every((p) => (p as RoomPlayer).finished);
         if (allFinished) {
           await set(ref(database, `rooms/${roomId}/status`), 'finished');
         }

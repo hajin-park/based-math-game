@@ -22,9 +22,10 @@ export default function JoinRoom() {
       setError('');
       await joinRoom(roomId.trim());
       navigate(`/multiplayer/lobby/${roomId.trim()}`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to join room:', error);
-      setError(error.message || 'Failed to join room. Please check the room ID and try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to join room. Please check the room ID and try again.';
+      setError(errorMessage);
     }
   };
 

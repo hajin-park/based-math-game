@@ -63,13 +63,16 @@ export function useGameHistory() {
         const data = snapshot.val();
 
         if (data) {
-          const entries: GameHistoryEntry[] = Object.entries(data).map(([id, value]: [string, any]) => ({
-            id,
-            score: value.score,
-            duration: value.duration,
-            gameModeId: value.gameModeId,
-            timestamp: value.timestamp,
-          }));
+          const entries: GameHistoryEntry[] = Object.entries(data).map(([id, value]: [string, unknown]) => {
+            const gameData = value as Record<string, unknown>;
+            return {
+              id,
+              score: gameData.score as number,
+              duration: gameData.duration as number,
+              gameModeId: gameData.gameModeId as string,
+              timestamp: gameData.timestamp as number,
+            };
+          });
 
           // Sort by timestamp descending (most recent first)
           entries.sort((a, b) => b.timestamp - a.timestamp);

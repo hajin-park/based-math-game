@@ -9,7 +9,7 @@ export default function Stats() {
 
   useEffect(() => {
     fetchHistory(timeRange);
-  }, [timeRange]);
+  }, [timeRange, fetchHistory]);
 
   const rangeStats = getStatsForTimeRange(timeRange);
   const scoresByMode = getScoresByGameMode();

@@ -14,7 +14,7 @@ export default function MultiplayerGame() {
   const { subscribeToRoom, updatePlayerScore, finishGame } = useRoom();
   const [room, setRoom] = useState<Room | null>(null);
   const [score, setScore] = useState(0);
-  const [randomSetting, setRandomSetting] = useState<any>(null);
+  const [randomSetting, setRandomSetting] = useState<[string, string, number, number] | null>(null);
   const scoreRef = useRef(0);
 
   useEffect(() => {

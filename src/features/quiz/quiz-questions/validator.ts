@@ -6,7 +6,7 @@ export function validateAnswer(
     // Helper function to clean input strings
     const cleanInput = (input: string, base: string) => {
         // Conditionally remove '0x' if present and toBase is 'hexadecimal'
-        let cleaned =
+        const cleaned =
             base.toLowerCase() === "hexadecimal" && input.startsWith("0x")
                 ? input.substring(2)
                 : input;

@@ -48,8 +48,9 @@ export default function RoomLobby() {
     if (!roomId) return;
     try {
       await startGame(roomId);
-    } catch (error: any) {
-      alert(error.message);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to start game';
+      alert(errorMessage);
     }
   };
 

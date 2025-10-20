@@ -30,12 +30,15 @@ export default function Leaderboard() {
       const data = snapshot.val();
 
       if (data) {
-        const entries: LeaderboardEntry[] = Object.entries(data).map(([uid, value]: [string, any]) => ({
-          uid,
-          displayName: value.displayName,
-          score: value.score,
-          timestamp: value.timestamp,
-        }));
+        const entries: LeaderboardEntry[] = Object.entries(data).map(([uid, value]: [string, unknown]) => {
+          const leaderboardData = value as Record<string, unknown>;
+          return {
+            uid,
+            displayName: leaderboardData.displayName as string,
+            score: leaderboardData.score as number,
+            timestamp: leaderboardData.timestamp as number,
+          };
+        });
 
         // Sort by score descending
         entries.sort((a, b) => b.score - a.score);

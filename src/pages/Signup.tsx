@@ -27,8 +27,9 @@ export default function Signup() {
         await signUpWithEmail(email, password, displayName);
       }
       navigate('/');
-    } catch (error: any) {
-      setError(error.message || 'Failed to create account');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create account';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -45,8 +46,9 @@ export default function Signup() {
         await signInWithGoogle();
       }
       navigate('/');
-    } catch (error: any) {
-      setError(error.message || 'Failed to sign up with Google');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to sign up with Google';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

@@ -16,7 +16,7 @@ import {
     ChosenSettingsTable,
     DurationSelect,
 } from "@features/quiz";
-import { QuizContext } from "@/contexts/GameContexts";
+import { QuizContext, QuestionSetting } from "@/contexts/GameContexts";
 
 const BASE_OPTIONS = ["Binary", "Octal", "Decimal", "Hexadecimal"];
 const DURATION_OPTIONS = [10, 15, 30, 60, 120, 180, 300];
@@ -33,7 +33,7 @@ export default function Settings() {
     const [toBase, setToBase] = useState("");
     const [rangeLower, setRangeLower] = useState(0);
     const [rangeUpper, setRangeUpper] = useState(0);
-    const [chosenSettings, setChosenSettings] = useState<any[]>([]); // [fromBase, toBase, rangeLower, rangeUpper]
+    const [chosenSettings, setChosenSettings] = useState<QuestionSetting[]>([]); // [fromBase, toBase, rangeLower, rangeUpper]
     const [SettingsFormSchema, setSettingsFormSchema] = useState(
         // Set FormSchema dynamically using state since validation conditions depend on current/past inputs
         z.object({
@@ -90,7 +90,7 @@ export default function Settings() {
     // Keep persistent settings between games
     useEffect(() => {
         setChosenSettings(settings.questions || []);
-    }, []);
+    }, [settings.questions]);
 
     // Update fromBaseOptions to prevent fromBase and toBase from having the same value
     useEffect(() => {
@@ -122,22 +122,23 @@ export default function Settings() {
 
     function onSubmitSettings(data: z.infer<typeof SettingsFormSchema>) {
         // newSettings may contain duplicate settings
-        const newSettings = [
-            // @ts-ignore
+        const newSettings: QuestionSetting[] = [
             ...chosenSettings,
-            // @ts-ignore
             [data.fromBase, data.toBase, data.rangeLower, data.rangeUpper],
         ];
 
         // Remove duplicate settings
-        const t = {};
-        // @ts-ignore
-        const finalSettings = newSettings.filter((a) => !(t[a] = a in t));
+        const seen = new Set<string>();
+        const finalSettings = newSettings.filter((setting) => {
+            const key = JSON.stringify(setting);
+            if (seen.has(key)) {
+                return false;
+            }
+            seen.add(key);
+            return true;
+        });
 
-        setChosenSettings(
-            // @ts-ignore
-            [...finalSettings]
-        );
+        setChosenSettings(finalSettings);
         // console.log(data);
     }
 

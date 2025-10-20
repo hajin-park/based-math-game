@@ -45,7 +45,7 @@ export default function Quiz() {
         };
 
         saveResults();
-    }, []);
+    }, [results.score, results.duration, results.gameModeId, saveGameResult, saving]);
 
     const gameMode = results.gameModeId ? getGameModeById(results.gameModeId) : null;
 
