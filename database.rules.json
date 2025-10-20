@@ -1,0 +1,54 @@
+{
+  "rules": {
+    "users": {
+      "$uid": {
+        ".read": "$uid === auth.uid",
+        ".write": "$uid === auth.uid",
+        "stats": {
+          ".validate": "newData.hasChildren(['gamesPlayed', 'totalScore'])"
+        },
+        "gameHistory": {
+          "$gameId": {
+            ".validate": "newData.hasChildren(['score', 'timestamp']) && newData.child('score').isNumber() && newData.child('timestamp').isNumber()"
+          }
+        }
+      }
+    },
+    "leaderboards": {
+      "$gameModeId": {
+        ".read": true,
+        "$uid": {
+          ".write": "$uid === auth.uid",
+          ".validate": "newData.hasChildren(['displayName', 'score', 'timestamp']) && newData.child('score').isNumber()"
+        }
+      }
+    },
+    "rooms": {
+      ".read": "auth != null",
+      "$roomId": {
+        ".write": "auth != null && (!data.exists() || data.child('createdBy').val() === auth.uid || data.child('players').child(auth.uid).exists())",
+        ".validate": "newData.hasChildren(['createdBy', 'settings', 'status'])",
+        "players": {
+          "$playerId": {
+            ".write": "$playerId === auth.uid || root.child('rooms').child($roomId).child('createdBy').val() === auth.uid",
+            ".validate": "newData.hasChildren(['displayName', 'ready'])"
+          }
+        },
+        "gameState": {
+          ".write": "root.child('rooms').child($roomId).child('createdBy').val() === auth.uid"
+        }
+      }
+    },
+    "gameModes": {
+      ".read": true,
+      ".write": false
+    },
+    "presence": {
+      "$uid": {
+        ".read": true,
+        ".write": "$uid === auth.uid"
+      }
+    }
+  }
+}
+

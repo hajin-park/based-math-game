@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -7,38 +7,82 @@ import {
     CardContent,
     CardFooter,
 } from "@/components/ui/card";
-import { QuizContext, ResultContext } from "@/Contexts.js";
+import { QuizContext, ResultContext } from "@/contexts/GameContexts";
+import { useStats } from "@/hooks/useStats";
+import { getGameModeById } from "@/types/gameMode";
 
 export default function Quiz() {
     const navigate = useNavigate();
-    // @ts-ignore
-    const { settings } = useContext(QuizContext);
-    // @ts-ignore
-    const { results } = useContext(ResultContext);
+    const { saveGameResult } = useStats();
+    const [saving, setSaving] = useState(false);
+
+    const quizContext = useContext(QuizContext);
+    const resultContext = useContext(ResultContext);
+
+    if (!quizContext || !resultContext) {
+        throw new Error('Results must be used within QuizContext and ResultContext providers');
+    }
+
+    const { settings } = quizContext;
+    const { results } = resultContext;
+
+    // Save game results to Firebase
+    useEffect(() => {
+        const saveResults = async () => {
+            if (results.score !== undefined && results.duration && !saving) {
+                setSaving(true);
+                try {
+                    await saveGameResult({
+                        score: results.score,
+                        duration: results.duration,
+                        gameModeId: results.gameModeId,
+                    });
+                } catch (error) {
+                    console.error('Failed to save game results:', error);
+                } finally {
+                    setSaving(false);
+                }
+            }
+        };
+
+        saveResults();
+    }, []);
+
+    const gameMode = results.gameModeId ? getGameModeById(results.gameModeId) : null;
 
     return (
-        <Card className="mx-auto w-5/6 md:w-2/3 lg:w-3/5 bg-gray-50">
-            <CardHeader>
-                <h1 className="text-center">Score: {results.score}</h1>
-                <h1 className="text-center">Duration: {settings.duration}</h1>
-            </CardHeader>
-            <CardContent>
-                <div className="w-fit mx-auto">
-                    <Button
-                        onClick={() => {
-                            navigate("/");
-                        }}
-                    >
-                        Play again?
+        <div className="flex justify-center items-center h-full">
+            <Card className="w-96">
+                <CardHeader className="text-center">
+                    <h1 className="text-2xl font-bold">Quiz Complete!</h1>
+                    {gameMode && (
+                        <p className="text-muted-foreground">{gameMode.name}</p>
+                    )}
+                </CardHeader>
+                <CardContent className="text-center space-y-4">
+                    <div>
+                        <p className="text-sm text-muted-foreground">Your Score</p>
+                        <p className="text-4xl font-bold">{results.score}</p>
+                    </div>
+                    {results.duration && (
+                        <div>
+                            <p className="text-sm text-muted-foreground">Time</p>
+                            <p className="text-xl">{results.duration}s</p>
+                        </div>
+                    )}
+                    {saving && (
+                        <p className="text-sm text-muted-foreground">Saving results...</p>
+                    )}
+                </CardContent>
+                <CardFooter className="flex gap-2 justify-center">
+                    <Button onClick={() => navigate("/stats")} variant="outline">
+                        View Stats
                     </Button>
-                </div>
-            </CardContent>
-            <CardFooter>
-                <p className="text-sm font-thing">
-                    Open issues or pull requests to report any bugs, issues, or
-                    suggestions.
-                </p>
-            </CardFooter>
-        </Card>
+                    <Button onClick={() => navigate("/")}>
+                        Play Again
+                    </Button>
+                </CardFooter>
+            </Card>
+        </div>
     );
 }

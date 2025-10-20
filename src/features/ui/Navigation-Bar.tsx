@@ -2,19 +2,33 @@ import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { Dialog } from "@headlessui/react";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function NavigationBar() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const { user, isGuest } = useAuth();
+
+    const navigation = [
+        { name: "Home", href: "/" },
+        { name: "Play", href: "/singleplayer" },
+        { name: "Multiplayer", href: "/multiplayer" },
+        { name: "Leaderboard", href: "/leaderboard" },
+        { name: "Stats", href: "/stats" },
+        { name: "Tutorials", href: "/tutorials" },
+    ];
 
     return (
-        <nav className="bg-white">
+        <nav className="bg-white border-b">
             <div
                 className="mx-auto flex items-center justify-between py-4 px-6 lg:px-8"
                 aria-label="Global"
             >
                 <div className="flex lg:flex-1">
-                    <NavLink to="/" className="-m-1.5 p-1.5">
-                        <span className="">a very based math game</span>
+                    <NavLink to="/" className="-m-1.5 p-1.5 font-bold text-lg">
+                        <span className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+                            Based Math Game
+                        </span>
                     </NavLink>
                 </div>
                 <div className="flex lg:hidden">
@@ -27,24 +41,32 @@ export default function NavigationBar() {
                         <Bars3Icon className="h-6 w-6" aria-hidden="true" />
                     </button>
                 </div>
-                <NavLink
-                    to="/how-to-play"
-                    className="hidden lg:flex pr-8 text-sm font-semibold leading-6 text-gray-900 hover:animate-pulse"
-                >
-                    How To Play
-                </NavLink>
-                <NavLink
-                    to="/tutorials"
-                    className="hidden lg:flex pr-8 text-sm font-semibold leading-6 text-gray-900 hover:animate-pulse"
-                >
-                    Tutorials
-                </NavLink>
-                <NavLink
-                    to="/"
-                    className="hidden lg:flex pr-8 text-sm font-semibold leading-6 text-gray-900 hover:animate-pulse"
-                >
-                    Home
-                </NavLink>
+                <div className="hidden lg:flex lg:gap-x-6 items-center">
+                    {navigation.map((item) => (
+                        <NavLink
+                            key={item.name}
+                            to={item.href}
+                            className={({ isActive }) =>
+                                `text-sm font-semibold leading-6 transition-colors ${
+                                    isActive
+                                        ? "text-primary"
+                                        : "text-gray-900 hover:text-primary"
+                                }`
+                            }
+                        >
+                            {item.name}
+                        </NavLink>
+                    ))}
+                    {isGuest ? (
+                        <Button asChild size="sm">
+                            <NavLink to="/signup">Sign Up</NavLink>
+                        </Button>
+                    ) : (
+                        <Button asChild size="sm" variant="outline">
+                            <NavLink to="/profile">Profile</NavLink>
+                        </Button>
+                    )}
+                </div>
             </div>
             <Dialog
                 as="div"
@@ -56,8 +78,10 @@ export default function NavigationBar() {
                 <Dialog.Panel className="fixed inset-y-0 right-0 z-10 flex w-full flex-col justify-between overflow-y-auto bg-white sm:max-w-sm sm:ring-1 sm:ring-gray-900/10">
                     <div className="p-6">
                         <div className="flex items-center justify-between">
-                            <NavLink to="/" className="-m-1.5 p-1.5">
-                                <span className="">a very based math game</span>
+                            <NavLink to="/" className="-m-1.5 p-1.5 font-bold">
+                                <span className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+                                    Based Math Game
+                                </span>
                             </NavLink>
                             <button
                                 type="button"
@@ -72,7 +96,33 @@ export default function NavigationBar() {
                             </button>
                         </div>
                         <div className="mt-6 flow-root">
-                            <div className="-my-6 divide-y divide-gray-500/10"></div>
+                            <div className="space-y-2 py-6">
+                                {navigation.map((item) => (
+                                    <NavLink
+                                        key={item.name}
+                                        to={item.href}
+                                        className="block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
+                                        onClick={() => setMobileMenuOpen(false)}
+                                    >
+                                        {item.name}
+                                    </NavLink>
+                                ))}
+                                <div className="pt-4 border-t">
+                                    {isGuest ? (
+                                        <Button asChild className="w-full">
+                                            <NavLink to="/signup" onClick={() => setMobileMenuOpen(false)}>
+                                                Sign Up
+                                            </NavLink>
+                                        </Button>
+                                    ) : (
+                                        <Button asChild variant="outline" className="w-full">
+                                            <NavLink to="/profile" onClick={() => setMobileMenuOpen(false)}>
+                                                Profile
+                                            </NavLink>
+                                        </Button>
+                                    )}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </Dialog.Panel>

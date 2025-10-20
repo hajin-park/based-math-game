@@ -16,7 +16,7 @@ import {
     ChosenSettingsTable,
     DurationSelect,
 } from "@features/quiz";
-import { QuizContext } from "@/Contexts.js";
+import { QuizContext } from "@/contexts/GameContexts";
 
 const BASE_OPTIONS = ["Binary", "Octal", "Decimal", "Hexadecimal"];
 const DURATION_OPTIONS = [10, 15, 30, 60, 120, 180, 300];
@@ -57,8 +57,13 @@ export default function Settings() {
         })
     );
 
-    // @ts-ignore
-    const { settings, setSettings } = useContext(QuizContext);
+    const quizContext = useContext(QuizContext);
+
+    if (!quizContext) {
+        throw new Error('Settings must be used within QuizContext provider');
+    }
+
+    const { settings, setSettings } = quizContext;
     const navigate = useNavigate();
 
     // Update FormSchema to take into account the current/past input values
@@ -214,8 +219,13 @@ export default function Settings() {
                             durations={DURATION_OPTIONS}
                             settings={settings}
                         />
+                        {!chosenSettings.length && (
+                            <p className="text-sm text-muted-foreground mb-2">
+                                Please add at least one question setting to start the quiz
+                            </p>
+                        )}
                         <Button disabled={!chosenSettings.length} type="submit">
-                            Submit
+                            Start Quiz
                         </Button>
                     </form>
                 </Form>
