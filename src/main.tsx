@@ -4,7 +4,6 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { Layout } from "./utils/Layout";
 import { AuthProvider } from "./contexts/AuthContext";
 import ErrorBoundary from "./components/ErrorBoundary";
-import ProtectedRoute from "./components/ProtectedRoute";
 import Error from "./pages/Error";
 import Home from "./pages/Home";
 import SingleplayerMode from "./pages/SingleplayerMode";
@@ -117,3 +116,14 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         </ErrorBoundary>
     </React.StrictMode>
 );
+
+// Register service worker for offline support
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').then((registration) => {
+            console.log('Service Worker registered:', registration);
+        }).catch((error) => {
+            console.log('Service Worker registration failed:', error);
+        });
+    });
+}

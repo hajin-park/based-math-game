@@ -7,7 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 export default function NavigationBar() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-    const { user, isGuest } = useAuth();
+    const { isGuest } = useAuth();
 
     const navigation = [
         { name: "Home", href: "/" },

@@ -23,7 +23,6 @@ export default function Quiz() {
         throw new Error('Results must be used within QuizContext and ResultContext providers');
     }
 
-    const { settings } = quizContext;
     const { results } = resultContext;
 
     // Save game results to Firebase

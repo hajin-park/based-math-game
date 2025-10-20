@@ -1,7 +1,5 @@
 import { useNavigate } from 'react-router-dom';
 import { useContext } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import GameModeSelect from '@/features/quiz/quiz-settings/Game-Mode-Select.component';
 import { QuizContext } from '@/contexts/GameContexts';
 import { GameMode } from '@/types/gameMode';

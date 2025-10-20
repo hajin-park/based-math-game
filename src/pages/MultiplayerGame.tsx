@@ -53,7 +53,7 @@ export default function MultiplayerGame() {
     time.setSeconds(time.getSeconds() + room.gameMode.duration);
   }
 
-  const timer = useTimer({
+  useTimer({
     expiryTimestamp: time,
     onExpire: async () => {
       if (roomId) {
@@ -61,16 +61,6 @@ export default function MultiplayerGame() {
       }
     },
   });
-
-  const handleCorrectAnswer = () => {
-    setScore((prev) => prev + 1);
-    if (room) {
-      const newSetting = room.gameMode.questions[
-        Math.floor(Math.random() * room.gameMode.questions.length)
-      ];
-      setRandomSetting(newSetting);
-    }
-  };
 
   if (!room || !randomSetting) {
     return (
@@ -90,10 +80,11 @@ export default function MultiplayerGame() {
               <CardTitle>{room.gameMode.name}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <QuizStats timer={timer} score={score} />
+              <QuizStats expiryTimestamp={time} setRunning={() => {}} score={score} />
               <QuizPrompt
+                score={score}
+                setScore={setScore}
                 setting={randomSetting}
-                onCorrectAnswer={handleCorrectAnswer}
               />
             </CardContent>
           </Card>

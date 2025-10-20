@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { ref, query, orderByChild, limitToLast, get, startAt, endAt } from 'firebase/database';
+import { useState, useCallback } from 'react';
+import { ref, query, orderByChild, limitToLast, get, startAt } from 'firebase/database';
 import { database } from '@/firebase/config';
 import { useAuth } from '@/contexts/AuthContext';
 

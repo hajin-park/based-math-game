@@ -33,7 +33,7 @@ export default function Settings() {
     const [toBase, setToBase] = useState("");
     const [rangeLower, setRangeLower] = useState(0);
     const [rangeUpper, setRangeUpper] = useState(0);
-    const [chosenSettings, setChosenSettings] = useState([]); // [fromBase, toBase, rangeLower, rangeUpper]
+    const [chosenSettings, setChosenSettings] = useState<any[]>([]); // [fromBase, toBase, rangeLower, rangeUpper]
     const [SettingsFormSchema, setSettingsFormSchema] = useState(
         // Set FormSchema dynamically using state since validation conditions depend on current/past inputs
         z.object({

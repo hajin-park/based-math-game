@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { ref, set, get, onValue, off, remove, push, serverTimestamp } from 'firebase/database';
+import { useState, useCallback } from 'react';
+import { ref, set, get, onValue, off, remove, push } from 'firebase/database';
 import { database } from '@/firebase/config';
 import { useAuth } from '@/contexts/AuthContext';
 import { GameMode } from '@/types/gameMode';
@@ -24,7 +24,6 @@ export interface Room {
 
 export function useRoom() {
   const { user } = useAuth();
-  const [currentRoom, setCurrentRoom] = useState<Room | null>(null);
   const [loading, setLoading] = useState(false);
 
   const createRoom = useCallback(
@@ -226,7 +225,6 @@ export function useRoom() {
   }, []);
 
   return {
-    currentRoom,
     loading,
     createRoom,
     joinRoom,

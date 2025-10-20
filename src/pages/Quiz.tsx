@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { QuizPrompt, QuizStats } from "@features/quiz";
 import { QuizContext, ResultContext } from "@/contexts/GameContexts";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 
 export default function Quiz() {
     const quizContext = useContext(QuizContext);
@@ -60,6 +61,15 @@ export default function Quiz() {
         );
         setRandomSetting(settings.questions[randomIndex]);
     }, [score, settings.questions]);
+
+    // Add keyboard shortcuts (Escape to exit)
+    useKeyboardShortcuts({
+        'escape': () => {
+            if (window.confirm('Exit game and return to menu? Your progress will not be saved.')) {
+                navigate('/');
+            }
+        }
+    });
 
     return (
         <Card className="mx-auto w-5/6 md:w-2/3 lg:w-3/5 bg-gray-50">

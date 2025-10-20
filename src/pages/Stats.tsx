@@ -1,26 +1,15 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuth } from '@/contexts/AuthContext';
-import { useStats } from '@/hooks/useStats';
 import { useGameHistory, TimeRange } from '@/hooks/useGameHistory';
 import { OFFICIAL_GAME_MODES } from '@/types/gameMode';
 
 export default function Stats() {
-  const { user } = useAuth();
-  const { getUserStats } = useStats();
   const { history, loading, fetchHistory, getStatsForTimeRange, getScoresByGameMode } = useGameHistory();
   const [timeRange, setTimeRange] = useState<TimeRange>('all');
-  const [overallStats, setOverallStats] = useState<any>(null);
 
   useEffect(() => {
     fetchHistory(timeRange);
-    loadOverallStats();
   }, [timeRange]);
-
-  const loadOverallStats = async () => {
-    const stats = await getUserStats();
-    setOverallStats(stats);
-  };
 
   const rangeStats = getStatsForTimeRange(timeRange);
   const scoresByMode = getScoresByGameMode();
