@@ -1,13 +1,10 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import {
   User,
-  signInAnonymously,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithPopup,
   GoogleAuthProvider,
-  linkWithCredential,
-  EmailAuthProvider,
   onAuthStateChanged,
   signOut as firebaseSignOut,
   updateProfile,
@@ -15,16 +12,25 @@ import {
 import { ref, onValue, set, onDisconnect, serverTimestamp } from 'firebase/database';
 import { auth, database } from '@/firebase/config';
 
+// Guest user interface for database-only guests
+interface GuestUser {
+  uid: string;
+  displayName: string;
+  isGuest: true;
+  createdAt: number;
+}
+
+// Combined user type (Firebase User or Guest User)
+type AppUser = User | GuestUser;
+
 interface AuthContextType {
-  user: User | null;
+  user: AppUser | null;
   loading: boolean;
   isGuest: boolean;
   signInAsGuest: () => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (email: string, password: string, displayName: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
-  linkGuestToEmail: (email: string, password: string, displayName: string) => Promise<void>;
-  linkGuestToGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
   updateDisplayName: (displayName: string) => Promise<void>;
 }
@@ -43,20 +49,65 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
+// Helper to check if user is a guest
+function isGuestUser(user: AppUser | null): user is GuestUser {
+  return user !== null && 'isGuest' in user && user.isGuest === true;
+}
+
+// Helper to generate guest ID
+function generateGuestId(): string {
+  return `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+}
+
+// Helper to get or create guest user from localStorage
+function getOrCreateGuestUser(): GuestUser {
+  const stored = localStorage.getItem('guestUser');
+  if (stored) {
+    try {
+      const parsed = JSON.parse(stored);
+      // Validate it's a valid guest user
+      if (parsed.uid && parsed.isGuest) {
+        return parsed;
+      }
+    } catch (e) {
+      // Invalid stored data, create new
+    }
+  }
+
+  // Create new guest user
+  const guestUser: GuestUser = {
+    uid: generateGuestId(),
+    displayName: 'Guest',
+    isGuest: true,
+    createdAt: Date.now(),
+  };
+  localStorage.setItem('guestUser', JSON.stringify(guestUser));
+  return guestUser;
+}
+
 export function AuthProvider({ children }: AuthProviderProps) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [isGuest, setIsGuest] = useState(false);
 
-  // Set up presence system
+  // Set up presence system for all users (guest and authenticated)
   useEffect(() => {
     if (!user) return;
 
     const presenceRef = ref(database, `presence/${user.uid}`);
+    const userRef = ref(database, `users/${user.uid}`);
     const connectedRef = ref(database, '.info/connected');
 
     const unsubscribe = onValue(connectedRef, (snapshot) => {
       if (snapshot.val() === true) {
+        // Store user info in database
+        set(userRef, {
+          uid: user.uid,
+          displayName: user.displayName || (isGuestUser(user) ? 'Guest' : 'User'),
+          isGuest: isGuestUser(user),
+          lastSeen: serverTimestamp(),
+        });
+
         // Set user as online
         set(presenceRef, {
           online: true,
@@ -68,33 +119,48 @@ export function AuthProvider({ children }: AuthProviderProps) {
           online: false,
           lastSeen: serverTimestamp(),
         });
+
+        // For guest users, clean up their data on disconnect
+        if (isGuestUser(user)) {
+          onDisconnect(userRef).remove();
+        }
       }
     });
 
     return () => unsubscribe();
-  }, [user]);
+  }, [user, isGuest]);
 
-  // Listen to auth state changes
+  // Listen to Firebase auth state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser);
-      setIsGuest(firebaseUser?.isAnonymous || false);
+      if (firebaseUser) {
+        // Real authenticated user
+        setUser(firebaseUser);
+        setIsGuest(false);
+        // Clear any guest user from localStorage
+        localStorage.removeItem('guestUser');
+      } else {
+        // No authenticated user, use guest
+        const guestUser = getOrCreateGuestUser();
+        setUser(guestUser);
+        setIsGuest(true);
+      }
       setLoading(false);
     });
 
     return () => unsubscribe();
   }, []);
 
-  // Auto sign-in as guest if not authenticated
-  useEffect(() => {
-    if (!loading && !user) {
-      signInAsGuest();
-    }
-  }, [loading, user]);
-
   const signInAsGuest = async () => {
     try {
-      await signInAnonymously(auth);
+      // Sign out of any Firebase auth
+      if (auth.currentUser) {
+        await firebaseSignOut(auth);
+      }
+      // Create new guest user
+      const guestUser = getOrCreateGuestUser();
+      setUser(guestUser);
+      setIsGuest(true);
     } catch (error) {
       console.error('Error signing in as guest:', error);
       throw error;
@@ -104,6 +170,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const signInWithEmail = async (email: string, password: string) => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
+      // Firebase auth state listener will handle setting the user
     } catch (error) {
       console.error('Error signing in with email:', error);
       throw error;
@@ -114,6 +181,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(userCredential.user, { displayName });
+      // Firebase auth state listener will handle setting the user
     } catch (error) {
       console.error('Error signing up with email:', error);
       throw error;
@@ -124,46 +192,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
+      // Firebase auth state listener will handle setting the user
     } catch (error) {
       console.error('Error signing in with Google:', error);
       throw error;
     }
   };
 
-  const linkGuestToEmail = async (email: string, password: string, displayName: string) => {
-    if (!user || !isGuest) {
-      throw new Error('Must be signed in as guest to link account');
-    }
-
-    try {
-      const credential = EmailAuthProvider.credential(email, password);
-      await linkWithCredential(user, credential);
-      await updateProfile(user, { displayName });
-    } catch (error) {
-      console.error('Error linking guest to email:', error);
-      throw error;
-    }
-  };
-
-  const linkGuestToGoogle = async () => {
-    if (!user || !isGuest) {
-      throw new Error('Must be signed in as guest to link account');
-    }
-
-    try {
-      const provider = new GoogleAuthProvider();
-      await linkWithCredential(user, GoogleAuthProvider.credential(await signInWithPopup(auth, provider).then(r => r.user.getIdToken())));
-    } catch (error) {
-      console.error('Error linking guest to Google:', error);
-      throw error;
-    }
-  };
-
   const signOut = async () => {
     try {
-      await firebaseSignOut(auth);
-      // Auto sign-in as guest after sign out
-      await signInAsGuest();
+      if (auth.currentUser) {
+        await firebaseSignOut(auth);
+      }
+      // Clear guest user and create new one
+      localStorage.removeItem('guestUser');
+      const guestUser = getOrCreateGuestUser();
+      setUser(guestUser);
+      setIsGuest(true);
     } catch (error) {
       console.error('Error signing out:', error);
       throw error;
@@ -176,9 +221,26 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
 
     try {
-      await updateProfile(user, { displayName });
-      // Force refresh user object
-      setUser({ ...user, displayName });
+      if (isGuestUser(user)) {
+        // Update guest user in localStorage and state
+        const updatedGuest: GuestUser = { ...user, displayName };
+        localStorage.setItem('guestUser', JSON.stringify(updatedGuest));
+        setUser(updatedGuest);
+
+        // Update in database
+        const userRef = ref(database, `users/${user.uid}`);
+        await set(userRef, {
+          uid: user.uid,
+          displayName,
+          isGuest: true,
+          lastSeen: serverTimestamp(),
+        });
+      } else {
+        // Update Firebase auth user
+        await updateProfile(user, { displayName });
+        // Force refresh user object
+        setUser({ ...user, displayName });
+      }
     } catch (error) {
       console.error('Error updating display name:', error);
       throw error;
@@ -193,8 +255,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     signInWithEmail,
     signUpWithEmail,
     signInWithGoogle,
-    linkGuestToEmail,
-    linkGuestToGoogle,
     signOut,
     updateDisplayName,
   };

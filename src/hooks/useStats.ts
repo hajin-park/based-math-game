@@ -77,7 +77,7 @@ export function useStats() {
 
           if (result.score > currentBestScore) {
             await set(leaderboardRef, {
-              displayName: user.displayName || user.isAnonymous ? 'Guest' : 'Anonymous',
+              displayName: user.displayName || ('isGuest' in user && user.isGuest ? 'Guest' : 'User'),
               score: result.score,
               timestamp,
             });

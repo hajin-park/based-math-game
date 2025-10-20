@@ -11,7 +11,9 @@ export function validateAnswer(
                 ? input.substring(2)
                 : input;
         // Remove leading zeros and convert to lowercase for case-insensitive comparison
-        return cleaned.replace(/^0+/, "").toLowerCase();
+        // Special case: if the result is empty after removing zeros, it means the value is 0
+        const withoutLeadingZeros = cleaned.replace(/^0+/, "");
+        return (withoutLeadingZeros || "0").toLowerCase();
     };
 
     // Clean both expected and actual strings based on the toBase parameter

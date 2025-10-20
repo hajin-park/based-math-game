@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export default function Signup() {
   const navigate = useNavigate();
-  const { signUpWithEmail, signInWithGoogle, isGuest, linkGuestToEmail, linkGuestToGoogle } = useAuth();
+  const { signUpWithEmail, signInWithGoogle, isGuest } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
@@ -21,11 +21,7 @@ export default function Signup() {
     setLoading(true);
 
     try {
-      if (isGuest) {
-        await linkGuestToEmail(email, password, displayName);
-      } else {
-        await signUpWithEmail(email, password, displayName);
-      }
+      await signUpWithEmail(email, password, displayName);
       navigate('/');
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to create account';
@@ -40,11 +36,7 @@ export default function Signup() {
     setLoading(true);
 
     try {
-      if (isGuest) {
-        await linkGuestToGoogle();
-      } else {
-        await signInWithGoogle();
-      }
+      await signInWithGoogle();
       navigate('/');
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to sign up with Google';

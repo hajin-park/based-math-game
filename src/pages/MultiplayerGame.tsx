@@ -22,7 +22,7 @@ export default function MultiplayerGame() {
 
     const unsubscribe = subscribeToRoom(roomId, (updatedRoom) => {
       setRoom(updatedRoom);
-      
+
       // Initialize random setting when room loads
       if (!randomSetting && updatedRoom.gameMode.questions.length > 0) {
         const setting = updatedRoom.gameMode.questions[
@@ -48,9 +48,22 @@ export default function MultiplayerGame() {
     }
   }, [score, roomId, updatePlayerScore]);
 
+  // Rotate question after each correct answer
+  useEffect(() => {
+    if (room && score > 0) {
+      const setting = room.gameMode.questions[
+        Math.floor(Math.random() * room.gameMode.questions.length)
+      ];
+      setRandomSetting(setting);
+    }
+  }, [score, room]);
+
+  // Initialize timer only after room is loaded
   const time = new Date();
-  if (room) {
-    time.setSeconds(time.getSeconds() + room.gameMode.duration);
+  if (room?.startedAt) {
+    const elapsed = Math.floor((Date.now() - room.startedAt) / 1000);
+    const remaining = Math.max(0, room.gameMode.duration - elapsed);
+    time.setSeconds(time.getSeconds() + remaining);
   }
 
   useTimer({
@@ -60,9 +73,10 @@ export default function MultiplayerGame() {
         await finishGame(roomId);
       }
     },
+    autoStart: !!room?.startedAt,
   });
 
-  if (!room || !randomSetting) {
+  if (!room || !randomSetting || !room.startedAt) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>

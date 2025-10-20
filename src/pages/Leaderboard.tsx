@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ref, query, orderByChild, limitToFirst, get } from 'firebase/database';
+import { ref, get } from 'firebase/database';
 import { database } from '@/firebase/config';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { OFFICIAL_GAME_MODES } from '@/types/gameMode';
@@ -24,9 +24,8 @@ export default function Leaderboard() {
     setLoading(true);
     try {
       const leaderboardRef = ref(database, `leaderboards/${gameModeId}`);
-      const leaderboardQuery = query(leaderboardRef, orderByChild('score'), limitToFirst(100));
-      
-      const snapshot = await get(leaderboardQuery);
+      // Get all entries and sort client-side since Firebase orderByChild returns ascending order
+      const snapshot = await get(leaderboardRef);
       const data = snapshot.val();
 
       if (data) {
@@ -40,7 +39,7 @@ export default function Leaderboard() {
           };
         });
 
-        // Sort by score descending
+        // Sort by score descending and take top 50
         entries.sort((a, b) => b.score - a.score);
         setLeaderboard(entries.slice(0, 50));
       } else {

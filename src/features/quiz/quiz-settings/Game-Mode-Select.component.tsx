@@ -69,7 +69,7 @@ export default function GameModeSelect({ onSelectMode }: GameModeSelectProps) {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button onClick={() => navigate('/')} className="w-full">
+              <Button onClick={() => navigate('/settings')} className="w-full">
                 Go to Custom Settings
               </Button>
             </CardContent>

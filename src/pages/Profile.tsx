@@ -63,7 +63,7 @@ export default function Profile() {
           </div>
 
           {/* Email */}
-          {user?.email && (
+          {user && 'email' in user && user.email && (
             <div>
               <Label>Email</Label>
               <p className="mt-2 text-sm">{user.email}</p>
