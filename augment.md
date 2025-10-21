@@ -4,7 +4,7 @@
 A React-based multiplayer quiz game for practicing base conversion (Binary, Octal, Decimal, Hexadecimal) with Firebase backend, real-time multiplayer, stats tracking, and leaderboards.
 
 **Project:** `ts_based_website` | **Firebase:** `based-math-game` | **License:** GPL-3.0
-**Repository:** https://github.com/hajin-park/Based-Math-Game
+**Repository:** https://github.com/hajin-park/based-math-game
 
 ---
 
@@ -25,15 +25,36 @@ A React-based multiplayer quiz game for practicing base conversion (Binary, Octa
 ### Directory Structure
 ```
 src/
-├── components/          # Shared components (ErrorBoundary, ProtectedRoute, ConnectionStatus)
-│   └── ui/             # shadcn UI components (button, card, form, input, etc.)
-├── contexts/           # React contexts (AuthContext, GameContexts)
+├── components/          # Shared components
+│   ├── ui/             # shadcn UI components (button, card, form, input, alert-dialog, etc.)
+│   ├── ErrorBoundary.tsx
+│   ├── ProtectedRoute.tsx
+│   ├── ConnectionStatus.tsx
+│   └── ProfileDropdown.tsx
+├── contexts/           # React contexts
+│   ├── AuthContext.tsx      # Authentication & guest user system
+│   ├── GameContexts.tsx     # Quiz & Result contexts
+│   └── ThemeContext.tsx     # Light/Dark mode
 ├── features/           # Feature modules
 │   ├── quiz/          # Quiz settings, questions, results components
-│   └── ui/            # Navigation, Footer
+│   ├── tutorials/     # Tutorial components
+│   └── ui/            # Navigation-Bar, Footer
 ├── firebase/          # Firebase config
-├── hooks/             # Custom hooks (useRoom, useStats, useGameHistory, etc.)
-├── pages/             # Route pages (Home, Quiz, Results, Leaderboard, etc.)
+├── hooks/             # Custom hooks
+│   ├── useRoom.ts
+│   ├── useStats.ts
+│   ├── useGameHistory.ts
+│   ├── useKeyboardShortcuts.ts
+│   └── useTabVisibility.ts
+├── pages/             # Route pages
+│   ├── profile/       # Profile pages (ProfileLayout, ProfileOverview, ProfileSettings)
+│   ├── Home.tsx, Quiz.tsx, Results.tsx, Leaderboard.tsx, Stats.tsx
+│   ├── Login.tsx, Signup.tsx
+│   ├── MultiplayerHome.tsx, CreateRoom.tsx, JoinRoom.tsx, RoomLobby.tsx
+│   ├── MultiplayerGame.tsx, MultiplayerResults.tsx
+│   ├── Settings.tsx, Usage.tsx, Tutorials.tsx
+│   ├── About.tsx, Privacy.tsx, Terms.tsx
+│   └── Error.tsx
 ├── types/             # TypeScript types (gameMode.ts)
 ├── utils/             # Utilities (Layout, analytics, ScrollToTop)
 └── main.tsx           # App entry + router config
@@ -54,14 +75,22 @@ src/
 /multiplayer/results/:roomId → MultiplayerResults
 /leaderboard → Leaderboard (tabs per game mode)
 /stats → Stats (time-based analytics)
-/profile → Profile (user account management)
+/how-to-play → Usage (how to play guide)
+/tutorials → Tutorials (base conversion tutorials)
+/about → About (project information)
+/privacy → Privacy (privacy policy)
+/terms → Terms (terms of service)
+/profile → ProfileLayout (sidebar layout)
+  /profile → ProfileOverview (account info)
+  /profile/settings → ProfileSettings (display name, delete account)
 /login → Login (email/Google sign-in)
 /signup → Signup (guest account linking)
 ```
 
 ### State Management
 **Contexts:**
-- `AuthContext` - User auth state, sign-in/out, account linking
+- `AuthContext` - User auth state, sign-in/out, account linking, guest user system, delete account
+- `ThemeContext` - Light/Dark mode toggle with localStorage persistence
 - `QuizContext` - Quiz settings (questions array, duration, gameModeId)
 - `ResultContext` - Quiz results (score, duration, gameModeId)
 
@@ -491,6 +520,55 @@ getThisMonthGames(gameModeId): Promise<GameHistoryEntry[]>
 
 ## Key Hooks
 
+### useRoom (`src/hooks/useRoom.ts`)
+**Multiplayer room management:**
+```typescript
+interface Room {
+  id: string;
+  hostUid: string;
+  gameMode: GameMode;
+  players: Record<string, RoomPlayer>;
+  status: 'waiting' | 'playing' | 'finished';
+  createdAt: number;
+  startedAt?: number;
+}
+
+interface RoomPlayer {
+  uid: string;
+  displayName: string;
+  ready: boolean;
+  score: number;
+  finished: boolean;
+}
+```
+
+**Methods:**
+- `createRoom(gameMode)` - Create new room, returns roomId
+- `joinRoom(roomId)` - Join existing room
+- `leaveRoom(roomId)` - Leave room, delete if host
+- `toggleReady(roomId)` - Toggle player ready status
+- `startGame(roomId)` - Start game (host only)
+- `updateScore(roomId, score)` - Update player score
+- `finishGame(roomId)` - Mark player as finished
+- `subscribeToRoom(roomId, callback)` - Real-time room updates
+- `unsubscribeFromRoom(roomId)` - Clean up listener
+
+### useStats (`src/hooks/useStats.ts`)
+**User statistics tracking:**
+- Reads from `/users/{uid}/stats` and `/users/{uid}/gameHistory`
+- Tracks: games played, total score, average score, best score
+- Works for both guest and authenticated users
+- Guest stats don't count toward global leaderboards
+
+### useGameHistory (`src/hooks/useGameHistory.ts`)
+**Game history queries with timestamp indexing:**
+- `getRecentGames(gameModeId, limit)` - Get recent games
+- `getGamesInTimeRange(gameModeId, startTime, endTime)` - Custom range
+- `getTodayGames(gameModeId)` - Today's games
+- `getThisWeekGames(gameModeId)` - This week's games
+- `getThisMonthGames(gameModeId)` - This month's games
+- Uses Firebase `.orderByChild("timestamp")` with `.indexOn` rule
+
 ### useKeyboardShortcuts
 - Escape key: Navigate to home
 - Global keyboard shortcuts for accessibility
@@ -499,11 +577,6 @@ getThisMonthGames(gameModeId): Promise<GameHistoryEntry[]>
 - Pauses timer when tab hidden (singleplayer only)
 - Prevents cheating in multiplayer
 - Uses Page Visibility API
-
-### useConnectionState
-- Monitors Firebase connection status
-- Shows alert when disconnected
-- Auto-reconnect handling
 
 ---
 
@@ -532,12 +605,61 @@ button, card, form, input, label, select, scroll-area, separator, toast, dialog,
   - Avatar with initials fallback
   - User email display
   - Sign Out available in both dropdown and profile sidebar
-- `Footer.tsx` - Footer with GitHub link (dark mode support)
+- `Footer.tsx` - Professional footer with multiple sections
+  - About section with project description and GitHub link
+  - Learn section (Tutorials, How to Play, About)
+  - Play section (Singleplayer, Multiplayer, Leaderboard, Stats)
+  - Legal section (Privacy Policy, Terms of Service, License)
+  - Bottom section with copyright and zetamac inspiration credit
+  - Fully responsive grid layout
+  - Dark mode support
 - `ErrorBoundary.tsx` - Error boundary with recovery
 - `ProtectedRoute.tsx` - Route protection for auth (supports `requireNonGuest` prop)
 - `ConnectionStatus.tsx` - Firebase connection indicator
 
 **Pages:**
+- `Usage.tsx` - How to Play guide
+  - Comprehensive guide covering all game features
+  - Game Basics: Explanation of the 4 number bases with visual examples
+  - Singleplayer Mode: Official game modes and Playground customization
+  - Multiplayer Mode: Creating/joining rooms and real-time competition
+  - During the Quiz: Answer mechanics, scoring system, and on-screen info
+  - Progress Tracking: Stats page and leaderboards explanation
+  - Quick Tips: 6 actionable tips for improvement
+  - Call-to-action section with links to Tutorials, Singleplayer, and Multiplayer
+  - Minimal design with informative visual elements (color-coded bases, example displays)
+  - Guest user notice about stat limitations
+- `Tutorials.tsx` - Base conversion tutorials
+  - 4 tabs: Binary (Base 2), Octal (Base 8), Decimal (Base 10), Hexadecimal (Base 16)
+  - Each tab has consistent minimal structure:
+    - "How It Works" section with brief explanation and one example
+    - "Counting in [Base]" section with compact grid showing values
+    - "Try It Yourself" interactive converter with real-time conversion
+  - Removed verbose content and large tables for cleaner, focused learning
+  - Dark mode support with color-coded sections per base
+- `About.tsx` - Project information page
+  - Mission statement and project description
+  - Feature list (tutorials, quizzes, multiplayer, progress tracking, leaderboards, guest mode)
+  - Technology stack information
+  - Inspiration credit to zetamac
+  - Open source license information
+- `Privacy.tsx` - Privacy policy page
+  - Information collection details (account info, game data, guest users, analytics)
+  - Data usage explanation
+  - Security measures
+  - User rights (access, update, delete)
+  - Third-party services (Firebase, Google Sign-In)
+  - Children's privacy policy
+  - Contact information
+- `Terms.tsx` - Terms of service page
+  - Agreement to terms
+  - Use license and restrictions
+  - User account responsibilities
+  - Guest user limitations
+  - Leaderboard and score policies
+  - Intellectual property (GPL-3.0 license)
+  - Disclaimers and liability limitations
+  - Contact information
 - `Stats.tsx` - User statistics with guest user notice
   - Shows yellow warning card for guest users
   - Encourages sign up to save stats permanently
@@ -578,6 +700,34 @@ button, card, form, input, label, select, scroll-area, separator, toast, dialog,
 ### Registration (`src/main.tsx`)
 - Service worker registered on app load
 - Updates checked periodically
+
+### SEO & Discoverability
+
+**Sitemap (`public/sitemap.xml`)**
+- XML sitemap for search engine crawlers
+- All public pages with priority and change frequency
+- Main pages: Home, Singleplayer, Multiplayer, Tutorials, How to Play
+- Secondary pages: Leaderboard, Stats, About, Privacy, Terms
+- Authentication pages: Login, Signup
+- Updated: 2025-10-21
+
+**Robots.txt (`public/robots.txt`)**
+- Allows all crawlers on public pages
+- Disallows user-specific pages (profile, settings, quiz, results)
+- Disallows dynamic multiplayer pages (lobby, game, results with room IDs)
+- Disallows authentication pages (login, signup)
+- Sitemap reference and crawl delay configuration
+
+**LLMs.txt (`public/llms.txt`)**
+- Comprehensive project documentation for AI/LLM crawlers
+- Project overview, features, and technology stack
+- Complete page listing with descriptions
+- Game mechanics and scoring system
+- Guest user system explanation
+- API and data structure documentation
+- Development setup and deployment instructions
+- SEO keywords and accessibility information
+- Privacy, performance, and browser support details
 
 ---
 

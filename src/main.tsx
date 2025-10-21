@@ -10,6 +10,9 @@ import Home from "./pages/Home";
 import SingleplayerMode from "./pages/SingleplayerMode";
 import Usage from "./pages/Usage";
 import Tutorials from "./pages/Tutorials";
+import About from "./pages/About";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
 import Settings from "./pages/Settings";
 import Quiz from "./pages/Quiz";
 import Results from "./pages/Results";
@@ -91,6 +94,18 @@ const router = createBrowserRouter([
             {
                 path: "/tutorials",
                 element: <Tutorials />,
+            },
+            {
+                path: "/about",
+                element: <About />,
+            },
+            {
+                path: "/privacy",
+                element: <Privacy />,
+            },
+            {
+                path: "/terms",
+                element: <Terms />,
             },
             {
                 path: "/multiplayer",

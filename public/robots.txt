@@ -1,0 +1,43 @@
+# Based Math Game - Robots.txt
+# https://based-math-game.web.app
+
+# Allow all crawlers
+User-agent: *
+Allow: /
+
+# Disallow authentication pages (no SEO value)
+Disallow: /login
+Disallow: /signup
+
+# Disallow user-specific pages
+Disallow: /profile
+Disallow: /profile/*
+
+# Disallow dynamic multiplayer pages (temporary rooms)
+Disallow: /multiplayer/lobby/*
+Disallow: /multiplayer/game/*
+Disallow: /multiplayer/results/*
+
+# Disallow settings and quiz pages (user-specific)
+Disallow: /settings
+Disallow: /quiz
+Disallow: /results
+
+# Allow important pages
+Allow: /
+Allow: /singleplayer
+Allow: /multiplayer
+Allow: /tutorials
+Allow: /how-to-play
+Allow: /leaderboard
+Allow: /stats
+Allow: /about
+Allow: /privacy
+Allow: /terms
+
+# Sitemap location
+Sitemap: https://based-math-game.web.app/sitemap.xml
+
+# Crawl delay (be nice to servers)
+Crawl-delay: 1
+

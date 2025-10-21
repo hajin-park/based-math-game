@@ -1,0 +1,183 @@
+# Based Math Game
+# A React-based multiplayer quiz game for practicing base conversion
+# https://based-math-game.web.app
+# https://github.com/hajin-park/based-math-game
+
+## Project Overview
+
+Based Math Game is an educational web application designed to help users master number base conversion between Binary (Base 2), Octal (Base 8), Decimal (Base 10), and Hexadecimal (Base 16). The application features both singleplayer and multiplayer modes, comprehensive tutorials, progress tracking, and global leaderboards.
+
+## Key Features
+
+### Game Modes
+- **Singleplayer Mode**: 6 official pre-configured game modes plus custom Playground mode
+- **Multiplayer Mode**: Real-time competitive rooms with live scoring
+- **Playground Mode**: Fully customizable quiz settings (conversions, ranges, duration)
+
+### Learning Resources
+- **Tutorials**: Interactive tutorials for each number base with live converters
+- **How to Play**: Comprehensive guide covering all game features and mechanics
+
+### Progress Tracking
+- **Stats Page**: Personal analytics with game history and performance trends
+- **Leaderboards**: Global rankings for each official game mode
+- **Guest Mode**: Play without account, with option to sign up for permanent stats
+
+### Authentication
+- **Guest Users**: Instant play without registration (localStorage-based)
+- **Email/Password**: Traditional account creation
+- **Google Sign-In**: OAuth authentication
+- **Account Linking**: Convert guest account to permanent account
+
+## Technology Stack
+
+- **Frontend**: React 19.2.0, TypeScript 5.2.2, Vite 7.1.7
+- **Styling**: Tailwind CSS 3.4.3, shadcn UI components
+- **Backend**: Firebase (Realtime Database, Authentication, Hosting, Analytics)
+- **Routing**: React Router 6
+- **State Management**: React Context API
+- **PWA**: Service Worker, Web Manifest
+
+## Main Pages
+
+### Public Pages
+- `/` - Home page with game mode selection
+- `/tutorials` - Interactive base conversion tutorials (Binary, Octal, Decimal, Hexadecimal)
+- `/how-to-play` - Complete gameplay guide
+- `/singleplayer` - Singleplayer game mode selection
+- `/multiplayer` - Multiplayer lobby (create/join rooms)
+- `/leaderboard` - Global leaderboards by game mode
+- `/stats` - Personal statistics and game history
+- `/about` - Project information and mission
+- `/privacy` - Privacy policy
+- `/terms` - Terms of service
+
+### Authentication Pages
+- `/login` - Sign in with email or Google
+- `/signup` - Create account or link guest account
+
+### Protected Pages
+- `/profile` - User profile overview
+- `/profile/settings` - Account settings and preferences
+
+### Dynamic Pages
+- `/quiz` - Active quiz gameplay
+- `/results` - Quiz results display
+- `/multiplayer/lobby/:roomId` - Multiplayer room lobby
+- `/multiplayer/game/:roomId` - Multiplayer game session
+- `/multiplayer/results/:roomId` - Multiplayer results
+
+## Game Mechanics
+
+### Base Conversion
+- Questions randomly generated from configured settings
+- Support for all combinations of Binary, Octal, Decimal, Hexadecimal
+- Configurable number ranges per conversion type
+- Real-time answer validation
+
+### Scoring System
+- +1 point per correct answer
+- Combo multiplier for consecutive correct answers
+- Time bonus in multiplayer mode (faster = more points)
+- Wrong answers break combo streak
+
+### Official Game Modes
+1. **Binary Basics**: Binary ↔ Decimal (0-255)
+2. **Hex Master**: Hexadecimal ↔ Decimal (0-255)
+3. **Octal Challenge**: Octal ↔ Decimal (0-511)
+4. **Mixed Bases**: All bases, small ranges
+5. **Advanced Binary**: Binary ↔ Decimal (0-65535)
+6. **Ultimate Challenge**: All bases, large ranges
+
+## Guest User System
+
+- No Firebase Anonymous Authentication (uses localStorage + Realtime Database)
+- Guest UIDs format: `guest_{timestamp}_{random}`
+- Full multiplayer support (create/join rooms)
+- Stats tracked locally and in database
+- Cannot appear on global leaderboards
+- Seamless upgrade to permanent account
+
+## API & Data Structure
+
+### Firebase Realtime Database
+- `/users/{uid}` - User profiles and stats
+- `/leaderboards/{gameModeId}/{uid}` - Global leaderboard entries
+- `/rooms/{roomId}` - Multiplayer room data
+- `/presence/{uid}` - User online/offline status
+- `/gameModes` - Official game mode configurations
+
+### Security Rules
+- Guest users can read/write own data
+- Guest users cannot write to global leaderboards
+- Authenticated users have full access to own data
+- All users can read leaderboards and game modes
+- Room hosts control game state
+
+## Development
+
+### Local Setup
+```bash
+npm install
+# Configure .env with Firebase credentials
+npm run dev  # Start dev server on localhost:5173
+```
+
+### Build & Deploy
+```bash
+npm run build  # TypeScript + Vite build → dist/
+firebase deploy  # Deploy to Firebase Hosting
+```
+
+### Firebase Emulators
+```bash
+firebase emulators:start  # Auth (9099), Database (9000), UI (4000)
+```
+
+## License & Attribution
+
+- **License**: GPL-3.0 (Open Source)
+- **Inspiration**: zetamac (https://arithmetic.zetamac.com)
+- **Repository**: https://github.com/hajin-park/based-math-game
+
+## Contact
+
+- **GitHub**: https://github.com/hajin-park/based-math-game
+- **Issues**: https://github.com/hajin-park/based-math-game/issues
+
+## SEO Keywords
+
+base conversion, binary, octal, decimal, hexadecimal, number systems, math game, educational game, quiz game, multiplayer quiz, base converter, computer science education, programming practice, number base tutorial, binary converter, hex converter, octal converter, math practice, competitive learning, real-time multiplayer, Firebase game, React game, TypeScript game, web-based learning, STEM education
+
+## Accessibility
+
+- ARIA labels on all interactive elements
+- Keyboard navigation support
+- Screen reader compatible
+- Dark mode support
+- Responsive design (mobile, tablet, desktop)
+
+## Performance
+
+- Bundle size: 950 kB (260 kB gzipped)
+- Lighthouse score target: 90+ for all metrics
+- Service Worker for offline support
+- Real-time database for instant updates
+- Optimized React rendering
+
+## Privacy & Data
+
+- Minimal data collection (only necessary for gameplay)
+- Guest users: localStorage only, no permanent storage
+- Authenticated users: Firebase Auth + Realtime Database
+- No third-party tracking (except Firebase Analytics)
+- User data deletion available in profile settings
+- GDPR compliant
+
+## Browser Support
+
+- Modern browsers (Chrome, Firefox, Safari, Edge)
+- ES2020+ JavaScript support required
+- Progressive Web App (PWA) installable
+- Mobile-responsive design
+
