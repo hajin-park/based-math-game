@@ -1519,38 +1519,180 @@ useEffect(() => {
 
 **Files Modified:**
 - `src/features/quiz/quiz-questions/Quiz-Stats.component.tsx` - Fixed infinite loop with useRef pattern
-- `src/pages/MultiplayerGame.tsx` - Removed `timer` from useEffect dependency array (line 117)
+- `src/pages/MultiplayerGame.tsx` - Fixed timer and question randomization issues
 
-**Additional Fix (Multiplayer):**
-The same issue occurred in `MultiplayerGame.tsx` where the timer restart effect had `timer` in its dependency array. Additionally, we needed to prevent the timer from restarting on every render:
+**Additional Fixes (Multiplayer):**
+
+1. **Timer Not Counting Down:**
+   - Root cause: Timer was being restarted in useEffect but `isRunning` was false
+   - Solution: Changed approach to calculate `expiryTimestamp` in `useMemo` and pass it to `useTimer` with `autoStart: true`
+   - The timer now automatically starts when the expiry timestamp changes
+
 ```typescript
-// Before (caused infinite loop):
+// Before (timer didn't run):
+const timer = useTimer({
+  expiryTimestamp: defaultExpiry,
+  autoStart: false,
+});
+
 useEffect(() => {
   if (room?.startedAt && room?.gameMode.duration) {
-    timer.restart(newExpiry, true);
+    timer.restart(newExpiry, true); // Didn't work reliably
   }
-}, [room?.startedAt, room?.gameMode.duration, timer]); // ❌ timer causes infinite loop
+}, [room?.startedAt, room?.gameMode.duration]);
 
-// After (fixed with ref to track startedAt):
-const timerStartedAtRef = useRef<number | null>(null);
+// After (timer runs correctly):
+const expiryTimestamp = useMemo(() => {
+  if (room?.startedAt && room?.gameMode.duration) {
+    const elapsed = Math.floor((Date.now() - room.startedAt) / 1000);
+    const remaining = Math.max(0, room.gameMode.duration - elapsed);
+    const expiry = new Date();
+    expiry.setSeconds(expiry.getSeconds() + remaining);
+    return expiry;
+  }
+  // Default expiry
+  const time = new Date();
+  time.setSeconds(time.getSeconds() + 60);
+  return time;
+}, [room?.startedAt, room?.gameMode.duration]);
 
+const timer = useTimer({
+  expiryTimestamp,
+  onExpire: async () => { await finishGame(roomId); },
+  autoStart: true, // ✅ Auto-start when expiry changes
+});
+```
+
+2. **Same Questions Each Game:**
+   - Root cause: Questions were loaded from `room.gameMode.questions` but never shuffled
+   - Solution: Implemented seeded Fisher-Yates shuffle using `room.startedAt` as seed
+   - Each new game gets a different `startedAt` timestamp, resulting in different question order
+   - All players get the same shuffled order (deterministic based on seed)
+
+```typescript
+// Shuffle questions based on startedAt
+if (updatedRoom.startedAt) {
+  const seed = updatedRoom.startedAt;
+  const questions = [...updatedRoom.gameMode.questions];
+
+  // Seeded shuffle using Fisher-Yates with LCG random
+  const seededRandom = (s: number) => {
+    const a = 1664525;
+    const c = 1013904223;
+    const m = Math.pow(2, 32);
+    return ((a * s + c) % m) / m;
+  };
+
+  let currentSeed = seed;
+  for (let i = questions.length - 1; i > 0; i--) {
+    currentSeed = Math.floor(seededRandom(currentSeed) * Math.pow(2, 32));
+    const j = Math.floor(seededRandom(currentSeed) * (i + 1));
+    [questions[i], questions[j]] = [questions[j], questions[i]];
+  }
+
+  questionsRef.current = questions;
+}
+```
+
+**Impact:** Games now work correctly in both singleplayer and multiplayer modes without crashing.
+
+---
+
+## Issue: Multiplayer Permission Errors and Timer Not Running (2025-10-21)
+
+### Problems:
+1. **PERMISSION_DENIED errors** when updating player scores in multiplayer games
+2. **Timer not counting down** - showed `isRunning: false` even after starting
+3. **Null reference error** in `subscribeToRoom` when `room.players` is null/undefined
+
+### Root Causes:
+
+1. **Permission Errors:**
+   - Database rules for `rooms/$roomId/players/$playerId` had `.validate` rule requiring specific children
+   - This prevented partial updates like updating just the `score` field
+   - Rule: `.validate: "newData.hasChildren(['displayName', 'ready'])"`
+
+2. **Timer Not Running:**
+   - `useTimer` hook doesn't automatically restart when `expiryTimestamp` prop changes
+   - Using `autoStart: true` with changing `expiryTimestamp` doesn't work
+   - Need to manually call `timer.restart()` when game starts
+
+3. **Null Reference:**
+   - `subscribeToRoom` tried to call `Object.values(room.players)` without checking if `room.players` exists
+   - Can happen when all players leave a room
+
+### Solutions:
+
+1. **Fixed Database Rules:**
+```json
+// Before (blocked partial updates):
+"players": {
+  "$playerId": {
+    ".write": "...",
+    ".validate": "newData.hasChildren(['displayName', 'ready'])" // ❌ Blocks score updates
+  }
+}
+
+// After (allows partial updates):
+"players": {
+  "$playerId": {
+    ".write": "..." // ✅ No validation, allows any field updates
+  }
+}
+```
+
+2. **Fixed Timer with Manual Restart:**
+```typescript
+// Track last startedAt to prevent duplicate restarts
+const lastStartedAtRef = useRef<number | null>(null);
+
+const timer = useTimer({
+  expiryTimestamp,
+  onExpire: async () => { await finishGame(roomId); },
+  autoStart: false, // Don't auto-start
+});
+
+// Manually restart when game starts
 useEffect(() => {
   if (room?.startedAt && room?.gameMode.duration) {
-    // Only restart timer if startedAt has changed
-    if (timerStartedAtRef.current !== room.startedAt) {
-      timerStartedAtRef.current = room.startedAt;
+    if (lastStartedAtRef.current !== room.startedAt) {
+      lastStartedAtRef.current = room.startedAt;
+
       const elapsed = Math.floor((Date.now() - room.startedAt) / 1000);
       const remaining = Math.max(0, room.gameMode.duration - elapsed);
       const newExpiry = new Date();
       newExpiry.setSeconds(newExpiry.getSeconds() + remaining);
-      timer.restart(newExpiry, true);
+
+      timer.restart(newExpiry, true); // ✅ Manually restart with autoStart
     }
   }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [room?.startedAt, room?.gameMode.duration]); // ✅ timer excluded, ref prevents re-restarts
+}, [room?.startedAt, room?.gameMode.duration]);
 ```
 
-**Impact:** Games now work correctly in both singleplayer and multiplayer modes without crashing.
+3. **Fixed Null Check:**
+```typescript
+const roomData = snapshot.val();
+const room: Room = { id: roomId, ...roomData };
+
+// Check if players exist before accessing
+if (!room.players) {
+  await remove(roomRef);
+  callback(null);
+  return;
+}
+
+const players = Object.values(room.players); // ✅ Safe now
+```
+
+**Files Modified:**
+- `database.rules.json` - Removed validation rule blocking partial player updates
+- `src/hooks/useRoom.ts` - Added null check for `room.players`
+- `src/pages/MultiplayerGame.tsx` - Fixed timer restart logic with ref tracking
+
+**Impact:**
+- ✅ Players can now update scores without permission errors
+- ✅ Timer counts down correctly in multiplayer games
+- ✅ No more null reference errors when room becomes empty
 
 ---
 

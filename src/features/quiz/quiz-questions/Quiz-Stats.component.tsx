@@ -5,7 +5,14 @@ import { Badge } from "@/components/ui/badge";
 import { Clock, Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export default function QuizStats({ expiryTimestamp, setRunning, score, timer: externalTimer }) {
+interface QuizStatsProps {
+    expiryTimestamp: Date;
+    setRunning: (running: boolean) => void;
+    score: number;
+    timer?: ReturnType<typeof useTimer>;
+}
+
+export default function QuizStats({ expiryTimestamp, setRunning, score, timer: externalTimer }: QuizStatsProps) {
     function handleOnExpire() {
         setRunning(false);
     }
@@ -35,6 +42,18 @@ export default function QuizStats({ expiryTimestamp, setRunning, score, timer: e
 
     // Calculate total seconds from timer components
     const totalSeconds = timer.seconds + timer.minutes * 60 + timer.hours * 3600;
+
+    // Debug logging for multiplayer timer
+    useEffect(() => {
+        if (externalTimer) {
+            console.log('QuizStats timer update:', {
+                isRunning: timer.isRunning,
+                totalSeconds,
+                seconds: timer.seconds,
+                minutes: timer.minutes
+            });
+        }
+    }, [externalTimer, timer.isRunning, timer.seconds, timer.minutes, totalSeconds]);
 
     // Format time as MM:SS
     const minutes = Math.floor(totalSeconds / 60);

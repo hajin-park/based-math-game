@@ -362,12 +362,55 @@ export function useRoom() {
       const room: Room = { id: roomId, ...roomData };
 
       // Check if host is missing but players remain
-      const players = Object.values(room.players);
+      if (!room.players) {
+        // No players in room, delete it
+        try {
+          await remove(roomRef);
+          callback(null);
+          return;
+        } catch (error) {
+          console.error('Error deleting empty room:', error);
+        }
+      }
+
+      // Filter out any null/undefined/malformed players
+      const allPlayers = Object.entries(room.players);
+      const validPlayers = allPlayers.filter(
+        ([, p]) => p !== null && p !== undefined && typeof p === 'object' && 'uid' in p && p.uid !== undefined
+      );
+
+      // Clean up ghost/malformed players if any exist
+      if (validPlayers.length < allPlayers.length) {
+        const updates: Record<string, null> = {};
+        allPlayers.forEach(([uid, p]) => {
+          if (!p || typeof p !== 'object' || !('uid' in p) || !p.uid) {
+            updates[`players/${uid}`] = null; // Remove malformed player
+          }
+        });
+
+        try {
+          await update(roomRef, updates);
+          // Don't call callback yet - wait for cleanup to propagate
+          return;
+        } catch (error) {
+          console.error('Error cleaning up ghost players:', error);
+        }
+      }
+
+      const players = validPlayers.map(([, p]) => p as RoomPlayer);
       const hostExists = players.some((p: RoomPlayer) => p.uid === room.hostUid);
 
       if (!hostExists && players.length > 0) {
         // Host disconnected but players remain - transfer host to first player
-        const newHost = players[0] as RoomPlayer;
+        const newHost = players[0];
+
+        // Validate newHost has uid
+        if (!newHost.uid) {
+          console.error('Cannot transfer host: newHost has no uid', newHost);
+          callback(room);
+          return;
+        }
+
         try {
           await update(roomRef, {
             hostUid: newHost.uid,

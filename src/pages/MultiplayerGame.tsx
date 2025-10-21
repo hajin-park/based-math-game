@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useTimer } from 'react-timer-hook';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRoom, Room } from '@/hooks/useRoom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -14,13 +13,19 @@ export default function MultiplayerGame() {
   const { user } = useAuth();
   const { toast } = useToast();
   const { subscribeToRoom, updatePlayerScore, finishGame } = useRoom();
+
+  // Handle timer expiration
+  const handleTimerExpire = async () => {
+    if (roomId) {
+      await finishGame(roomId);
+    }
+  };
   const [room, setRoom] = useState<Room | null>(null);
   const [score, setScore] = useState(0);
   const [randomSetting, setRandomSetting] = useState<[string, string, number, number] | null>(null);
   const scoreRef = useRef(0);
   const questionsRef = useRef<[string, string, number, number][]>([]);
   const hasNavigatedRef = useRef(false);
-  const timerStartedAtRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!roomId) return;
@@ -48,8 +53,32 @@ export default function MultiplayerGame() {
 
       setRoom(updatedRoom);
 
-      // Store questions in ref to avoid triggering effects
-      questionsRef.current = updatedRoom.gameMode.questions;
+      // Shuffle questions based on startedAt to get different questions each game
+      // Use startedAt as seed so all players get same shuffled order
+      if (updatedRoom.startedAt) {
+        const seed = updatedRoom.startedAt;
+        const questions = [...updatedRoom.gameMode.questions];
+
+        // Seeded shuffle using Fisher-Yates with LCG random
+        const seededRandom = (s: number) => {
+          const a = 1664525;
+          const c = 1013904223;
+          const m = Math.pow(2, 32);
+          return ((a * s + c) % m) / m;
+        };
+
+        let currentSeed = seed;
+        for (let i = questions.length - 1; i > 0; i--) {
+          currentSeed = Math.floor(seededRandom(currentSeed) * Math.pow(2, 32));
+          const j = Math.floor(seededRandom(currentSeed) * (i + 1));
+          [questions[i], questions[j]] = [questions[j], questions[i]];
+        }
+
+        questionsRef.current = questions;
+      } else {
+        // Game hasn't started yet, use original order
+        questionsRef.current = updatedRoom.gameMode.questions;
+      }
 
       // Navigate to lobby if game was reset (host left mid-game)
       if (updatedRoom.status === 'waiting') {
@@ -89,38 +118,30 @@ export default function MultiplayerGame() {
     }
   }, [score, roomId, updatePlayerScore]);
 
-  // Initialize timer with default expiry
-  const defaultExpiry = useMemo(() => {
+  // Calculate expiry timestamp based on room startedAt and duration
+  // This is calculated once when the game starts and doesn't change
+  const expiryTimestamp = useMemo(() => {
+    if (room?.startedAt && room?.gameMode.duration) {
+      const elapsed = Math.floor((Date.now() - room.startedAt) / 1000);
+      const remaining = Math.max(0, room.gameMode.duration - elapsed);
+      const expiry = new Date();
+      expiry.setSeconds(expiry.getSeconds() + remaining);
+
+      console.log('Calculating expiry timestamp:', {
+        startedAt: room.startedAt,
+        elapsed,
+        remaining,
+        expiry: expiry.toISOString()
+      });
+
+      return expiry;
+    }
+
+    // Default expiry (60 seconds)
     const time = new Date();
     time.setSeconds(time.getSeconds() + 60);
     return time;
-  }, []);
-
-  const timer = useTimer({
-    expiryTimestamp: defaultExpiry,
-    onExpire: async () => {
-      if (roomId) {
-        await finishGame(roomId);
-      }
-    },
-    autoStart: false,
-  });
-
-  // Restart timer when game starts
-  useEffect(() => {
-    if (room?.startedAt && room?.gameMode.duration) {
-      // Only restart timer if startedAt has changed (prevents infinite loops)
-      if (timerStartedAtRef.current !== room.startedAt) {
-        timerStartedAtRef.current = room.startedAt;
-        const elapsed = Math.floor((Date.now() - room.startedAt) / 1000);
-        const remaining = Math.max(0, room.gameMode.duration - elapsed);
-        const newExpiry = new Date();
-        newExpiry.setSeconds(newExpiry.getSeconds() + remaining);
-        timer.restart(newExpiry, true); // true = autoStart
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [room?.startedAt, room?.gameMode.duration]); // timer is intentionally excluded to prevent infinite loops
+  }, [room?.startedAt, room?.gameMode.duration]);
 
   // Generate deterministic seed for multiplayer questions
   // Combine room ID hash with score to ensure all players get same questions
@@ -151,10 +172,9 @@ export default function MultiplayerGame() {
         <div className="lg:col-span-2">
           <Card className="shadow-lg">
             <QuizStats
-              expiryTimestamp={defaultExpiry}
-              setRunning={() => {}}
+              expiryTimestamp={expiryTimestamp}
+              setRunning={handleTimerExpire}
               score={score}
-              timer={timer}
             />
             <CardContent className="p-0">
               <QuizPrompt

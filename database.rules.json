@@ -31,8 +31,7 @@
         ".validate": "newData.hasChildren(['hostUid', 'gameMode', 'status'])",
         "players": {
           "$playerId": {
-            ".write": "$playerId === auth.uid || ($playerId.beginsWith('guest_') && newData.child('uid').val() === $playerId) || root.child('rooms').child($roomId).child('hostUid').val() === auth.uid || root.child('rooms').child($roomId).child('hostUid').val() === $playerId",
-            ".validate": "newData.hasChildren(['displayName', 'ready'])"
+            ".write": "$playerId === auth.uid || ($playerId.beginsWith('guest_') && newData.child('uid').val() === $playerId) || root.child('rooms').child($roomId).child('hostUid').val() === auth.uid || root.child('rooms').child($roomId).child('hostUid').val() === $playerId"
           }
         },
         "gameState": {

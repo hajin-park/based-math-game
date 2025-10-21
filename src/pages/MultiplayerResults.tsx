@@ -44,12 +44,15 @@ export default function MultiplayerResults() {
 
       setRoom(updatedRoom);
 
-      // Increment winner's wins (only once)
-      if (updatedRoom.status === 'finished' && !hasIncrementedWinsRef.current) {
-        hasIncrementedWinsRef.current = true;
+      // Increment winner's wins (only once, and only by the winner themselves)
+      // This prevents duplicate increments when multiple clients are viewing the results
+      if (updatedRoom.status === 'finished' && !hasIncrementedWinsRef.current && user) {
         const sortedPlayers = Object.values(updatedRoom.players).sort((a, b) => b.score - a.score);
         const winner = sortedPlayers[0];
-        if (winner) {
+
+        // Only the winner increments their own wins
+        if (winner && winner.uid === user.uid) {
+          hasIncrementedWinsRef.current = true;
           incrementWins(roomId, winner.uid).catch((error) => {
             console.error('Failed to increment wins:', error);
           });
@@ -65,7 +68,7 @@ export default function MultiplayerResults() {
     });
 
     return () => unsubscribe();
-  }, [roomId, subscribeToRoom, navigate, toast, incrementWins]);
+  }, [roomId, subscribeToRoom, navigate, toast, incrementWins, user]);
 
   const handleReturnToLobby = async () => {
     if (!roomId) return;
