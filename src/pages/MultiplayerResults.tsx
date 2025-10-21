@@ -1,26 +1,67 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useRoom, Room } from '@/hooks/useRoom';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/components/ui/use-toast';
 import { Trophy } from 'lucide-react';
 
 export default function MultiplayerResults() {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
-  const { subscribeToRoom } = useRoom();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const { subscribeToRoom, resetRoom } = useRoom();
   const [room, setRoom] = useState<Room | null>(null);
+  const hasNavigatedRef = useRef(false);
 
   useEffect(() => {
     if (!roomId) return;
 
     const unsubscribe = subscribeToRoom(roomId, (updatedRoom) => {
+      // Handle room deletion (host disconnected)
+      if (!updatedRoom) {
+        // Prevent multiple navigations
+        if (hasNavigatedRef.current) return;
+        hasNavigatedRef.current = true;
+
+        // Navigate first, then show toast
+        navigate('/multiplayer', { replace: true });
+
+        // Show toast after navigation
+        setTimeout(() => {
+          toast({
+            title: 'Host Disconnected',
+            description: 'The host has left the game.',
+            variant: 'destructive',
+          });
+        }, 100);
+        return;
+      }
+
       setRoom(updatedRoom);
+
+      // If room status changed back to waiting, navigate to lobby
+      if (updatedRoom.status === 'waiting') {
+        navigate(`/multiplayer/lobby/${roomId}`);
+      }
     });
 
     return () => unsubscribe();
-  }, [roomId, subscribeToRoom]);
+  }, [roomId, subscribeToRoom, navigate, toast]);
+
+  const handleReturnToLobby = async () => {
+    if (!roomId) return;
+    try {
+      await resetRoom(roomId);
+      // Navigation will happen automatically via the useEffect when status changes to 'waiting'
+    } catch (error) {
+      console.error('Failed to reset room:', error);
+      alert('Failed to return to lobby. Please try again.');
+    }
+  };
 
   if (!room) {
     return (
@@ -32,6 +73,7 @@ export default function MultiplayerResults() {
 
   const sortedPlayers = Object.values(room.players).sort((a, b) => b.score - a.score);
   const winner = sortedPlayers[0];
+  const isHost = user?.uid === room.hostUid;
 
   return (
     <div className="container mx-auto p-4 flex items-center justify-center min-h-[80vh]">
@@ -75,13 +117,25 @@ export default function MultiplayerResults() {
             </div>
           </div>
         </CardContent>
-        <CardFooter className="flex gap-2 justify-center">
-          <Button onClick={() => navigate('/multiplayer')} variant="outline">
-            Back to Multiplayer
-          </Button>
-          <Button onClick={() => navigate('/')}>
-            Back to Home
-          </Button>
+        <CardFooter className="flex flex-col gap-3">
+          {isHost && (
+            <Button onClick={handleReturnToLobby} className="w-full" size="lg">
+              Return to Lobby (Play Again)
+            </Button>
+          )}
+          {!isHost && (
+            <p className="text-sm text-muted-foreground text-center">
+              Waiting for host to return to lobby...
+            </p>
+          )}
+          <div className="flex gap-2 justify-center w-full">
+            <Button onClick={() => navigate('/multiplayer')} variant="outline">
+              Leave Room
+            </Button>
+            <Button onClick={() => navigate('/')} variant="outline">
+              Back to Home
+            </Button>
+          </div>
         </CardFooter>
       </Card>
     </div>

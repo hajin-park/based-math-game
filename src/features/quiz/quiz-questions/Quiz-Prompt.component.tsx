@@ -21,27 +21,18 @@ const VALID_PATTERNS: { [key: string]: RegExp } = {
     hexadecimal: /^[0-9a-fx]*$/, // Allow 'x' for '0x' prefix
 };
 
-export default function QuizPrompt({ score, setScore, setting }) {
+export default function QuizPrompt({ score, setScore, setting, seed }) {
     const [question, setQuestion] = useState("");
     const [answer, setAnswer] = useState("");
     const [showSuccess, setShowSuccess] = useState(false);
-    const [comboCount, setComboCount] = useState(0);
     const inputRef = useRef<HTMLInputElement>(null);
-    const comboTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
-        setQuestion(generateQuestion(setting[0], setting[2], setting[3]));
+        // Generate question with optional seed for multiplayer determinism
+        setQuestion(generateQuestion(setting[0], setting[2], setting[3], seed));
         // Auto-focus input for better UX (especially mobile)
         inputRef.current?.focus();
-    }, [score, setting]);
-
-    // Reset combo counter when a new question is generated
-    useEffect(() => {
-        // Clear any pending combo timeout
-        if (comboTimeoutRef.current) {
-            clearTimeout(comboTimeoutRef.current);
-        }
-    }, [question]);
+    }, [score, setting, seed]);
 
     function handleOnChange(event: React.ChangeEvent<HTMLInputElement>) {
         const input = event.currentTarget.value.toLowerCase();
@@ -75,66 +66,74 @@ export default function QuizPrompt({ score, setScore, setting }) {
             // Show success animation
             setShowSuccess(true);
             setTimeout(() => setShowSuccess(false), 300);
-
-            // Update combo counter
-            setComboCount((prev) => prev + 1);
-
-            // Reset combo after 5 seconds of inactivity
-            if (comboTimeoutRef.current) {
-                clearTimeout(comboTimeoutRef.current);
-            }
-            comboTimeoutRef.current = setTimeout(() => {
-                setComboCount(0);
-            }, 5000);
         }
     }
 
     return (
-        <section className="grid sm:grid-rows-3 grid-rows-5 sm:grid-cols-2 grid-cols-1 relative">
-            <h1 className="row-start-1 col-start-1 sm:col-span-2 text-center font-bold">
-                Convert
-            </h1>
-            <p className="row-start-2 col-start-1 col-span-1 row-span-1 text-center">
-                {setting[0]}
-            </p>
-            <p className="row-start-3 col-start-1 col-span-1 row-span-1 text-center">
-                {question}
-            </p>
-            <p className="sm:row-start-2 row-start-4 sm:col-start-2 col-start-1 col-span-1 row-span-1 text-center">
-                {setting[1]}
-            </p>
-            <div className="sm:row-start-3 row-start-5 sm:col-start-2 col-start-1 col-span-1 row-span-1 text-center relative">
-                <Input
-                    ref={inputRef}
-                    onChange={(e) => handleOnChange(e)}
-                    type="text"
-                    value={answer}
-                    autoComplete="off"
-                    autoCorrect="off"
-                    spellCheck="false"
-                    className={cn(
-                        "transition-all duration-200",
-                        showSuccess && "ring-2 ring-green-500 bg-green-50 dark:bg-green-950"
-                    )}
-                    inputMode="text"
-                    pattern={VALID_PATTERNS[setting[1].toLowerCase()]?.source}
-                />
+        <section className="py-8 px-4 space-y-8">
+            {/* Header */}
+            <div className="text-center">
+                <h1 className="text-2xl font-bold text-muted-foreground mb-2">
+                    Convert
+                </h1>
+            </div>
 
-                {/* Success animation */}
-                {showSuccess && (
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                        <div className="text-2xl font-bold text-green-600 dark:text-green-400 animate-bounce">
-                            ✓
-                        </div>
+            {/* Question Display */}
+            <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-8">
+                {/* From Base */}
+                <div className="flex flex-col items-center gap-3 min-w-[200px]">
+                    <div className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                        {setting[0]}
                     </div>
-                )}
+                    <div className="text-3xl md:text-4xl font-bold font-mono bg-muted px-6 py-4 rounded-lg min-w-[180px] text-center">
+                        {question}
+                    </div>
+                </div>
 
-                {/* Combo counter - show at 3+ */}
-                {comboCount >= 3 && (
-                    <div className="absolute -top-8 right-0 text-sm font-bold text-orange-600 dark:text-orange-400 animate-pulse">
-                        🔥 {comboCount} combo!
+                {/* Arrow Indicator */}
+                <div className="text-4xl text-muted-foreground rotate-90 md:rotate-0">
+                    →
+                </div>
+
+                {/* To Base */}
+                <div className="flex flex-col items-center gap-3 min-w-[200px]">
+                    <div className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                        {setting[1]}
                     </div>
-                )}
+                    <div className="relative w-full max-w-[280px]">
+                        <Input
+                            ref={inputRef}
+                            onChange={(e) => handleOnChange(e)}
+                            type="text"
+                            value={answer}
+                            autoComplete="off"
+                            autoCorrect="off"
+                            spellCheck="false"
+                            placeholder={showSuccess ? "" : "Type your answer..."}
+                            className={cn(
+                                "text-lg md:text-xl font-bold font-mono text-center h-14 px-3 transition-all duration-200",
+                                showSuccess && "ring-2 ring-green-500 bg-green-50 dark:bg-green-950 scale-105"
+                            )}
+                            inputMode="text"
+                            pattern={VALID_PATTERNS[setting[1].toLowerCase()]?.source}
+                        />
+
+                        {/* Success animation */}
+                        {showSuccess && (
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                <div className="text-5xl font-bold text-green-600 dark:text-green-400 animate-bounce">
+                                    ✓
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {/* Helper Text */}
+            <div className="text-center text-sm text-muted-foreground">
+                <p>Type your answer and press Enter or continue typing</p>
+                <p className="text-xs mt-1">Press <kbd className="px-2 py-1 bg-muted rounded">Esc</kbd> to exit</p>
             </div>
         </section>
     );

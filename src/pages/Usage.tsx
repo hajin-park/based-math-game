@@ -239,7 +239,7 @@ export default function Usage() {
 
             <div className="bg-muted p-4 rounded-lg">
               <h3 className="font-semibold mb-2 text-sm">On-Screen Information</h3>
-              <div className="grid grid-cols-3 gap-3 text-xs">
+              <div className="grid grid-cols-2 gap-4 text-xs">
                 <div className="text-center">
                   <div className="font-mono text-2xl font-bold">45s</div>
                   <div className="text-muted-foreground">Time Remaining</div>
@@ -247,10 +247,6 @@ export default function Usage() {
                 <div className="text-center">
                   <div className="font-mono text-2xl font-bold text-green-600 dark:text-green-400">12</div>
                   <div className="text-muted-foreground">Current Score</div>
-                </div>
-                <div className="text-center">
-                  <div className="font-mono text-2xl font-bold text-orange-600 dark:text-orange-400">×3</div>
-                  <div className="text-muted-foreground">Combo Multiplier</div>
                 </div>
               </div>
             </div>

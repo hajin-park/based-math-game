@@ -1,21 +1,35 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { OFFICIAL_GAME_MODES, getDifficultyColor, GameMode } from '@/types/gameMode';
+import { PlaygroundSettings } from '@features/quiz';
+import { QuestionSetting } from '@/contexts/GameContexts';
 
 interface GameModeSelectProps {
   onSelectMode: (mode: GameMode) => void;
 }
 
 export default function GameModeSelect({ onSelectMode }: GameModeSelectProps) {
-  const navigate = useNavigate();
   const [selectedTab, setSelectedTab] = useState('official');
 
   const handleSelectMode = (mode: GameMode) => {
     onSelectMode(mode);
+  };
+
+  const handleCustomPlayground = (settings: { questions: QuestionSetting[]; duration: number }) => {
+    // Create a custom game mode from the playground settings
+    const customMode: GameMode = {
+      id: 'custom-playground',
+      name: 'Custom Playground',
+      description: 'Your custom quiz settings',
+      isOfficial: false,
+      questions: settings.questions,
+      duration: settings.duration,
+      difficulty: 'Custom',
+    };
+    onSelectMode(customMode);
   };
 
   return (
@@ -62,16 +76,12 @@ export default function GameModeSelect({ onSelectMode }: GameModeSelectProps) {
 
         <TabsContent value="custom">
           <Card>
-            <CardHeader>
-              <CardTitle>Custom Playground</CardTitle>
-              <CardDescription>
-                Create your own quiz with custom settings
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button onClick={() => navigate('/settings')} className="w-full">
-                Go to Custom Settings
-              </Button>
+            <CardContent className="pt-6">
+              <PlaygroundSettings
+                onStartQuiz={handleCustomPlayground}
+                buttonText="Start Custom Quiz"
+                showHeader={true}
+              />
             </CardContent>
           </Card>
         </TabsContent>

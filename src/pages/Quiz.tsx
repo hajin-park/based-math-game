@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext, useRef } from "react";
+import { useState, useEffect, useContext, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { QuizPrompt, QuizStats } from "@features/quiz";
@@ -30,8 +30,12 @@ export default function Quiz() {
     // Track game start time for duration calculation
     const startTimeRef = useRef(Date.now());
 
-    const time = new Date();
-    time.setSeconds(time.getSeconds() + settings.duration);
+    // Create expiry timestamp only once to prevent timer reset
+    const expiryTimestamp = useMemo(() => {
+        const time = new Date();
+        time.setSeconds(time.getSeconds() + settings.duration);
+        return time;
+    }, [settings.duration]);
 
     console.log(settings);
 
@@ -72,19 +76,21 @@ export default function Quiz() {
     });
 
     return (
-        <Card className="mx-auto w-5/6 md:w-2/3 lg:w-3/5 bg-gray-50">
-            <QuizStats
-                expiryTimestamp={time}
-                setRunning={setRunning}
-                score={score}
-            />
-            <CardContent>
-                <QuizPrompt
+        <div className="container mx-auto px-4 py-8 min-h-screen flex items-center justify-center">
+            <Card className="w-full max-w-4xl shadow-lg">
+                <QuizStats
+                    expiryTimestamp={expiryTimestamp}
+                    setRunning={setRunning}
                     score={score}
-                    setScore={setScore}
-                    setting={randomSetting}
                 />
-            </CardContent>
-        </Card>
+                <CardContent className="p-0">
+                    <QuizPrompt
+                        score={score}
+                        setScore={setScore}
+                        setting={randomSetting}
+                    />
+                </CardContent>
+            </Card>
+        </div>
     );
 }

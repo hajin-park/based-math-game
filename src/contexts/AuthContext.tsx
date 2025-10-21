@@ -71,7 +71,7 @@ function getOrCreateGuestUser(): GuestUser {
       if (parsed.uid && parsed.isGuest) {
         return parsed;
       }
-    } catch (e) {
+    } catch {
       // Invalid stored data, create new
     }
   }

@@ -4,9 +4,10 @@ export interface GameMode {
   id: string;
   name: string;
   description: string;
-  difficulty: 'Easy' | 'Medium' | 'Hard' | 'Expert';
+  difficulty: 'Easy' | 'Medium' | 'Hard' | 'Expert' | 'Custom';
   duration: number; // in seconds
   questions: QuestionSetting[];
+  isOfficial?: boolean;
   icon?: string;
   color?: string;
 }
@@ -22,6 +23,7 @@ export const OFFICIAL_GAME_MODES: GameMode[] = [
       ['Binary', 'Decimal', 0, 15],
       ['Decimal', 'Binary', 0, 15],
     ],
+    isOfficial: true,
     color: 'bg-blue-500',
   },
   {
@@ -34,6 +36,7 @@ export const OFFICIAL_GAME_MODES: GameMode[] = [
       ['Hexadecimal', 'Decimal', 0, 255],
       ['Decimal', 'Hexadecimal', 0, 255],
     ],
+    isOfficial: true,
     color: 'bg-purple-500',
   },
   {
@@ -46,6 +49,7 @@ export const OFFICIAL_GAME_MODES: GameMode[] = [
       ['Octal', 'Decimal', 0, 127],
       ['Decimal', 'Octal', 0, 127],
     ],
+    isOfficial: true,
     color: 'bg-green-500',
   },
   {
@@ -62,6 +66,7 @@ export const OFFICIAL_GAME_MODES: GameMode[] = [
       ['Octal', 'Decimal', 0, 255],
       ['Decimal', 'Octal', 0, 255],
     ],
+    isOfficial: true,
     color: 'bg-orange-500',
   },
   {
@@ -76,6 +81,7 @@ export const OFFICIAL_GAME_MODES: GameMode[] = [
       ['Hexadecimal', 'Decimal', 0, 31],
       ['Decimal', 'Hexadecimal', 0, 31],
     ],
+    isOfficial: true,
     color: 'bg-red-500',
   },
   {
@@ -94,6 +100,7 @@ export const OFFICIAL_GAME_MODES: GameMode[] = [
       ['Binary', 'Hexadecimal', 0, 65535],
       ['Hexadecimal', 'Binary', 0, 65535],
     ],
+    isOfficial: true,
     color: 'bg-indigo-500',
   },
 ];
@@ -112,6 +119,8 @@ export function getDifficultyColor(difficulty: GameMode['difficulty']): string {
       return 'text-orange-600';
     case 'Expert':
       return 'text-red-600';
+    case 'Custom':
+      return 'text-blue-600';
     default:
       return 'text-gray-600';
   }

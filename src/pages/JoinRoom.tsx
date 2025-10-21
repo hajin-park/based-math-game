@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,9 +8,18 @@ import { useRoom } from '@/hooks/useRoom';
 
 export default function JoinRoom() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { joinRoom, loading } = useRoom();
   const [roomId, setRoomId] = useState('');
   const [error, setError] = useState('');
+
+  // Pre-fill room ID from URL parameter if present
+  useEffect(() => {
+    const codeFromUrl = searchParams.get('code');
+    if (codeFromUrl) {
+      setRoomId(codeFromUrl);
+    }
+  }, [searchParams]);
 
   const handleJoinRoom = async () => {
     if (!roomId.trim()) {

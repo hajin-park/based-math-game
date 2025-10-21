@@ -63,12 +63,12 @@ src/
 ### Routing
 ```typescript
 / → Home (hero + game mode cards)
-/singleplayer → SingleplayerMode (official modes + playground)
-/settings → Settings (custom playground)
+/singleplayer → SingleplayerMode (official modes + inline custom playground)
+/settings → Settings (DEPRECATED - redirects to /singleplayer)
 /quiz → Quiz (game page)
 /results → Results (score display)
 /multiplayer → MultiplayerHome (create/join room)
-/multiplayer/create → CreateRoom
+/multiplayer/create → CreateRoom (official modes + inline custom playground)
 /multiplayer/join → JoinRoom
 /multiplayer/lobby/:roomId → RoomLobby
 /multiplayer/game/:roomId → MultiplayerGame
@@ -407,6 +407,52 @@ validateAnswer(expected: string, actual: string, toBase: string): boolean
 - **Auto-validation** on keystroke (no submit button)
 - **No incorrect attempts tracked** (pure speed metric)
 - **No time bonus** (score = correct answers within time limit)
+- **No combo system** (removed as it doesn't make sense with auto-validation)
+
+### Custom Playground Architecture
+The Custom Playground feature allows users to create custom quiz settings with specific base conversions, number ranges, and durations.
+
+**Key Components:**
+- `Playground-Settings.component.tsx` - Reusable form component for custom settings
+  - **Improved UI/UX** with step-by-step layout and better visual organization
+  - Two-step process: (1) Add question types, (2) Review & configure
+  - Numbered steps with clear visual hierarchy
+  - Responsive grid layout for base selectors and range inputs
+  - Enhanced form validation feedback
+  - Mobile-optimized design
+  - Accepts `onStartQuiz` callback to handle quiz start
+  - Accepts `initialSettings` for pre-populating form
+  - Accepts `buttonText` to customize the submit button
+  - Accepts `showHeader` to optionally display header text
+  - Manages form state for base selection, range inputs, and duration
+  - Validates settings and prevents duplicate question configurations
+  - Returns `{ questions: QuestionSetting[], duration: number }` on submit
+
+- `Chosen-Settings-Table.component.tsx` - Enhanced settings display
+  - Badge-based display for base conversions with arrow indicator
+  - Improved delete button with icon-only design
+  - Empty state message when no settings added
+  - Hover effects for better interactivity
+  - Compact and readable layout
+
+**Integration Points:**
+1. **Singleplayer Mode** (`Game-Mode-Select.component.tsx`)
+   - Inline playground in "Custom Playground" tab
+   - Creates custom GameMode object on submit
+   - Immediately starts quiz with custom settings
+
+2. **Multiplayer Mode** (`CreateRoom.tsx`)
+   - Inline playground in "Custom Playground" tab
+   - Creates custom GameMode object on submit
+   - Creates room with custom settings shared to all players
+
+**User Flows:**
+- **Singleplayer:** Home → Singleplayer → Custom Playground tab → Configure inline → Start Quiz
+- **Multiplayer:** Home → Multiplayer → Create Room → Custom Playground tab → Configure inline → Create Room
+
+**Deprecated:**
+- `/settings` route now redirects to `/singleplayer` for backward compatibility
+- Settings page functionality fully integrated into inline playground
 
 ---
 
@@ -420,7 +466,10 @@ joinRoom(roomId: string): Promise<void>
 leaveRoom(roomId: string): Promise<void>
 setPlayerReady(roomId: string, ready: boolean): Promise<void>
 startGame(roomId: string): Promise<void>
-subscribeToRoom(roomId: string, callback: (room: Room) => void): () => void
+updatePlayerScore(roomId: string, score: number): Promise<void>
+finishGame(roomId: string): Promise<void>
+resetRoom(roomId: string): Promise<void>
+subscribeToRoom(roomId: string, callback: (room: Room | null) => void): () => void
 ```
 
 **Room Structure:**
@@ -438,17 +487,35 @@ interface Room {
 interface RoomPlayer {
   uid: string;
   displayName: string;
-  ready: boolean;
+  ready: boolean;            // Host is always ready (set to true on creation)
   score: number;
   finished: boolean;
 }
 ```
 
+**Ready State Logic:**
+- **Host:** Automatically marked as ready when creating room (doesn't need ready button)
+- **Non-host players:** Must manually mark themselves as ready
+- **Start game validation:** Only checks if all non-host players are ready
+- **UI display:** Host shows "Hosting" badge instead of ready status
+- **Ready count:** Displays "X/Y players ready" where Y excludes the host
+
 **Room Lifecycle:**
-1. Host creates room → status: "waiting"
-2. Players join → added to players object
-3. All players ready → host starts game → status: "playing"
-4. Game ends → status: "finished"
+1. Host creates room → status: "waiting" (host automatically marked as ready)
+2. Players join via room code or invite link → added to players object
+3. Non-host players mark themselves as ready
+4. Host starts game when all non-host players are ready → status: "playing"
+5. Game ends → status: "finished", navigate to results page
+6. Host clicks "Return to Lobby" → resets room to "waiting", all players return to lobby
+7. Repeat from step 3 for another game (or players leave room)
+
+**Invite Link Feature:**
+- **Copy Room Code:** Copies just the room ID to clipboard with toast notification
+- **Copy Invite Link:** Copies full URL with pre-filled room code
+  - Format: `https://domain.com/multiplayer/join?code=ROOMCODE`
+  - When opened, automatically fills the room code in join page
+  - Toast notifications confirm successful copy
+- Both options available in room lobby with visual feedback
 
 **Guest User Support:**
 - Both guest and authenticated users can create rooms
@@ -459,8 +526,32 @@ interface RoomPlayer {
 ### Real-time Synchronization
 - Room state synced via Firebase Realtime Database
 - Player scores updated in real-time during game
-- Timer synchronized across all clients
-- Disconnect handling with presence system
+- Timer synchronized across all clients using room `startedAt` timestamp
+- **Deterministic question sequence**: All players see the same questions in the same order
+  - Questions selected using `score % questions.length` for fairness
+  - Initial question (score=0) is always `questions[0]`
+  - Questions stored in `useRef` to prevent infinite re-renders
+  - **Seeded random generation**: Uses room ID + score as seed for `generateQuestion()`
+    - Same seed produces same random number for all players
+    - Hash of room ID combined with score ensures deterministic questions
+    - Singleplayer uses `Math.random()` (no seed) for variety
+- **Host disconnect handling**:
+  - Firebase `onDisconnect()` automatically removes player when they disconnect
+  - When host leaves:
+    - If other players exist: Transfer host to first remaining player
+    - If game is in progress: Reset to lobby (status='waiting', reset scores)
+    - If no players left: Delete the room
+  - Players redirected to lobby when host leaves mid-game
+  - Toast notification (not blocking alert) notifies players that host has left
+  - Navigation happens immediately with `replace: true` to prevent back navigation
+  - `hasNavigatedRef` prevents multiple navigation attempts from repeated Firebase callbacks
+  - Graceful cleanup prevents orphaned rooms
+- **Room reset after game**:
+  - Host can click "Return to Lobby" on results page
+  - `resetRoom()` function resets all player scores, finished status, and ready states
+  - Room status changes back to "waiting", `startedAt` is removed
+  - All players automatically navigate back to lobby when status changes
+  - Non-host players see "Waiting for host to return to lobby..." message
 
 ---
 
@@ -587,13 +678,31 @@ button, card, form, input, label, select, scroll-area, separator, toast, dialog,
 
 ### Custom Components
 **Quiz:**
-- `Quiz-Prompt.component.tsx` - Question display + answer input with success animations
-- `Quiz-Stats.component.tsx` - Timer + score + combo counter
+- `Quiz-Prompt.component.tsx` - Enhanced question display with improved layout
+  - Large, centered question display with clear base labels
+  - Prominent answer input field with placeholder text
+  - Success animations with checkmark and scale effect
+  - Responsive layout (vertical on mobile, horizontal on desktop)
+  - Arrow indicator between from/to bases
+  - Helper text with keyboard shortcuts
+  - Auto-focus on input for better UX
+
+- `Quiz-Stats.component.tsx` - Enhanced timer and score display
+  - MM:SS formatted countdown timer (not raw seconds)
+  - Visual feedback for low time (orange < 10s, red pulsing < 5s)
+  - Icon-based display with Clock and Trophy icons
+  - Badge-styled score display
+  - Tabular numbers for consistent width
+  - Border separator from quiz content
+  - Accepts optional `timer` prop for multiplayer (uses internal timer for singleplayer)
+  - Real-time updates every second
+
 - `Base-Select.component.tsx` - Base dropdown with form integration
 - `Range-Input.component.tsx` - Number range inputs
 - `Duration-Select.component.tsx` - Duration dropdown
 - `Chosen-Settings-Table.component.tsx` - Settings list with delete
-- `Game-Mode-Select.component.tsx` - Tabs for official/custom modes
+- `Game-Mode-Select.component.tsx` - Tabs for official/custom modes with inline playground
+- `Playground-Settings.component.tsx` - Reusable custom playground settings form
 
 **UI:**
 - `Navigation-Bar.tsx` - Responsive nav with profile dropdown
@@ -623,15 +732,17 @@ button, card, form, input, label, select, scroll-area, separator, toast, dialog,
 - `Usage.tsx` - How to Play guide
   - Comprehensive guide covering all game features
   - Game Basics: Explanation of the 4 number bases with visual examples
-  - Singleplayer Mode: Official game modes and Playground customization
-  - Multiplayer Mode: Creating/joining rooms and real-time competition
-  - During the Quiz: Answer mechanics, scoring system, and on-screen info
+  - Singleplayer Mode: Official game modes and inline Playground customization
+  - Multiplayer Mode: Creating/joining rooms with custom settings and real-time competition
+  - During the Quiz: Answer mechanics, scoring system, and on-screen info (MM:SS timer + score with visual feedback)
   - Progress Tracking: Stats page and leaderboards explanation
   - Quick Tips: 6 actionable tips for improvement
   - Call-to-action section with links to Tutorials, Singleplayer, and Multiplayer
   - Minimal design with informative visual elements (color-coded bases, example displays)
   - Guest user notice about stat limitations
+  - No combo multiplier display (removed as it doesn't align with auto-validation)
 - `Tutorials.tsx` - Base conversion tutorials
+- `Settings.tsx` - DEPRECATED redirect page (redirects to /singleplayer for backward compatibility)
   - 4 tabs: Binary (Base 2), Octal (Base 8), Decimal (Base 10), Hexadecimal (Base 16)
   - Each tab has consistent minimal structure:
     - "How It Works" section with brief explanation and one example
@@ -868,6 +979,12 @@ resolve: {
 - **Pattern validation:** `pattern="[0-9a-fA-F]*"` for hex inputs
 - **Touch targets:** Minimum 44x44px for buttons
 
+### Dark Mode Support
+- **Theme system:** Class-based dark mode using Tailwind CSS
+- **Card backgrounds:** Use Tailwind's `bg-card` instead of hardcoded `bg-gray-50` for proper dark mode support
+- **Quiz and Settings pages:** Removed hardcoded background colors to respect theme settings
+- **Automatic theme detection:** Respects system preference on first load
+
 ### Accessibility
 - **ARIA labels:** All interactive elements
 - **Keyboard navigation:** Tab order, focus management
@@ -1008,8 +1125,12 @@ try {
 
 **Timer doesn't work:**
 - Check `react-timer-hook` is installed
-- Verify expiry timestamp calculation
+- Verify expiry timestamp calculation with `useMemo` to prevent recreation
 - Check useEffect cleanup
+- Timer displays in MM:SS format calculated from `timer.seconds + timer.minutes * 60 + timer.hours * 3600`
+- Visual feedback: orange text when < 10s, red pulsing when < 5s
+- **Singleplayer**: Use `useMemo` for `expiryTimestamp` to prevent timer reset on every render, set `autoStart: true` in `useTimer`
+- **Multiplayer**: Use `timer.restart()` method when game starts to sync with room `startedAt` timestamp
 
 **Multiplayer sync issues:**
 - Verify Firebase Realtime Database rules
