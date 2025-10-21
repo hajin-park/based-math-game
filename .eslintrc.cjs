@@ -12,7 +12,19 @@ module.exports = {
   rules: {
     'react-refresh/only-export-components': [
       'warn',
-      { allowConstantExport: true },
+      {
+        allowConstantExport: true,
+        allowExportNames: ['useAuth', 'useTheme']
+      },
     ],
   },
+  overrides: [
+    {
+      // Disable for shadcn/ui components and context files
+      files: ['src/components/ui/**/*.tsx', 'src/contexts/**/*.tsx'],
+      rules: {
+        'react-refresh/only-export-components': 'off',
+      },
+    },
+  ],
 }

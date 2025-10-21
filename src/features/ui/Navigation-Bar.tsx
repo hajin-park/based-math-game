@@ -4,6 +4,7 @@ import { Dialog } from "@headlessui/react";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import ProfileDropdown from "@/components/ProfileDropdown";
 
 export default function NavigationBar() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -19,7 +20,7 @@ export default function NavigationBar() {
     ];
 
     return (
-        <nav className="bg-white border-b">
+        <nav className="bg-white dark:bg-gray-950 border-b dark:border-gray-800">
             <div
                 className="mx-auto flex items-center justify-between py-4 px-6 lg:px-8"
                 aria-label="Global"
@@ -34,7 +35,7 @@ export default function NavigationBar() {
                 <div className="flex lg:hidden">
                     <button
                         type="button"
-                        className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-gray-700"
+                        className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-gray-700 dark:text-gray-300"
                         onClick={() => setMobileMenuOpen(true)}
                     >
                         <span className="sr-only">Open main menu</span>
@@ -50,7 +51,7 @@ export default function NavigationBar() {
                                 `text-sm font-semibold leading-6 transition-colors ${
                                     isActive
                                         ? "text-primary"
-                                        : "text-gray-900 hover:text-primary"
+                                        : "text-gray-900 hover:text-primary dark:text-gray-100 dark:hover:text-primary"
                                 }`
                             }
                         >
@@ -62,9 +63,7 @@ export default function NavigationBar() {
                             <NavLink to="/signup">Sign Up</NavLink>
                         </Button>
                     ) : (
-                        <Button asChild size="sm" variant="outline">
-                            <NavLink to="/profile">Profile</NavLink>
-                        </Button>
+                        <ProfileDropdown />
                     )}
                 </div>
             </div>
@@ -75,7 +74,7 @@ export default function NavigationBar() {
                 onClose={setMobileMenuOpen}
             >
                 <div className="fixed inset-0 z-10" />
-                <Dialog.Panel className="fixed inset-y-0 right-0 z-10 flex w-full flex-col justify-between overflow-y-auto bg-white sm:max-w-sm sm:ring-1 sm:ring-gray-900/10">
+                <Dialog.Panel className="fixed inset-y-0 right-0 z-10 flex w-full flex-col justify-between overflow-y-auto bg-white dark:bg-gray-950 sm:max-w-sm sm:ring-1 sm:ring-gray-900/10 dark:sm:ring-gray-800">
                     <div className="p-6">
                         <div className="flex items-center justify-between">
                             <NavLink to="/" className="-m-1.5 p-1.5 font-bold">
@@ -85,7 +84,7 @@ export default function NavigationBar() {
                             </NavLink>
                             <button
                                 type="button"
-                                className="-m-2.5 rounded-md p-2.5 text-gray-700"
+                                className="-m-2.5 rounded-md p-2.5 text-gray-700 dark:text-gray-300"
                                 onClick={() => setMobileMenuOpen(false)}
                             >
                                 <span className="sr-only">Close menu</span>
@@ -101,7 +100,7 @@ export default function NavigationBar() {
                                     <NavLink
                                         key={item.name}
                                         to={item.href}
-                                        className="block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
+                                        className="block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800"
                                         onClick={() => setMobileMenuOpen(false)}
                                     >
                                         {item.name}

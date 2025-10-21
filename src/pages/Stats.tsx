@@ -1,9 +1,14 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { useGameHistory, TimeRange } from '@/hooks/useGameHistory';
+import { useAuth } from '@/contexts/AuthContext';
 import { OFFICIAL_GAME_MODES } from '@/types/gameMode';
 
 export default function Stats() {
+  const navigate = useNavigate();
+  const { isGuest } = useAuth();
   const { history, loading, fetchHistory, getStatsForTimeRange, getScoresByGameMode } = useGameHistory();
   const [timeRange, setTimeRange] = useState<TimeRange>('all');
 
@@ -23,6 +28,35 @@ export default function Stats() {
 
   return (
     <div className="container mx-auto p-4 space-y-4">
+      {/* Guest user notice */}
+      {isGuest && (
+        <Card className="border-yellow-500 bg-yellow-50 dark:bg-yellow-950">
+          <CardHeader>
+            <CardTitle className="text-yellow-800 dark:text-yellow-200">Guest Account</CardTitle>
+            <CardDescription className="text-yellow-700 dark:text-yellow-300">
+              You're currently playing as a guest. Your stats are being tracked, but they won't be saved permanently or count towards the global leaderboard.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Button
+                onClick={() => navigate('/signup')}
+                className="bg-yellow-600 hover:bg-yellow-700 text-white"
+              >
+                Sign Up to Save Stats
+              </Button>
+              <Button
+                onClick={() => navigate('/login')}
+                variant="outline"
+                className="border-yellow-600 text-yellow-700 hover:bg-yellow-100 dark:text-yellow-300 dark:hover:bg-yellow-900"
+              >
+                Log In
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle>Your Statistics</CardTitle>

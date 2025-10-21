@@ -19,7 +19,7 @@ export interface UserStats {
 }
 
 export function useStats() {
-  const { user } = useAuth();
+  const { user, isGuest } = useAuth();
 
   const saveGameResult = useCallback(
     async (result: GameResult) => {
@@ -66,8 +66,9 @@ export function useStats() {
           };
         });
 
-        // Update leaderboard if game mode is specified
-        if (result.gameModeId) {
+        // Update leaderboard ONLY if user is NOT a guest and game mode is specified
+        // Guest users can track stats but won't appear on global leaderboard
+        if (result.gameModeId && !isGuest) {
           const leaderboardRef = ref(
             database,
             `leaderboards/${result.gameModeId}/${user.uid}`
@@ -77,9 +78,10 @@ export function useStats() {
 
           if (result.score > currentBestScore) {
             await set(leaderboardRef, {
-              displayName: user.displayName || ('isGuest' in user && user.isGuest ? 'Guest' : 'User'),
+              displayName: user.displayName || 'User',
               score: result.score,
               timestamp,
+              isGuest: false, // Explicitly mark as not a guest for validation
             });
           }
         }
@@ -88,7 +90,7 @@ export function useStats() {
         throw error;
       }
     },
-    [user]
+    [user, isGuest]
   );
 
   const getUserStats = useCallback(async (): Promise<UserStats | null> => {

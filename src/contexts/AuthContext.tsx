@@ -8,8 +8,9 @@ import {
   onAuthStateChanged,
   signOut as firebaseSignOut,
   updateProfile,
+  deleteUser,
 } from 'firebase/auth';
-import { ref, onValue, set, onDisconnect, serverTimestamp } from 'firebase/database';
+import { ref, onValue, set, onDisconnect, serverTimestamp, remove } from 'firebase/database';
 import { auth, database } from '@/firebase/config';
 
 // Guest user interface for database-only guests
@@ -33,6 +34,7 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
   updateDisplayName: (displayName: string) => Promise<void>;
+  deleteAccount: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -100,29 +102,43 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     const unsubscribe = onValue(connectedRef, (snapshot) => {
       if (snapshot.val() === true) {
-        // Store user info in database
-        set(userRef, {
+        // Store user info in database with proper structure for guest users
+        const userData = {
           uid: user.uid,
           displayName: user.displayName || (isGuestUser(user) ? 'Guest' : 'User'),
           isGuest: isGuestUser(user),
           lastSeen: serverTimestamp(),
+        };
+
+        set(userRef, userData).catch((error) => {
+          console.error('Error setting user data:', error);
         });
 
-        // Set user as online
-        set(presenceRef, {
+        // Set user as online with uid for security rules validation
+        const presenceData = {
+          uid: user.uid,
           online: true,
           lastSeen: serverTimestamp(),
+        };
+
+        set(presenceRef, presenceData).catch((error) => {
+          console.error('Error setting presence:', error);
         });
 
         // Set user as offline when disconnected
         onDisconnect(presenceRef).set({
+          uid: user.uid,
           online: false,
           lastSeen: serverTimestamp(),
+        }).catch((error) => {
+          console.error('Error setting onDisconnect for presence:', error);
         });
 
         // For guest users, clean up their data on disconnect
         if (isGuestUser(user)) {
-          onDisconnect(userRef).remove();
+          onDisconnect(userRef).remove().catch((error) => {
+            console.error('Error setting onDisconnect for user removal:', error);
+          });
         }
       }
     });
@@ -247,6 +263,40 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  const deleteAccount = async () => {
+    if (!user) {
+      throw new Error('Must be signed in to delete account');
+    }
+
+    try {
+      if (isGuestUser(user)) {
+        // Guest users can't delete accounts (they're temporary)
+        throw new Error('Guest accounts cannot be deleted');
+      }
+
+      // Delete user data from database
+      const userRef = ref(database, `users/${user.uid}`);
+      const presenceRef = ref(database, `presence/${user.uid}`);
+
+      await remove(userRef);
+      await remove(presenceRef);
+
+      // Delete Firebase auth user
+      if (auth.currentUser) {
+        await deleteUser(auth.currentUser);
+      }
+
+      // Clear state and create new guest user
+      localStorage.removeItem('guestUser');
+      const guestUser = getOrCreateGuestUser();
+      setUser(guestUser);
+      setIsGuest(true);
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      throw error;
+    }
+  };
+
   const value: AuthContextType = {
     user,
     loading,
@@ -257,6 +307,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     signInWithGoogle,
     signOut,
     updateDisplayName,
+    deleteAccount,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

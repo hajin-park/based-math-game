@@ -2,12 +2,13 @@
   "rules": {
     "users": {
       "$uid": {
-        ".read": "$uid === auth.uid",
-        ".write": "$uid === auth.uid",
+        ".read": "$uid === auth.uid || $uid.beginsWith('guest_')",
+        ".write": "$uid === auth.uid || ($uid.beginsWith('guest_') && newData.child('uid').val() === $uid && newData.child('isGuest').val() === true)",
         "stats": {
           ".validate": "newData.hasChildren(['gamesPlayed', 'totalScore'])"
         },
         "gameHistory": {
+          ".indexOn": ["timestamp"],
           "$gameId": {
             ".validate": "newData.hasChildren(['score', 'timestamp']) && newData.child('score').isNumber() && newData.child('timestamp').isNumber()"
           }
@@ -18,24 +19,24 @@
       "$gameModeId": {
         ".read": true,
         "$uid": {
-          ".write": "$uid === auth.uid",
-          ".validate": "newData.hasChildren(['displayName', 'score', 'timestamp']) && newData.child('score').isNumber()"
+          ".write": "($uid === auth.uid && !$uid.beginsWith('guest_')) || ($uid.beginsWith('guest_') && newData.child('isGuest').val() !== true)",
+          ".validate": "newData.hasChildren(['displayName', 'score', 'timestamp']) && newData.child('score').isNumber() && (!newData.hasChild('isGuest') || newData.child('isGuest').val() === false)"
         }
       }
     },
     "rooms": {
-      ".read": "auth != null",
+      ".read": "true",
       "$roomId": {
-        ".write": "auth != null && (!data.exists() || data.child('createdBy').val() === auth.uid || data.child('players').child(auth.uid).exists())",
-        ".validate": "newData.hasChildren(['createdBy', 'settings', 'status'])",
+        ".write": "!data.exists() || data.child('hostUid').val() === auth.uid || data.child('hostUid').val().beginsWith('guest_') || (auth != null && data.child('players').child(auth.uid).exists()) || data.child('players').hasChild(newData.child('hostUid').val())",
+        ".validate": "newData.hasChildren(['hostUid', 'gameMode', 'status'])",
         "players": {
           "$playerId": {
-            ".write": "$playerId === auth.uid || root.child('rooms').child($roomId).child('createdBy').val() === auth.uid",
+            ".write": "$playerId === auth.uid || ($playerId.beginsWith('guest_') && newData.child('uid').val() === $playerId) || root.child('rooms').child($roomId).child('hostUid').val() === auth.uid || root.child('rooms').child($roomId).child('hostUid').val() === $playerId",
             ".validate": "newData.hasChildren(['displayName', 'ready'])"
           }
         },
         "gameState": {
-          ".write": "root.child('rooms').child($roomId).child('createdBy').val() === auth.uid"
+          ".write": "root.child('rooms').child($roomId).child('hostUid').val() === auth.uid || root.child('rooms').child($roomId).child('hostUid').val().beginsWith('guest_')"
         }
       }
     },
@@ -46,7 +47,7 @@
     "presence": {
       "$uid": {
         ".read": true,
-        ".write": "$uid === auth.uid"
+        ".write": "$uid === auth.uid || ($uid.beginsWith('guest_') && newData.child('uid').val() === $uid)"
       }
     }
   }

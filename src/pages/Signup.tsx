@@ -50,7 +50,7 @@ export default function Signup() {
     <div className="container mx-auto p-4 flex items-center justify-center min-h-[80vh]">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>{isGuest ? 'Upgrade Account' : 'Create Account'}</CardTitle>
+          <CardTitle>{isGuest ? 'Create Account' : 'Create Account'}</CardTitle>
           <CardDescription>
             {isGuest
               ? 'Convert your guest account to save your progress'
@@ -106,7 +106,7 @@ export default function Signup() {
             </div>
 
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Creating account...' : isGuest ? 'Upgrade Account' : 'Create Account'}
+              {loading ? 'Creating account...' : isGuest ? 'Create Account' : 'Create Account'}
             </Button>
 
             <div className="relative">

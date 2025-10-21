@@ -29,15 +29,24 @@ export default function Leaderboard() {
       const data = snapshot.val();
 
       if (data) {
-        const entries: LeaderboardEntry[] = Object.entries(data).map(([uid, value]: [string, unknown]) => {
-          const leaderboardData = value as Record<string, unknown>;
-          return {
-            uid,
-            displayName: leaderboardData.displayName as string,
-            score: leaderboardData.score as number,
-            timestamp: leaderboardData.timestamp as number,
-          };
-        });
+        const entries: LeaderboardEntry[] = Object.entries(data)
+          .filter(([uid, value]) => {
+            // Filter out guest users (UIDs starting with 'guest_')
+            // and entries marked as guest
+            const leaderboardData = value as Record<string, unknown>;
+            const isGuestUid = uid.startsWith('guest_');
+            const isGuestMarked = leaderboardData.isGuest === true;
+            return !isGuestUid && !isGuestMarked;
+          })
+          .map(([uid, value]: [string, unknown]) => {
+            const leaderboardData = value as Record<string, unknown>;
+            return {
+              uid,
+              displayName: leaderboardData.displayName as string,
+              score: leaderboardData.score as number,
+              timestamp: leaderboardData.timestamp as number,
+            };
+          });
 
         // Sort by score descending and take top 50
         entries.sort((a, b) => b.score - a.score);

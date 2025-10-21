@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { Layout } from "./utils/Layout";
 import { AuthProvider } from "./contexts/AuthContext";
+import { ThemeProvider } from "./contexts/ThemeContext";
 import ErrorBoundary from "./components/ErrorBoundary";
 import Error from "./pages/Error";
 import Home from "./pages/Home";
@@ -14,7 +15,9 @@ import Quiz from "./pages/Quiz";
 import Results from "./pages/Results";
 import Leaderboard from "./pages/Leaderboard";
 import Stats from "./pages/Stats";
-import Profile from "./pages/Profile";
+import ProfileLayout from "./pages/profile/ProfileLayout";
+import ProfileOverview from "./pages/profile/ProfileOverview";
+import ProfileSettings from "./pages/profile/ProfileSettings";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import MultiplayerHome from "./pages/MultiplayerHome";
@@ -61,7 +64,17 @@ const router = createBrowserRouter([
             },
             {
                 path: "/profile",
-                element: <Profile />,
+                element: <ProfileLayout />,
+                children: [
+                    {
+                        path: "",
+                        element: <ProfileOverview />,
+                    },
+                    {
+                        path: "settings",
+                        element: <ProfileSettings />,
+                    },
+                ],
             },
             {
                 path: "/login",
@@ -110,9 +123,11 @@ const router = createBrowserRouter([
 ReactDOM.createRoot(document.getElementById("root")!).render(
     <React.StrictMode>
         <ErrorBoundary>
-            <AuthProvider>
-                <RouterProvider router={router} />
-            </AuthProvider>
+            <ThemeProvider>
+                <AuthProvider>
+                    <RouterProvider router={router} />
+                </AuthProvider>
+            </ThemeProvider>
         </ErrorBoundary>
     </React.StrictMode>
 );

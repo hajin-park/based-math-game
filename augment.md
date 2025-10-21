@@ -111,53 +111,47 @@ if (import.meta.env.DEV) {
 ### Database Schema
 ```
 /users/{userId}
+  ├── uid: string (required for guest validation)
   ├── displayName: string
   ├── email: string | null
   ├── photoURL: string | null
-  ├── isAnonymous: boolean
+  ├── isGuest: boolean (true for guest users, false/undefined for authenticated)
   ├── createdAt: timestamp
   ├── lastSeen: timestamp
-  ├── presence: "online" | "offline"
-  └── stats/{gameModeId}
-      ├── gamesPlayed: number
-      ├── totalScore: number
-      ├── highScore: number
-      ├── averageScore: number
-      ├── lastPlayed: timestamp
-      └── gameHistory/{gameId}
-          ├── score: number
-          ├── duration: number
-          ├── timestamp: timestamp
-          └── questionsPerSecond: number
+  ├── stats
+  │   ├── gamesPlayed: number
+  │   ├── totalScore: number
+  │   ├── highScore: number
+  │   ├── averageScore: number
+  │   └── lastPlayed: timestamp
+  └── gameHistory/{gameId}
+      ├── score: number
+      ├── duration: number
+      ├── gameModeId: string
+      └── timestamp: timestamp
 
 /rooms/{roomId}
-  ├── createdBy: userId
+  ├── hostUid: userId (can be guest or authenticated)
   ├── createdAt: timestamp
   ├── status: "waiting" | "playing" | "finished"
-  ├── hasPassword: boolean
-  ├── passwordHash: string | null
-  ├── maxPlayers: number (default 4)
-  ├── settings
-  │   ├── questions: QuestionSetting[]
-  │   ├── duration: number
-  │   └── gameModeId: string
+  ├── gameMode: GameMode object
   ├── players/{userId}
+  │   ├── uid: string
   │   ├── displayName: string
-  │   ├── joinedAt: timestamp
   │   ├── ready: boolean
   │   ├── score: number
-  │   └── status: "connected" | "disconnected"
-  └── gameState
+  │   └── finished: boolean
+  ├── startedAt: timestamp | null
+  └── gameState (optional)
       ├── startedAt: timestamp | null
       ├── currentQuestion: number
       └── timeRemaining: number
 
 /leaderboards/{gameModeId}/{userId}
   ├── displayName: string
-  ├── highScore: number
-  ├── gamesPlayed: number
-  ├── averageScore: number
-  └── lastUpdated: timestamp
+  ├── score: number (high score for this mode)
+  ├── timestamp: timestamp
+  └── isGuest: false (explicitly false, guest entries rejected by rules)
 
 /gameModes/{gameModeId}
   ├── name: string
@@ -167,32 +161,34 @@ if (import.meta.env.DEV) {
   │   ├── questions: QuestionSetting[]
   │   └── duration: number
   └── createdAt: timestamp
+
+/presence/{userId}
+  ├── uid: string (required for guest validation)
+  ├── online: boolean
+  └── lastSeen: timestamp
 ```
 
 ### Security Rules (`database.rules.json`)
+**Key Features:**
+- Supports both authenticated users (Firebase Auth) and guest users (localStorage-based)
+- Guest users identified by UIDs starting with `guest_`
+- Guest users CANNOT write to global leaderboards
+- All users can create/join rooms and track stats
+
 ```json
 {
   "rules": {
     "users": {
       "$uid": {
-        ".read": "auth != null",
-        ".write": "$uid === auth.uid",
+        ".read": "$uid === auth.uid || $uid.beginsWith('guest_')",
+        ".write": "$uid === auth.uid || ($uid.beginsWith('guest_') && newData.child('uid').val() === $uid && newData.child('isGuest').val() === true)",
         "stats": {
-          "$gameModeId": {
-            "gameHistory": {
-              ".indexOn": ["timestamp"]
-            }
-          }
-        }
-      }
-    },
-    "rooms": {
-      "$roomId": {
-        ".read": "auth != null",
-        ".write": "auth != null && (!data.exists() || data.child('createdBy').val() === auth.uid || data.child('players').child(auth.uid).exists())",
-        "players": {
-          "$playerId": {
-            ".write": "$playerId === auth.uid"
+          ".validate": "newData.hasChildren(['gamesPlayed', 'totalScore'])"
+        },
+        "gameHistory": {
+          ".indexOn": ["timestamp"],
+          "$gameId": {
+            ".validate": "newData.hasChildren(['score', 'timestamp']) && newData.child('score').isNumber() && newData.child('timestamp').isNumber()"
           }
         }
       }
@@ -201,12 +197,36 @@ if (import.meta.env.DEV) {
       "$gameModeId": {
         ".read": true,
         "$uid": {
-          ".write": "$uid === auth.uid"
+          ".write": "($uid === auth.uid && !$uid.beginsWith('guest_')) || ($uid.beginsWith('guest_') && newData.child('isGuest').val() !== true)",
+          ".validate": "newData.hasChildren(['displayName', 'score', 'timestamp']) && newData.child('score').isNumber() && (!newData.hasChild('isGuest') || newData.child('isGuest').val() === false)"
+        }
+      }
+    },
+    "rooms": {
+      ".read": "true",
+      "$roomId": {
+        ".write": "!data.exists() || data.child('hostUid').val() === auth.uid || data.child('hostUid').val().beginsWith('guest_') || (auth != null && data.child('players').child(auth.uid).exists()) || data.child('players').hasChild(newData.child('hostUid').val())",
+        ".validate": "newData.hasChildren(['hostUid', 'gameMode', 'status'])",
+        "players": {
+          "$playerId": {
+            ".write": "$playerId === auth.uid || ($playerId.beginsWith('guest_') && newData.child('uid').val() === $playerId) || root.child('rooms').child($roomId).child('hostUid').val() === auth.uid || root.child('rooms').child($roomId).child('hostUid').val() === $playerId",
+            ".validate": "newData.hasChildren(['displayName', 'ready'])"
+          }
+        },
+        "gameState": {
+          ".write": "root.child('rooms').child($roomId).child('hostUid').val() === auth.uid || root.child('rooms').child($roomId).child('hostUid').val().beginsWith('guest_')"
         }
       }
     },
     "gameModes": {
-      ".read": true
+      ".read": true,
+      ".write": false
+    },
+    "presence": {
+      "$uid": {
+        ".read": true,
+        ".write": "$uid === auth.uid || ($uid.beginsWith('guest_') && newData.child('uid').val() === $uid)"
+      }
     }
   }
 }
@@ -218,28 +238,69 @@ if (import.meta.env.DEV) {
 
 ### AuthContext (`src/contexts/AuthContext.tsx`)
 **Features:**
-- Auto guest sign-in on app load
-- Account linking (guest → email/Google)
-- Presence system (online/offline status)
+- Auto guest user creation on app load (localStorage-based, NO Firebase Anonymous Auth)
+- Guest users use Realtime Database presence system with connect/disconnect API
+- Full authentication support (email/password, Google)
+- Presence system for both guest and authenticated users
 - User profile management
+
+### ThemeContext (`src/contexts/ThemeContext.tsx`)
+**Features:**
+- Light/Dark mode toggle
+- Persists theme preference to localStorage
+- Respects system preference on first load
+- Class-based dark mode (Tailwind)
+
+**Methods:**
+```typescript
+interface ThemeContextType {
+  theme: 'light' | 'dark';
+  toggleTheme: () => void;
+  setTheme: (theme: 'light' | 'dark') => void;
+}
+```
+
+**Guest User Implementation:**
+```typescript
+interface GuestUser {
+  uid: string;              // Format: guest_{timestamp}_{random}
+  displayName: string;
+  isGuest: true;
+  createdAt: number;
+}
+
+type AppUser = User | GuestUser;  // Combined type
+```
 
 **Methods:**
 ```typescript
 interface AuthContextType {
-  user: User | null;
+  user: AppUser | null;
   loading: boolean;
+  isGuest: boolean;
   signInAsGuest: () => Promise<void>;
-  linkGuestToEmail: (email: string, password: string) => Promise<void>;
-  linkGuestToGoogle: () => Promise<void>;
+  signInWithEmail: (email: string, password: string) => Promise<void>;
+  signUpWithEmail: (email: string, password: string, displayName: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
+  updateDisplayName: (displayName: string) => Promise<void>;
+  deleteAccount: () => Promise<void>;
 }
 ```
 
+**Presence System:**
+- Monitors `.info/connected` for connection state
+- Writes to `/users/{uid}` and `/presence/{uid}` with `uid` field for validation
+- Uses `onDisconnect()` to set offline status and clean up guest data
+- Guest user data automatically removed on disconnect
+- All database operations include error handling with `.catch()`
+
 **Flow:**
-1. App loads → auto guest sign-in
-2. User plays as guest
-3. Optional: link guest account to email/Google
-4. Guest data preserved after linking
+1. App loads → `onAuthStateChanged` listener activates
+2. If no Firebase user → create/retrieve guest user from localStorage
+3. If Firebase user → use authenticated user, clear guest from localStorage
+4. Presence system tracks online/offline for all users
+5. Guest users can upgrade to authenticated accounts (sign up/log in)
 
 ---
 
@@ -325,11 +386,33 @@ validateAnswer(expected: string, actual: string, toBase: string): boolean
 ### Room Management (`src/hooks/useRoom.ts`)
 **Functions:**
 ```typescript
-createRoom(settings, hasPassword, password, maxPlayers): Promise<string>
-joinRoom(roomId, password?): Promise<void>
-leaveRoom(roomId): Promise<void>
-updatePlayerReady(roomId, ready): Promise<void>
-startGame(roomId): Promise<void>
+createRoom(gameMode: GameMode): Promise<string>
+joinRoom(roomId: string): Promise<void>
+leaveRoom(roomId: string): Promise<void>
+setPlayerReady(roomId: string, ready: boolean): Promise<void>
+startGame(roomId: string): Promise<void>
+subscribeToRoom(roomId: string, callback: (room: Room) => void): () => void
+```
+
+**Room Structure:**
+```typescript
+interface Room {
+  id: string;
+  hostUid: string;           // Can be guest or authenticated user
+  gameMode: GameMode;
+  players: Record<string, RoomPlayer>;
+  status: 'waiting' | 'playing' | 'finished';
+  createdAt: number;
+  startedAt?: number;
+}
+
+interface RoomPlayer {
+  uid: string;
+  displayName: string;
+  ready: boolean;
+  score: number;
+  finished: boolean;
+}
 ```
 
 **Room Lifecycle:**
@@ -338,13 +421,11 @@ startGame(roomId): Promise<void>
 3. All players ready → host starts game → status: "playing"
 4. Game ends → status: "finished"
 
-**Password Protection:**
-- Passwords hashed with SHA-256 before storage
-- Hash compared on join attempt
-
-**Rate Limiting:**
-- Max 5 rooms per user
-- Enforced in database security rules
+**Guest User Support:**
+- Both guest and authenticated users can create rooms
+- Both can join rooms
+- Security rules validate based on `hostUid` (supports `guest_` prefix)
+- Rooms are publicly readable (`.read: "true"`)
 
 ### Real-time Synchronization
 - Room state synced via Firebase Realtime Database
@@ -359,13 +440,36 @@ startGame(roomId): Promise<void>
 ### Stats Tracking (`src/hooks/useStats.ts`)
 **Function:**
 ```typescript
-saveGameResult(gameModeId: string, score: number, duration: number): Promise<void>
+saveGameResult(result: GameResult): Promise<void>
+
+interface GameResult {
+  score: number;
+  duration: number;
+  gameModeId?: string;
+  timestamp?: number;
+}
 ```
 
 **Updates:**
-1. User stats: gamesPlayed, totalScore, highScore, averageScore, lastPlayed
-2. Game history: individual game record with timestamp
-3. Leaderboard: user's entry for game mode
+1. User stats: gamesPlayed, totalScore, highScore, averageScore, lastPlayed (all users)
+2. Game history: individual game record with timestamp (all users)
+3. Leaderboard: ONLY for authenticated users (isGuest check prevents guest entries)
+
+**Guest User Behavior:**
+- Stats are tracked in database under `/users/{guestUid}/stats`
+- Game history is saved under `/users/{guestUid}/gameHistory/{gameId}`
+- **Leaderboard updates are BLOCKED** when `isGuest === true`
+- Guest data is cleaned up on disconnect via `onDisconnect().remove()`
+- Stats page shows yellow notice encouraging sign up
+
+### Leaderboard (`src/pages/Leaderboard.tsx`)
+**Filtering:**
+- Fetches all entries from `/leaderboards/{gameModeId}`
+- **Filters out guest users** by checking:
+  - UID starts with `guest_`
+  - Entry has `isGuest: true` field
+- Sorts by score descending, displays top 50
+- Only authenticated users appear on global leaderboards
 
 ### Game History (`src/hooks/useGameHistory.ts`)
 **Queries:**
@@ -381,6 +485,7 @@ getThisMonthGames(gameModeId): Promise<GameHistoryEntry[]>
 - Time-based filtering with Firebase `.orderByChild("timestamp")`
 - Calculates: total games, total score, average score, best score
 - Supports custom date ranges
+- Works for both guest and authenticated users
 
 ---
 
@@ -418,11 +523,35 @@ button, card, form, input, label, select, scroll-area, separator, toast, dialog,
 - `Game-Mode-Select.component.tsx` - Tabs for official/custom modes
 
 **UI:**
-- `Navigation-Bar.tsx` - Responsive nav with user menu, mobile sheet
-- `Footer.tsx` - Footer with GitHub link
+- `Navigation-Bar.tsx` - Responsive nav with profile dropdown
+  - Shows "Sign Up" button for guest users
+  - Shows profile avatar dropdown for authenticated users
+  - Dark mode support
+- `ProfileDropdown.tsx` - Profile menu dropdown
+  - View Profile, Settings, Appearance (Light/Dark), Sign Out
+  - Avatar with initials fallback
+  - User email display
+  - Sign Out available in both dropdown and profile sidebar
+- `Footer.tsx` - Footer with GitHub link (dark mode support)
 - `ErrorBoundary.tsx` - Error boundary with recovery
-- `ProtectedRoute.tsx` - Route protection for auth
+- `ProtectedRoute.tsx` - Route protection for auth (supports `requireNonGuest` prop)
 - `ConnectionStatus.tsx` - Firebase connection indicator
+
+**Pages:**
+- `Stats.tsx` - User statistics with guest user notice
+  - Shows yellow warning card for guest users
+  - Encourages sign up to save stats permanently
+  - Explains stats won't count toward global leaderboard
+  - Provides "Sign Up" and "Log In" buttons
+- `Leaderboard.tsx` - Global leaderboards (filters out guest users)
+- `profile/` - Profile pages (authenticated users only)
+  - `ProfileLayout.tsx` - Sidebar layout with navigation and Sign Out button
+  - `ProfileOverview.tsx` - Account information and quick stats
+  - `ProfileSettings.tsx` - Display name editing and Delete Account option
+    - Delete Account with confirmation modal
+    - Lists all data that will be lost
+    - Deletes Firebase auth user and database records
+  - Redirects guest users to signup page
 
 ---
 
@@ -491,6 +620,37 @@ npm run lint     # ESLint check
 - **Production:** Push to `main` → deploy to Firebase Hosting
 - **Preview:** PR → deploy preview URL
 - **Build:** `npm ci && npm run build`
+
+## Guest User System
+
+### Overview
+- **NO Firebase Anonymous Authentication** - uses localStorage + Realtime Database presence
+- Guest users identified by UIDs starting with `guest_`
+- Full multiplayer support (create/join rooms)
+- Stats tracking (local + database)
+- **Cannot** appear on global leaderboards
+
+### Guest User Lifecycle
+1. **Creation**: Auto-created on app load if no Firebase user
+   - Stored in `localStorage` as JSON
+   - UID format: `guest_{timestamp}_{random}`
+2. **Presence**: Tracked via `.info/connected` listener
+   - Writes to `/users/{guestUid}` and `/presence/{guestUid}`
+   - Includes `uid` field for security rules validation
+3. **Cleanup**: Automatic on disconnect
+   - `onDisconnect().remove()` clears user data
+   - Presence set to offline
+4. **Upgrade**: Can sign up or log in
+   - Guest data cleared from localStorage
+   - Becomes authenticated user
+
+### Security Enforcement
+- **Database Rules**: Validate `guest_` prefix and `isGuest` field
+- **Stats Hook**: Checks `isGuest` before leaderboard writes
+- **Leaderboard Page**: Filters out guest entries client-side
+- **Triple Protection**: Rules + hook + UI filtering
+
+---
 
 ## Important Implementation Details
 
@@ -630,18 +790,31 @@ await remove(ref(database, `rooms/${roomId}`));
 
 ### Authentication Patterns
 ```typescript
-// Get current user
-const user = auth.currentUser;
+// Get current user (can be Firebase User or GuestUser)
+const { user, isGuest } = useAuth();
 
-// Sign in anonymously
-await signInAnonymously(auth);
+// Check if user is a guest
+function isGuestUser(user: AppUser | null): user is GuestUser {
+  return user !== null && 'isGuest' in user && user.isGuest === true;
+}
 
-// Link guest to email
-const credential = EmailAuthProvider.credential(email, password);
-await linkWithCredential(user, credential);
+// Sign in with email
+await signInWithEmail(email, password);
 
-// Sign out
-await signOut(auth);
+// Sign up with email
+await signUpWithEmail(email, password, displayName);
+
+// Sign in with Google
+await signInWithGoogle();
+
+// Sign out (creates new guest user)
+await signOut();
+
+// Update display name (works for both guest and authenticated)
+await updateDisplayName(newName);
+
+// Delete account (authenticated users only)
+await deleteAccount();
 ```
 
 ### Context Usage
