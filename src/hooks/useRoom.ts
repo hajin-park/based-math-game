@@ -10,6 +10,7 @@ export interface RoomPlayer {
   ready: boolean;
   score: number;
   finished: boolean;
+  wins: number;
 }
 
 export interface Room {
@@ -20,6 +21,7 @@ export interface Room {
   status: 'waiting' | 'playing' | 'finished';
   createdAt: number;
   startedAt?: number;
+  maxPlayers: number; // Maximum number of players (2-10)
 }
 
 export function useRoom() {
@@ -27,8 +29,13 @@ export function useRoom() {
   const [loading, setLoading] = useState(false);
 
   const createRoom = useCallback(
-    async (gameMode: GameMode): Promise<string> => {
+    async (gameMode: GameMode, maxPlayers: number = 4): Promise<string> => {
       if (!user) throw new Error('Must be authenticated to create room');
+
+      // Validate maxPlayers
+      if (maxPlayers < 2 || maxPlayers > 10) {
+        throw new Error('Max players must be between 2 and 10');
+      }
 
       setLoading(true);
       try {
@@ -39,6 +46,7 @@ export function useRoom() {
         const room: Omit<Room, 'id'> = {
           hostUid: user.uid,
           gameMode,
+          maxPlayers,
           players: {
             [user.uid]: {
               uid: user.uid,
@@ -46,6 +54,7 @@ export function useRoom() {
               ready: true, // Host is always ready (doesn't need to mark themselves ready)
               score: 0,
               finished: false,
+              wins: 0,
             },
           },
           status: 'waiting',
@@ -55,6 +64,7 @@ export function useRoom() {
         await set(newRoomRef, room);
 
         // Set up host disconnect handler - remove host player on disconnect
+        // Client-side listeners will handle host transfer or room deletion
         const hostPlayerRef = ref(database, `rooms/${roomId}/players/${user.uid}`);
         onDisconnect(hostPlayerRef).remove();
 
@@ -88,7 +98,8 @@ export function useRoom() {
           throw new Error('Room is not accepting players');
         }
 
-        if (Object.keys(room.players).length >= 4) {
+        const maxPlayers = room.maxPlayers || 4; // Default to 4 for backwards compatibility
+        if (Object.keys(room.players).length >= maxPlayers) {
           throw new Error('Room is full');
         }
 
@@ -99,6 +110,7 @@ export function useRoom() {
           ready: false,
           score: 0,
           finished: false,
+          wins: 0,
         });
 
         // Set up disconnect handler - remove player on disconnect
@@ -287,19 +299,97 @@ export function useRoom() {
     [user]
   );
 
+  const incrementWins = useCallback(
+    async (roomId: string, winnerId: string) => {
+      try {
+        const winnerRef = ref(database, `rooms/${roomId}/players/${winnerId}/wins`);
+        const snapshot = await get(winnerRef);
+        const currentWins = snapshot.val() || 0;
+        await set(winnerRef, currentWins + 1);
+      } catch (error) {
+        console.error('Error incrementing wins:', error);
+        throw error;
+      }
+    },
+    []
+  );
+
+  const updateGameMode = useCallback(
+    async (roomId: string, gameMode: GameMode) => {
+      if (!user) throw new Error('Must be authenticated to update game mode');
+
+      try {
+        const roomRef = ref(database, `rooms/${roomId}`);
+        const snapshot = await get(roomRef);
+        const room = snapshot.val();
+
+        if (!room) {
+          throw new Error('Room not found');
+        }
+
+        if (room.hostUid !== user.uid) {
+          throw new Error('Only the host can update game mode');
+        }
+
+        if (room.status !== 'waiting') {
+          throw new Error('Cannot update game mode while game is in progress');
+        }
+
+        // Update game mode
+        await set(ref(database, `rooms/${roomId}/gameMode`), gameMode);
+      } catch (error) {
+        console.error('Error updating game mode:', error);
+        throw error;
+      }
+    },
+    [user]
+  );
+
   const subscribeToRoom = useCallback((
     roomId: string,
     callback: (room: Room | null) => void
   ) => {
     const roomRef = ref(database, `rooms/${roomId}`);
 
-    const listener = onValue(roomRef, (snapshot) => {
-      if (snapshot.exists()) {
-        callback({ id: roomId, ...snapshot.val() });
-      } else {
-        // Room was deleted (host disconnected)
+    const listener = onValue(roomRef, async (snapshot) => {
+      if (!snapshot.exists()) {
+        // Room was deleted
         callback(null);
+        return;
       }
+
+      const roomData = snapshot.val();
+      const room: Room = { id: roomId, ...roomData };
+
+      // Check if host is missing but players remain
+      const players = Object.values(room.players);
+      const hostExists = players.some((p: RoomPlayer) => p.uid === room.hostUid);
+
+      if (!hostExists && players.length > 0) {
+        // Host disconnected but players remain - transfer host to first player
+        const newHost = players[0] as RoomPlayer;
+        try {
+          await update(roomRef, {
+            hostUid: newHost.uid,
+            [`players/${newHost.uid}/ready`]: true, // New host is automatically ready
+          });
+          // Don't call callback yet - wait for the update to propagate
+          return;
+        } catch (error) {
+          console.error('Error transferring host:', error);
+        }
+      } else if (players.length === 0) {
+        // No players left - delete the room
+        try {
+          await remove(roomRef);
+          callback(null);
+          return;
+        } catch (error) {
+          console.error('Error deleting empty room:', error);
+        }
+      }
+
+      callback(room);
     });
 
     return () => off(roomRef, 'value', listener);
@@ -315,6 +405,8 @@ export function useRoom() {
     updatePlayerScore,
     finishGame,
     resetRoom,
+    incrementWins,
+    updateGameMode,
     subscribeToRoom,
   };
 }

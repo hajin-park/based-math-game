@@ -99,7 +99,9 @@ src/
 {
   questions: QuestionSetting[],  // Array<[fromBase, toBase, rangeLower, rangeUpper]>
   duration: number,               // seconds
-  gameModeId?: string            // optional game mode ID
+  gameModeId?: string,           // optional game mode ID
+  trackStats?: boolean,          // whether to track stats (default: true)
+  isMultiplayer?: boolean        // whether this is a multiplayer game
 }
 ```
 
@@ -970,7 +972,22 @@ resolve: {
   "hosting": {
     "public": "dist",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
-    "rewrites": [{ "source": "**", "destination": "/index.html" }]
+    "headers": [
+      {
+        "source": "**/*.@(js|mjs)",
+        "headers": [{ "key": "Content-Type", "value": "application/javascript; charset=utf-8" }]
+      },
+      {
+        "source": "**/*.css",
+        "headers": [{ "key": "Content-Type", "value": "text/css; charset=utf-8" }]
+      },
+      {
+        "source": "**/*.json",
+        "headers": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }]
+      }
+    ],
+    "rewrites": [{ "source": "**", "destination": "/index.html" }],
+    "cleanUrls": true
   },
   "database": {
     "rules": "database.rules.json"
@@ -1199,6 +1216,450 @@ try {
 - User behavior tracking
 - A/B testing framework
 - Conversion funnel analysis
+
+---
+
+## Recent Bug Fixes & Improvements
+
+### Issue 1: Duplicate Statistics Bug (FIXED)
+**Problem:** Statistics were being saved multiple times when a game ended, creating duplicate entries in the database.
+
+**Root Cause:** In `Results.tsx`, the `useEffect` hook had `saving` in its dependency array. This created an infinite loop:
+1. Effect runs → sets `saving` to `true`
+2. Calls `saveGameResult`
+3. Sets `saving` to `false`
+4. `saving` change triggers effect again → repeat
+
+**Solution:** Removed `saving` from the dependency array and used an empty array to ensure the effect runs only once on mount.
+
+**Files Modified:**
+- `src/pages/Results.tsx` - Changed dependency array from `[results.score, results.duration, results.gameModeId, saveGameResult, saving]` to `[]`
+
+---
+
+### Issue 2: Statistics Display After Refresh (FIXED)
+**Problem:** User statistics would disappear on the stats page after a browser refresh, even though they appeared correctly on the leaderboard.
+
+**Root Cause:** In `useGameHistory.ts` and `useStats.ts`, the `useCallback` hooks had the entire `user` object in their dependency arrays. When user properties like `displayName` were updated, the `user` object reference changed, causing the callback functions to be recreated unnecessarily. This triggered effects repeatedly and caused stale data issues.
+
+**Solution:** Changed dependencies to use specific properties instead of the entire object:
+- `useGameHistory.ts`: Changed from `[user]` to `[user?.uid]`
+- `useStats.ts`: Changed from `[user, isGuest]` to `[user?.uid, user?.displayName, isGuest]` for `saveGameResult` and `[user?.uid]` for `getUserStats`
+
+**Files Modified:**
+- `src/hooks/useGameHistory.ts` - Updated `fetchHistory` callback dependencies
+- `src/hooks/useStats.ts` - Updated `saveGameResult` and `getUserStats` callback dependencies
+
+---
+
+### Issue 3: Leaderboard Separation by Game Mode (ALREADY IMPLEMENTED)
+**Status:** This feature was already implemented in the codebase.
+
+**Implementation:**
+- Database schema uses `/leaderboards/{gameModeId}/{userId}` structure
+- `Leaderboard.tsx` has buttons to switch between different official game modes
+- Each game mode maintains its own separate leaderboard
+
+---
+
+### Issue 4: Official/Tracked Game Mode Toggle (IMPLEMENTED)
+**Feature:** Added an option during single-player game mode selection to choose whether the game session should be tracked and count toward account statistics.
+
+**Implementation:**
+1. **UI Toggle** (`Game-Mode-Select.component.tsx`):
+   - Added a Switch component with clear labeling
+   - Shows different messages based on tracking state
+   - Positioned prominently above game mode selection
+
+2. **Context Integration** (`QuizSettings` interface):
+   - Added `trackStats?: boolean` field (defaults to `true` for backward compatibility)
+   - Passed through from game mode selection to quiz settings
+
+3. **Conditional Saving** (`Results.tsx`):
+   - Modified to check `settings.trackStats` before saving results
+   - Only saves to database if `trackStats !== false`
+   - Displays "This game was not tracked" message when appropriate
+
+4. **Callback Updates**:
+   - `Game-Mode-Select.component.tsx`: Updated `onSelectMode` callback to accept `trackStats` parameter
+   - `SingleplayerMode.tsx`: Updated to pass `trackStats` value instead of hardcoding `true`
+
+**Files Modified:**
+- `src/features/quiz/quiz-settings/Game-Mode-Select.component.tsx` - Added Switch UI and state management
+- `src/pages/SingleplayerMode.tsx` - Updated to accept and pass `trackStats` parameter
+- `src/pages/Results.tsx` - Added conditional saving logic and tracking status display
+- `src/contexts/GameContexts.tsx` - Already had `trackStats?: boolean` field in `QuizSettings` interface
+
+**User Experience:**
+- Users can practice without affecting their stats
+- Clear visual feedback about tracking status
+- Default behavior (tracking enabled) maintains backward compatibility
+
+---
+
+### Issue 5: Stats Page Tab Switching Layout Issues (FIXED)
+**Problem:** Layout would shift and deform when users switched between time range options (Today, This Week, This Month, All Time) on the stats page.
+
+**Root Causes:**
+1. Different time ranges had different amounts of data, causing content height changes
+2. Loading spinner appeared/disappeared without reserved space
+3. No minimum height for content area
+4. No smooth transitions between states
+
+**Solution:**
+1. **Reserved Space**: Added `min-h-[600px]` to content area to prevent layout shifts
+2. **Skeleton Loaders**: Replaced simple spinner with detailed skeleton loaders that match the actual content structure:
+   - Stats cards skeleton (4 cards)
+   - Performance by game mode skeleton (3 items)
+   - Recent games skeleton (5 items)
+3. **Smooth Transitions**: Added `animate-in fade-in duration-300` for content appearance
+4. **Absolute Positioning**: Made loading state use absolute positioning to overlay the reserved space
+
+**Files Modified:**
+- `src/pages/Stats.tsx` - Added Skeleton component import, implemented skeleton loaders, added minimum height and transitions
+
+**User Experience:**
+- No layout jumps when switching time ranges
+- Smooth fade-in transitions
+- Professional loading states that match final content structure
+- Consistent page height regardless of data amount
+
+---
+
+### Issue 6: MIME Type Module Loading Error (FIXED)
+**Problem:** On some browsers, the site failed to load with the error: "Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of 'text/html'."
+
+**Root Cause:** Firebase Hosting was not explicitly setting the correct MIME types for JavaScript modules and CSS files. While Firebase Hosting typically serves static files correctly, some browsers enforce strict MIME type checking for ES modules, and without explicit headers, the server's default MIME type detection could fail.
+
+**Solution:** Added explicit `Content-Type` headers in `firebase.json` for:
+- JavaScript modules (`.js`, `.mjs`): `application/javascript; charset=utf-8`
+- CSS files (`.css`): `text/css; charset=utf-8`
+- JSON files (`.json`): `application/json; charset=utf-8`
+
+Also added `"cleanUrls": true` for better URL handling.
+
+**Files Modified:**
+- `firebase.json` - Added `headers` configuration with explicit MIME types
+
+**Technical Details:**
+- The rewrite rule `"source": "**"` only applies to requests that don't match existing files
+- Static files in `dist/` are served first, before rewrites are applied
+- Explicit headers ensure correct MIME types even when browser MIME type detection is strict
+- This fix is especially important for ES modules which have strict MIME type requirements per HTML spec
+
+**User Experience:**
+- Site now loads correctly across all browsers
+- No more module loading errors
+- Proper content type headers improve caching and performance
+
+---
+
+### Recent Updates (Latest Session)
+
+#### Task 1: Fixed Duplicate Game Entries in Stats Tracking (FIXED)
+**Problem:** After previous fixes, games were being saved twice instead of once due to React Strict Mode double-invoking effects in development.
+
+**Root Cause:** React.StrictMode intentionally double-invokes effects in development to help detect side effects. The `useEffect` in `Results.tsx` was running twice, causing duplicate saves.
+
+**Solution:** Added a `useRef` flag (`hasSavedRef`) to track if results have already been saved, preventing duplicate saves even in Strict Mode.
+
+**Files Modified:**
+- `src/pages/Results.tsx` - Added `hasSavedRef` to prevent duplicate saves
+
+**Code Changes:**
+```typescript
+const hasSavedRef = useRef(false);
+
+useEffect(() => {
+  const saveResults = async () => {
+    if (hasSavedRef.current) return; // Prevent duplicate saves
+
+    if (results.score !== undefined && results.duration && shouldTrack) {
+      hasSavedRef.current = true;
+      // ... save logic
+    }
+  };
+  saveResults();
+}, []);
+```
+
+---
+
+#### Task 2: Added Win Counter Display in Multiplayer Lobbies (IMPLEMENTED)
+**Feature:** Track and display room-specific win counts for each player in multiplayer lobbies.
+
+**Implementation:**
+1. **Updated RoomPlayer Interface** - Added `wins: number` field
+2. **Initialize Wins** - Set `wins: 0` when creating/joining rooms
+3. **Increment Wins** - Added `incrementWins()` function to increment winner's count after each game
+4. **Display Wins** - Show win count next to player names in lobby (e.g., "PlayerName (3 wins)")
+5. **Preserve Wins** - Win counters persist when game settings are changed or room is reset
+
+**Files Modified:**
+- `src/hooks/useRoom.ts` - Added `wins` field to `RoomPlayer` interface, added `incrementWins()` function
+- `src/pages/MultiplayerResults.tsx` - Increment winner's wins when game finishes
+- `src/pages/RoomLobby.tsx` - Display win counts next to player names
+
+**Database Structure:**
+```
+/rooms/{roomId}/players/{playerId}/wins: number
+```
+
+**User Experience:**
+- Win counters are room-specific (not global)
+- Counters reset when a new room is created
+- Counters persist across multiple games in the same room
+- Small, unobtrusive display in lobby
+
+---
+
+#### Task 3: Allow Host to Edit Game Settings in Multiplayer Lobby (IMPLEMENTED)
+**Feature:** Give room host ability to modify game mode settings while in the lobby, with real-time updates for all players.
+
+**Implementation:**
+1. **Added updateGameMode() Function** - Allows host to change game mode in waiting rooms
+2. **Host-Only UI** - Collapsible settings panel visible only to host
+3. **Real-Time Sync** - All players see updated settings immediately via Firebase listeners
+4. **Win Counter Preservation** - Win counters persist when settings are changed
+5. **Visual Indicators** - Current game mode is highlighted, disabled button prevents re-selection
+
+**Files Modified:**
+- `src/hooks/useRoom.ts` - Added `updateGameMode()` function with host and status validation
+- `src/pages/RoomLobby.tsx` - Added collapsible settings UI with game mode selection
+
+**Security:**
+- Only host can update game mode (validated in `updateGameMode()`)
+- Cannot update while game is in progress (status must be 'waiting')
+
+**User Experience:**
+- Compact, collapsible UI to avoid clutter
+- Shows all official game modes with difficulty badges
+- Toast notifications for successful updates
+- Non-host players see settings but cannot edit
+
+---
+
+#### Task 4: Fixed Guest User and Room Cleanup Issues (FIXED)
+**Problem:** PERMISSION_DENIED errors when guest users disconnect, causing ghost accounts and empty rooms to accumulate in the database.
+
+**Root Cause:** Firebase security rules only allowed write operations when `newData` exists. The `onDisconnect().remove()` operation tries to delete data (where `newData` is null), which was being denied.
+
+**Solution:**
+1. **Updated Security Rules** - Modified rules to allow deletion for guest users:
+   ```json
+   ".write": "$uid === auth.uid || ($uid.beginsWith('guest_') && (!newData.exists() || ...))"
+   ```
+2. **Enhanced Cleanup Logic** - Guest users now properly clean up:
+   - User data (`/users/{guestUid}`)
+   - Presence data (`/presence/{guestUid}`)
+   - Room data (entire room deleted when host disconnects)
+3. **Separate Handling** - Authenticated users set presence to offline; guest users remove all data
+
+**Files Modified:**
+- `database.rules.json` - Updated `/users/$uid` and `/presence/$uid` rules to allow deletion
+- `src/contexts/AuthContext.tsx` - Improved disconnect handlers for guest vs authenticated users
+- `src/hooks/useRoom.ts` - Simplified room cleanup (delete entire room when host disconnects)
+
+**Edge Cases Handled:**
+- Guest user closes browser/tab → Data cleaned up via `onDisconnect`
+- Guest user loses internet → Firebase automatically triggers `onDisconnect`
+- Host leaves room → Entire room deleted (simpler than host transfer on disconnect)
+- All players leave room → Room deleted via `leaveRoom()` logic
+- Guest in room when disconnecting → Player removed, room cleaned up if empty
+
+**Technical Details:**
+- `onDisconnect()` can only perform simple operations (set, remove, update)
+- Cannot run complex logic like "check if room is empty" in `onDisconnect`
+- Solution: Delete entire room when host disconnects (host is always required)
+- Client-side `leaveRoom()` handles host transfer for intentional leaves
+
+**User Experience:**
+- No more ghost accounts in database
+- No more empty rooms accumulating
+- Clean, automatic cleanup on disconnect
+- Proper error handling with console logging
+
+---
+
+### Critical Bug Fixes (Latest Session)
+
+#### Issue 1: Fixed Maximum Update Depth Error in Quiz Games (CRITICAL - FIXED)
+**Problem:** Both singleplayer and multiplayer games crashed with "Maximum update depth exceeded" error during active gameplay.
+
+**Root Cause:** The `Quiz-Stats.component.tsx` component had `useEffect` hooks with `timer` object in their dependency arrays. The `timer` object from `react-timer-hook` changes on every render, causing infinite loops:
+- Lines 44-48: Cleanup effect with `timer` dependency
+- Lines 51-62: Visibility change effect with `timer` dependency
+- Line 29: Timer restart effect with `internalTimer` dependency
+
+**Solution:** Used `useRef` to store the timer object and access it via `.current` in effects, with empty dependency arrays:
+```typescript
+const timerRef = useRef(timer);
+timerRef.current = timer;
+
+// Cleanup timer on unmount
+useEffect(() => {
+  return () => {
+    timerRef.current.pause();
+  };
+}, []); // Only run on mount/unmount
+
+// Pause timer when tab is not visible
+useEffect(() => {
+  const handleVisibilityChange = () => {
+    if (document.hidden) {
+      timerRef.current.pause();
+    } else {
+      timerRef.current.resume();
+    }
+  };
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+  return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+}, []); // Only run on mount/unmount
+```
+
+**Files Modified:**
+- `src/features/quiz/quiz-questions/Quiz-Stats.component.tsx` - Fixed infinite loop with useRef pattern
+- `src/pages/MultiplayerGame.tsx` - Removed `timer` from useEffect dependency array (line 117)
+
+**Additional Fix (Multiplayer):**
+The same issue occurred in `MultiplayerGame.tsx` where the timer restart effect had `timer` in its dependency array. Additionally, we needed to prevent the timer from restarting on every render:
+```typescript
+// Before (caused infinite loop):
+useEffect(() => {
+  if (room?.startedAt && room?.gameMode.duration) {
+    timer.restart(newExpiry, true);
+  }
+}, [room?.startedAt, room?.gameMode.duration, timer]); // ❌ timer causes infinite loop
+
+// After (fixed with ref to track startedAt):
+const timerStartedAtRef = useRef<number | null>(null);
+
+useEffect(() => {
+  if (room?.startedAt && room?.gameMode.duration) {
+    // Only restart timer if startedAt has changed
+    if (timerStartedAtRef.current !== room.startedAt) {
+      timerStartedAtRef.current = room.startedAt;
+      const elapsed = Math.floor((Date.now() - room.startedAt) / 1000);
+      const remaining = Math.max(0, room.gameMode.duration - elapsed);
+      const newExpiry = new Date();
+      newExpiry.setSeconds(newExpiry.getSeconds() + remaining);
+      timer.restart(newExpiry, true);
+    }
+  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [room?.startedAt, room?.gameMode.duration]); // ✅ timer excluded, ref prevents re-restarts
+```
+
+**Impact:** Games now work correctly in both singleplayer and multiplayer modes without crashing.
+
+---
+
+#### Issue 2: Fixed Win Counters Not Displaying (FIXED)
+**Problem:** Win counter feature implemented in previous session was not showing up in multiplayer lobby after the first game.
+
+**Root Cause:** The `hasIncrementedWinsRef` in `MultiplayerResults.tsx` was not being reset when players returned to the lobby. This meant:
+- First game: Wins incremented correctly ✓
+- Second game: `hasIncrementedWinsRef.current` was still `true`, so wins were NOT incremented ✗
+
+**Solution:** Reset the `hasIncrementedWinsRef` flag when room status changes back to 'waiting':
+```typescript
+// If room status changed back to waiting, navigate to lobby
+if (updatedRoom.status === 'waiting') {
+  // Reset the wins increment flag for the next game
+  hasIncrementedWinsRef.current = false;
+  navigate(`/multiplayer/lobby/${roomId}`);
+}
+```
+
+**Files Modified:**
+- `src/pages/MultiplayerResults.tsx` - Reset wins increment flag on room reset
+
+**Impact:** Win counters now properly increment and display for all games in a room session.
+
+---
+
+#### Issue 3: Fixed Host Disconnect Room Cleanup (FIXED)
+**Problem:** When host refreshed the page or left, the room cleanup logic failed:
+- Host refreshes → entire room deleted, all players kicked
+- No host transfer mechanism
+- Orphaned rooms if cleanup failed
+
+**User Requirement:** Host transfer to another player if others are present; room deletion only if room becomes empty.
+
+**Solution:** Implemented intelligent host transfer and cleanup:
+
+1. **Changed onDisconnect Handler:**
+   - Old: Delete entire room when host disconnects
+   - New: Remove only the host player, let client-side logic handle transfer/cleanup
+
+2. **Enhanced subscribeToRoom Listener:**
+   - Detects when host is missing but players remain
+   - Automatically transfers host to first remaining player
+   - Makes new host ready automatically
+   - Deletes room only when no players remain
+
+3. **Added Configurable Player Limit:**
+   - Room interface now includes `maxPlayers: number` (2-10)
+   - Host selects player limit at room creation
+   - Displayed in lobby as "Players (2/4)" format
+   - Validated in `joinRoom` to prevent overfilling
+
+**Files Modified:**
+- `src/hooks/useRoom.ts`:
+  - Updated `Room` interface with `maxPlayers` field
+  - Modified `createRoom()` to accept `maxPlayers` parameter (default 4)
+  - Changed disconnect handler to remove player instead of entire room
+  - Enhanced `subscribeToRoom()` with host transfer logic
+  - Updated `joinRoom()` to check against `maxPlayers`
+- `src/pages/CreateRoom.tsx`:
+  - Added player limit selector (2-10 players)
+  - Passes `maxPlayers` to `createRoom()`
+- `src/pages/RoomLobby.tsx`:
+  - Updated player count display to show "Players (X/Y)"
+
+**Host Transfer Logic:**
+```typescript
+const listener = onValue(roomRef, async (snapshot) => {
+  if (!snapshot.exists()) {
+    callback(null);
+    return;
+  }
+
+  const room: Room = { id: roomId, ...snapshot.val() };
+  const players = Object.values(room.players);
+  const hostExists = players.some((p: any) => p.uid === room.hostUid);
+
+  if (!hostExists && players.length > 0) {
+    // Host disconnected but players remain - transfer host
+    const newHost = players[0] as RoomPlayer;
+    await update(roomRef, {
+      hostUid: newHost.uid,
+      [`players/${newHost.uid}/ready`]: true,
+    });
+    return; // Wait for update to propagate
+  } else if (players.length === 0) {
+    // No players left - delete the room
+    await remove(roomRef);
+    callback(null);
+    return;
+  }
+
+  callback(room);
+});
+```
+
+**Edge Cases Handled:**
+- Host refreshes with other players → Host transferred to first player
+- Host closes tab with other players → Host transferred automatically
+- Last player leaves → Room deleted
+- Host leaves intentionally → `leaveRoom()` handles transfer (existing logic)
+- All players disconnect → Room deleted
+
+**User Experience:**
+- Seamless host transfer without disruption
+- Remaining players see new host badge
+- No "Host Disconnected" errors unless room is deleted
+- Configurable room size for different group sizes
 
 ---
 

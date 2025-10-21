@@ -6,17 +6,19 @@ import { Badge } from '@/components/ui/badge';
 import { useRoom, Room } from '@/hooks/useRoom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
-import { Copy, Check, Link2 } from 'lucide-react';
+import { Copy, Check, Link2, Settings, ChevronDown, ChevronUp } from 'lucide-react';
+import { OFFICIAL_GAME_MODES, GameMode, getDifficultyColor } from '@/types/gameMode';
 
 export default function RoomLobby() {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { leaveRoom, setPlayerReady, startGame, subscribeToRoom } = useRoom();
+  const { leaveRoom, setPlayerReady, startGame, subscribeToRoom, updateGameMode } = useRoom();
   const [room, setRoom] = useState<Room | null>(null);
   const [isReady, setIsReady] = useState(false);
   const [copied, setCopied] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const { toast } = useToast();
   const hasNavigatedRef = useRef(false);
 
@@ -103,6 +105,25 @@ export default function RoomLobby() {
     }
   };
 
+  const handleChangeGameMode = async (mode: GameMode) => {
+    if (!roomId) return;
+    try {
+      await updateGameMode(roomId, mode);
+      toast({
+        title: "Game mode updated!",
+        description: `Changed to ${mode.name}`,
+      });
+      setShowSettings(false);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update game mode';
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
+  };
+
   if (!room) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -176,11 +197,59 @@ export default function RoomLobby() {
             </Button>
           </div>
 
+          {/* Game Settings (Host Only) */}
+          {isHost && (
+            <div className="border rounded-md">
+              <Button
+                onClick={() => setShowSettings(!showSettings)}
+                variant="ghost"
+                className="w-full justify-between p-4"
+              >
+                <div className="flex items-center gap-2">
+                  <Settings className="h-4 w-4" />
+                  <span className="font-semibold">Game Settings</span>
+                </div>
+                {showSettings ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              </Button>
+
+              {showSettings && (
+                <div className="p-4 pt-0 space-y-3">
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Select a different game mode (win counters will be preserved)
+                  </p>
+                  <div className="grid gap-2 max-h-64 overflow-y-auto">
+                    {OFFICIAL_GAME_MODES.map((mode) => (
+                      <Button
+                        key={mode.id}
+                        onClick={() => handleChangeGameMode(mode)}
+                        variant={room.gameMode.id === mode.id ? "default" : "outline"}
+                        className="justify-start h-auto p-3"
+                        disabled={room.gameMode.id === mode.id}
+                      >
+                        <div className="flex flex-col items-start gap-1 w-full">
+                          <div className="flex items-center justify-between w-full">
+                            <span className="font-semibold">{mode.name}</span>
+                            <Badge className={getDifficultyColor(mode.difficulty)} variant="outline">
+                              {mode.difficulty}
+                            </Badge>
+                          </div>
+                          <span className="text-xs text-muted-foreground">
+                            {mode.duration}s • {mode.questions.length} question types
+                          </span>
+                        </div>
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Players */}
           <div>
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-semibold">
-                Players ({playerCount}/4)
+                Players ({playerCount}/{room.maxPlayers || 4})
               </h3>
               {nonHostPlayers.length > 0 && (
                 <span className="text-sm text-muted-foreground">
@@ -191,13 +260,21 @@ export default function RoomLobby() {
             <div className="space-y-2">
               {Object.values(room.players).map((player) => {
                 const isPlayerHost = player.uid === room.hostUid;
+                const wins = player.wins || 0;
                 return (
                   <div
                     key={player.uid}
                     className="flex items-center justify-between p-3 rounded-md bg-muted/50"
                   >
                     <div className="flex items-center gap-2">
-                      <span>{player.displayName}</span>
+                      <span>
+                        {player.displayName}
+                        {wins > 0 && (
+                          <span className="text-sm text-muted-foreground ml-1">
+                            ({wins} {wins === 1 ? 'win' : 'wins'})
+                          </span>
+                        )}
+                      </span>
                       {isPlayerHost && (
                         <Badge variant="outline">Host</Badge>
                       )}

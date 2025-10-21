@@ -20,6 +20,7 @@ export default function MultiplayerGame() {
   const scoreRef = useRef(0);
   const questionsRef = useRef<[string, string, number, number][]>([]);
   const hasNavigatedRef = useRef(false);
+  const timerStartedAtRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!roomId) return;
@@ -108,13 +109,18 @@ export default function MultiplayerGame() {
   // Restart timer when game starts
   useEffect(() => {
     if (room?.startedAt && room?.gameMode.duration) {
-      const elapsed = Math.floor((Date.now() - room.startedAt) / 1000);
-      const remaining = Math.max(0, room.gameMode.duration - elapsed);
-      const newExpiry = new Date();
-      newExpiry.setSeconds(newExpiry.getSeconds() + remaining);
-      timer.restart(newExpiry, true); // true = autoStart
+      // Only restart timer if startedAt has changed (prevents infinite loops)
+      if (timerStartedAtRef.current !== room.startedAt) {
+        timerStartedAtRef.current = room.startedAt;
+        const elapsed = Math.floor((Date.now() - room.startedAt) / 1000);
+        const remaining = Math.max(0, room.gameMode.duration - elapsed);
+        const newExpiry = new Date();
+        newExpiry.setSeconds(newExpiry.getSeconds() + remaining);
+        timer.restart(newExpiry, true); // true = autoStart
+      }
     }
-  }, [room?.startedAt, room?.gameMode.duration, timer]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [room?.startedAt, room?.gameMode.duration]); // timer is intentionally excluded to prevent infinite loops
 
   // Generate deterministic seed for multiplayer questions
   // Combine room ID hash with score to ensure all players get same questions

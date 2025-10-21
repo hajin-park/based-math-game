@@ -90,7 +90,8 @@ export function useStats() {
         throw error;
       }
     },
-    [user, isGuest]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [user?.uid, user?.displayName, isGuest] // Only depend on specific properties to prevent unnecessary re-creation
   );
 
   const getUserStats = useCallback(async (): Promise<UserStats | null> => {
@@ -104,7 +105,8 @@ export function useStats() {
       console.error('Error getting user stats:', error);
       return null;
     }
-  }, [user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.uid]); // Only depend on uid to prevent unnecessary re-creation
 
   return {
     saveGameResult,

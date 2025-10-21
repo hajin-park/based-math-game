@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useGameHistory, TimeRange } from '@/hooks/useGameHistory';
 import { useAuth } from '@/contexts/AuthContext';
 import { OFFICIAL_GAME_MODES } from '@/types/gameMode';
@@ -80,12 +81,58 @@ export default function Stats() {
             ))}
           </div>
 
-          {loading ? (
-            <div className="flex justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            </div>
-          ) : (
-            <div className="space-y-6">
+          {/* Content area with minimum height to prevent layout shifts */}
+          <div className="min-h-[600px]">
+            {loading ? (
+              <div className="space-y-6">
+                {/* Skeleton for stats cards */}
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                  {[1, 2, 3, 4].map((i) => (
+                    <Card key={i}>
+                      <CardHeader className="pb-2">
+                        <Skeleton className="h-4 w-24" />
+                      </CardHeader>
+                      <CardContent>
+                        <Skeleton className="h-8 w-16" />
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+
+                {/* Skeleton for performance by game mode */}
+                <Card>
+                  <CardHeader>
+                    <Skeleton className="h-6 w-48" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {[1, 2, 3].map((i) => (
+                        <div key={i} className="space-y-2">
+                          <Skeleton className="h-4 w-32" />
+                          <Skeleton className="h-4 w-24" />
+                          <Skeleton className="h-2 w-full" />
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Skeleton for recent games */}
+                <Card>
+                  <CardHeader>
+                    <Skeleton className="h-6 w-32" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {[1, 2, 3, 4, 5].map((i) => (
+                        <Skeleton key={i} className="h-16 w-full" />
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            ) : (
+              <div className="space-y-6 animate-in fade-in duration-300">
               {/* Stats cards */}
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <Card>
@@ -202,8 +249,9 @@ export default function Stats() {
                   No games played yet. Start playing to see your stats!
                 </div>
               )}
-            </div>
-          )}
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>

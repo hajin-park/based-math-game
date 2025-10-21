@@ -14,12 +14,12 @@ export default function SingleplayerMode() {
 
   const { setSettings } = quizContext;
 
-  const handleSelectMode = (mode: GameMode) => {
+  const handleSelectMode = (mode: GameMode, trackStats: boolean) => {
     setSettings({
       questions: mode.questions,
       duration: mode.duration,
       gameModeId: mode.id,
-      trackStats: true,
+      trackStats,
     });
     navigate('/quiz');
   };

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useTimer } from "react-timer-hook";
 import { CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -20,13 +20,18 @@ export default function QuizStats({ expiryTimestamp, setRunning, score, timer: e
     // Use external timer if provided, otherwise use internal timer
     const timer = externalTimer || internalTimer;
 
+    // Store timer in ref to avoid dependency issues
+    const timerRef = useRef(timer);
+    timerRef.current = timer;
+
     // For singleplayer, restart the timer when component mounts
     useEffect(() => {
         if (!externalTimer) {
             // Restart timer to ensure it starts counting down
             internalTimer.restart(expiryTimestamp, true);
         }
-    }, [externalTimer, expiryTimestamp, internalTimer]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // Only run on mount
 
     // Calculate total seconds from timer components
     const totalSeconds = timer.seconds + timer.minutes * 60 + timer.hours * 3600;
@@ -43,23 +48,23 @@ export default function QuizStats({ expiryTimestamp, setRunning, score, timer: e
     // Cleanup timer on unmount to prevent memory leaks
     useEffect(() => {
         return () => {
-            timer.pause();
+            timerRef.current.pause();
         };
-    }, [timer]);
+    }, []); // Only run on mount/unmount
 
     // Pause timer when tab is not visible
     useEffect(() => {
         const handleVisibilityChange = () => {
             if (document.hidden) {
-                timer.pause();
+                timerRef.current.pause();
             } else {
-                timer.resume();
+                timerRef.current.resume();
             }
         };
 
         document.addEventListener('visibilitychange', handleVisibilityChange);
         return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-    }, [timer]);
+    }, []); // Only run on mount/unmount
 
     return (
         <CardHeader className="border-b">

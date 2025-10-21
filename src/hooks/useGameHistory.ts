@@ -87,7 +87,8 @@ export function useGameHistory() {
         setLoading(false);
       }
     },
-    [user]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [user?.uid] // Only depend on uid to prevent unnecessary re-creation
   );
 
   const getStatsForTimeRange = useCallback(

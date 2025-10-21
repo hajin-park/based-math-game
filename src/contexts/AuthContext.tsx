@@ -125,19 +125,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
           console.error('Error setting presence:', error);
         });
 
-        // Set user as offline when disconnected
-        onDisconnect(presenceRef).set({
-          uid: user.uid,
-          online: false,
-          lastSeen: serverTimestamp(),
-        }).catch((error) => {
-          console.error('Error setting onDisconnect for presence:', error);
-        });
-
         // For guest users, clean up their data on disconnect
         if (isGuestUser(user)) {
+          // Remove user data
           onDisconnect(userRef).remove().catch((error) => {
             console.error('Error setting onDisconnect for user removal:', error);
+          });
+          // Remove presence data
+          onDisconnect(presenceRef).remove().catch((error) => {
+            console.error('Error setting onDisconnect for presence removal:', error);
+          });
+        } else {
+          // For authenticated users, just set them as offline when disconnected
+          onDisconnect(presenceRef).set({
+            uid: user.uid,
+            online: false,
+            lastSeen: serverTimestamp(),
+          }).catch((error) => {
+            console.error('Error setting onDisconnect for presence:', error);
           });
         }
       }

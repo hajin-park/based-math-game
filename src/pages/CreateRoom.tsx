@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useRoom } from '@/hooks/useRoom';
 import { OFFICIAL_GAME_MODES, GameMode, getDifficultyColor } from '@/types/gameMode';
 import { Badge } from '@/components/ui/badge';
@@ -14,12 +16,13 @@ export default function CreateRoom() {
   const { createRoom, loading } = useRoom();
   const [selectedMode, setSelectedMode] = useState<GameMode | null>(null);
   const [selectedTab, setSelectedTab] = useState('official');
+  const [maxPlayers, setMaxPlayers] = useState<number>(4);
 
   const handleCreateRoom = async () => {
     if (!selectedMode) return;
 
     try {
-      const roomId = await createRoom(selectedMode);
+      const roomId = await createRoom(selectedMode, maxPlayers);
       navigate(`/multiplayer/lobby/${roomId}`);
     } catch (error) {
       console.error('Failed to create room:', error);
@@ -40,7 +43,7 @@ export default function CreateRoom() {
     };
 
     try {
-      const roomId = await createRoom(customMode);
+      const roomId = await createRoom(customMode, maxPlayers);
       navigate(`/multiplayer/lobby/${roomId}`);
     } catch (error) {
       console.error('Failed to create room:', error);
@@ -92,6 +95,26 @@ export default function CreateRoom() {
                 ))}
               </div>
 
+              {/* Player Limit Selector */}
+              <div className="space-y-2">
+                <Label htmlFor="maxPlayers">Maximum Players</Label>
+                <Select
+                  value={maxPlayers.toString()}
+                  onValueChange={(value) => setMaxPlayers(parseInt(value))}
+                >
+                  <SelectTrigger id="maxPlayers" className="w-full">
+                    <SelectValue placeholder="Select max players" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
+                      <SelectItem key={num} value={num.toString()}>
+                        {num} Players
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               <div className="flex gap-2 justify-end">
                 <Button onClick={() => navigate('/multiplayer')} variant="outline">
                   Cancel
@@ -105,7 +128,27 @@ export default function CreateRoom() {
               </div>
             </TabsContent>
 
-            <TabsContent value="custom">
+            <TabsContent value="custom" className="space-y-4">
+              {/* Player Limit Selector */}
+              <div className="space-y-2">
+                <Label htmlFor="maxPlayersCustom">Maximum Players</Label>
+                <Select
+                  value={maxPlayers.toString()}
+                  onValueChange={(value) => setMaxPlayers(parseInt(value))}
+                >
+                  <SelectTrigger id="maxPlayersCustom" className="w-full">
+                    <SelectValue placeholder="Select max players" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
+                      <SelectItem key={num} value={num.toString()}>
+                        {num} Players
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               <Card>
                 <CardContent className="pt-6">
                   <PlaygroundSettings

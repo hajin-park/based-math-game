@@ -13,9 +13,10 @@ export default function MultiplayerResults() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  const { subscribeToRoom, resetRoom } = useRoom();
+  const { subscribeToRoom, resetRoom, incrementWins } = useRoom();
   const [room, setRoom] = useState<Room | null>(null);
   const hasNavigatedRef = useRef(false);
+  const hasIncrementedWinsRef = useRef(false);
 
   useEffect(() => {
     if (!roomId) return;
@@ -43,14 +44,28 @@ export default function MultiplayerResults() {
 
       setRoom(updatedRoom);
 
+      // Increment winner's wins (only once)
+      if (updatedRoom.status === 'finished' && !hasIncrementedWinsRef.current) {
+        hasIncrementedWinsRef.current = true;
+        const sortedPlayers = Object.values(updatedRoom.players).sort((a, b) => b.score - a.score);
+        const winner = sortedPlayers[0];
+        if (winner) {
+          incrementWins(roomId, winner.uid).catch((error) => {
+            console.error('Failed to increment wins:', error);
+          });
+        }
+      }
+
       // If room status changed back to waiting, navigate to lobby
       if (updatedRoom.status === 'waiting') {
+        // Reset the wins increment flag for the next game
+        hasIncrementedWinsRef.current = false;
         navigate(`/multiplayer/lobby/${roomId}`);
       }
     });
 
     return () => unsubscribe();
-  }, [roomId, subscribeToRoom, navigate, toast]);
+  }, [roomId, subscribeToRoom, navigate, toast, incrementWins]);
 
   const handleReturnToLobby = async () => {
     if (!roomId) return;

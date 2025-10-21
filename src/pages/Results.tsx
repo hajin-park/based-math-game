@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,6 +15,7 @@ export default function Quiz() {
     const navigate = useNavigate();
     const { saveGameResult } = useStats();
     const [saving, setSaving] = useState(false);
+    const hasSavedRef = useRef(false);
 
     const quizContext = useContext(QuizContext);
     const resultContext = useContext(ResultContext);
@@ -24,11 +25,21 @@ export default function Quiz() {
     }
 
     const { results } = resultContext;
+    const { settings } = quizContext;
 
-    // Save game results to Firebase
+    // Save game results to Firebase (only once on mount)
     useEffect(() => {
         const saveResults = async () => {
-            if (results.score !== undefined && results.duration && !saving) {
+            // Prevent duplicate saves (important for React Strict Mode in development)
+            if (hasSavedRef.current) {
+                return;
+            }
+
+            // Only save if trackStats is true (default to true for backward compatibility)
+            const shouldTrack = settings.trackStats !== false;
+
+            if (results.score !== undefined && results.duration && shouldTrack) {
+                hasSavedRef.current = true;
                 setSaving(true);
                 try {
                     await saveGameResult({
@@ -38,6 +49,7 @@ export default function Quiz() {
                     });
                 } catch (error) {
                     console.error('Failed to save game results:', error);
+                    hasSavedRef.current = false; // Reset on error to allow retry
                 } finally {
                     setSaving(false);
                 }
@@ -45,9 +57,11 @@ export default function Quiz() {
         };
 
         saveResults();
-    }, [results.score, results.duration, results.gameModeId, saveGameResult, saving]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // Empty dependency array - only run once on mount
 
     const gameMode = results.gameModeId ? getGameModeById(results.gameModeId) : null;
+    const shouldTrack = settings.trackStats !== false;
 
     return (
         <div className="flex justify-center items-center h-full">
@@ -71,6 +85,11 @@ export default function Quiz() {
                     )}
                     {saving && (
                         <p className="text-sm text-muted-foreground">Saving results...</p>
+                    )}
+                    {!shouldTrack && (
+                        <p className="text-sm text-muted-foreground italic">
+                            This game was not tracked
+                        </p>
                     )}
                 </CardContent>
                 <CardFooter className="flex gap-2 justify-center">
