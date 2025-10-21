@@ -79,9 +79,11 @@ export function useStats() {
         // Update leaderboard ONLY if game mode is specified
         // Guest check already done above
         if (result.gameModeId) {
+          // Use flat collection structure: leaderboard-{gameModeId} to avoid odd segment count
           const leaderboardRef = doc(
             firestore,
-            `leaderboards/${result.gameModeId}/${user.uid}`
+            `leaderboard-${result.gameModeId}`,
+            user.uid
           );
           const currentLeaderboardEntry = await getDoc(leaderboardRef);
           const currentBestScore = currentLeaderboardEntry.exists()
@@ -93,6 +95,7 @@ export function useStats() {
               displayName: user.displayName || 'User',
               score: result.score,
               timestamp,
+              gameModeId: result.gameModeId, // Store game mode for reference
               isGuest: false, // Explicitly mark as not a guest for validation
             });
           }

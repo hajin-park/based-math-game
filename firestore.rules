@@ -63,20 +63,24 @@ service cloud.firestore {
     }
     
     // Global leaderboards - authenticated users only can write, everyone can read
-    match /leaderboards/{gameModeId}/{userId} {
+    // Using flat collection structure: leaderboard-{gameModeId}
+    // Match any collection that starts with "leaderboard-"
+    match /{leaderboardCollection}/{userId} {
       // Anyone can read leaderboards (including unauthenticated users)
-      allow read: if true;
-      
+      allow read: if leaderboardCollection.matches('leaderboard-.*');
+
       // Only authenticated (non-guest) users can write to leaderboards
-      allow create, update: if isOwner(userId) && isNotGuest()
-        && request.resource.data.keys().hasAll(['displayName', 'score', 'timestamp'])
+      allow create, update: if leaderboardCollection.matches('leaderboard-.*')
+        && isOwner(userId) && isNotGuest()
+        && request.resource.data.keys().hasAll(['displayName', 'score', 'timestamp', 'gameModeId'])
         && request.resource.data.displayName is string
         && request.resource.data.score is number
         && request.resource.data.timestamp is number
+        && request.resource.data.gameModeId is string
         && (!request.resource.data.keys().hasAny(['isGuest']) || request.resource.data.isGuest == false);
-      
+
       // Users can delete their own leaderboard entries
-      allow delete: if isOwner(userId);
+      allow delete: if leaderboardCollection.matches('leaderboard-.*') && isOwner(userId);
     }
   }
 }

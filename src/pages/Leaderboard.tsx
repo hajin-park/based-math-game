@@ -23,7 +23,8 @@ export default function Leaderboard() {
   const fetchLeaderboard = async (gameModeId: string) => {
     setLoading(true);
     try {
-      const leaderboardRef = collection(firestore, `leaderboards/${gameModeId}`);
+      // Use flat collection structure: leaderboard-{gameModeId}
+      const leaderboardRef = collection(firestore, `leaderboard-${gameModeId}`);
 
       // Query Firestore for top 50 scores, ordered by score descending
       const leaderboardQuery = query(
