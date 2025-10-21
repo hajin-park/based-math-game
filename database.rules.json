@@ -1,29 +1,5 @@
 {
   "rules": {
-    "users": {
-      "$uid": {
-        ".read": "$uid === auth.uid || $uid.beginsWith('guest_')",
-        ".write": "$uid === auth.uid || ($uid.beginsWith('guest_') && (!newData.exists() || (newData.child('uid').val() === $uid && newData.child('isGuest').val() === true)))",
-        "stats": {
-          ".validate": "newData.hasChildren(['gamesPlayed', 'totalScore'])"
-        },
-        "gameHistory": {
-          ".indexOn": ["timestamp"],
-          "$gameId": {
-            ".validate": "newData.hasChildren(['score', 'timestamp']) && newData.child('score').isNumber() && newData.child('timestamp').isNumber()"
-          }
-        }
-      }
-    },
-    "leaderboards": {
-      "$gameModeId": {
-        ".read": true,
-        "$uid": {
-          ".write": "($uid === auth.uid && !$uid.beginsWith('guest_')) || ($uid.beginsWith('guest_') && newData.child('isGuest').val() !== true)",
-          ".validate": "newData.hasChildren(['displayName', 'score', 'timestamp']) && newData.child('score').isNumber() && (!newData.hasChild('isGuest') || newData.child('isGuest').val() === false)"
-        }
-      }
-    },
     "rooms": {
       ".read": "true",
       "$roomId": {

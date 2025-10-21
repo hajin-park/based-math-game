@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { ref, get } from 'firebase/database';
-import { database } from '@/firebase/config';
+import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
+import { firestore } from '@/firebase/config';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { OFFICIAL_GAME_MODES } from '@/types/gameMode';
 
@@ -23,34 +23,38 @@ export default function Leaderboard() {
   const fetchLeaderboard = async (gameModeId: string) => {
     setLoading(true);
     try {
-      const leaderboardRef = ref(database, `leaderboards/${gameModeId}`);
-      // Get all entries and sort client-side since Firebase orderByChild returns ascending order
-      const snapshot = await get(leaderboardRef);
-      const data = snapshot.val();
+      const leaderboardRef = collection(firestore, `leaderboards/${gameModeId}`);
 
-      if (data) {
-        const entries: LeaderboardEntry[] = Object.entries(data)
-          .filter(([uid, value]) => {
+      // Query Firestore for top 50 scores, ordered by score descending
+      const leaderboardQuery = query(
+        leaderboardRef,
+        orderBy('score', 'desc'),
+        limit(50)
+      );
+
+      const snapshot = await getDocs(leaderboardQuery);
+
+      if (!snapshot.empty) {
+        const entries: LeaderboardEntry[] = snapshot.docs
+          .filter((doc) => {
             // Filter out guest users (UIDs starting with 'guest_')
             // and entries marked as guest
-            const leaderboardData = value as Record<string, unknown>;
-            const isGuestUid = uid.startsWith('guest_');
-            const isGuestMarked = leaderboardData.isGuest === true;
+            const data = doc.data();
+            const isGuestUid = doc.id.startsWith('guest_');
+            const isGuestMarked = data.isGuest === true;
             return !isGuestUid && !isGuestMarked;
           })
-          .map(([uid, value]: [string, unknown]) => {
-            const leaderboardData = value as Record<string, unknown>;
+          .map((doc) => {
+            const data = doc.data();
             return {
-              uid,
-              displayName: leaderboardData.displayName as string,
-              score: leaderboardData.score as number,
-              timestamp: leaderboardData.timestamp as number,
+              uid: doc.id,
+              displayName: data.displayName as string,
+              score: data.score as number,
+              timestamp: data.timestamp as number,
             };
           });
 
-        // Sort by score descending and take top 50
-        entries.sort((a, b) => b.score - a.score);
-        setLeaderboard(entries.slice(0, 50));
+        setLeaderboard(entries);
       } else {
         setLeaderboard([]);
       }

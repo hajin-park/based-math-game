@@ -11,7 +11,8 @@ import {
   deleteUser,
 } from 'firebase/auth';
 import { ref, onValue, set, onDisconnect, serverTimestamp, remove } from 'firebase/database';
-import { auth, database } from '@/firebase/config';
+import { doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { auth, database, firestore } from '@/firebase/config';
 
 // Guest user interface for database-only guests
 interface GuestUser {
@@ -100,49 +101,69 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const userRef = ref(database, `users/${user.uid}`);
     const connectedRef = ref(database, '.info/connected');
 
-    const unsubscribe = onValue(connectedRef, (snapshot) => {
+    const unsubscribe = onValue(connectedRef, async (snapshot) => {
       if (snapshot.val() === true) {
-        // Store user info in database with proper structure for guest users
-        const userData = {
-          uid: user.uid,
-          displayName: user.displayName || (isGuestUser(user) ? 'Guest' : 'User'),
-          isGuest: isGuestUser(user),
-          lastSeen: serverTimestamp(),
-        };
-
-        set(userRef, userData).catch((error) => {
-          console.error('Error setting user data:', error);
-        });
-
-        // Set user as online with uid for security rules validation
-        const presenceData = {
-          uid: user.uid,
-          online: true,
-          lastSeen: serverTimestamp(),
-        };
-
-        set(presenceRef, presenceData).catch((error) => {
-          console.error('Error setting presence:', error);
-        });
-
-        // For guest users, clean up their data on disconnect
+        // For guest users: Store in RTDB only (ephemeral)
         if (isGuestUser(user)) {
-          // Remove user data
-          onDisconnect(userRef).remove().catch((error) => {
-            console.error('Error setting onDisconnect for user removal:', error);
+          const userData = {
+            uid: user.uid,
+            displayName: user.displayName || 'Guest',
+            isGuest: true,
+            lastSeen: serverTimestamp(),
+          };
+
+          set(userRef, userData).catch((error) => {
+            console.error('Error setting guest user data:', error);
           });
-          // Remove presence data
+
+          // Set presence
+          set(presenceRef, {
+            uid: user.uid,
+            online: true,
+            lastSeen: serverTimestamp(),
+          }).catch((error) => {
+            console.error('Error setting guest presence:', error);
+          });
+
+          // Clean up guest data on disconnect
+          onDisconnect(userRef).remove().catch((error) => {
+            console.error('Error setting onDisconnect for guest user removal:', error);
+          });
           onDisconnect(presenceRef).remove().catch((error) => {
-            console.error('Error setting onDisconnect for presence removal:', error);
+            console.error('Error setting onDisconnect for guest presence removal:', error);
           });
         } else {
-          // For authenticated users, just set them as offline when disconnected
+          // For authenticated users: Store profile in Firestore (persistent)
+          const userProfileRef = doc(firestore, `users/${user.uid}`);
+          try {
+            await setDoc(userProfileRef, {
+              uid: user.uid,
+              displayName: user.displayName || 'User',
+              email: user.email || null,
+              photoURL: user.photoURL || null,
+              createdAt: Date.now(),
+              lastSeen: Date.now(),
+            }, { merge: true });
+          } catch (error) {
+            console.error('Error setting user profile in Firestore:', error);
+          }
+
+          // Set presence in RTDB (ephemeral)
+          set(presenceRef, {
+            uid: user.uid,
+            online: true,
+            lastSeen: serverTimestamp(),
+          }).catch((error) => {
+            console.error('Error setting authenticated user presence:', error);
+          });
+
+          // Set offline status on disconnect
           onDisconnect(presenceRef).set({
             uid: user.uid,
             online: false,
             lastSeen: serverTimestamp(),
           }).catch((error) => {
-            console.error('Error setting onDisconnect for presence:', error);
+            console.error('Error setting onDisconnect for authenticated user presence:', error);
           });
         }
       }
@@ -279,11 +300,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
         throw new Error('Guest accounts cannot be deleted');
       }
 
-      // Delete user data from database
-      const userRef = ref(database, `users/${user.uid}`);
-      const presenceRef = ref(database, `presence/${user.uid}`);
+      // Delete user data from Firestore (persistent data)
+      const userProfileRef = doc(firestore, `users/${user.uid}`);
+      const userStatsRef = doc(firestore, `userStats/${user.uid}`);
 
-      await remove(userRef);
+      await deleteDoc(userProfileRef).catch((error) => {
+        console.error('Error deleting user profile from Firestore:', error);
+      });
+
+      await deleteDoc(userStatsRef).catch((error) => {
+        console.error('Error deleting user stats from Firestore:', error);
+      });
+
+      // Delete presence from RTDB (ephemeral data)
+      const presenceRef = ref(database, `presence/${user.uid}`);
       await remove(presenceRef);
 
       // Delete Firebase auth user

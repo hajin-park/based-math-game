@@ -1,0 +1,83 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(uid) {
+      return isAuthenticated() && request.auth.uid == uid;
+    }
+    
+    function isNotGuest() {
+      return isAuthenticated() && !request.auth.uid.matches('guest_.*');
+    }
+    
+    // User profiles - authenticated users only
+    match /users/{userId} {
+      // Users can read their own profile
+      allow read: if isOwner(userId);
+      
+      // Users can create/update their own profile (authenticated users only)
+      allow create, update: if isOwner(userId) && isNotGuest();
+      
+      // Users can delete their own profile
+      allow delete: if isOwner(userId);
+    }
+    
+    // User statistics - authenticated users only
+    match /userStats/{userId} {
+      // Users can read their own stats
+      allow read: if isOwner(userId);
+      
+      // Users can create/update their own stats (authenticated users only)
+      allow create, update: if isOwner(userId) && isNotGuest()
+        && request.resource.data.keys().hasAll(['gamesPlayed', 'totalScore', 'highScore', 'averageScore', 'lastPlayed'])
+        && request.resource.data.gamesPlayed is number
+        && request.resource.data.totalScore is number
+        && request.resource.data.highScore is number
+        && request.resource.data.averageScore is number
+        && request.resource.data.lastPlayed is number;
+      
+      // Users can delete their own stats
+      allow delete: if isOwner(userId);
+    }
+    
+    // Game history - authenticated users only
+    match /userStats/{userId}/gameHistory/{gameId} {
+      // Users can read their own game history
+      allow read: if isOwner(userId);
+      
+      // Users can create game history entries (authenticated users only)
+      allow create: if isOwner(userId) && isNotGuest()
+        && request.resource.data.keys().hasAll(['score', 'duration', 'gameModeId', 'timestamp'])
+        && request.resource.data.score is number
+        && request.resource.data.duration is number
+        && request.resource.data.gameModeId is string
+        && request.resource.data.timestamp is number;
+      
+      // Users can delete their own game history
+      allow delete: if isOwner(userId);
+    }
+    
+    // Global leaderboards - authenticated users only can write, everyone can read
+    match /leaderboards/{gameModeId}/{userId} {
+      // Anyone can read leaderboards
+      allow read: if true;
+      
+      // Only authenticated (non-guest) users can write to leaderboards
+      allow create, update: if isOwner(userId) && isNotGuest()
+        && request.resource.data.keys().hasAll(['displayName', 'score', 'timestamp'])
+        && request.resource.data.displayName is string
+        && request.resource.data.score is number
+        && request.resource.data.timestamp is number
+        && (!request.resource.data.keys().hasAny(['isGuest']) || request.resource.data.isGuest == false);
+      
+      // Users can delete their own leaderboard entries
+      allow delete: if isOwner(userId);
+    }
+  }
+}
+

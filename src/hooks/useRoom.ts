@@ -11,6 +11,10 @@ export interface RoomPlayer {
   score: number;
   finished: boolean;
   wins: number;
+  disconnected?: boolean; // True if player is disconnected
+  disconnectedAt?: number; // Timestamp when player disconnected
+  kicked?: boolean; // True if player was kicked by host
+  kickedAt?: number; // Timestamp when player was kicked
 }
 
 export interface Room {
@@ -55,6 +59,7 @@ export function useRoom() {
               score: 0,
               finished: false,
               wins: 0,
+              disconnected: false,
             },
           },
           status: 'waiting',
@@ -63,10 +68,13 @@ export function useRoom() {
 
         await set(newRoomRef, room);
 
-        // Set up host disconnect handler - remove host player on disconnect
-        // Client-side listeners will handle host transfer or room deletion
+        // Set up host disconnect handler - mark as disconnected
+        // Client-side listeners will handle host transfer
         const hostPlayerRef = ref(database, `rooms/${roomId}/players/${user.uid}`);
-        onDisconnect(hostPlayerRef).remove();
+        onDisconnect(hostPlayerRef).update({
+          disconnected: true,
+          disconnectedAt: Date.now(),
+        });
 
         return roomId;
       } catch (error) {
@@ -98,23 +106,47 @@ export function useRoom() {
           throw new Error('Room is not accepting players');
         }
 
-        const maxPlayers = room.maxPlayers || 4; // Default to 4 for backwards compatibility
-        if (Object.keys(room.players).length >= maxPlayers) {
-          throw new Error('Room is full');
+        const playerRef = ref(database, `rooms/${roomId}/players/${user.uid}`);
+        const existingPlayer = room.players?.[user.uid];
+
+        // Check if player is reconnecting (was disconnected or kicked)
+        if (existingPlayer) {
+          if (existingPlayer.kicked) {
+            throw new Error('You have been removed from this room');
+          }
+
+          // Reconnecting - update disconnected status
+          await update(playerRef, {
+            disconnected: false,
+            disconnectedAt: null,
+          });
+        } else {
+          // New player joining
+          const maxPlayers = room.maxPlayers || 4;
+          const activePlayers = Object.values(room.players || {}).filter(
+            (p: unknown) => !(p as RoomPlayer).disconnected && !(p as RoomPlayer).kicked
+          );
+
+          if (activePlayers.length >= maxPlayers) {
+            throw new Error('Room is full');
+          }
+
+          await set(playerRef, {
+            uid: user.uid,
+            displayName: user.displayName || 'Guest',
+            ready: false,
+            score: 0,
+            finished: false,
+            wins: 0,
+            disconnected: false,
+          });
         }
 
-        const playerRef = ref(database, `rooms/${roomId}/players/${user.uid}`);
-        await set(playerRef, {
-          uid: user.uid,
-          displayName: user.displayName || 'Guest',
-          ready: false,
-          score: 0,
-          finished: false,
-          wins: 0,
+        // Set up disconnect handler - mark as disconnected instead of removing
+        onDisconnect(playerRef).update({
+          disconnected: true,
+          disconnectedAt: Date.now(),
         });
-
-        // Set up disconnect handler - remove player on disconnect
-        onDisconnect(playerRef).remove();
       } catch (error) {
         console.error('Error joining room:', error);
         throw error;
@@ -345,6 +377,41 @@ export function useRoom() {
     [user]
   );
 
+  const kickPlayer = useCallback(
+    async (roomId: string, playerUid: string) => {
+      if (!user) return;
+
+      try {
+        const roomRef = ref(database, `rooms/${roomId}`);
+        const snapshot = await get(roomRef);
+        const room = snapshot.val();
+
+        if (!room) {
+          throw new Error('Room not found');
+        }
+
+        if (room.hostUid !== user.uid) {
+          throw new Error('Only the host can kick players');
+        }
+
+        if (playerUid === user.uid) {
+          throw new Error('Cannot kick yourself');
+        }
+
+        // Mark player as kicked
+        const playerRef = ref(database, `rooms/${roomId}/players/${playerUid}`);
+        await update(playerRef, {
+          kicked: true,
+          kickedAt: Date.now(),
+        });
+      } catch (error) {
+        console.error('Error kicking player:', error);
+        throw error;
+      }
+    },
+    [user]
+  );
+
   const subscribeToRoom = useCallback((
     roomId: string,
     callback: (room: Room | null) => void
@@ -398,31 +465,37 @@ export function useRoom() {
       }
 
       const players = validPlayers.map(([, p]) => p as RoomPlayer);
-      const hostExists = players.some((p: RoomPlayer) => p.uid === room.hostUid);
 
-      if (!hostExists && players.length > 0) {
-        // Host disconnected but players remain - transfer host to first player
-        const newHost = players[0];
+      // Check if host is disconnected and transfer to first connected player
+      const host = players.find((p: RoomPlayer) => p.uid === room.hostUid);
+      const hostDisconnected = host?.disconnected === true;
 
-        // Validate newHost has uid
-        if (!newHost.uid) {
-          console.error('Cannot transfer host: newHost has no uid', newHost);
-          callback(room);
-          return;
+      if (hostDisconnected && players.length > 1) {
+        // Find first connected, non-kicked player to transfer host to
+        const newHost = players.find((p: RoomPlayer) =>
+          p.uid !== room.hostUid && !p.disconnected && !p.kicked
+        );
+
+        if (newHost) {
+          // Transfer host to connected player
+          try {
+            await update(roomRef, {
+              hostUid: newHost.uid,
+              [`players/${newHost.uid}/ready`]: true, // New host is automatically ready
+            });
+            // Don't call callback yet - wait for the update to propagate
+            return;
+          } catch (error) {
+            console.error('Error transferring host:', error);
+          }
         }
+        // If no connected players available, keep disconnected host
+      }
 
-        try {
-          await update(roomRef, {
-            hostUid: newHost.uid,
-            [`players/${newHost.uid}/ready`]: true, // New host is automatically ready
-          });
-          // Don't call callback yet - wait for the update to propagate
-          return;
-        } catch (error) {
-          console.error('Error transferring host:', error);
-        }
-      } else if (players.length === 0) {
-        // No players left - delete the room
+      // Check if all players are disconnected or kicked - delete room
+      const activePlayerCount = players.filter((p: RoomPlayer) => !p.disconnected && !p.kicked).length;
+      if (activePlayerCount === 0) {
+        // No active players left - delete the room
         try {
           await remove(roomRef);
           callback(null);
@@ -450,6 +523,7 @@ export function useRoom() {
     resetRoom,
     incrementWins,
     updateGameMode,
+    kickPlayer,
     subscribeToRoom,
   };
 }

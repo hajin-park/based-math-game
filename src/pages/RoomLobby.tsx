@@ -6,14 +6,14 @@ import { Badge } from '@/components/ui/badge';
 import { useRoom, Room } from '@/hooks/useRoom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
-import { Copy, Check, Link2, Settings, ChevronDown, ChevronUp } from 'lucide-react';
+import { Copy, Check, Link2, Settings, ChevronDown, ChevronUp, X } from 'lucide-react';
 import { OFFICIAL_GAME_MODES, GameMode, getDifficultyColor } from '@/types/gameMode';
 
 export default function RoomLobby() {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { leaveRoom, setPlayerReady, startGame, subscribeToRoom, updateGameMode } = useRoom();
+  const { leaveRoom, setPlayerReady, startGame, subscribeToRoom, updateGameMode, kickPlayer } = useRoom();
   const [room, setRoom] = useState<Room | null>(null);
   const [isReady, setIsReady] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -46,6 +46,26 @@ export default function RoomLobby() {
         return;
       }
 
+      // Check if current user was kicked
+      if (user && updatedRoom.players[user.uid]?.kicked) {
+        // Prevent multiple navigations
+        if (hasNavigatedRef.current) return;
+        hasNavigatedRef.current = true;
+
+        // Navigate first, then show toast
+        navigate('/multiplayer', { replace: true });
+
+        // Show toast after navigation
+        setTimeout(() => {
+          toast({
+            title: 'Removed from Room',
+            description: 'You have been removed from the room by the host.',
+            variant: 'destructive',
+          });
+        }, 100);
+        return;
+      }
+
       setRoom(updatedRoom);
 
       // Navigate to game when it starts
@@ -55,7 +75,7 @@ export default function RoomLobby() {
     });
 
     return () => unsubscribe();
-  }, [roomId, subscribeToRoom, navigate, toast]);
+  }, [roomId, subscribeToRoom, navigate, toast, user]);
 
   const handleLeave = async () => {
     if (!roomId) return;
@@ -88,6 +108,24 @@ export default function RoomLobby() {
       toast({
         title: "Room code copied!",
         description: "Share this code with your friends to join.",
+      });
+    }
+  };
+
+  const handleKickPlayer = async (playerUid: string) => {
+    if (!roomId) return;
+    try {
+      await kickPlayer(roomId, playerUid);
+      toast({
+        title: "Player removed",
+        description: "The player has been removed from the room.",
+      });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to kick player';
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
       });
     }
   };
@@ -133,11 +171,14 @@ export default function RoomLobby() {
   }
 
   const isHost = user?.uid === room.hostUid;
-  // Filter out host from ready check - host doesn't need to be ready
-  const nonHostPlayers = Object.values(room.players).filter((p) => p.uid !== room.hostUid);
+  // Filter out host, disconnected, and kicked players from ready check
+  const nonHostPlayers = Object.values(room.players).filter(
+    (p) => p.uid !== room.hostUid && !p.disconnected && !p.kicked
+  );
   const allReady = nonHostPlayers.length > 0 && nonHostPlayers.every((p) => p.ready);
   const readyCount = nonHostPlayers.filter((p) => p.ready).length;
-  const playerCount = Object.keys(room.players).length;
+  // Count only active (non-kicked) players
+  const playerCount = Object.values(room.players).filter((p) => !p.kicked).length;
 
   return (
     <div className="container mx-auto p-4">
@@ -261,13 +302,19 @@ export default function RoomLobby() {
               {Object.values(room.players).map((player) => {
                 const isPlayerHost = player.uid === room.hostUid;
                 const wins = player.wins || 0;
+                const isDisconnected = player.disconnected === true;
+                const isKicked = player.kicked === true;
+
+                // Don't show kicked players
+                if (isKicked) return null;
+
                 return (
                   <div
                     key={player.uid}
                     className="flex items-center justify-between p-3 rounded-md bg-muted/50"
                   >
                     <div className="flex items-center gap-2">
-                      <span>
+                      <span className={isDisconnected ? 'text-muted-foreground' : ''}>
                         {player.displayName}
                         {wins > 0 && (
                           <span className="text-sm text-muted-foreground ml-1">
@@ -279,13 +326,28 @@ export default function RoomLobby() {
                         <Badge variant="outline">Host</Badge>
                       )}
                     </div>
-                    {isPlayerHost ? (
-                      <Badge variant="secondary">Hosting</Badge>
-                    ) : player.ready ? (
-                      <Badge className="bg-green-600">Ready</Badge>
-                    ) : (
-                      <Badge variant="outline">Not Ready</Badge>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {isDisconnected ? (
+                        <Badge variant="destructive">Disconnected</Badge>
+                      ) : isPlayerHost ? (
+                        <Badge variant="secondary">Hosting</Badge>
+                      ) : player.ready ? (
+                        <Badge className="bg-green-600">Ready</Badge>
+                      ) : (
+                        <Badge variant="outline">Not Ready</Badge>
+                      )}
+                      {/* Kick button - only show for host, not for themselves */}
+                      {isHost && !isPlayerHost && (
+                        <Button
+                          onClick={() => handleKickPlayer(player.uid)}
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 );
               })}

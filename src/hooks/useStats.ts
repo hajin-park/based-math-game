@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
-import { ref, set, get, runTransaction } from 'firebase/database';
-import { database } from '@/firebase/config';
+import { doc, setDoc, getDoc, runTransaction, collection, addDoc } from 'firebase/firestore';
+import { firestore } from '@/firebase/config';
 import { useAuth } from '@/contexts/AuthContext';
 
 export interface GameResult {
@@ -28,23 +28,29 @@ export function useStats() {
         return;
       }
 
+      // Guest users cannot save to Firestore (persistent storage)
+      if (isGuest) {
+        console.warn('Guest users cannot save stats to persistent storage');
+        return;
+      }
+
       const timestamp = result.timestamp || Date.now();
-      const gameId = `game_${timestamp}`;
 
       try {
-        // Save game to history
-        const gameHistoryRef = ref(database, `users/${user.uid}/gameHistory/${gameId}`);
-        await set(gameHistoryRef, {
+        // Save game to history (Firestore subcollection)
+        const gameHistoryRef = collection(firestore, `userStats/${user.uid}/gameHistory`);
+        await addDoc(gameHistoryRef, {
           score: result.score,
           duration: result.duration,
           gameModeId: result.gameModeId || 'custom',
           timestamp,
         });
 
-        // Update user stats
-        const statsRef = ref(database, `users/${user.uid}/stats`);
-        await runTransaction(statsRef, (currentStats) => {
-          const stats = currentStats || {
+        // Update user stats (Firestore transaction)
+        const statsRef = doc(firestore, `userStats/${user.uid}`);
+        await runTransaction(firestore, async (transaction) => {
+          const statsDoc = await transaction.get(statsRef);
+          const currentStats = statsDoc.exists() ? statsDoc.data() as UserStats : {
             gamesPlayed: 0,
             totalScore: 0,
             highScore: 0,
@@ -52,32 +58,36 @@ export function useStats() {
             lastPlayed: 0,
           };
 
-          const newGamesPlayed = stats.gamesPlayed + 1;
-          const newTotalScore = stats.totalScore + result.score;
-          const newHighScore = Math.max(stats.highScore, result.score);
+          const newGamesPlayed = currentStats.gamesPlayed + 1;
+          const newTotalScore = currentStats.totalScore + result.score;
+          const newHighScore = Math.max(currentStats.highScore, result.score);
           const newAverageScore = newTotalScore / newGamesPlayed;
 
-          return {
+          const updatedStats: UserStats = {
             gamesPlayed: newGamesPlayed,
             totalScore: newTotalScore,
             highScore: newHighScore,
             averageScore: Math.round(newAverageScore * 100) / 100,
             lastPlayed: timestamp,
           };
+
+          transaction.set(statsRef, updatedStats);
         });
 
-        // Update leaderboard ONLY if user is NOT a guest and game mode is specified
-        // Guest users can track stats but won't appear on global leaderboard
-        if (result.gameModeId && !isGuest) {
-          const leaderboardRef = ref(
-            database,
+        // Update leaderboard ONLY if game mode is specified
+        // Guest check already done above
+        if (result.gameModeId) {
+          const leaderboardRef = doc(
+            firestore,
             `leaderboards/${result.gameModeId}/${user.uid}`
           );
-          const currentLeaderboardEntry = await get(leaderboardRef);
-          const currentBestScore = currentLeaderboardEntry.val()?.score || 0;
+          const currentLeaderboardEntry = await getDoc(leaderboardRef);
+          const currentBestScore = currentLeaderboardEntry.exists()
+            ? currentLeaderboardEntry.data()?.score || 0
+            : 0;
 
           if (result.score > currentBestScore) {
-            await set(leaderboardRef, {
+            await setDoc(leaderboardRef, {
               displayName: user.displayName || 'User',
               score: result.score,
               timestamp,
@@ -97,16 +107,25 @@ export function useStats() {
   const getUserStats = useCallback(async (): Promise<UserStats | null> => {
     if (!user) return null;
 
+    // Guest users don't have persistent stats in Firestore
+    if (isGuest) {
+      return null;
+    }
+
     try {
-      const statsRef = ref(database, `users/${user.uid}/stats`);
-      const snapshot = await get(statsRef);
-      return snapshot.val();
+      const statsRef = doc(firestore, `userStats/${user.uid}`);
+      const snapshot = await getDoc(statsRef);
+
+      if (snapshot.exists()) {
+        return snapshot.data() as UserStats;
+      }
+      return null;
     } catch (error) {
       console.error('Error getting user stats:', error);
       return null;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.uid]); // Only depend on uid to prevent unnecessary re-creation
+  }, [user?.uid, isGuest]); // Only depend on uid and isGuest to prevent unnecessary re-creation
 
   return {
     saveGameResult,

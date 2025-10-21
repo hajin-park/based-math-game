@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
-import { ref, query, orderByChild, limitToLast, get, startAt } from 'firebase/database';
-import { database } from '@/firebase/config';
+import { collection, query, orderBy, limit as firestoreLimit, where, getDocs, Query, DocumentData } from 'firebase/firestore';
+import { firestore } from '@/firebase/config';
 import { useAuth } from '@/contexts/AuthContext';
 
 export interface GameHistoryEntry {
@@ -14,7 +14,7 @@ export interface GameHistoryEntry {
 export type TimeRange = 'today' | 'week' | 'month' | 'all';
 
 export function useGameHistory() {
-  const { user } = useAuth();
+  const { user, isGuest } = useAuth();
   const [history, setHistory] = useState<GameHistoryEntry[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -36,46 +36,58 @@ export function useGameHistory() {
   };
 
   const fetchHistory = useCallback(
-    async (timeRange: TimeRange = 'all', limit: number = 50) => {
+    async (timeRange: TimeRange = 'all', limitCount: number = 50) => {
       if (!user) {
+        setHistory([]);
+        return;
+      }
+
+      // Guest users don't have persistent game history in Firestore
+      if (isGuest) {
         setHistory([]);
         return;
       }
 
       setLoading(true);
       try {
-        const historyRef = ref(database, `users/${user.uid}/gameHistory`);
+        const historyRef = collection(firestore, `userStats/${user.uid}/gameHistory`);
         const startTime = getTimeRangeStart(timeRange);
 
-        let historyQuery;
+        let historyQuery: Query<DocumentData>;
         if (timeRange === 'all') {
-          historyQuery = query(historyRef, orderByChild('timestamp'), limitToLast(limit));
+          historyQuery = query(
+            historyRef,
+            orderBy('timestamp', 'desc'),
+            firestoreLimit(limitCount)
+          );
         } else {
           historyQuery = query(
             historyRef,
-            orderByChild('timestamp'),
-            startAt(startTime),
-            limitToLast(limit)
+            where('timestamp', '>=', startTime),
+            orderBy('timestamp', 'desc'),
+            firestoreLimit(limitCount)
           );
         }
 
-        const snapshot = await get(historyQuery);
-        const data = snapshot.val();
+        const snapshot = await getDocs(historyQuery);
 
-        if (data) {
-          const entries: GameHistoryEntry[] = Object.entries(data).map(([id, value]: [string, unknown]) => {
-            const gameData = value as Record<string, unknown>;
+        if (!snapshot.empty) {
+          const entries: GameHistoryEntry[] = snapshot.docs.map((doc) => {
+            const data = doc.data() as {
+              score: number;
+              duration: number;
+              gameModeId: string;
+              timestamp: number;
+            };
             return {
-              id,
-              score: gameData.score as number,
-              duration: gameData.duration as number,
-              gameModeId: gameData.gameModeId as string,
-              timestamp: gameData.timestamp as number,
+              id: doc.id,
+              score: data.score,
+              duration: data.duration,
+              gameModeId: data.gameModeId,
+              timestamp: data.timestamp,
             };
           });
 
-          // Sort by timestamp descending (most recent first)
-          entries.sort((a, b) => b.timestamp - a.timestamp);
           setHistory(entries);
         } else {
           setHistory([]);
@@ -88,7 +100,7 @@ export function useGameHistory() {
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [user?.uid] // Only depend on uid to prevent unnecessary re-creation
+    [user?.uid, isGuest] // Only depend on uid and isGuest to prevent unnecessary re-creation
   );
 
   const getStatsForTimeRange = useCallback(
