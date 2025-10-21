@@ -16,6 +16,7 @@ export default function NavigationBar() {
         { name: "Multiplayer", href: "/multiplayer" },
         { name: "Leaderboard", href: "/leaderboard" },
         { name: "Stats", href: "/stats" },
+        { name: "How to Play", href: "/how-to-play" },
         { name: "Tutorials", href: "/tutorials" },
     ];
 

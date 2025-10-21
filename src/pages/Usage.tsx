@@ -15,7 +15,7 @@ export default function Usage() {
         {/* Game Basics */}
         <Card>
           <CardHeader>
-            <CardTitle>🎯 Game Basics</CardTitle>
+            <CardTitle>Game Basics</CardTitle>
             <CardDescription>Understanding base conversion challenges</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -55,7 +55,7 @@ export default function Usage() {
         {/* Singleplayer Mode */}
         <Card>
           <CardHeader>
-            <CardTitle>🎮 Singleplayer Mode</CardTitle>
+            <CardTitle>Singleplayer Mode</CardTitle>
             <CardDescription>Practice at your own pace</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -115,7 +115,7 @@ export default function Usage() {
             </div>
 
             <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
-              <p className="text-sm font-semibold mb-2">💡 Pro Tip:</p>
+              <p className="text-sm font-semibold mb-2">Pro Tip:</p>
               <p className="text-sm">
                 Start with official modes to learn, then use Playground to focus on specific conversions you find challenging!
               </p>
@@ -126,7 +126,7 @@ export default function Usage() {
         {/* Multiplayer Mode */}
         <Card>
           <CardHeader>
-            <CardTitle>👥 Multiplayer Mode</CardTitle>
+            <CardTitle>Multiplayer Mode</CardTitle>
             <CardDescription>Compete with friends in real-time</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -175,7 +175,7 @@ export default function Usage() {
             </div>
 
             <div className="bg-purple-50 dark:bg-purple-950 p-4 rounded-lg border border-purple-200 dark:border-purple-800">
-              <p className="text-sm font-semibold mb-2">🏆 Scoring:</p>
+              <p className="text-sm font-semibold mb-2">Scoring:</p>
               <p className="text-sm">
                 All players answer the same questions simultaneously. Fastest correct answers earn the most points.
                 Results are shown in real-time on the leaderboard!
@@ -187,7 +187,7 @@ export default function Usage() {
         {/* During the Quiz */}
         <Card>
           <CardHeader>
-            <CardTitle>⚡ During the Quiz</CardTitle>
+            <CardTitle>During the Quiz</CardTitle>
             <CardDescription>Gameplay mechanics and scoring</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -218,19 +218,19 @@ export default function Usage() {
                 <h3 className="font-semibold mb-2">Scoring System</h3>
                 <ul className="space-y-2 text-sm">
                   <li className="flex items-start gap-2">
-                    <span className="text-green-600 dark:text-green-400 font-bold">✓</span>
+                    <span className="text-green-600 dark:text-green-400 font-bold">+</span>
                     <span><strong>Correct answer:</strong> +1 point</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-orange-600 dark:text-orange-400 font-bold">🔥</span>
+                    <span className="text-orange-600 dark:text-orange-400 font-bold">×</span>
                     <span><strong>Combo bonus:</strong> Consecutive correct answers increase your combo multiplier</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-red-600 dark:text-red-400 font-bold">✗</span>
+                    <span className="text-red-600 dark:text-red-400 font-bold">−</span>
                     <span><strong>Wrong answer:</strong> Breaks combo, no points</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-blue-600 dark:text-blue-400 font-bold">⏱</span>
+                    <span className="text-blue-600 dark:text-blue-400 font-bold">⏲</span>
                     <span><strong>Time bonus:</strong> Faster answers in multiplayer earn more points</span>
                   </li>
                 </ul>
@@ -241,7 +241,7 @@ export default function Usage() {
               <h3 className="font-semibold mb-2 text-sm">On-Screen Information</h3>
               <div className="grid grid-cols-3 gap-3 text-xs">
                 <div className="text-center">
-                  <div className="font-mono text-2xl font-bold">⏱ 45</div>
+                  <div className="font-mono text-2xl font-bold">45s</div>
                   <div className="text-muted-foreground">Time Remaining</div>
                 </div>
                 <div className="text-center">
@@ -260,7 +260,7 @@ export default function Usage() {
         {/* Progress Tracking */}
         <Card>
           <CardHeader>
-            <CardTitle>📊 Progress Tracking</CardTitle>
+            <CardTitle>Progress Tracking</CardTitle>
             <CardDescription>Monitor your improvement over time</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -317,7 +317,7 @@ export default function Usage() {
             </div>
 
             <div className="bg-yellow-50 dark:bg-yellow-950 p-4 rounded-lg border border-yellow-200 dark:border-yellow-800">
-              <p className="text-sm font-semibold mb-2">⚠️ Guest Users:</p>
+              <p className="text-sm font-semibold mb-2">Guest Users:</p>
               <p className="text-sm">
                 Playing as a guest? Your stats are tracked during your session, but won't be saved permanently
                 or appear on global leaderboards. <Link to="/signup" className="text-primary hover:underline font-semibold">Sign up</Link> to
@@ -330,7 +330,7 @@ export default function Usage() {
         {/* Quick Tips */}
         <Card>
           <CardHeader>
-            <CardTitle>💡 Quick Tips</CardTitle>
+            <CardTitle>Quick Tips</CardTitle>
             <CardDescription>Improve your performance</CardDescription>
           </CardHeader>
           <CardContent>
@@ -370,7 +370,7 @@ export default function Usage() {
         {/* Get Started */}
         <Card className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950 border-2">
           <CardHeader>
-            <CardTitle>🚀 Ready to Start?</CardTitle>
+            <CardTitle>Ready to Start?</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="mb-4">

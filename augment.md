@@ -597,8 +597,10 @@ button, card, form, input, label, select, scroll-area, separator, toast, dialog,
 
 **UI:**
 - `Navigation-Bar.tsx` - Responsive nav with profile dropdown
+  - Navigation links: Home, Play, Multiplayer, Leaderboard, Stats, How to Play, Tutorials
   - Shows "Sign Up" button for guest users
   - Shows profile avatar dropdown for authenticated users
+  - Mobile menu with hamburger icon
   - Dark mode support
 - `ProfileDropdown.tsx` - Profile menu dropdown
   - View Profile, Settings, Appearance (Light/Dark), Sign Out
