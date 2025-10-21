@@ -29,7 +29,9 @@ export function useStats() {
       }
 
       // Guest users cannot save to Firestore (persistent storage)
-      if (isGuest) {
+      // Check both isGuest flag and UID prefix for reliability
+      const userIsGuest = isGuest || user.uid.startsWith('guest_');
+      if (userIsGuest) {
         console.warn('Guest users cannot save stats to persistent storage');
         return;
       }
@@ -108,7 +110,9 @@ export function useStats() {
     if (!user) return null;
 
     // Guest users don't have persistent stats in Firestore
-    if (isGuest) {
+    // Check both isGuest flag and UID prefix for reliability
+    const userIsGuest = isGuest || user.uid.startsWith('guest_');
+    if (userIsGuest) {
       return null;
     }
 

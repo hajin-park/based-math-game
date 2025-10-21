@@ -64,7 +64,7 @@ service cloud.firestore {
     
     // Global leaderboards - authenticated users only can write, everyone can read
     match /leaderboards/{gameModeId}/{userId} {
-      // Anyone can read leaderboards
+      // Anyone can read leaderboards (including unauthenticated users)
       allow read: if true;
       
       // Only authenticated (non-guest) users can write to leaderboards

@@ -43,7 +43,9 @@ export function useGameHistory() {
       }
 
       // Guest users don't have persistent game history in Firestore
-      if (isGuest) {
+      // Check both isGuest flag and UID prefix for reliability
+      const userIsGuest = isGuest || user.uid.startsWith('guest_');
+      if (userIsGuest) {
         setHistory([]);
         return;
       }
