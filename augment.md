@@ -10,8 +10,8 @@ A React-based multiplayer quiz game for practicing base conversion (Binary, Octa
 
 ## Tech Stack
 
-**Core:** React 19.2.0 + TypeScript 5.2.2 + Vite 7.1.7 + Tailwind CSS 3.4.3
-**Backend:** Firebase JS SDK 12.4.0 (Realtime Database + Auth + Analytics + Hosting)
+**Core:** React 19.2.0 + TypeScript 5.9.3 + Vite 7.1.11 + Tailwind CSS 3.4.3
+**Backend:** Firebase JS SDK 12.4.0 (Realtime Database + Auth + Hosting)
 **UI:** shadcn UI (Radix primitives) + lucide-react icons
 **Forms:** React Hook Form 7.51.2 + Zod 3.22.4
 **Routing:** React Router DOM 6.22.3
@@ -112,28 +112,26 @@ src/
 import { initializeApp } from 'firebase/app';
 import { getAuth, connectAuthEmulator } from 'firebase/auth';
 import { getDatabase, connectDatabaseEmulator } from 'firebase/database';
-import { getAnalytics } from 'firebase/analytics';
 
 // Environment variables from .env
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: "based-math-game.firebaseapp.com",
-  databaseURL: "https://based-math-game-default-rtdb.firebaseio.com",
-  projectId: "based-math-game",
-  storageBucket: "based-math-game.appspot.com",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const database = getDatabase(app);
-export const analytics = getAnalytics(app);
 
-// Emulators in development
-if (import.meta.env.DEV) {
-  connectAuthEmulator(auth, "http://localhost:9099");
-  connectDatabaseEmulator(database, "localhost", 9000);
+// Emulators in development (controlled by VITE_USE_FIREBASE_EMULATORS env var)
+if (import.meta.env.DEV && import.meta.env.VITE_USE_FIREBASE_EMULATORS === 'true') {
+  connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
+  connectDatabaseEmulator(database, '127.0.0.1', 9000);
 }
 ```
 
@@ -337,21 +335,33 @@ interface AuthContextType {
 
 ### Official Game Modes (`src/types/gameMode.ts`)
 ```typescript
+export interface GameMode {
+  id: string;
+  name: string;
+  description: string;
+  difficulty: 'Easy' | 'Medium' | 'Hard' | 'Expert' | 'Custom';
+  duration: number;
+  questions: QuestionSetting[];
+  isOfficial?: boolean;
+  icon?: string;
+  color?: string;
+}
+
 export const OFFICIAL_GAME_MODES: GameMode[] = [
   {
-    id: "binary-basics",
-    name: "Binary Basics",
-    description: "Convert between Binary and Decimal (0-255)",
+    id: 'binary-basics',
+    name: 'Binary Basics',
+    description: 'Master binary to decimal conversions with small numbers',
+    difficulty: 'Easy',
+    duration: 60,
+    questions: [
+      ['Binary', 'Decimal', 0, 15],
+      ['Decimal', 'Binary', 0, 15],
+    ],
     isOfficial: true,
-    settings: {
-      questions: [
-        ["Binary", "Decimal", 0, 255],
-        ["Decimal", "Binary", 0, 255]
-      ],
-      duration: 60
-    }
+    color: 'bg-blue-500',
   },
-  // ... 5 more official modes
+  // ... 4 more official modes (hex-hero, octal-odyssey, mixed-master, ultimate-challenge)
 ];
 ```
 
@@ -382,11 +392,12 @@ const baseMappings = {
 
 ### Question Generation (`generator.ts`)
 ```typescript
-generateQuestion(fromBase: string, rangeLower: number, rangeUpper: number): string
+generateQuestion(fromBase: string, rangeLower: number, rangeUpper: number, seed?: number): string
 ```
-1. Generate random decimal in range
-2. Convert to fromBase using `Number.toString(radix)`
-3. Return string
+1. Generate random decimal in range using seeded random if seed provided
+2. Seeded random: `Math.sin(seed) * 10000` for deterministic multiplayer questions
+3. Convert to fromBase using `Number.toString(radix)`
+4. Return string
 
 ### Base Conversion (`converter.ts`)
 ```typescript
@@ -634,15 +645,15 @@ interface RoomPlayer {
 ```
 
 **Methods:**
-- `createRoom(gameMode)` - Create new room, returns roomId
-- `joinRoom(roomId)` - Join existing room
-- `leaveRoom(roomId)` - Leave room, delete if host
-- `toggleReady(roomId)` - Toggle player ready status
+- `createRoom(gameMode)` - Create new room, returns roomId, sets up onDisconnect for host
+- `joinRoom(roomId)` - Join existing room, sets up onDisconnect for player
+- `leaveRoom(roomId)` - Leave room, transfer host or delete room if host leaves
+- `setPlayerReady(roomId, ready)` - Set player ready status
 - `startGame(roomId)` - Start game (host only)
-- `updateScore(roomId, score)` - Update player score
+- `updatePlayerScore(roomId, score)` - Update player score
 - `finishGame(roomId)` - Mark player as finished
-- `subscribeToRoom(roomId, callback)` - Real-time room updates
-- `unsubscribeFromRoom(roomId)` - Clean up listener
+- `resetRoom(roomId)` - Reset room to waiting state (host only)
+- `subscribeToRoom(roomId, callback)` - Real-time room updates, callback receives Room | null
 
 ### useStats (`src/hooks/useStats.ts`)
 **User statistics tracking:**
@@ -694,7 +705,9 @@ button, card, form, input, label, select, scroll-area, separator, toast, dialog,
   - Badge-styled score display
   - Tabular numbers for consistent width
   - Border separator from quiz content
-  - Accepts optional `timer` prop for multiplayer (uses internal timer for singleplayer)
+  - Accepts optional `timer` prop for multiplayer
+  - For singleplayer: creates internal timer and calls `restart()` in useEffect
+  - Pauses timer when tab is hidden (Page Visibility API)
   - Real-time updates every second
 
 - `Base-Select.component.tsx` - Base dropdown with form integration
@@ -876,8 +889,8 @@ npm run lint     # ESLint check
 
 ### Build Output
 - **dist/index.html** - 1.05 kB
-- **dist/assets/index-*.css** - 43.53 kB (8.27 kB gzipped)
-- **dist/assets/index-*.js** - 950.85 kB (260.74 kB gzipped)
+- **dist/assets/index-*.css** - ~52 kB (~9.5 kB gzipped)
+- **dist/assets/index-*.js** - ~1,056 kB (~285 kB gzipped)
 
 ### CI/CD (GitHub Actions)
 - **Production:** Push to `main` → deploy to Firebase Hosting
@@ -920,8 +933,13 @@ npm run lint     # ESLint check
 ### Environment Variables (`.env`)
 ```
 VITE_FIREBASE_API_KEY=...
+VITE_FIREBASE_AUTH_DOMAIN=...
+VITE_FIREBASE_DATABASE_URL=...
+VITE_FIREBASE_PROJECT_ID=...
+VITE_FIREBASE_STORAGE_BUCKET=...
 VITE_FIREBASE_MESSAGING_SENDER_ID=...
 VITE_FIREBASE_APP_ID=...
+VITE_USE_FIREBASE_EMULATORS=true  # Optional, for development
 ```
 
 ### Path Aliases (`vite.config.ts`)
@@ -994,7 +1012,7 @@ resolve: {
 ### Performance
 - **Code splitting:** Dynamic imports for routes (future)
 - **Image optimization:** WebP format, lazy loading
-- **Bundle size:** 950 kB (260 kB gzipped)
+- **Bundle size:** ~1,056 kB (~285 kB gzipped)
 - **Lighthouse score:** Target 90+ for all metrics
 
 ---
@@ -1050,11 +1068,18 @@ return () => unsubscribe();
 // Write data
 await set(ref(database, `users/${userId}/stats`), statsData);
 
-// Update specific fields
-await update(ref(database, `rooms/${roomId}`), { status: "playing" });
+// Update specific fields (use relative paths from ref)
+await update(ref(database, `rooms/${roomId}`), {
+  status: "playing",
+  'players/uid123/score': 10  // Relative path from roomId
+});
 
 // Delete data
 await remove(ref(database, `rooms/${roomId}`));
+
+// Set up disconnect handler
+const playerRef = ref(database, `rooms/${roomId}/players/${userId}`);
+onDisconnect(playerRef).remove();
 ```
 
 ### Authentication Patterns
@@ -1129,8 +1154,14 @@ try {
 - Check useEffect cleanup
 - Timer displays in MM:SS format calculated from `timer.seconds + timer.minutes * 60 + timer.hours * 3600`
 - Visual feedback: orange text when < 10s, red pulsing when < 5s
-- **Singleplayer**: Use `useMemo` for `expiryTimestamp` to prevent timer reset on every render, set `autoStart: true` in `useTimer`
-- **Multiplayer**: Use `timer.restart()` method when game starts to sync with room `startedAt` timestamp
+- **Singleplayer**:
+  - `Quiz.tsx` creates `expiryTimestamp` with `useMemo` and passes to `QuizStats`
+  - `QuizStats` creates internal timer with `autoStart: false`
+  - `useEffect` calls `internalTimer.restart(expiryTimestamp, true)` to start countdown
+- **Multiplayer**:
+  - `MultiplayerGame.tsx` creates timer with `autoStart: false`
+  - `useEffect` calls `timer.restart()` when `room.startedAt` changes
+  - Calculates remaining time from `room.startedAt` timestamp for sync across clients
 
 **Multiplayer sync issues:**
 - Verify Firebase Realtime Database rules
