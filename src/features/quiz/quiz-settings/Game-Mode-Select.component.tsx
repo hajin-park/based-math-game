@@ -9,8 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { OFFICIAL_GAME_MODES, getDifficultyColor, GameMode } from '@/types/gameMode';
 import { PlaygroundSettings } from '@features/quiz';
 import { QuestionSetting } from '@/contexts/GameContexts';
-import { Trophy, Clock, Layers, Play, BarChart3, Wrench, Filter, Target } from 'lucide-react';
+import { Trophy, Clock, Layers, Play, BarChart3, Wrench, Filter, Target, ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface GameModeSelectProps {
   onSelectMode: (mode: GameMode, trackStats: boolean) => void;
@@ -26,6 +27,7 @@ export default function GameModeSelect({ onSelectMode }: GameModeSelectProps) {
   const [baseFilter, setBaseFilter] = useState<BaseFilter>('all');
   const [difficultyFilter, setDifficultyFilter] = useState<DifficultyFilter>('all');
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
+  const [expandedModeId, setExpandedModeId] = useState<string | null>(null);
 
   const handleSelectMode = (mode: GameMode) => {
     onSelectMode(mode, trackStats);
@@ -213,6 +215,51 @@ export default function GameModeSelect({ onSelectMode }: GameModeSelectProps) {
                       <span>{mode.questions.length} types</span>
                     </div>
                   </div>
+
+                  {/* Detailed Settings Collapsible */}
+                  <Collapsible
+                    open={expandedModeId === mode.id}
+                    onOpenChange={(open) => setExpandedModeId(open ? mode.id : null)}
+                  >
+                    <CollapsibleTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-between h-8 text-xs"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <span>View Details</span>
+                        {expandedModeId === mode.id ? (
+                          <ChevronUp className="h-3 w-3" />
+                        ) : (
+                          <ChevronDown className="h-3 w-3" />
+                        )}
+                      </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="pt-2">
+                      <div className="space-y-2 text-xs">
+                        <div className="p-2 rounded-md bg-muted/50">
+                          <p className="font-semibold mb-1">Question Types:</p>
+                          <ul className="space-y-0.5 text-muted-foreground">
+                            {mode.questions.map((q, idx) => (
+                              <li key={idx}>
+                                • {q[0]} → {q[1]} (Range: {q[2]}-{q[3]})
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                        {mode.targetQuestions && (
+                          <div className="p-2 rounded-md bg-muted/50">
+                            <p className="font-semibold">Speed Run Mode</p>
+                            <p className="text-muted-foreground">
+                              Complete {mode.targetQuestions} questions as fast as possible
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+
                   <Button
                     size="sm"
                     className="w-full"

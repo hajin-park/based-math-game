@@ -11,4 +11,7 @@ export default defineConfig({
             "@features": path.resolve(__dirname, "./src/features"),
         },
     },
+    optimizeDeps: {
+        include: ['react', 'react-dom', '@radix-ui/react-collapsible'],
+    },
 });

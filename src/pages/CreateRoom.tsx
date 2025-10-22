@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,12 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PlaygroundSettings } from '@features/quiz';
 import { QuestionSetting } from '@/contexts/GameContexts';
-import { Plus, Trophy, Wrench, Users, Clock, Layers, CheckCircle2 } from 'lucide-react';
+import { Plus, Trophy, Wrench, Users, Clock, Layers, CheckCircle2, Filter, Target, ChevronDown, ChevronUp } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+
+type BaseFilter = 'all' | 'binary' | 'octal' | 'hexadecimal' | 'all-bases';
+type DifficultyFilter = 'all' | 'Easy' | 'Medium' | 'Hard' | 'Expert';
+type TypeFilter = 'all' | 'timed' | 'speedrun';
 
 export default function CreateRoom() {
   const navigate = useNavigate();
@@ -18,6 +23,10 @@ export default function CreateRoom() {
   const [selectedMode, setSelectedMode] = useState<GameMode | null>(null);
   const [selectedTab, setSelectedTab] = useState('official');
   const [maxPlayers, setMaxPlayers] = useState<number>(4);
+  const [baseFilter, setBaseFilter] = useState<BaseFilter>('all');
+  const [difficultyFilter, setDifficultyFilter] = useState<DifficultyFilter>('all');
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
+  const [expandedModeId, setExpandedModeId] = useState<string | null>(null);
 
   const handleCreateRoom = async () => {
     if (!selectedMode) return;
@@ -58,6 +67,39 @@ export default function CreateRoom() {
     }
   };
 
+  // Filter game modes based on selected filters
+  const filteredModes = useMemo(() => {
+    return OFFICIAL_GAME_MODES.filter((mode) => {
+      // Base filter
+      if (baseFilter !== 'all') {
+        const hasBase = mode.questions.some((q) => {
+          const fromBase = q[0].toLowerCase();
+          const toBase = q[1].toLowerCase();
+          if (baseFilter === 'all-bases') {
+            return (fromBase === 'binary' || fromBase === 'octal' || fromBase === 'hexadecimal') &&
+                   (toBase === 'binary' || toBase === 'octal' || toBase === 'hexadecimal');
+          }
+          return fromBase === baseFilter || toBase === baseFilter;
+        });
+        if (!hasBase) return false;
+      }
+
+      // Difficulty filter
+      if (difficultyFilter !== 'all' && mode.difficulty !== difficultyFilter) {
+        return false;
+      }
+
+      // Type filter (timed vs speedrun)
+      if (typeFilter !== 'all') {
+        const isSpeedRun = mode.targetQuestions !== undefined;
+        if (typeFilter === 'speedrun' && !isSpeedRun) return false;
+        if (typeFilter === 'timed' && isSpeedRun) return false;
+      }
+
+      return true;
+    });
+  }, [baseFilter, difficultyFilter, typeFilter]);
+
   return (
     <div className="container mx-auto px-4 py-8 space-y-6">
       {/* Header */}
@@ -92,8 +134,102 @@ export default function CreateRoom() {
             </TabsList>
 
             <TabsContent value="official" className="space-y-6 mt-6">
+              {/* Player Limit Selector */}
+              <Card className="border-primary/20 bg-primary/5">
+                <CardContent className="pt-6">
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-5 w-5 text-primary" />
+                      <Label htmlFor="maxPlayers" className="text-base font-semibold">
+                        Maximum Players
+                      </Label>
+                    </div>
+                    <Select
+                      value={maxPlayers.toString()}
+                      onValueChange={(value) => setMaxPlayers(parseInt(value))}
+                    >
+                      <SelectTrigger id="maxPlayers" className="w-full">
+                        <SelectValue placeholder="Select max players" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
+                          <SelectItem key={num} value={num.toString()}>
+                            {num} Players
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Filters */}
+              <Card className="border-2">
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <Filter className="h-5 w-5 text-primary" />
+                    <CardTitle className="text-lg">Filter Games</CardTitle>
+                  </div>
+                  <CardDescription>
+                    Narrow down from 48 official modes
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-4 sm:grid-cols-3">
+                    {/* Base Type Filter */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Base Type</Label>
+                      <Select value={baseFilter} onValueChange={(value) => setBaseFilter(value as BaseFilter)}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Bases</SelectItem>
+                          <SelectItem value="binary">Binary Only</SelectItem>
+                          <SelectItem value="octal">Octal Only</SelectItem>
+                          <SelectItem value="hexadecimal">Hexadecimal Only</SelectItem>
+                          <SelectItem value="all-bases">All Bases Mixed</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Difficulty Filter */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Difficulty</Label>
+                      <Select value={difficultyFilter} onValueChange={(value) => setDifficultyFilter(value as DifficultyFilter)}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Difficulties</SelectItem>
+                          <SelectItem value="Easy">Easy</SelectItem>
+                          <SelectItem value="Medium">Medium</SelectItem>
+                          <SelectItem value="Hard">Hard</SelectItem>
+                          <SelectItem value="Expert">Expert</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Type Filter */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Game Type</Label>
+                      <Select value={typeFilter} onValueChange={(value) => setTypeFilter(value as TypeFilter)}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Types</SelectItem>
+                          <SelectItem value="timed">Timed Challenges</SelectItem>
+                          <SelectItem value="speedrun">Speed Runs</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {OFFICIAL_GAME_MODES.map((mode) => (
+                {filteredModes.map((mode) => (
                   <Card
                     key={mode.id}
                     className={`cursor-pointer transition-all duration-200 border-2 ${
@@ -130,6 +266,51 @@ export default function CreateRoom() {
                           <span className="text-muted-foreground">{mode.questions.length} types</span>
                         </div>
                       </div>
+
+                      {/* Detailed Settings Collapsible */}
+                      <Collapsible
+                        open={expandedModeId === mode.id}
+                        onOpenChange={(open) => setExpandedModeId(open ? mode.id : null)}
+                      >
+                        <CollapsibleTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="w-full justify-between h-8 text-xs"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <span>View Details</span>
+                            {expandedModeId === mode.id ? (
+                              <ChevronUp className="h-3 w-3" />
+                            ) : (
+                              <ChevronDown className="h-3 w-3" />
+                            )}
+                          </Button>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="pt-2">
+                          <div className="space-y-2 text-xs">
+                            <div className="p-2 rounded-md bg-muted/50">
+                              <p className="font-semibold mb-1">Question Types:</p>
+                              <ul className="space-y-0.5 text-muted-foreground">
+                                {mode.questions.map((q, idx) => (
+                                  <li key={idx}>
+                                    • {q[0]} → {q[1]} (Range: {q[2]}-{q[3]})
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                            {mode.targetQuestions && (
+                              <div className="p-2 rounded-md bg-muted/50">
+                                <p className="font-semibold">Speed Run Mode</p>
+                                <p className="text-muted-foreground">
+                                  Complete {mode.targetQuestions} questions as fast as possible
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </CollapsibleContent>
+                      </Collapsible>
+
                       {selectedMode?.id === mode.id && (
                         <div className="flex items-center gap-2 text-sm text-primary font-medium">
                           <CheckCircle2 className="h-4 w-4" />
@@ -141,34 +322,27 @@ export default function CreateRoom() {
                 ))}
               </div>
 
-              {/* Player Limit Selector */}
-              <Card className="border-primary/20 bg-primary/5">
-                <CardContent className="pt-6">
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <Users className="h-5 w-5 text-primary" />
-                      <Label htmlFor="maxPlayers" className="text-base font-semibold">
-                        Maximum Players
-                      </Label>
-                    </div>
-                    <Select
-                      value={maxPlayers.toString()}
-                      onValueChange={(value) => setMaxPlayers(parseInt(value))}
+              {filteredModes.length === 0 && (
+                <Card className="border-2 border-dashed">
+                  <CardContent className="py-12 text-center">
+                    <Target className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                    <p className="text-lg font-medium mb-2">No modes match your filters</p>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Try adjusting your filter settings
+                    </p>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setBaseFilter('all');
+                        setDifficultyFilter('all');
+                        setTypeFilter('all');
+                      }}
                     >
-                      <SelectTrigger id="maxPlayers" className="w-full">
-                        <SelectValue placeholder="Select max players" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {[2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
-                          <SelectItem key={num} value={num.toString()}>
-                            {num} Players
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </CardContent>
-              </Card>
+                      Reset Filters
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
 
               <div className="flex gap-3 justify-end">
                 <Button onClick={() => navigate('/multiplayer')} variant="outline" size="lg">

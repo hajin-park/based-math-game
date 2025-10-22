@@ -100,16 +100,16 @@ export function getIndexHints(value: string, base: string, grouped: boolean = fa
       const result: string[] = [];
       for (let i = 0; i < hints.length; i++) {
         if (i > 0 && i % groupSize === 0) {
-          result.push(' '); // Add space separator
+          result.push('  '); // Add double space separator to match grouped digit spacing
         }
-        result.push(hints[i]);
+        result.push(hints[i] + ' '); // Add space after each hint value
       }
 
-      return result.join(' ');
+      return result.join('').trim();
     }
   }
 
-  return hints.join(' ');
+  return hints.join('  '); // Use double space for better readability
 }
 
 /**

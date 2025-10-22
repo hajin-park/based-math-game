@@ -23,6 +23,7 @@ import { OFFICIAL_GAME_MODES, GameMode, getDifficultyColor } from '@/types/gameM
 import KickedModal from '@/components/KickedModal';
 import { PlaygroundSettings } from '@features/quiz';
 import { QuestionSetting } from '@/contexts/GameContexts';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 export default function RoomLobby() {
   const { roomId } = useParams<{ roomId: string }>();
@@ -37,6 +38,7 @@ export default function RoomLobby() {
   const [transferHostUid, setTransferHostUid] = useState<string | null>(null);
   const [showKickedModal, setShowKickedModal] = useState(false);
   const [showPlaygroundSettings, setShowPlaygroundSettings] = useState(false);
+  const [showGameDetails, setShowGameDetails] = useState(false);
   const { toast } = useToast();
   const hasNavigatedRef = useRef(false);
 
@@ -260,49 +262,49 @@ export default function RoomLobby() {
   return (
     <>
       <KickedModal open={showKickedModal} onClose={handleKickedModalClose} />
-      <div className="container mx-auto px-4 py-8 space-y-6">
+      <div className="container mx-auto px-4 py-4 space-y-4">
         {/* Header */}
-        <div className="text-center space-y-2 animate-in">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <Users className="h-8 w-8 text-primary" />
-            <h1 className="text-4xl font-bold gradient-text">Room Lobby</h1>
+        <div className="text-center space-y-1 animate-in">
+          <div className="flex items-center justify-center gap-2">
+            <Users className="h-6 w-6 text-primary" />
+            <h1 className="text-3xl font-bold gradient-text">Room Lobby</h1>
           </div>
-          <p className="text-lg text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             Waiting for players to join...
           </p>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div className="grid gap-4 lg:grid-cols-3">
           {/* Main Lobby Card */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-4">
             <Card className="border-2 shadow-lg">
-              <CardHeader>
+              <CardHeader className="pb-4">
                 <div className="flex items-start justify-between gap-4">
-                  <div className="space-y-2">
+                  <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <Trophy className="h-6 w-6 text-primary" />
-                      <CardTitle className="text-2xl">{room.gameMode.name}</CardTitle>
+                      <Trophy className="h-5 w-5 text-primary" />
+                      <CardTitle className="text-xl">{room.gameMode.name}</CardTitle>
                     </div>
-                    <CardDescription className="text-base">
+                    <CardDescription className="text-sm">
                       {room.gameMode.description}
                     </CardDescription>
                   </div>
                   <Badge
-                    className={`${getDifficultyColor(room.gameMode.difficulty)} shrink-0`}
+                    className={`${getDifficultyColor(room.gameMode.difficulty)} shrink-0 text-xs`}
                     variant="secondary"
                   >
                     {room.gameMode.difficulty}
                   </Badge>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-4">
                 {/* Room Code & Invite */}
                 <Card className="border-primary/20 bg-primary/5">
-                  <CardContent className="pt-6 space-y-4">
+                  <CardContent className="pt-4 space-y-3">
                     <div className="flex items-center gap-3">
                       <div className="flex-1">
-                        <p className="text-sm text-muted-foreground mb-1">Room Code</p>
-                        <p className="font-mono font-bold text-2xl tracking-wider uppercase text-primary">
+                        <p className="text-xs text-muted-foreground mb-1">Room Code</p>
+                        <p className="font-mono font-bold text-xl tracking-wider uppercase text-primary">
                           {roomId}
                         </p>
                       </div>
@@ -310,16 +312,16 @@ export default function RoomLobby() {
                         onClick={handleCopyRoomId}
                         variant="outline"
                         size="sm"
-                        className="shrink-0"
+                        className="shrink-0 h-8"
                       >
                         {copied ? (
                           <>
-                            <Check className="h-4 w-4 mr-2" />
+                            <Check className="h-3.5 w-3.5 mr-1.5" />
                             Copied
                           </>
                         ) : (
                           <>
-                            <Copy className="h-4 w-4 mr-2" />
+                            <Copy className="h-3.5 w-3.5 mr-1.5" />
                             Copy
                           </>
                         )}
@@ -329,16 +331,16 @@ export default function RoomLobby() {
                       onClick={handleCopyInviteLink}
                       variant="secondary"
                       size="sm"
-                      className="w-full"
+                      className="w-full h-8"
                     >
                       {linkCopied ? (
                         <>
-                          <Check className="h-4 w-4 mr-2" />
+                          <Check className="h-3.5 w-3.5 mr-1.5" />
                           Invite Link Copied!
                         </>
                       ) : (
                         <>
-                          <Link2 className="h-4 w-4 mr-2" />
+                          <Link2 className="h-3.5 w-3.5 mr-1.5" />
                           Copy Invite Link
                         </>
                       )}
@@ -540,22 +542,22 @@ export default function RoomLobby() {
 
                 {/* Players List */}
                 <Card className="border-2">
-                  <CardHeader>
+                  <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <Users className="h-5 w-5 text-primary" />
-                        <CardTitle className="text-lg">
+                        <Users className="h-4 w-4 text-primary" />
+                        <CardTitle className="text-base">
                           Players ({playerCount}/{room.maxPlayers || 4})
                         </CardTitle>
                       </div>
                       {nonHostPlayers.length > 0 && (
-                        <Badge variant="secondary" className="text-sm">
+                        <Badge variant="secondary" className="text-xs">
                           {readyCount}/{nonHostPlayers.length} ready
                         </Badge>
                       )}
                     </div>
                   </CardHeader>
-                  <CardContent className="space-y-3">
+                  <CardContent className="space-y-2">
                     {Object.values(room.players).map((player) => {
                       const isPlayerHost = player.uid === room.hostUid;
                       const wins = player.wins || 0;
@@ -568,7 +570,7 @@ export default function RoomLobby() {
                       return (
                         <div
                           key={player.uid}
-                          className={`flex items-center justify-between p-4 rounded-lg border-2 ${
+                          className={`flex items-center justify-between p-3 rounded-lg border-2 ${
                             isDisconnected
                               ? 'bg-muted/30 border-muted'
                               : 'bg-muted/50 border-muted'
@@ -644,32 +646,71 @@ export default function RoomLobby() {
 
                 {/* Game Info */}
                 <Card className="border-primary/20 bg-primary/5">
-                  <CardContent className="pt-6">
-                    <div className="grid grid-cols-2 gap-4">
+                  <CardContent className="pt-4 space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
                       <div className="flex items-center gap-2">
-                        <Clock className="h-5 w-5 text-primary" />
+                        <Clock className="h-4 w-4 text-primary" />
                         <div>
                           <p className="text-xs text-muted-foreground">Duration</p>
-                          <p className="text-lg font-bold">{room.gameMode.duration}s</p>
+                          <p className="text-base font-bold">{room.gameMode.duration}s</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Layers className="h-5 w-5 text-primary" />
+                        <Layers className="h-4 w-4 text-primary" />
                         <div>
                           <p className="text-xs text-muted-foreground">Question Types</p>
-                          <p className="text-lg font-bold">{room.gameMode.questions.length}</p>
+                          <p className="text-base font-bold">{room.gameMode.questions.length}</p>
                         </div>
                       </div>
                     </div>
+
+                    {/* Detailed Game Settings Collapsible */}
+                    <Collapsible open={showGameDetails} onOpenChange={setShowGameDetails}>
+                      <CollapsibleTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="w-full justify-between h-8 text-xs"
+                        >
+                          <span>View Detailed Settings</span>
+                          {showGameDetails ? (
+                            <ChevronUp className="h-3 w-3" />
+                          ) : (
+                            <ChevronDown className="h-3 w-3" />
+                          )}
+                        </Button>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="pt-2">
+                        <div className="space-y-2 text-xs">
+                          <div className="p-2 rounded-md bg-background/50">
+                            <p className="font-semibold mb-1">Question Types:</p>
+                            <ul className="space-y-0.5 text-muted-foreground">
+                              {room.gameMode.questions.map((q, idx) => (
+                                <li key={idx}>
+                                  • {q[0]} → {q[1]} (Range: {q[2]}-{q[3]})
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                          {room.gameMode.targetQuestions && (
+                            <div className="p-2 rounded-md bg-background/50">
+                              <p className="font-semibold">Speed Run Mode</p>
+                              <p className="text-muted-foreground">
+                                Complete {room.gameMode.targetQuestions} questions as fast as possible
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
                   </CardContent>
                 </Card>
 
                 {/* Actions */}
-                <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <Button
                     onClick={handleLeave}
                     variant="outline"
-                    size="lg"
                     className="flex-1"
                   >
                     Leave Room
@@ -678,27 +719,25 @@ export default function RoomLobby() {
                     <Button
                       onClick={handleStart}
                       disabled={!allReady || playerCount < 2}
-                      size="lg"
                       className="flex-1 shadow-sm"
                     >
-                      <Play className="mr-2 h-5 w-5" />
+                      <Play className="mr-2 h-4 w-4" />
                       Start Game
                     </Button>
                   ) : (
                     <Button
                       onClick={handleToggleReady}
                       variant={isReady ? 'outline' : 'default'}
-                      size="lg"
                       className="flex-1 shadow-sm"
                     >
                       {isReady ? (
                         <>
-                          <X className="mr-2 h-5 w-5" />
+                          <X className="mr-2 h-4 w-4" />
                           Not Ready
                         </>
                       ) : (
                         <>
-                          <Check className="mr-2 h-5 w-5" />
+                          <Check className="mr-2 h-4 w-4" />
                           Ready
                         </>
                       )}
@@ -726,37 +765,37 @@ export default function RoomLobby() {
           </div>
 
           {/* Sidebar - Game Summary */}
-          <div className="space-y-6">
-            <Card className="border-2 shadow-lg sticky top-4">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Trophy className="h-5 w-5 text-primary" />
+          <div className="space-y-4">
+            <Card className="border-2 shadow-lg">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Trophy className="h-4 w-4 text-primary" />
                   Game Summary
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                    <span className="text-sm text-muted-foreground">Mode</span>
-                    <Badge variant="secondary">{room.gameMode.difficulty}</Badge>
+              <CardContent className="space-y-2">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
+                    <span className="text-xs text-muted-foreground">Mode</span>
+                    <Badge variant="secondary" className="text-xs">{room.gameMode.difficulty}</Badge>
                   </div>
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                    <span className="text-sm text-muted-foreground">Duration</span>
-                    <span className="font-semibold">{room.gameMode.duration}s</span>
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
+                    <span className="text-xs text-muted-foreground">Duration</span>
+                    <span className="text-sm font-semibold">{room.gameMode.duration}s</span>
                   </div>
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                    <span className="text-sm text-muted-foreground">Players</span>
-                    <span className="font-semibold">{playerCount}/{room.maxPlayers || 4}</span>
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
+                    <span className="text-xs text-muted-foreground">Players</span>
+                    <span className="text-sm font-semibold">{playerCount}/{room.maxPlayers || 4}</span>
                   </div>
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                    <span className="text-sm text-muted-foreground">Visual Aids</span>
-                    <Badge variant={room.allowVisualAids ? "default" : "outline"}>
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
+                    <span className="text-xs text-muted-foreground">Visual Aids</span>
+                    <Badge variant={room.allowVisualAids ? "default" : "outline"} className="text-xs">
                       {room.allowVisualAids ? 'Enabled' : 'Disabled'}
                     </Badge>
                   </div>
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                    <span className="text-sm text-muted-foreground">Countdown</span>
-                    <Badge variant={room.enableCountdown ? "default" : "outline"}>
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
+                    <span className="text-xs text-muted-foreground">Countdown</span>
+                    <Badge variant={room.enableCountdown ? "default" : "outline"} className="text-xs">
                       {room.enableCountdown ? 'Enabled' : 'Disabled'}
                     </Badge>
                   </div>

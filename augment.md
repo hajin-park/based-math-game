@@ -878,6 +878,68 @@ const players = Object.values(room.players);
 
 ---
 
+## Recent UI/UX Improvements (2025)
+
+### 1. Index Value Visual Hints Alignment Fix
+**Issue:** Double spacing in index value visual hints due to joining array with spaces after already adding space separators in loop.
+**Solution:** Changed `result.join(' ')` to `result.join('').trim()` with proper spacing logic within the loop.
+**Files Modified:** `src/features/quiz/quiz-questions/formatters.ts`
+
+### 2. Countdown Timer Design Update
+**Changes:**
+- Wrapped countdown in Card component for consistency with design system
+- Applied semantic color variables: `text-destructive` (count 3), `text-warning` (count 2), `text-success` (count 1)
+- Added proper spacing (p-12, gap-6) and border radius
+- Removed raw color classes (text-red-500, text-yellow-500, text-green-500)
+**Files Modified:** `src/components/Countdown.tsx`
+
+### 3. Game Selection Tab Border Alignment Fix
+**Issue:** TabsList used `rounded-lg` while TabsTrigger used `rounded-md`, causing visual misalignment.
+**Solution:** Standardized both to `rounded-lg` and added `shadow-sm` to active state.
+**Files Modified:** `src/components/ui/tabs.tsx`
+
+### 4. Game Filtering in Multiplayer Room Creation
+**Features Added:**
+- Base type filter (All Bases, Binary Only, Octal Only, Hexadecimal Only, All Bases Mixed)
+- Difficulty filter (All Difficulties, Easy, Medium, Hard, Expert)
+- Game type filter (All Types, Timed Challenges, Speed Runs)
+- Filter UI card with 3-column grid layout
+- Empty state with "No modes match your filters" message and reset button
+- useMemo for efficient filtering of 48 official game modes
+**Files Modified:** `src/pages/CreateRoom.tsx`
+
+### 5. UI Element Reordering in Room Creation
+**Changes:**
+- Moved maximum player selection control above game selection section
+- Applied to both official and custom tabs
+- Improved user flow by setting player limit before selecting game mode
+**Files Modified:** `src/pages/CreateRoom.tsx`
+
+### 6. Room Lobby Layout Optimization
+**Changes:**
+- Reduced overall spacing for better viewport efficiency (space-y-6 → space-y-4, py-8 → py-4)
+- Reduced header sizes (text-4xl → text-3xl, text-lg → text-sm)
+- Reduced padding throughout (pb-6 → pb-4, pt-6 → pt-4, p-4 → p-3)
+- Reduced icon sizes (h-8 w-8 → h-6 w-6, h-6 w-6 → h-5 w-5, h-5 w-5 → h-4 w-4)
+- Reduced button heights (size="lg" → default size)
+- Reduced font sizes for labels and values (text-lg → text-base, text-sm → text-xs)
+- Removed sticky positioning from game summary card (sticky top-4 → normal flow)
+- Optimized for laptop screens (1366x768 and 1920x1080) without scrolling
+**Files Modified:** `src/pages/RoomLobby.tsx`
+
+### 7. Detailed Game Settings Dropdown
+**Features Added:**
+- Collapsible section in game mode cards showing:
+  - Question types with conversion directions and counts
+  - Speed run mode indicator with target questions
+- Added to both CreateRoom page (game selection cards) and RoomLobby page (game info section)
+- Uses shadcn Collapsible component with ChevronDown/ChevronUp icons
+- Compact text-xs styling for detailed information
+- Click event stopPropagation to prevent card selection when expanding details
+**Files Modified:** `src/pages/CreateRoom.tsx`, `src/pages/RoomLobby.tsx`
+
+---
+
 ## License & Credits
 
 **License:** GNU General Public License v3.0

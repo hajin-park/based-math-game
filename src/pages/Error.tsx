@@ -3,18 +3,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, Home, RefreshCw } from "lucide-react";
 
-const Error = () => {
-    const error = useRouteError() as Error | { statusText?: string; message?: string } | null;
+const ErrorPage = () => {
+    const error = useRouteError() as { statusText?: string; message?: string; stack?: string } | null;
     const navigate = useNavigate();
     console.error(error);
 
-    const errorMessage = error instanceof Error
+    const errorMessage = (error && typeof error === 'object' && 'message' in error && error.message)
         ? error.message
-        : (error && typeof error === 'object' && 'message' in error && error.message)
-            ? error.message
-            : (error && typeof error === 'object' && 'statusText' in error && error.statusText)
-                ? error.statusText
-                : "An unexpected error occurred";
+        : (error && typeof error === 'object' && 'statusText' in error && error.statusText)
+            ? error.statusText
+            : "An unexpected error occurred";
 
     return (
         <div className="container mx-auto px-4 flex items-center justify-center min-h-screen">
@@ -60,4 +58,4 @@ const Error = () => {
     );
 };
 
-export default Error;
+export default ErrorPage;
