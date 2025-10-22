@@ -1,7 +1,8 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { User, Settings, LogOut, Gamepad2 } from 'lucide-react';
+import { User, Settings, LogOut, Gamepad2, Sparkles } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 import { useEffect } from 'react';
 
 export default function ProfileLayout() {
@@ -31,24 +32,30 @@ export default function ProfileLayout() {
   ];
 
   return (
-    <div className="flex h-full bg-gray-50 dark:bg-gray-900">
+    <div className="flex min-h-screen bg-background">
       {/* Sidebar */}
-      <aside className="w-64 bg-white dark:bg-gray-950 border-r dark:border-gray-800 flex-shrink-0 flex flex-col">
-        <div className="p-6">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Profile</h2>
-          <p className="text-sm text-muted-foreground mt-1">Manage your account</p>
+      <aside className="w-72 border-r border-border flex-shrink-0 flex flex-col bg-card">
+        <div className="p-6 space-y-2">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-6 w-6 text-primary" />
+            <h2 className="text-2xl font-bold gradient-text">Profile</h2>
+          </div>
+          <p className="text-sm text-muted-foreground">Manage your account settings</p>
         </div>
-        <nav className="px-3 space-y-1 flex-1">
+
+        <Separator />
+
+        <nav className="px-4 py-4 space-y-2 flex-1">
           {navItems.map((item) => (
             <NavLink
               key={item.name}
               to={item.href}
               end={item.end}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                `flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
                   isActive
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                    ? 'bg-primary text-primary-foreground shadow-md'
+                    : 'text-foreground hover:bg-muted hover:text-primary'
                 }`
               }
             >
@@ -58,12 +65,14 @@ export default function ProfileLayout() {
           ))}
         </nav>
 
+        <Separator />
+
         {/* Sign Out Button */}
-        <div className="p-3 border-t dark:border-gray-800">
+        <div className="p-4">
           <Button
             onClick={handleSignOut}
             variant="ghost"
-            className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
+            className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10 h-11"
           >
             <LogOut className="h-5 w-5 mr-3" />
             Sign Out
@@ -73,7 +82,7 @@ export default function ProfileLayout() {
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto">
-        <div className="container mx-auto p-8 max-w-4xl">
+        <div className="container mx-auto p-8 max-w-5xl">
           <Outlet />
         </div>
       </main>

@@ -18,7 +18,7 @@ import {
 import { useRoom, Room } from '@/hooks/useRoom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
-import { Copy, Check, Link2, Settings, ChevronDown, ChevronUp, X, Eye, Timer, UserCog } from 'lucide-react';
+import { Copy, Check, Link2, Settings, ChevronDown, ChevronUp, X, Eye, Timer, UserCog, Users, Crown, Shield, WifiOff, Trophy, Clock, Layers, Play } from 'lucide-react';
 import { OFFICIAL_GAME_MODES, GameMode, getDifficultyColor } from '@/types/gameMode';
 import KickedModal from '@/components/KickedModal';
 import { PlaygroundSettings } from '@features/quiz';
@@ -250,371 +250,532 @@ export default function RoomLobby() {
   return (
     <>
       <KickedModal open={showKickedModal} onClose={handleKickedModalClose} />
-      <div className="container mx-auto p-4">
-        <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>{room.gameMode.name}</CardTitle>
-              <CardDescription>{room.gameMode.description}</CardDescription>
-            </div>
-            <Badge>{room.gameMode.difficulty}</Badge>
+      <div className="container mx-auto px-4 py-8 space-y-6">
+        {/* Header */}
+        <div className="text-center space-y-2 animate-in">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <Users className="h-8 w-8 text-primary" />
+            <h1 className="text-4xl font-bold gradient-text">Room Lobby</h1>
           </div>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Room Code & Invite */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <div className="flex-1">
-                <p className="text-sm text-muted-foreground">Room Code</p>
-                <p className="font-mono font-bold text-lg tracking-wider uppercase">{roomId}</p>
-              </div>
-              <Button
-                onClick={handleCopyRoomId}
-                variant="outline"
-                size="sm"
-              >
-                {copied ? (
-                  <>
-                    <Check className="h-4 w-4 mr-2" />
-                    Copied
-                  </>
-                ) : (
-                  <>
-                    <Copy className="h-4 w-4 mr-2" />
-                    Copy Code
-                  </>
-                )}
-              </Button>
-            </div>
-            <Button
-              onClick={handleCopyInviteLink}
-              variant="secondary"
-              size="sm"
-              className="w-full"
-            >
-              {linkCopied ? (
-                <>
-                  <Check className="h-4 w-4 mr-2" />
-                  Invite Link Copied!
-                </>
-              ) : (
-                <>
-                  <Link2 className="h-4 w-4 mr-2" />
-                  Copy Invite Link
-                </>
-              )}
-            </Button>
-          </div>
+          <p className="text-lg text-muted-foreground">
+            Waiting for players to join...
+          </p>
+        </div>
 
-          {/* Game Settings (Host Only) */}
-          {isHost && (
-            <div className="border rounded-md">
-              <Button
-                onClick={() => setShowSettings(!showSettings)}
-                variant="ghost"
-                className="w-full justify-between p-4"
-              >
-                <div className="flex items-center gap-2">
-                  <Settings className="h-4 w-4" />
-                  <span className="font-semibold">Game Settings</span>
+        <div className="grid gap-6 lg:grid-cols-3">
+          {/* Main Lobby Card */}
+          <div className="lg:col-span-2 space-y-6">
+            <Card className="border-2 shadow-lg">
+              <CardHeader>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Trophy className="h-6 w-6 text-primary" />
+                      <CardTitle className="text-2xl">{room.gameMode.name}</CardTitle>
+                    </div>
+                    <CardDescription className="text-base">
+                      {room.gameMode.description}
+                    </CardDescription>
+                  </div>
+                  <Badge
+                    className={`${getDifficultyColor(room.gameMode.difficulty)} shrink-0`}
+                    variant="secondary"
+                  >
+                    {room.gameMode.difficulty}
+                  </Badge>
                 </div>
-                {showSettings ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-              </Button>
-
-              {showSettings && !showPlaygroundSettings && (
-                <div className="p-4 pt-0 space-y-4">
-                  {/* Game Mode Selection */}
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-3">
-                      Select a different game mode (win counters will be preserved)
-                    </p>
-                    <div className="grid gap-2 max-h-64 overflow-y-auto">
-                      {OFFICIAL_GAME_MODES.map((mode) => (
-                        <Button
-                          key={mode.id}
-                          onClick={() => handleChangeGameMode(mode)}
-                          variant={room.gameMode.id === mode.id ? "default" : "outline"}
-                          className="justify-start h-auto p-3"
-                          disabled={room.gameMode.id === mode.id}
-                        >
-                          <div className="flex flex-col items-start gap-1 w-full">
-                            <div className="flex items-center justify-between w-full">
-                              <span className="font-semibold">{mode.name}</span>
-                              <Badge className={getDifficultyColor(mode.difficulty)} variant="outline">
-                                {mode.difficulty}
-                              </Badge>
-                            </div>
-                            <span className="text-xs text-muted-foreground">
-                              {mode.duration}s • {mode.questions.length} question types
-                            </span>
-                          </div>
-                        </Button>
-                      ))}
-
-                      {/* Custom Playground Button */}
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Room Code & Invite */}
+                <Card className="border-primary/20 bg-primary/5">
+                  <CardContent className="pt-6 space-y-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1">
+                        <p className="text-sm text-muted-foreground mb-1">Room Code</p>
+                        <p className="font-mono font-bold text-2xl tracking-wider uppercase text-primary">
+                          {roomId}
+                        </p>
+                      </div>
                       <Button
-                        onClick={() => setShowPlaygroundSettings(true)}
-                        variant={room.gameMode.id === 'custom-playground' ? "default" : "outline"}
-                        className="justify-start h-auto p-3"
+                        onClick={handleCopyRoomId}
+                        variant="outline"
+                        size="sm"
+                        className="shrink-0"
                       >
-                        <div className="flex flex-col items-start gap-1 w-full">
-                          <div className="flex items-center justify-between w-full">
-                            <span className="font-semibold">Custom Playground</span>
-                            <Badge className={getDifficultyColor('Custom')} variant="outline">
-                              Custom
-                            </Badge>
-                          </div>
-                          <span className="text-xs text-muted-foreground">
-                            Create your own custom quiz settings
-                          </span>
-                        </div>
+                        {copied ? (
+                          <>
+                            <Check className="h-4 w-4 mr-2" />
+                            Copied
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="h-4 w-4 mr-2" />
+                            Copy
+                          </>
+                        )}
                       </Button>
                     </div>
-                  </div>
-
-                  {/* Host Controls */}
-                  <div className="border-t pt-4 space-y-3">
-                    <p className="text-sm font-semibold">Host Controls</p>
-
-                    {/* Allow Visual Aids Toggle */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Eye className="h-4 w-4 text-muted-foreground" />
-                        <div>
-                          <Label htmlFor="allow-visual-aids" className="cursor-pointer">
-                            Allow Visual Aids
-                          </Label>
-                          <p className="text-xs text-muted-foreground">
-                            Let players use grouped digits and index hints
-                          </p>
-                        </div>
-                      </div>
-                      <Switch
-                        id="allow-visual-aids"
-                        checked={room.allowVisualAids ?? true}
-                        onCheckedChange={async (checked) => {
-                          if (roomId) {
-                            try {
-                              await updateRoomSettings(roomId, { allowVisualAids: checked });
-                            } catch {
-                              toast({
-                                title: 'Error',
-                                description: 'Failed to update visual aids setting',
-                                variant: 'destructive',
-                              });
-                            }
-                          }
-                        }}
-                      />
-                    </div>
-
-                    {/* Enable Countdown Toggle */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Timer className="h-4 w-4 text-muted-foreground" />
-                        <div>
-                          <Label htmlFor="enable-countdown" className="cursor-pointer">
-                            Enable Countdown
-                          </Label>
-                          <p className="text-xs text-muted-foreground">
-                            Show 3-2-1 countdown before game starts
-                          </p>
-                        </div>
-                      </div>
-                      <Switch
-                        id="enable-countdown"
-                        checked={room.enableCountdown ?? true}
-                        onCheckedChange={async (checked) => {
-                          if (roomId) {
-                            try {
-                              await updateRoomSettings(roomId, { enableCountdown: checked });
-                            } catch {
-                              toast({
-                                title: 'Error',
-                                description: 'Failed to update countdown setting',
-                                variant: 'destructive',
-                              });
-                            }
-                          }
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Custom Playground Settings */}
-              {showSettings && showPlaygroundSettings && (
-                <div className="p-4 pt-0 space-y-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-semibold">Custom Playground Settings</h3>
                     <Button
-                      variant="ghost"
+                      onClick={handleCopyInviteLink}
+                      variant="secondary"
                       size="sm"
-                      onClick={() => setShowPlaygroundSettings(false)}
+                      className="w-full"
                     >
-                      Back to Modes
-                    </Button>
-                  </div>
-                  <PlaygroundSettings
-                    onStartQuiz={handleCustomPlayground}
-                    buttonText="Update Room Settings"
-                    showHeader={false}
-                  />
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Players */}
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-semibold">
-                Players ({playerCount}/{room.maxPlayers || 4})
-              </h3>
-              {nonHostPlayers.length > 0 && (
-                <span className="text-sm text-muted-foreground">
-                  {readyCount}/{nonHostPlayers.length} ready
-                </span>
-              )}
-            </div>
-            <div className="space-y-2">
-              {Object.values(room.players).map((player) => {
-                const isPlayerHost = player.uid === room.hostUid;
-                const wins = player.wins || 0;
-                const isDisconnected = player.disconnected === true;
-                const isKicked = player.kicked === true;
-
-                // Don't show kicked players
-                if (isKicked) return null;
-
-                return (
-                  <div
-                    key={player.uid}
-                    className="flex items-center justify-between p-3 rounded-md bg-muted/50"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className={isDisconnected ? 'text-muted-foreground' : ''}>
-                        {player.displayName}
-                        {wins > 0 && (
-                          <span className="text-sm text-muted-foreground ml-1">
-                            ({wins} {wins === 1 ? 'win' : 'wins'})
-                          </span>
-                        )}
-                      </span>
-                      {isPlayerHost && (
-                        <Badge variant="outline">Host</Badge>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {isDisconnected ? (
-                        <Badge variant="destructive">Disconnected</Badge>
-                      ) : isPlayerHost ? (
-                        <Badge variant="secondary">Hosting</Badge>
-                      ) : player.ready ? (
-                        <Badge className="bg-green-600">Ready</Badge>
+                      {linkCopied ? (
+                        <>
+                          <Check className="h-4 w-4 mr-2" />
+                          Invite Link Copied!
+                        </>
                       ) : (
-                        <Badge variant="outline">Not Ready</Badge>
+                        <>
+                          <Link2 className="h-4 w-4 mr-2" />
+                          Copy Invite Link
+                        </>
                       )}
-                      {/* Transfer host button - only show for host, not for themselves, and not for disconnected players */}
-                      {isHost && !isPlayerHost && !isDisconnected && (
-                        <Button
-                          onClick={() => setTransferHostUid(player.uid)}
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0 hover:bg-primary hover:text-primary-foreground"
-                          title="Transfer host to this player"
-                        >
-                          <UserCog className="h-4 w-4" />
-                        </Button>
-                      )}
-                      {/* Kick button - only show for host, not for themselves */}
-                      {isHost && !isPlayerHost && (
-                        <Button
-                          onClick={() => handleKickPlayer(player.uid)}
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0 hover:bg-destructive hover:text-destructive-foreground"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                {/* Game Settings (Host Only) */}
+                {isHost && (
+                  <Card className="border-2">
+                    <CardHeader
+                      className="cursor-pointer hover:bg-muted/50 transition-colors"
+                      onClick={() => setShowSettings(!showSettings)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Settings className="h-5 w-5 text-primary" />
+                          <CardTitle className="text-lg">Game Settings</CardTitle>
+                        </div>
+                        {showSettings ? (
+                          <ChevronUp className="h-5 w-5 text-muted-foreground" />
+                        ) : (
+                          <ChevronDown className="h-5 w-5 text-muted-foreground" />
+                        )}
+                      </div>
+                    </CardHeader>
+
+                    {showSettings && !showPlaygroundSettings && (
+                      <CardContent className="space-y-6">
+                        {/* Game Mode Selection */}
+                        <div className="space-y-3">
+                          <Label className="text-base font-semibold">Change Game Mode</Label>
+                          <p className="text-sm text-muted-foreground">
+                            Select a different mode (win counters will be preserved)
+                          </p>
+                          <div className="grid gap-3 max-h-80 overflow-y-auto pr-2">
+                            {OFFICIAL_GAME_MODES.map((mode) => (
+                              <Card
+                                key={mode.id}
+                                className={`cursor-pointer transition-all duration-300 border-2 ${
+                                  room.gameMode.id === mode.id
+                                    ? 'border-primary bg-primary/5'
+                                    : 'hover:border-primary/50 hover:shadow-md'
+                                }`}
+                                onClick={() => room.gameMode.id !== mode.id && handleChangeGameMode(mode)}
+                              >
+                                <CardHeader className="p-4">
+                                  <div className="flex items-start justify-between gap-2">
+                                    <div className="space-y-1">
+                                      <CardTitle className="text-base">{mode.name}</CardTitle>
+                                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                        <span className="flex items-center gap-1">
+                                          <Clock className="h-3 w-3" />
+                                          {mode.duration}s
+                                        </span>
+                                        <span className="flex items-center gap-1">
+                                          <Layers className="h-3 w-3" />
+                                          {mode.questions.length} types
+                                        </span>
+                                      </div>
+                                    </div>
+                                    <Badge
+                                      className={getDifficultyColor(mode.difficulty)}
+                                      variant="secondary"
+                                    >
+                                      {mode.difficulty}
+                                    </Badge>
+                                  </div>
+                                </CardHeader>
+                              </Card>
+                            ))}
+
+                            {/* Custom Playground Button */}
+                            <Card
+                              className={`cursor-pointer transition-all duration-300 border-2 ${
+                                room.gameMode.id === 'custom-playground'
+                                  ? 'border-primary bg-primary/5'
+                                  : 'hover:border-primary/50 hover:shadow-md'
+                              }`}
+                              onClick={() => setShowPlaygroundSettings(true)}
+                            >
+                              <CardHeader className="p-4">
+                                <div className="flex items-start justify-between gap-2">
+                                  <div className="space-y-1">
+                                    <CardTitle className="text-base">Custom Playground</CardTitle>
+                                    <CardDescription className="text-xs">
+                                      Create your own custom quiz settings
+                                    </CardDescription>
+                                  </div>
+                                  <Badge
+                                    className={getDifficultyColor('Custom')}
+                                    variant="secondary"
+                                  >
+                                    Custom
+                                  </Badge>
+                                </div>
+                              </CardHeader>
+                            </Card>
+                          </div>
+                        </div>
+
+                        {/* Host Controls */}
+                        <div className="space-y-4 p-4 rounded-lg bg-muted/30 border">
+                          <div className="flex items-center gap-2">
+                            <Shield className="h-5 w-5 text-primary" />
+                            <Label className="text-base font-semibold">Host Controls</Label>
+                          </div>
+
+                          {/* Allow Visual Aids Toggle */}
+                          <div className="flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-3">
+                              <Eye className="h-4 w-4 text-muted-foreground" />
+                              <div className="space-y-0.5">
+                                <Label htmlFor="allow-visual-aids" className="cursor-pointer font-medium">
+                                  Allow Visual Aids
+                                </Label>
+                                <p className="text-xs text-muted-foreground">
+                                  Let players use grouped digits and index hints
+                                </p>
+                              </div>
+                            </div>
+                            <Switch
+                              id="allow-visual-aids"
+                              checked={room.allowVisualAids ?? true}
+                              onCheckedChange={async (checked) => {
+                                if (roomId) {
+                                  try {
+                                    await updateRoomSettings(roomId, { allowVisualAids: checked });
+                                  } catch {
+                                    toast({
+                                      title: 'Error',
+                                      description: 'Failed to update visual aids setting',
+                                      variant: 'destructive',
+                                    });
+                                  }
+                                }
+                              }}
+                            />
+                          </div>
+
+                          {/* Enable Countdown Toggle */}
+                          <div className="flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-3">
+                              <Timer className="h-4 w-4 text-muted-foreground" />
+                              <div className="space-y-0.5">
+                                <Label htmlFor="enable-countdown" className="cursor-pointer font-medium">
+                                  Enable Countdown
+                                </Label>
+                                <p className="text-xs text-muted-foreground">
+                                  Show 3-2-1 countdown before game starts
+                                </p>
+                              </div>
+                            </div>
+                            <Switch
+                              id="enable-countdown"
+                              checked={room.enableCountdown ?? true}
+                              onCheckedChange={async (checked) => {
+                                if (roomId) {
+                                  try {
+                                    await updateRoomSettings(roomId, { enableCountdown: checked });
+                                  } catch {
+                                    toast({
+                                      title: 'Error',
+                                      description: 'Failed to update countdown setting',
+                                      variant: 'destructive',
+                                    });
+                                  }
+                                }
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </CardContent>
+                    )}
+
+                    {/* Custom Playground Settings */}
+                    {showSettings && showPlaygroundSettings && (
+                      <CardContent className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-base font-semibold">Custom Playground Settings</Label>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setShowPlaygroundSettings(false)}
+                          >
+                            Back to Modes
+                          </Button>
+                        </div>
+                        <PlaygroundSettings
+                          onStartQuiz={handleCustomPlayground}
+                          buttonText="Update Room Settings"
+                          showHeader={false}
+                        />
+                      </CardContent>
+                    )}
+                  </Card>
+                )}
+
+                {/* Players List */}
+                <Card className="border-2">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Users className="h-5 w-5 text-primary" />
+                        <CardTitle className="text-lg">
+                          Players ({playerCount}/{room.maxPlayers || 4})
+                        </CardTitle>
+                      </div>
+                      {nonHostPlayers.length > 0 && (
+                        <Badge variant="secondary" className="text-sm">
+                          {readyCount}/{nonHostPlayers.length} ready
+                        </Badge>
                       )}
                     </div>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {Object.values(room.players).map((player) => {
+                      const isPlayerHost = player.uid === room.hostUid;
+                      const wins = player.wins || 0;
+                      const isDisconnected = player.disconnected === true;
+                      const isKicked = player.kicked === true;
+
+                      // Don't show kicked players
+                      if (isKicked) return null;
+
+                      return (
+                        <div
+                          key={player.uid}
+                          className={`flex items-center justify-between p-4 rounded-lg border-2 transition-all ${
+                            isDisconnected
+                              ? 'bg-muted/30 border-muted'
+                              : 'bg-muted/50 border-muted hover:border-primary/30'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="flex flex-col">
+                              <div className="flex items-center gap-2">
+                                <span className={`font-medium ${isDisconnected ? 'text-muted-foreground' : ''}`}>
+                                  {player.displayName}
+                                </span>
+                                {isPlayerHost && (
+                                  <Crown className="h-4 w-4 text-yellow-600" />
+                                )}
+                              </div>
+                              {wins > 0 && (
+                                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                  <Trophy className="h-3 w-3" />
+                                  {wins} {wins === 1 ? 'win' : 'wins'}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {isDisconnected ? (
+                              <Badge variant="destructive" className="flex items-center gap-1">
+                                <WifiOff className="h-3 w-3" />
+                                Disconnected
+                              </Badge>
+                            ) : isPlayerHost ? (
+                              <Badge variant="secondary" className="flex items-center gap-1">
+                                <Crown className="h-3 w-3" />
+                                Host
+                              </Badge>
+                            ) : player.ready ? (
+                              <Badge className="bg-success flex items-center gap-1">
+                                <Check className="h-3 w-3" />
+                                Ready
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline">Not Ready</Badge>
+                            )}
+                            {/* Transfer host button - only show for host, not for themselves, and not for disconnected players */}
+                            {isHost && !isPlayerHost && !isDisconnected && (
+                              <Button
+                                onClick={() => setTransferHostUid(player.uid)}
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0 hover:bg-primary hover:text-primary-foreground"
+                                title="Transfer host to this player"
+                              >
+                                <UserCog className="h-4 w-4" />
+                              </Button>
+                            )}
+                            {/* Kick button - only show for host, not for themselves */}
+                            {isHost && !isPlayerHost && (
+                              <Button
+                                onClick={() => handleKickPlayer(player.uid)}
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                                title="Kick player"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </CardContent>
+                </Card>
+
+                {/* Game Info */}
+                <Card className="border-primary/20 bg-primary/5">
+                  <CardContent className="pt-6">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-5 w-5 text-primary" />
+                        <div>
+                          <p className="text-xs text-muted-foreground">Duration</p>
+                          <p className="text-lg font-bold">{room.gameMode.duration}s</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Layers className="h-5 w-5 text-primary" />
+                        <div>
+                          <p className="text-xs text-muted-foreground">Question Types</p>
+                          <p className="text-lg font-bold">{room.gameMode.questions.length}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Actions */}
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button
+                    onClick={handleLeave}
+                    variant="outline"
+                    size="lg"
+                    className="flex-1"
+                  >
+                    Leave Room
+                  </Button>
+                  {isHost ? (
+                    <Button
+                      onClick={handleStart}
+                      disabled={!allReady || playerCount < 2}
+                      size="lg"
+                      className="flex-1 shadow-sm"
+                    >
+                      <Play className="mr-2 h-5 w-5" />
+                      Start Game
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={handleToggleReady}
+                      variant={isReady ? 'outline' : 'default'}
+                      size="lg"
+                      className="flex-1 shadow-sm"
+                    >
+                      {isReady ? (
+                        <>
+                          <X className="mr-2 h-5 w-5" />
+                          Not Ready
+                        </>
+                      ) : (
+                        <>
+                          <Check className="mr-2 h-5 w-5" />
+                          Ready
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </div>
+
+                {/* Status Messages */}
+                {isHost && !allReady && nonHostPlayers.length > 0 && (
+                  <div className="text-center p-3 rounded-lg bg-muted/50 border">
+                    <p className="text-sm text-muted-foreground">
+                      Waiting for {nonHostPlayers.length - readyCount} player{nonHostPlayers.length - readyCount !== 1 ? 's' : ''} to be ready...
+                    </p>
                   </div>
-                );
-              })}
-            </div>
+                )}
+                {isHost && playerCount < 2 && (
+                  <div className="text-center p-3 rounded-lg bg-warning/10 border border-warning/20">
+                    <p className="text-sm text-warning-foreground">
+                      Need at least 2 players to start
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
 
-          {/* Game Info */}
-          <div className="p-4 rounded-md bg-muted/50">
-            <p className="text-sm">
-              <span className="font-semibold">Duration:</span> {room.gameMode.duration}s
-            </p>
-            <p className="text-sm">
-              <span className="font-semibold">Question Types:</span> {room.gameMode.questions.length}
-            </p>
+          {/* Sidebar - Game Summary */}
+          <div className="space-y-6">
+            <Card className="border-2 shadow-lg sticky top-4">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Trophy className="h-5 w-5 text-primary" />
+                  Game Summary
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                    <span className="text-sm text-muted-foreground">Mode</span>
+                    <Badge variant="secondary">{room.gameMode.difficulty}</Badge>
+                  </div>
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                    <span className="text-sm text-muted-foreground">Duration</span>
+                    <span className="font-semibold">{room.gameMode.duration}s</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                    <span className="text-sm text-muted-foreground">Players</span>
+                    <span className="font-semibold">{playerCount}/{room.maxPlayers || 4}</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                    <span className="text-sm text-muted-foreground">Visual Aids</span>
+                    <Badge variant={room.allowVisualAids ? "default" : "outline"}>
+                      {room.allowVisualAids ? 'Enabled' : 'Disabled'}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                    <span className="text-sm text-muted-foreground">Countdown</span>
+                    <Badge variant={room.enableCountdown ? "default" : "outline"}>
+                      {room.enableCountdown ? 'Enabled' : 'Disabled'}
+                    </Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
+        </div>
 
-          {/* Actions */}
-          <div className="flex gap-2">
-            <Button onClick={handleLeave} variant="outline" className="flex-1">
-              Leave Room
-            </Button>
-            {isHost ? (
-              <Button
-                onClick={handleStart}
-                disabled={!allReady || playerCount < 2}
-                className="flex-1"
-              >
-                Start Game
-              </Button>
-            ) : (
-              <Button
-                onClick={handleToggleReady}
-                variant={isReady ? 'outline' : 'default'}
-                className="flex-1"
-              >
-                {isReady ? 'Not Ready' : 'Ready'}
-              </Button>
-            )}
-          </div>
-
-          {isHost && !allReady && nonHostPlayers.length > 0 && (
-            <p className="text-sm text-center text-muted-foreground">
-              Waiting for {nonHostPlayers.length - readyCount} player{nonHostPlayers.length - readyCount !== 1 ? 's' : ''} to be ready...
-            </p>
-          )}
-          {isHost && playerCount < 2 && (
-            <p className="text-sm text-center text-muted-foreground">
-              Need at least 2 players to start
-            </p>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Transfer Host Confirmation Dialog */}
-      <AlertDialog open={transferHostUid !== null} onOpenChange={(open) => !open && setTransferHostUid(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Transfer Host Privileges?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to transfer host privileges to{' '}
-              <span className="font-semibold">
-                {transferHostUid && room?.players[transferHostUid]?.displayName}
-              </span>
-              ? You will no longer be the host and will need to ready up to start the game.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleTransferHost}>
-              Transfer Host
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        {/* Transfer Host Confirmation Dialog */}
+        <AlertDialog open={transferHostUid !== null} onOpenChange={(open) => !open && setTransferHostUid(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Transfer Host Privileges?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to transfer host privileges to{' '}
+                <span className="font-semibold">
+                  {transferHostUid && room?.players[transferHostUid]?.displayName}
+                </span>
+                ? You will no longer be the host and will need to ready up to start the game.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleTransferHost}>
+                Transfer Host
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </>
   );

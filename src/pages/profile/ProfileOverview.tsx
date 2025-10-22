@@ -1,12 +1,16 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { Mail, Calendar, Hash } from 'lucide-react';
+import { Mail, Calendar, Hash, User, Shield, TrendingUp, Trophy, Target, ArrowRight } from 'lucide-react';
 import { getUserAvatarUrl } from '@/lib/avatarGenerator';
+import { useNavigate } from 'react-router-dom';
 
 export default function ProfileOverview() {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const getInitials = (name: string | null | undefined) => {
     if (!name) return 'U';
@@ -46,94 +50,167 @@ export default function ProfileOverview() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 animate-in fade-in duration-300">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Overview</h1>
-        <p className="text-muted-foreground mt-1">Your account information</p>
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <User className="h-8 w-8 text-primary" />
+          <h1 className="text-4xl font-bold gradient-text">Account Overview</h1>
+        </div>
+        <p className="text-lg text-muted-foreground">
+          Your profile information and quick stats
+        </p>
       </div>
 
       {/* Profile Card */}
-      <Card>
+      <Card className="border-2 shadow-lg">
         <CardHeader>
-          <CardTitle>Profile Information</CardTitle>
-          <CardDescription>Your basic account details</CardDescription>
+          <CardTitle className="text-2xl flex items-center gap-2">
+            <Shield className="h-6 w-6 text-primary" />
+            Profile Information
+          </CardTitle>
+          <CardDescription className="text-base">
+            Your basic account details
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Avatar and Name */}
-          <div className="flex items-center gap-4">
-            <Avatar className="h-20 w-20">
+          <div className="flex items-center gap-6 p-6 rounded-lg bg-gradient-to-r from-primary/10 to-accent/10 border-2 border-primary/20">
+            <Avatar className="h-24 w-24 border-4 border-primary/30 shadow-lg">
               <AvatarImage src={getUserPhotoURL()} alt={user?.displayName || 'User'} />
-              <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
+              <AvatarFallback className="bg-primary text-primary-foreground text-3xl font-bold">
                 {getInitials(user?.displayName)}
               </AvatarFallback>
             </Avatar>
-            <div>
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+            <div className="space-y-2">
+              <h3 className="text-2xl font-bold gradient-text">
                 {user?.displayName || 'User'}
               </h3>
-              <Badge className="mt-1 bg-green-600">Authenticated Account</Badge>
+              <Badge className="bg-success text-success-foreground">
+                <Shield className="h-3 w-3 mr-1" />
+                Authenticated Account
+              </Badge>
             </div>
           </div>
 
+          <Separator />
+
           {/* Details */}
-          <div className="space-y-4 pt-4 border-t dark:border-gray-800">
+          <div className="grid gap-6 md:grid-cols-2">
             {/* Email */}
             {user && 'email' in user && user.email && (
-              <div className="flex items-center gap-3 text-sm">
-                <Mail className="h-5 w-5 text-muted-foreground" />
-                <div>
-                  <p className="text-xs text-muted-foreground">Email</p>
-                  <p className="text-gray-900 dark:text-gray-100">{user.email}</p>
-                </div>
-              </div>
+              <Card className="border-2">
+                <CardContent className="pt-6">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 rounded-lg bg-primary/10">
+                      <Mail className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-xs font-medium text-muted-foreground">Email Address</p>
+                      <p className="text-sm font-medium break-all">{user.email}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             )}
 
             {/* User ID */}
-            <div className="flex items-center gap-3 text-sm">
-              <Hash className="h-5 w-5 text-muted-foreground" />
-              <div>
-                <p className="text-xs text-muted-foreground">User ID</p>
-                <p className="font-mono text-xs text-gray-900 dark:text-gray-100">{user?.uid}</p>
-              </div>
-            </div>
+            <Card className="border-2">
+              <CardContent className="pt-6">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <Hash className="h-5 w-5 text-primary" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-xs font-medium text-muted-foreground">User ID</p>
+                    <p className="font-mono text-xs break-all">{user?.uid}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Account Created */}
-            <div className="flex items-center gap-3 text-sm">
-              <Calendar className="h-5 w-5 text-muted-foreground" />
-              <div>
-                <p className="text-xs text-muted-foreground">Account Created</p>
-                <p className="text-gray-900 dark:text-gray-100">{formatDate(getCreatedAt())}</p>
-              </div>
-            </div>
+            <Card className="border-2 md:col-span-2">
+              <CardContent className="pt-6">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <Calendar className="h-5 w-5 text-primary" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-xs font-medium text-muted-foreground">Account Created</p>
+                    <p className="text-sm font-medium">{formatDate(getCreatedAt())}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </CardContent>
       </Card>
 
       {/* Quick Stats */}
-      <Card>
+      <Card className="border-2 shadow-lg">
         <CardHeader>
-          <CardTitle>Quick Stats</CardTitle>
-          <CardDescription>Your gaming performance at a glance</CardDescription>
+          <CardTitle className="text-2xl flex items-center gap-2">
+            <TrendingUp className="h-6 w-6 text-primary" />
+            Quick Stats
+          </CardTitle>
+          <CardDescription className="text-base">
+            Your gaming performance at a glance
+          </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="text-center p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
-              <p className="text-2xl font-bold text-primary">-</p>
-              <p className="text-sm text-muted-foreground mt-1">Games Played</p>
-            </div>
-            <div className="text-center p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
-              <p className="text-2xl font-bold text-primary">-</p>
-              <p className="text-sm text-muted-foreground mt-1">High Score</p>
-            </div>
-            <div className="text-center p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
-              <p className="text-2xl font-bold text-primary">-</p>
-              <p className="text-sm text-muted-foreground mt-1">Average Score</p>
-            </div>
+            <Card className="border-2 hover:shadow-md transition-shadow">
+              <CardContent className="pt-6 text-center space-y-2">
+                <div className="flex justify-center">
+                  <div className="p-3 rounded-full bg-primary/10">
+                    <Target className="h-6 w-6 text-primary" />
+                  </div>
+                </div>
+                <p className="text-3xl font-bold gradient-text">-</p>
+                <p className="text-sm font-medium text-muted-foreground">Games Played</p>
+              </CardContent>
+            </Card>
+            <Card className="border-2 hover:shadow-md transition-shadow">
+              <CardContent className="pt-6 text-center space-y-2">
+                <div className="flex justify-center">
+                  <div className="p-3 rounded-full bg-success/10">
+                    <Trophy className="h-6 w-6 text-success" />
+                  </div>
+                </div>
+                <p className="text-3xl font-bold text-success">-</p>
+                <p className="text-sm font-medium text-muted-foreground">High Score</p>
+              </CardContent>
+            </Card>
+            <Card className="border-2 hover:shadow-md transition-shadow">
+              <CardContent className="pt-6 text-center space-y-2">
+                <div className="flex justify-center">
+                  <div className="p-3 rounded-full bg-primary/10">
+                    <TrendingUp className="h-6 w-6 text-primary" />
+                  </div>
+                </div>
+                <p className="text-3xl font-bold gradient-text">-</p>
+                <p className="text-sm font-medium text-muted-foreground">Average Score</p>
+              </CardContent>
+            </Card>
           </div>
-          <p className="text-xs text-muted-foreground text-center mt-4">
-            Visit the <a href="/stats" className="text-primary hover:underline">Stats page</a> for detailed analytics
-          </p>
+
+          <Separator />
+
+          <div className="flex items-center justify-center gap-2">
+            <p className="text-sm text-muted-foreground">
+              Visit the Stats page for detailed analytics
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/stats')}
+              className="gap-2"
+            >
+              View Stats
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>

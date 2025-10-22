@@ -1,44 +1,62 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
+import { BookOpen, Sparkles, Users, Clock, Target, Lightbulb, ArrowRight } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
 
 export default function Usage() {
   return (
-    <div className="container mx-auto p-4 max-w-5xl">
-      <div className="mb-8 text-center">
-        <h1 className="text-4xl font-bold mb-2">How to Play</h1>
-        <p className="text-muted-foreground">
+    <div className="container mx-auto px-4 py-8 max-w-5xl">
+      <div className="mb-12 text-center space-y-4 animate-in">
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <BookOpen className="h-10 w-10 text-primary" />
+          <h1 className="text-5xl font-bold gradient-text">How to Play</h1>
+        </div>
+        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
           Learn how to master base conversion with Based Math Game
         </p>
       </div>
 
       <div className="space-y-6">
         {/* Game Basics */}
-        <Card>
+        <Card className="border-2 shadow-lg">
           <CardHeader>
-            <CardTitle>Game Basics</CardTitle>
+            <CardTitle className="text-2xl">Game Basics</CardTitle>
             <CardDescription>Understanding base conversion challenges</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p>
+            <p className="text-base leading-relaxed">
               Based Math Game tests your ability to convert numbers between different bases:
             </p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <div className="bg-blue-50 dark:bg-blue-950 p-3 rounded-lg border border-blue-200 dark:border-blue-800 text-center">
-                <div className="font-bold text-blue-600 dark:text-blue-400">Binary</div>
-                <div className="text-xs text-muted-foreground">Base 2</div>
-              </div>
-              <div className="bg-orange-50 dark:bg-orange-950 p-3 rounded-lg border border-orange-200 dark:border-orange-800 text-center">
-                <div className="font-bold text-orange-600 dark:text-orange-400">Octal</div>
-                <div className="text-xs text-muted-foreground">Base 8</div>
-              </div>
-              <div className="bg-green-50 dark:bg-green-950 p-3 rounded-lg border border-green-200 dark:border-green-800 text-center">
-                <div className="font-bold text-green-600 dark:text-green-400">Decimal</div>
-                <div className="text-xs text-muted-foreground">Base 10</div>
-              </div>
-              <div className="bg-purple-50 dark:bg-purple-950 p-3 rounded-lg border border-purple-200 dark:border-purple-800 text-center">
-                <div className="font-bold text-purple-600 dark:text-purple-400">Hexadecimal</div>
-                <div className="text-xs text-muted-foreground">Base 16</div>
-              </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
+              <Card className="border-2 hover:shadow-md transition-shadow">
+                <CardContent className="pt-6 text-center">
+                  <Badge className="mb-2 bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">Base 2</Badge>
+                  <p className="font-bold text-lg">Binary</p>
+                  <p className="text-xs text-muted-foreground mt-1">Digits: 0-1</p>
+                </CardContent>
+              </Card>
+              <Card className="border-2 hover:shadow-md transition-shadow">
+                <CardContent className="pt-6 text-center">
+                  <Badge className="mb-2 bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300">Base 8</Badge>
+                  <p className="font-bold text-lg">Octal</p>
+                  <p className="text-xs text-muted-foreground mt-1">Digits: 0-7</p>
+                </CardContent>
+              </Card>
+              <Card className="border-2 hover:shadow-md transition-shadow">
+                <CardContent className="pt-6 text-center">
+                  <Badge className="mb-2 bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">Base 10</Badge>
+                  <p className="font-bold text-lg">Decimal</p>
+                  <p className="text-xs text-muted-foreground mt-1">Digits: 0-9</p>
+                </CardContent>
+              </Card>
+              <Card className="border-2 hover:shadow-md transition-shadow">
+                <CardContent className="pt-6 text-center">
+                  <Badge className="mb-2 bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300">Base 16</Badge>
+                  <p className="font-bold text-lg">Hexadecimal</p>
+                  <p className="text-xs text-muted-foreground mt-1">Digits: 0-F</p>
+                </CardContent>
+              </Card>
             </div>
             <div className="bg-muted p-4 rounded-lg mt-4">
               <p className="text-sm font-semibold mb-2">Example Question:</p>
@@ -53,10 +71,13 @@ export default function Usage() {
         </Card>
 
         {/* Singleplayer Mode */}
-        <Card>
+        <Card className="border-2 shadow-lg">
           <CardHeader>
-            <CardTitle>Singleplayer Mode</CardTitle>
-            <CardDescription>Practice at your own pace</CardDescription>
+            <CardTitle className="text-2xl flex items-center gap-2">
+              <Sparkles className="h-6 w-6 text-primary" />
+              Singleplayer Mode
+            </CardTitle>
+            <CardDescription>Practice at your own pace with flexible game modes</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
@@ -124,10 +145,13 @@ export default function Usage() {
         </Card>
 
         {/* Multiplayer Mode */}
-        <Card>
+        <Card className="border-2 shadow-lg">
           <CardHeader>
-            <CardTitle>Multiplayer Mode</CardTitle>
-            <CardDescription>Compete with friends in real-time</CardDescription>
+            <CardTitle className="text-2xl flex items-center gap-2">
+              <Users className="h-6 w-6 text-primary" />
+              Multiplayer Mode
+            </CardTitle>
+            <CardDescription>Compete with friends in real-time challenges</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
@@ -189,10 +213,13 @@ export default function Usage() {
         </Card>
 
         {/* During the Quiz */}
-        <Card>
+        <Card className="border-2 shadow-lg">
           <CardHeader>
-            <CardTitle>During the Quiz</CardTitle>
-            <CardDescription>Gameplay mechanics and scoring</CardDescription>
+            <CardTitle className="text-2xl flex items-center gap-2">
+              <Clock className="h-6 w-6 text-primary" />
+              During the Quiz
+            </CardTitle>
+            <CardDescription>Gameplay mechanics and scoring system</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid md:grid-cols-2 gap-4">
@@ -262,9 +289,12 @@ export default function Usage() {
         </Card>
 
         {/* Progress Tracking */}
-        <Card>
+        <Card className="border-2 shadow-lg">
           <CardHeader>
-            <CardTitle>Progress Tracking</CardTitle>
+            <CardTitle className="text-2xl flex items-center gap-2">
+              <Target className="h-6 w-6 text-primary" />
+              Progress Tracking
+            </CardTitle>
             <CardDescription>Monitor your improvement over time</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -332,10 +362,13 @@ export default function Usage() {
         </Card>
 
         {/* Quick Tips */}
-        <Card>
+        <Card className="border-2 shadow-lg">
           <CardHeader>
-            <CardTitle>Quick Tips</CardTitle>
-            <CardDescription>Improve your performance</CardDescription>
+            <CardTitle className="text-2xl flex items-center gap-2">
+              <Lightbulb className="h-6 w-6 text-primary" />
+              Quick Tips
+            </CardTitle>
+            <CardDescription>Improve your performance and master base conversion</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid md:grid-cols-2 gap-4 text-sm">
@@ -372,32 +405,45 @@ export default function Usage() {
         </Card>
 
         {/* Get Started */}
-        <Card className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950 border-2">
+        <Card className="border-2 shadow-lg bg-gradient-to-r from-primary/5 to-accent/5">
           <CardHeader>
-            <CardTitle>Ready to Start?</CardTitle>
+            <CardTitle className="text-2xl gradient-text">Ready to Start?</CardTitle>
+            <CardDescription className="text-base">
+              Choose your path and start mastering base conversion today!
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="mb-4">
-              Choose your path and start mastering base conversion today!
-            </p>
-            <div className="flex flex-wrap gap-3">
+            <Separator className="mb-6" />
+            <div className="grid md:grid-cols-3 gap-4">
               <Link
                 to="/tutorials"
-                className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+                className="group flex items-center justify-between rounded-lg border-2 border-primary/20 bg-primary/10 px-6 py-4 hover:border-primary/50 hover:bg-primary/20 transition-all"
               >
-                Learn with Tutorials
+                <div>
+                  <p className="font-semibold text-primary">Learn with Tutorials</p>
+                  <p className="text-xs text-muted-foreground">Master each base system</p>
+                </div>
+                <ArrowRight className="h-5 w-5 text-primary group-hover:translate-x-1 transition-transform" />
               </Link>
               <Link
                 to="/singleplayer"
-                className="inline-flex items-center justify-center rounded-md bg-secondary px-4 py-2 text-sm font-medium hover:bg-secondary/80 transition-colors"
+                className="group flex items-center justify-between rounded-lg border-2 border-primary/20 bg-primary/10 px-6 py-4 hover:border-primary/50 hover:bg-primary/20 transition-all"
               >
-                Start Singleplayer
+                <div>
+                  <p className="font-semibold text-primary">Start Singleplayer</p>
+                  <p className="text-xs text-muted-foreground">Practice at your pace</p>
+                </div>
+                <ArrowRight className="h-5 w-5 text-primary group-hover:translate-x-1 transition-transform" />
               </Link>
               <Link
                 to="/multiplayer"
-                className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
+                className="group flex items-center justify-between rounded-lg border-2 border-primary/20 bg-primary/10 px-6 py-4 hover:border-primary/50 hover:bg-primary/20 transition-all"
               >
-                Play Multiplayer
+                <div>
+                  <p className="font-semibold text-primary">Play Multiplayer</p>
+                  <p className="text-xs text-muted-foreground">Compete with friends</p>
+                </div>
+                <ArrowRight className="h-5 w-5 text-primary group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
           </CardContent>

@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import { useRoom, Room } from '@/hooks/useRoom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
-import { Trophy } from 'lucide-react';
+import { Trophy, Crown, Medal, Home, RotateCcw, Loader2 } from 'lucide-react';
 
 export default function MultiplayerResults() {
   const { roomId } = useParams<{ roomId: string }>();
@@ -84,7 +85,7 @@ export default function MultiplayerResults() {
   if (!room) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
       </div>
     );
   }
@@ -93,69 +94,149 @@ export default function MultiplayerResults() {
   const winner = sortedPlayers[0];
   const isHost = user?.uid === room.hostUid;
 
-  return (
-    <div className="container mx-auto p-4 flex items-center justify-center min-h-[80vh]">
-      <Card className="w-full max-w-2xl">
-        <CardHeader className="text-center">
-          <CardTitle className="text-3xl">Game Complete!</CardTitle>
-          <p className="text-muted-foreground">{room.gameMode.name}</p>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Winner */}
-          <div className="text-center p-6 rounded-lg bg-gradient-to-r from-yellow-500/20 to-orange-500/20">
-            <Trophy className="h-12 w-12 mx-auto mb-2 text-yellow-600" />
-            <h2 className="text-2xl font-bold">{winner.displayName}</h2>
-            <p className="text-muted-foreground">Winner</p>
-            <p className="text-4xl font-bold mt-2">{winner.score}</p>
-          </div>
+  const getRankIcon = (index: number) => {
+    if (index === 0) return <Crown className="h-6 w-6 text-yellow-600" />;
+    if (index === 1) return <Medal className="h-6 w-6 text-gray-400" />;
+    if (index === 2) return <Medal className="h-6 w-6 text-amber-700" />;
+    return null;
+  };
 
-          {/* All players */}
-          <div>
-            <h3 className="font-semibold mb-3">Final Scores</h3>
-            <div className="space-y-2">
-              {sortedPlayers.map((player, index) => (
-                <div
-                  key={player.uid}
-                  className="flex items-center justify-between p-4 rounded-md bg-muted/50"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="font-bold text-2xl text-muted-foreground w-8">
-                      #{index + 1}
-                    </span>
-                    <div>
-                      <p className="font-semibold">{player.displayName}</p>
-                      {index === 0 && (
-                        <Badge className="bg-yellow-600">Winner</Badge>
-                      )}
-                    </div>
-                  </div>
-                  <span className="font-bold text-2xl">{player.score}</span>
-                </div>
-              ))}
+  return (
+    <div className="container mx-auto px-4 py-8 flex items-center justify-center min-h-[calc(100vh-8rem)]">
+      <div className="w-full max-w-3xl space-y-6 animate-in">
+        {/* Header */}
+        <div className="text-center space-y-2">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <Trophy className="h-8 w-8 text-success" />
+            <h1 className="text-4xl font-bold gradient-text">Game Complete!</h1>
+          </div>
+          <p className="text-lg text-muted-foreground">
+            {room.gameMode.name}
+          </p>
+        </div>
+
+        <Card className="border-2 shadow-xl">
+          <CardHeader className="text-center pb-6">
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <Trophy className="h-12 w-12 text-yellow-600 animate-pulse" />
             </div>
-          </div>
-        </CardContent>
-        <CardFooter className="flex flex-col gap-3">
-          {isHost && (
-            <Button onClick={handleReturnToLobby} className="w-full" size="lg">
-              Return to Lobby (Play Again)
-            </Button>
-          )}
-          {!isHost && (
-            <p className="text-sm text-muted-foreground text-center">
-              Waiting for host to return to lobby...
-            </p>
-          )}
-          <div className="flex gap-2 justify-center w-full">
-            <Button onClick={() => navigate('/multiplayer')} variant="outline">
-              Leave Room
-            </Button>
-            <Button onClick={() => navigate('/')} variant="outline">
-              Back to Home
-            </Button>
-          </div>
-        </CardFooter>
-      </Card>
+            <CardTitle className="text-3xl gradient-text">
+              {winner.displayName}
+            </CardTitle>
+            <CardDescription className="text-lg">
+              Winner
+            </CardDescription>
+            <div className="mt-4">
+              <p className="text-6xl font-bold gradient-text animate-pulse-glow">
+                {winner.score}
+              </p>
+              <p className="text-sm text-muted-foreground mt-2">points</p>
+            </div>
+          </CardHeader>
+
+          <Separator />
+
+          <CardContent className="pt-6 space-y-6">
+            {/* All players */}
+            <div className="space-y-3">
+              <h3 className="font-semibold text-lg flex items-center gap-2">
+                <Trophy className="h-5 w-5 text-primary" />
+                Final Standings
+              </h3>
+              <div className="space-y-3">
+                {sortedPlayers.map((player, index) => (
+                  <Card
+                    key={player.uid}
+                    className={`border-2 transition-all ${
+                      index === 0
+                        ? 'border-yellow-600/50 bg-gradient-to-r from-yellow-500/10 to-orange-500/10'
+                        : 'border-muted hover:border-primary/30'
+                    }`}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className="flex items-center justify-center w-12 h-12 rounded-full bg-muted">
+                            {getRankIcon(index) || (
+                              <span className="font-bold text-xl text-muted-foreground">
+                                #{index + 1}
+                              </span>
+                            )}
+                          </div>
+                          <div>
+                            <p className="font-semibold text-lg">{player.displayName}</p>
+                            {index === 0 && (
+                              <Badge className="bg-yellow-600 hover:bg-yellow-700">
+                                <Crown className="h-3 w-3 mr-1" />
+                                Champion
+                              </Badge>
+                            )}
+                            {index === 1 && (
+                              <Badge variant="secondary">
+                                2nd Place
+                              </Badge>
+                            )}
+                            {index === 2 && (
+                              <Badge variant="outline">
+                                3rd Place
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-3xl">{player.score}</p>
+                          <p className="text-xs text-muted-foreground">points</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+
+          <Separator />
+
+          <CardFooter className="flex flex-col gap-4 pt-6">
+            {isHost ? (
+              <Button
+                onClick={handleReturnToLobby}
+                className="w-full shadow-sm"
+                size="lg"
+              >
+                <RotateCcw className="mr-2 h-5 w-5" />
+                Return to Lobby (Play Again)
+              </Button>
+            ) : (
+              <div className="w-full text-center p-4 rounded-lg bg-muted/50 border">
+                <Loader2 className="h-5 w-5 animate-spin mx-auto mb-2 text-primary" />
+                <p className="text-sm text-muted-foreground">
+                  Waiting for host to return to lobby...
+                </p>
+              </div>
+            )}
+            <div className="flex flex-col sm:flex-row gap-3 w-full">
+              <Button
+                onClick={() => navigate('/multiplayer')}
+                variant="outline"
+                size="lg"
+                className="flex-1"
+              >
+                Leave Room
+              </Button>
+              <Button
+                onClick={() => navigate('/')}
+                variant="outline"
+                size="lg"
+                className="flex-1"
+              >
+                <Home className="mr-2 h-5 w-5" />
+                Back to Home
+              </Button>
+            </div>
+          </CardFooter>
+        </Card>
+      </div>
     </div>
   );
 }

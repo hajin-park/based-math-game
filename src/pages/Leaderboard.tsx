@@ -3,9 +3,11 @@ import { collection, getDocs, query, orderBy, limit, doc, getDoc } from 'firebas
 import { firestore } from '@/firebase/config';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 import { OFFICIAL_GAME_MODES } from '@/types/gameMode';
 import { useAuth } from '@/contexts/AuthContext';
 import { Badge } from '@/components/ui/badge';
+import { Trophy, Crown, Medal, Loader2, Target, Users } from 'lucide-react';
 
 interface LeaderboardEntry {
   uid: string;
@@ -137,136 +139,189 @@ export default function Leaderboard() {
 
   const selectedModeData = OFFICIAL_GAME_MODES.find((mode) => mode.id === selectedMode);
 
+  const getRankIcon = (index: number) => {
+    if (index === 0) return <Crown className="h-5 w-5 text-yellow-600" />;
+    if (index === 1) return <Medal className="h-5 w-5 text-gray-400" />;
+    if (index === 2) return <Medal className="h-5 w-5 text-amber-700" />;
+    return null;
+  };
+
   return (
-    <div className="container mx-auto p-4 space-y-4">
-      <Card>
+    <div className="container mx-auto px-4 py-8 space-y-6">
+      {/* Header */}
+      <div className="text-center space-y-2 animate-in">
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <Trophy className="h-8 w-8 text-primary" />
+          <h1 className="text-4xl font-bold gradient-text">Leaderboard</h1>
+        </div>
+        <p className="text-lg text-muted-foreground">
+          Top scores for each game mode
+        </p>
+      </div>
+
+      <Card className="border-2 shadow-lg">
         <CardHeader>
-          <CardTitle>Leaderboard</CardTitle>
-          <CardDescription>Top scores for each game mode</CardDescription>
+          <CardTitle className="text-2xl flex items-center gap-2">
+            <Target className="h-6 w-6 text-primary" />
+            Global Rankings
+          </CardTitle>
+          <CardDescription className="text-base">
+            Compete with players worldwide
+          </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {/* Mode selector */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Select Game Mode</label>
-              <Select value={selectedMode} onValueChange={setSelectedMode}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select a game mode" />
-                </SelectTrigger>
-                <SelectContent className="max-h-[400px]">
-                  {/* Group by mode type */}
-                  <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
-                    Timed - 15 Seconds
-                  </div>
-                  {OFFICIAL_GAME_MODES.filter(m => m.id.includes('-15s')).map((mode) => (
-                    <SelectItem key={mode.id} value={mode.id}>
-                      {mode.name}
-                    </SelectItem>
-                  ))}
-                  <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground mt-2">
-                    Timed - 60 Seconds
-                  </div>
-                  {OFFICIAL_GAME_MODES.filter(m => m.id.includes('-60s')).map((mode) => (
-                    <SelectItem key={mode.id} value={mode.id}>
-                      {mode.name}
-                    </SelectItem>
-                  ))}
-                  <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground mt-2">
-                    Speed Run - 10 Questions
-                  </div>
-                  {OFFICIAL_GAME_MODES.filter(m => m.id.includes('-10q')).map((mode) => (
-                    <SelectItem key={mode.id} value={mode.id}>
-                      {mode.name}
-                    </SelectItem>
-                  ))}
-                  <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground mt-2">
-                    Speed Run - 30 Questions
-                  </div>
-                  {OFFICIAL_GAME_MODES.filter(m => m.id.includes('-30q')).map((mode) => (
-                    <SelectItem key={mode.id} value={mode.id}>
-                      {mode.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* User's Rank Card (if not in top 50) */}
-            {!isGuest && userRank && userRank.rank > 50 && (
-              <Card className="bg-primary/5 border-primary/20">
-                <CardContent className="pt-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Your Rank</p>
-                      <p className="text-2xl font-bold">#{userRank.rank}</p>
-                      <p className="text-xs text-muted-foreground">
-                        out of {userRank.totalPlayers} players
-                      </p>
+        <CardContent className="space-y-6">
+          {/* Mode selector */}
+          <Card className="border-primary/20 bg-primary/5">
+            <CardContent className="pt-6">
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Trophy className="h-5 w-5 text-primary" />
+                  <Label className="text-base font-semibold">Select Game Mode</Label>
+                </div>
+                <Select value={selectedMode} onValueChange={setSelectedMode}>
+                  <SelectTrigger className="w-full h-11">
+                    <SelectValue placeholder="Select a game mode" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-[400px]">
+                    {/* Group by mode type */}
+                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                      Timed - 15 Seconds
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm text-muted-foreground">Your Score</p>
-                      <p className="text-2xl font-bold">{userRank.score}</p>
+                    {OFFICIAL_GAME_MODES.filter(m => m.id.includes('-15s')).map((mode) => (
+                      <SelectItem key={mode.id} value={mode.id}>
+                        {mode.name}
+                      </SelectItem>
+                    ))}
+                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground mt-2">
+                      Timed - 60 Seconds
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Leaderboard table */}
-            {loading ? (
-              <div className="flex justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    {OFFICIAL_GAME_MODES.filter(m => m.id.includes('-60s')).map((mode) => (
+                      <SelectItem key={mode.id} value={mode.id}>
+                        {mode.name}
+                      </SelectItem>
+                    ))}
+                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground mt-2">
+                      Speed Run - 10 Questions
+                    </div>
+                    {OFFICIAL_GAME_MODES.filter(m => m.id.includes('-10q')).map((mode) => (
+                      <SelectItem key={mode.id} value={mode.id}>
+                        {mode.name}
+                      </SelectItem>
+                    ))}
+                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground mt-2">
+                      Speed Run - 30 Questions
+                    </div>
+                    {OFFICIAL_GAME_MODES.filter(m => m.id.includes('-30q')).map((mode) => (
+                      <SelectItem key={mode.id} value={mode.id}>
+                        {mode.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-            ) : leaderboard.length > 0 ? (
-              <div className="rounded-md border">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b bg-muted/50">
-                      <th className="p-4 text-left font-medium">Rank</th>
-                      <th className="p-4 text-left font-medium">Player</th>
-                      <th className="p-4 text-right font-medium">Score</th>
-                      <th className="p-4 text-right font-medium">Date</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {leaderboard.map((entry, index) => {
-                      const isCurrentUser = user && entry.uid === user.uid;
-                      return (
-                        <tr
-                          key={entry.uid}
-                          className={`border-b last:border-0 ${
-                            isCurrentUser
-                              ? 'bg-primary/10 hover:bg-primary/15 border-primary/20'
-                              : 'hover:bg-muted/50'
-                          }`}
-                        >
-                          <td className="p-4">
-                            <div className="flex items-center gap-2">
-                              <span className={`font-bold ${index < 3 ? 'text-yellow-600' : ''}`}>
+            </CardContent>
+          </Card>
+
+          {/* User's Rank Card (if not in top 50) */}
+          {!isGuest && userRank && userRank.rank > 50 && (
+            <Card className="bg-primary/10 border-primary/50 border-2">
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4 text-primary" />
+                      <p className="text-sm font-medium text-muted-foreground">Your Rank</p>
+                    </div>
+                    <p className="text-4xl font-bold gradient-text">#{userRank.rank}</p>
+                    <p className="text-xs text-muted-foreground">
+                      out of {userRank.totalPlayers} players
+                    </p>
+                  </div>
+                  <div className="text-right space-y-2">
+                    <div className="flex items-center gap-2 justify-end">
+                      <Trophy className="h-4 w-4 text-primary" />
+                      <p className="text-sm font-medium text-muted-foreground">Your Score</p>
+                    </div>
+                    <p className="text-4xl font-bold gradient-text">{userRank.score}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Leaderboard table */}
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+              <p className="text-sm text-muted-foreground">Loading leaderboard...</p>
+            </div>
+          ) : leaderboard.length > 0 ? (
+            <div className="space-y-3">
+              {leaderboard.map((entry, index) => {
+                const isCurrentUser = user && entry.uid === user.uid;
+                const rankIcon = getRankIcon(index);
+
+                return (
+                  <Card
+                    key={entry.uid}
+                    className={`border-2 transition-all ${
+                      isCurrentUser
+                        ? 'border-primary bg-primary/10 shadow-md'
+                        : index < 3
+                        ? 'border-yellow-600/30 bg-gradient-to-r from-yellow-500/5 to-orange-500/5'
+                        : 'border-muted hover:border-primary/30 hover:shadow-sm'
+                    }`}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className="flex items-center justify-center w-12 h-12 rounded-full bg-muted">
+                            {rankIcon || (
+                              <span className="font-bold text-lg text-muted-foreground">
                                 #{index + 1}
                               </span>
+                            )}
+                          </div>
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <p className="font-semibold text-lg">{entry.displayName}</p>
                               {isCurrentUser && (
-                                <Badge variant="outline" className="text-xs">You</Badge>
+                                <Badge variant="default" className="text-xs">
+                                  You
+                                </Badge>
                               )}
                             </div>
-                          </td>
-                          <td className="p-4 font-medium">{entry.displayName}</td>
-                          <td className="p-4 text-right font-semibold">{entry.score}</td>
-                          <td className="p-4 text-right text-sm text-muted-foreground">
-                            {new Date(entry.timestamp).toLocaleDateString()}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                No scores yet for {selectedModeData?.name}. Be the first!
-              </div>
-            )}
-          </div>
+                            <p className="text-xs text-muted-foreground">
+                              {new Date(entry.timestamp).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric'
+                              })}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-3xl gradient-text">{entry.score}</p>
+                          <p className="text-xs text-muted-foreground">points</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          ) : (
+            <Card className="border-2 border-dashed">
+              <CardContent className="py-12">
+                <div className="text-center space-y-3">
+                  <Trophy className="h-12 w-12 mx-auto text-muted-foreground/50" />
+                  <p className="text-muted-foreground">
+                    No scores yet for {selectedModeData?.name}. Be the first!
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </CardContent>
       </Card>
     </div>

@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
-import { Dialog } from "@headlessui/react";
-import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/AuthContext";
 import ProfileDropdown from "@/components/ProfileDropdown";
+import { Menu, Sparkles } from "lucide-react";
 
 export default function NavigationBar() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -21,93 +22,91 @@ export default function NavigationBar() {
     ];
 
     return (
-        <nav className="bg-white dark:bg-gray-950 border-b dark:border-gray-800">
-            <div
-                className="mx-auto flex items-center justify-between py-4 px-6 lg:px-8"
-                aria-label="Global"
-            >
-                <div className="flex lg:flex-1">
-                    <NavLink to="/" className="-m-1.5 p-1.5 font-bold text-lg">
-                        <span className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+        <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+            <div className="container flex h-16 items-center justify-between px-4">
+                {/* Logo */}
+                <div className="flex items-center gap-2">
+                    <NavLink to="/" className="flex items-center gap-2 font-bold text-lg hover:opacity-80 transition-opacity">
+                        <Sparkles className="h-5 w-5 text-primary" />
+                        <span className="gradient-text hidden sm:inline">
                             Based Math Game
+                        </span>
+                        <span className="gradient-text sm:hidden">
+                            BMG
                         </span>
                     </NavLink>
                 </div>
-                <div className="flex lg:hidden">
-                    <button
-                        type="button"
-                        className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-gray-700 dark:text-gray-300"
-                        onClick={() => setMobileMenuOpen(true)}
-                    >
-                        <span className="sr-only">Open main menu</span>
-                        <Bars3Icon className="h-6 w-6" aria-hidden="true" />
-                    </button>
-                </div>
-                <div className="hidden lg:flex lg:gap-x-6 items-center">
+
+                {/* Desktop Navigation */}
+                <div className="hidden lg:flex lg:items-center lg:gap-6">
                     {navigation.map((item) => (
                         <NavLink
                             key={item.name}
                             to={item.href}
                             className={({ isActive }) =>
-                                `text-sm font-semibold leading-6 transition-colors ${
+                                `text-sm font-medium transition-colors hover:text-primary ${
                                     isActive
                                         ? "text-primary"
-                                        : "text-gray-900 hover:text-primary dark:text-gray-100 dark:hover:text-primary"
+                                        : "text-muted-foreground"
                                 }`
                             }
                         >
                             {item.name}
                         </NavLink>
                     ))}
+                </div>
+
+                {/* Desktop Auth */}
+                <div className="hidden lg:flex lg:items-center lg:gap-4">
                     {isGuest ? (
-                        <Button asChild size="sm">
+                        <Button asChild size="sm" className="shadow-sm">
                             <NavLink to="/signup">Sign Up</NavLink>
                         </Button>
                     ) : (
                         <ProfileDropdown />
                     )}
                 </div>
-            </div>
-            <Dialog
-                as="div"
-                className="lg:hidden"
-                open={mobileMenuOpen}
-                onClose={setMobileMenuOpen}
-            >
-                <div className="fixed inset-0 z-10" />
-                <Dialog.Panel className="fixed inset-y-0 right-0 z-10 flex w-full flex-col justify-between overflow-y-auto bg-white dark:bg-gray-950 sm:max-w-sm sm:ring-1 sm:ring-gray-900/10 dark:sm:ring-gray-800">
-                    <div className="p-6">
-                        <div className="flex items-center justify-between">
-                            <NavLink to="/" className="-m-1.5 p-1.5 font-bold">
-                                <span className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-                                    Based Math Game
-                                </span>
-                            </NavLink>
-                            <button
-                                type="button"
-                                className="-m-2.5 rounded-md p-2.5 text-gray-700 dark:text-gray-300"
-                                onClick={() => setMobileMenuOpen(false)}
-                            >
-                                <span className="sr-only">Close menu</span>
-                                <XMarkIcon
-                                    className="h-6 w-6"
-                                    aria-hidden="true"
-                                />
-                            </button>
-                        </div>
-                        <div className="mt-6 flow-root">
-                            <div className="space-y-2 py-6">
-                                {navigation.map((item) => (
-                                    <NavLink
-                                        key={item.name}
-                                        to={item.href}
-                                        className="block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800"
-                                        onClick={() => setMobileMenuOpen(false)}
-                                    >
-                                        {item.name}
-                                    </NavLink>
-                                ))}
-                                <div className="pt-4 border-t">
+
+                {/* Mobile Menu */}
+                <div className="flex lg:hidden">
+                    <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+                        <SheetTrigger asChild>
+                            <Button variant="ghost" size="icon" className="lg:hidden">
+                                <Menu className="h-5 w-5" />
+                                <span className="sr-only">Open menu</span>
+                            </Button>
+                        </SheetTrigger>
+                        <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+                            <SheetHeader>
+                                <SheetTitle className="text-left">
+                                    <span className="gradient-text">Based Math Game</span>
+                                </SheetTitle>
+                            </SheetHeader>
+                            <div className="mt-6 flex flex-col gap-4">
+                                {/* Navigation Links */}
+                                <nav className="flex flex-col gap-2">
+                                    {navigation.map((item) => (
+                                        <NavLink
+                                            key={item.name}
+                                            to={item.href}
+                                            className={({ isActive }) =>
+                                                `flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-accent ${
+                                                    isActive
+                                                        ? "bg-accent text-accent-foreground"
+                                                        : "text-muted-foreground hover:text-foreground"
+                                                }`
+                                            }
+                                            onClick={() => setMobileMenuOpen(false)}
+                                        >
+                                            {item.name}
+                                        </NavLink>
+                                    ))}
+                                </nav>
+
+                                <Separator />
+
+                                {/* Auth Section */}
+                                <div className="flex flex-col gap-2">
                                     {isGuest ? (
                                         <Button asChild className="w-full">
                                             <NavLink to="/signup" onClick={() => setMobileMenuOpen(false)}>
@@ -123,10 +122,10 @@ export default function NavigationBar() {
                                     )}
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                </Dialog.Panel>
-            </Dialog>
+                        </SheetContent>
+                    </Sheet>
+                </div>
+            </div>
         </nav>
     );
 }

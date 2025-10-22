@@ -1,31 +1,38 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Shield, Calendar } from 'lucide-react';
 
 export default function Privacy() {
   return (
-    <div className="container mx-auto p-4 max-w-4xl">
-      <div className="mb-8 text-center">
-        <h1 className="text-4xl font-bold mb-2">Privacy Policy</h1>
-        <p className="text-muted-foreground">
-          Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-        </p>
+    <div className="container mx-auto px-4 py-8 max-w-5xl">
+      <div className="mb-12 text-center space-y-4 animate-in">
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <Shield className="h-10 w-10 text-primary" />
+          <h1 className="text-5xl font-bold gradient-text">Privacy Policy</h1>
+        </div>
+        <div className="flex items-center justify-center gap-2 text-muted-foreground">
+          <Calendar className="h-4 w-4" />
+          <p className="text-base">
+            Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+          </p>
+        </div>
       </div>
 
       <div className="space-y-6">
-        <Card>
+        <Card className="border-2 shadow-lg">
           <CardHeader>
-            <CardTitle>Introduction</CardTitle>
+            <CardTitle className="text-2xl">Introduction</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 text-base leading-relaxed">
             <p>
-              Based Math Game ("we", "our", or "us") is committed to protecting your privacy. This Privacy Policy 
+              Based Math Game ("we", "our", or "us") is committed to protecting your privacy. This Privacy Policy
               explains how we collect, use, and safeguard your information when you use our web application.
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-2 shadow-lg">
           <CardHeader>
-            <CardTitle>Information We Collect</CardTitle>
+            <CardTitle className="text-2xl">Information We Collect</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
@@ -59,9 +66,9 @@ export default function Privacy() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-2 shadow-lg">
           <CardHeader>
-            <CardTitle>How We Use Your Information</CardTitle>
+            <CardTitle className="text-2xl">How We Use Your Information</CardTitle>
           </CardHeader>
           <CardContent>
             <ul className="space-y-2 text-sm">
@@ -89,9 +96,9 @@ export default function Privacy() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-2 shadow-lg">
           <CardHeader>
-            <CardTitle>Data Storage and Security</CardTitle>
+            <CardTitle className="text-2xl">Data Storage and Security</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <p>
@@ -105,9 +112,9 @@ export default function Privacy() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-2 shadow-lg">
           <CardHeader>
-            <CardTitle>Your Rights</CardTitle>
+            <CardTitle className="text-2xl">Your Rights</CardTitle>
           </CardHeader>
           <CardContent>
             <ul className="space-y-2 text-sm">
@@ -127,9 +134,9 @@ export default function Privacy() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-2 shadow-lg">
           <CardHeader>
-            <CardTitle>Third-Party Services</CardTitle>
+            <CardTitle className="text-2xl">Third-Party Services</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <p>
@@ -151,34 +158,34 @@ export default function Privacy() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-2 shadow-lg">
           <CardHeader>
-            <CardTitle>Children's Privacy</CardTitle>
+            <CardTitle className="text-2xl">Children's Privacy</CardTitle>
           </CardHeader>
           <CardContent>
             <p>
-              Our service is not directed to children under 13. We do not knowingly collect personal information 
-              from children under 13. If you are a parent or guardian and believe your child has provided us with 
+              Our service is not directed to children under 13. We do not knowingly collect personal information
+              from children under 13. If you are a parent or guardian and believe your child has provided us with
               personal information, please contact us.
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-2 shadow-lg">
           <CardHeader>
-            <CardTitle>Changes to This Policy</CardTitle>
+            <CardTitle className="text-2xl">Changes to This Policy</CardTitle>
           </CardHeader>
           <CardContent>
             <p>
-              We may update this Privacy Policy from time to time. We will notify you of any changes by posting 
+              We may update this Privacy Policy from time to time. We will notify you of any changes by posting
               the new Privacy Policy on this page and updating the "Last updated" date.
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-2 shadow-lg">
           <CardHeader>
-            <CardTitle>Contact Us</CardTitle>
+            <CardTitle className="text-2xl">Contact Us</CardTitle>
           </CardHeader>
           <CardContent>
             <p>

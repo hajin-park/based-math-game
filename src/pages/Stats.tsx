@@ -3,9 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useGameHistory, TimeRange } from '@/hooks/useGameHistory';
 import { useAuth } from '@/contexts/AuthContext';
 import { OFFICIAL_GAME_MODES } from '@/types/gameMode';
+import { BarChart3, TrendingUp, Target, Clock, Percent, Trophy, Calendar, Gamepad2, Info } from 'lucide-react';
 
 export default function Stats() {
   const navigate = useNavigate();
@@ -28,57 +32,74 @@ export default function Stats() {
   ];
 
   return (
-    <div className="container mx-auto p-4 space-y-4">
+    <div className="container mx-auto px-4 py-8 space-y-6">
+      {/* Header */}
+      <div className="text-center space-y-2 animate-in">
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <BarChart3 className="h-8 w-8 text-primary" />
+          <h1 className="text-4xl font-bold gradient-text">Your Statistics</h1>
+        </div>
+        <p className="text-lg text-muted-foreground">
+          Track your progress and performance over time
+        </p>
+      </div>
+
       {/* Guest user notice */}
       {isGuest && (
-        <Card className="border-yellow-500 bg-yellow-50 dark:bg-yellow-950">
-          <CardHeader>
-            <CardTitle className="text-yellow-800 dark:text-yellow-200">Guest Account</CardTitle>
-            <CardDescription className="text-yellow-700 dark:text-yellow-300">
-              You're currently playing as a guest. Your stats are being tracked, but they won't be saved permanently or count towards the global leaderboard.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col sm:flex-row gap-2">
+        <Alert className="border-warning/50 bg-warning/10">
+          <Info className="h-4 w-4 text-warning" />
+          <AlertDescription className="text-sm">
+            <span className="font-semibold">Guest Account:</span> Your stats are being tracked, but they won't be saved permanently or count towards the global leaderboard.
+            <div className="flex flex-col sm:flex-row gap-2 mt-3">
               <Button
                 onClick={() => navigate('/signup')}
-                className="bg-yellow-600 hover:bg-yellow-700 text-white"
+                size="sm"
+                className="bg-warning hover:bg-warning/90 text-warning-foreground"
               >
                 Sign Up to Save Stats
               </Button>
               <Button
                 onClick={() => navigate('/login')}
                 variant="outline"
-                className="border-yellow-600 text-yellow-700 hover:bg-yellow-100 dark:text-yellow-300 dark:hover:bg-yellow-900"
+                size="sm"
               >
                 Log In
               </Button>
             </div>
-          </CardContent>
-        </Card>
+          </AlertDescription>
+        </Alert>
       )}
 
-      <Card>
+      <Card className="border-2 shadow-lg">
         <CardHeader>
-          <CardTitle>Your Statistics</CardTitle>
-          <CardDescription>Track your progress and performance</CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-2xl flex items-center gap-2">
+                <TrendingUp className="h-6 w-6 text-primary" />
+                Performance Overview
+              </CardTitle>
+              <CardDescription className="text-base mt-1">
+                View your stats across different time periods
+              </CardDescription>
+            </div>
+          </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-6">
           {/* Time range selector */}
-          <div className="flex flex-wrap gap-2 mb-6">
-            {timeRanges.map((range) => (
-              <button
-                key={range.value}
-                onClick={() => setTimeRange(range.value)}
-                className={`px-4 py-2 rounded-md transition-colors ${
-                  timeRange === range.value
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-secondary hover:bg-secondary/80'
-                }`}
-              >
-                {range.label}
-              </button>
-            ))}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-primary" />
+              <label className="text-sm font-semibold">Time Period</label>
+            </div>
+            <Tabs value={timeRange} onValueChange={(value) => setTimeRange(value as TimeRange)}>
+              <TabsList className="grid w-full max-w-md grid-cols-4 h-11">
+                {timeRanges.map((range) => (
+                  <TabsTrigger key={range.value} value={range.value} className="text-sm">
+                    {range.label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
           </div>
 
           {/* Content area with minimum height to prevent layout shifts */}
@@ -133,133 +154,193 @@ export default function Stats() {
               </div>
             ) : (
               <div className="space-y-6 animate-in fade-in duration-300">
-              {/* Stats cards */}
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardDescription>Games Played</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{rangeStats.gamesPlayed}</div>
-                  </CardContent>
-                </Card>
+                {/* Stats cards */}
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+                  <Card className="border-2 hover:shadow-md transition-shadow">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center gap-2">
+                        <Gamepad2 className="h-4 w-4 text-primary" />
+                        <CardDescription className="text-xs font-medium">Games Played</CardDescription>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-3xl font-bold gradient-text">{rangeStats.gamesPlayed}</div>
+                    </CardContent>
+                  </Card>
 
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardDescription>Total Score</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{rangeStats.totalScore}</div>
-                  </CardContent>
-                </Card>
+                  <Card className="border-2 hover:shadow-md transition-shadow">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center gap-2">
+                        <TrendingUp className="h-4 w-4 text-primary" />
+                        <CardDescription className="text-xs font-medium">Total Score</CardDescription>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-3xl font-bold gradient-text">{rangeStats.totalScore}</div>
+                    </CardContent>
+                  </Card>
 
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardDescription>Average Score</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{rangeStats.averageScore}</div>
-                  </CardContent>
-                </Card>
+                  <Card className="border-2 hover:shadow-md transition-shadow">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center gap-2">
+                        <Target className="h-4 w-4 text-primary" />
+                        <CardDescription className="text-xs font-medium">Average Score</CardDescription>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-3xl font-bold gradient-text">{rangeStats.averageScore}</div>
+                    </CardContent>
+                  </Card>
 
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardDescription>High Score</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{rangeStats.highScore}</div>
-                  </CardContent>
-                </Card>
+                  <Card className="border-2 hover:shadow-md transition-shadow">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center gap-2">
+                        <Trophy className="h-4 w-4 text-success" />
+                        <CardDescription className="text-xs font-medium">High Score</CardDescription>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-3xl font-bold text-success">{rangeStats.highScore}</div>
+                    </CardContent>
+                  </Card>
 
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardDescription>Accuracy</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">
-                      {rangeStats.averageAccuracy !== undefined ? `${rangeStats.averageAccuracy.toFixed(1)}%` : 'N/A'}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+                  <Card className="border-2 hover:shadow-md transition-shadow">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center gap-2">
+                        <Percent className="h-4 w-4 text-primary" />
+                        <CardDescription className="text-xs font-medium">Accuracy</CardDescription>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-3xl font-bold gradient-text">
+                        {rangeStats.averageAccuracy !== undefined ? `${rangeStats.averageAccuracy.toFixed(1)}%` : 'N/A'}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
 
-              {/* Scores by game mode */}
-              {Object.keys(scoresByMode).length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Performance by Game Mode</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {Object.entries(scoresByMode).map(([modeId, scores]) => {
-                        const mode = OFFICIAL_GAME_MODES.find((m) => m.id === modeId);
-                        const avgScore = scores.reduce((a, b) => a + b, 0) / scores.length;
-                        const maxScore = Math.max(...scores);
+                {/* Scores by game mode */}
+                {Object.keys(scoresByMode).length > 0 && (
+                  <Card className="border-2">
+                    <CardHeader>
+                      <CardTitle className="text-xl flex items-center gap-2">
+                        <Trophy className="h-5 w-5 text-primary" />
+                        Performance by Game Mode
+                      </CardTitle>
+                      <CardDescription>
+                        Your average and best scores for each mode
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-6">
+                        {Object.entries(scoresByMode).map(([modeId, scores]) => {
+                          const mode = OFFICIAL_GAME_MODES.find((m) => m.id === modeId);
+                          const avgScore = scores.reduce((a, b) => a + b, 0) / scores.length;
+                          const maxScore = Math.max(...scores);
 
-                        return (
-                          <div key={modeId} className="space-y-2">
-                            <div className="flex justify-between items-center">
-                              <span className="font-medium">{mode?.name || modeId}</span>
-                              <span className="text-sm text-muted-foreground">
-                                {scores.length} games
-                              </span>
-                            </div>
-                            <div className="flex gap-4 text-sm">
-                              <span>Avg: {avgScore.toFixed(1)}</span>
-                              <span>Best: {maxScore}</span>
-                            </div>
-                            <div className="w-full bg-secondary rounded-full h-2">
-                              <div
-                                className="bg-primary h-2 rounded-full transition-all"
-                                style={{ width: `${(avgScore / maxScore) * 100}%` }}
-                              />
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Recent games */}
-              {history.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Recent Games</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      {history.slice(0, 10).map((game) => {
-                        const mode = OFFICIAL_GAME_MODES.find((m) => m.id === game.gameModeId);
-                        return (
-                          <div
-                            key={game.id}
-                            className="flex justify-between items-center p-3 rounded-md bg-muted/50"
-                          >
-                            <div>
-                              <div className="font-medium">{mode?.name || 'Custom'}</div>
-                              <div className="text-sm text-muted-foreground">
-                                {new Date(game.timestamp).toLocaleString()}
+                          return (
+                            <div key={modeId} className="space-y-3 p-4 rounded-lg bg-muted/30 border">
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <span className="font-semibold text-base">{mode?.name || modeId}</span>
+                                  <Badge variant="secondary" className="ml-2 text-xs">
+                                    {scores.length} {scores.length === 1 ? 'game' : 'games'}
+                                  </Badge>
+                                </div>
+                              </div>
+                              <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                  <p className="text-xs text-muted-foreground">Average</p>
+                                  <p className="text-2xl font-bold text-primary">{avgScore.toFixed(1)}</p>
+                                </div>
+                                <div className="space-y-1">
+                                  <p className="text-xs text-muted-foreground">Best</p>
+                                  <p className="text-2xl font-bold text-success">{maxScore}</p>
+                                </div>
+                              </div>
+                              <div className="space-y-2">
+                                <div className="flex justify-between text-xs text-muted-foreground">
+                                  <span>Progress to Best</span>
+                                  <span>{((avgScore / maxScore) * 100).toFixed(0)}%</span>
+                                </div>
+                                <div className="w-full bg-secondary rounded-full h-3 overflow-hidden">
+                                  <div
+                                    className="bg-gradient-to-r from-primary to-success h-3 rounded-full transition-all duration-500"
+                                    style={{ width: `${(avgScore / maxScore) * 100}%` }}
+                                  />
+                                </div>
                               </div>
                             </div>
-                            <div className="text-right">
-                              <div className="font-bold text-lg">{game.score}</div>
-                              <div className="text-sm text-muted-foreground">{game.duration}s</div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
+                          );
+                        })}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
 
-              {history.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
-                  No games played yet. Start playing to see your stats!
-                </div>
-              )}
+                {/* Recent games */}
+                {history.length > 0 && (
+                  <Card className="border-2">
+                    <CardHeader>
+                      <CardTitle className="text-xl flex items-center gap-2">
+                        <Clock className="h-5 w-5 text-primary" />
+                        Recent Games
+                      </CardTitle>
+                      <CardDescription>
+                        Your last 10 completed games
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {history.slice(0, 10).map((game) => {
+                          const mode = OFFICIAL_GAME_MODES.find((m) => m.id === game.gameModeId);
+                          return (
+                            <Card
+                              key={game.id}
+                              className="border-2 hover:border-primary/50 transition-all hover:shadow-md"
+                            >
+                              <CardContent className="p-4">
+                                <div className="flex justify-between items-center">
+                                  <div className="space-y-1">
+                                    <div className="font-semibold text-base">{mode?.name || 'Custom'}</div>
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                      <Calendar className="h-3 w-3" />
+                                      {new Date(game.timestamp).toLocaleString()}
+                                    </div>
+                                  </div>
+                                  <div className="text-right space-y-1">
+                                    <div className="font-bold text-2xl gradient-text">{game.score}</div>
+                                    <div className="flex items-center gap-1 text-xs text-muted-foreground justify-end">
+                                      <Clock className="h-3 w-3" />
+                                      {game.duration}s
+                                    </div>
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          );
+                        })}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {history.length === 0 && (
+                  <Card className="border-2 border-dashed">
+                    <CardContent className="py-12">
+                      <div className="text-center space-y-3">
+                        <Gamepad2 className="h-12 w-12 mx-auto text-muted-foreground/50" />
+                        <p className="text-muted-foreground">
+                          No games played yet. Start playing to see your stats!
+                        </p>
+                        <Button onClick={() => navigate('/singleplayer')} className="mt-4">
+                          <Gamepad2 className="mr-2 h-4 w-4" />
+                          Play Now
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             )}
           </div>

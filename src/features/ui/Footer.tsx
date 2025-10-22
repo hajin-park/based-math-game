@@ -1,135 +1,122 @@
-import { AiFillGithub } from "react-icons/ai";
 import { Link } from "react-router-dom";
+import { Separator } from "@/components/ui/separator";
+import { Github, Sparkles } from "lucide-react";
 
 export default function Footer() {
     const currentYear = new Date().getFullYear();
 
+    const footerSections = [
+        {
+            title: "Learn",
+            links: [
+                { name: "Tutorials", href: "/tutorials" },
+                { name: "How to Play", href: "/how-to-play" },
+                { name: "About", href: "/about" },
+            ],
+        },
+        {
+            title: "Play",
+            links: [
+                { name: "Singleplayer", href: "/singleplayer" },
+                { name: "Multiplayer", href: "/multiplayer" },
+                { name: "Leaderboard", href: "/leaderboard" },
+                { name: "Stats", href: "/stats" },
+            ],
+        },
+        {
+            title: "Legal",
+            links: [
+                { name: "Privacy Policy", href: "/privacy" },
+                { name: "Terms of Service", href: "/terms" },
+                {
+                    name: "License (GPL-3.0)",
+                    href: "https://github.com/hajin-park/based-math-game/blob/main/LICENSE",
+                    external: true
+                },
+            ],
+        },
+    ];
+
     return (
-        <footer className="bg-white dark:bg-gray-950 border-t border-gray-200 dark:border-gray-800 mt-auto">
-            <div className="mx-auto max-w-7xl px-6 py-12 lg:px-8">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-                    {/* About Section */}
-                    <div className="space-y-4">
-                        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                            Based Math Game
-                        </h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                            Master base conversion through interactive practice and timed quizzes.
+        <footer className="border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+            <div className="container px-4 py-12 md:py-16">
+                <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-5">
+                    {/* Brand Section */}
+                    <div className="lg:col-span-2 space-y-4">
+                        <div className="flex items-center gap-2">
+                            <Sparkles className="h-5 w-5 text-primary" />
+                            <h3 className="font-bold text-lg gradient-text">
+                                Based Math Game
+                            </h3>
+                        </div>
+                        <p className="text-sm text-muted-foreground max-w-xs">
+                            Master base conversion through interactive practice and timed quizzes. Challenge yourself and compete with others!
                         </p>
-                        <div className="flex space-x-4">
+                        <div className="flex items-center gap-4">
                             <a
                                 href="https://github.com/hajin-park/based-math-game"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
-                                aria-label="GitHub"
+                                className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+                                aria-label="GitHub Repository"
                             >
-                                <AiFillGithub className="h-6 w-6" aria-hidden="true" />
+                                <Github className="h-5 w-5" />
+                                <span>View on GitHub</span>
                             </a>
                         </div>
                     </div>
 
-                    {/* Learn Section */}
-                    <div>
-                        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                            Learn
-                        </h3>
-                        <ul className="space-y-3">
-                            <li>
-                                <Link to="/tutorials" className="text-sm text-gray-600 dark:text-gray-400 hover:text-primary">
-                                    Tutorials
-                                </Link>
-                            </li>
-                            <li>
-                                <Link to="/how-to-play" className="text-sm text-gray-600 dark:text-gray-400 hover:text-primary">
-                                    How to Play
-                                </Link>
-                            </li>
-                            <li>
-                                <Link to="/about" className="text-sm text-gray-600 dark:text-gray-400 hover:text-primary">
-                                    About
-                                </Link>
-                            </li>
-                        </ul>
-                    </div>
-
-                    {/* Play Section */}
-                    <div>
-                        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                            Play
-                        </h3>
-                        <ul className="space-y-3">
-                            <li>
-                                <Link to="/singleplayer" className="text-sm text-gray-600 dark:text-gray-400 hover:text-primary">
-                                    Singleplayer
-                                </Link>
-                            </li>
-                            <li>
-                                <Link to="/multiplayer" className="text-sm text-gray-600 dark:text-gray-400 hover:text-primary">
-                                    Multiplayer
-                                </Link>
-                            </li>
-                            <li>
-                                <Link to="/leaderboard" className="text-sm text-gray-600 dark:text-gray-400 hover:text-primary">
-                                    Leaderboard
-                                </Link>
-                            </li>
-                            <li>
-                                <Link to="/stats" className="text-sm text-gray-600 dark:text-gray-400 hover:text-primary">
-                                    Stats
-                                </Link>
-                            </li>
-                        </ul>
-                    </div>
-
-                    {/* Legal Section */}
-                    <div>
-                        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                            Legal
-                        </h3>
-                        <ul className="space-y-3">
-                            <li>
-                                <Link to="/privacy" className="text-sm text-gray-600 dark:text-gray-400 hover:text-primary">
-                                    Privacy Policy
-                                </Link>
-                            </li>
-                            <li>
-                                <Link to="/terms" className="text-sm text-gray-600 dark:text-gray-400 hover:text-primary">
-                                    Terms of Service
-                                </Link>
-                            </li>
-                            <li>
-                                <a
-                                    href="https://github.com/hajin-park/based-math-game/blob/main/LICENSE"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-sm text-gray-600 dark:text-gray-400 hover:text-primary"
-                                >
-                                    License (GPL-3.0)
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
+                    {/* Footer Links */}
+                    {footerSections.map((section) => (
+                        <div key={section.title}>
+                            <h3 className="font-semibold text-sm mb-4">
+                                {section.title}
+                            </h3>
+                            <ul className="space-y-3">
+                                {section.links.map((link) => (
+                                    <li key={link.name}>
+                                        {link.external ? (
+                                            <a
+                                                href={link.href}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                                            >
+                                                {link.name}
+                                            </a>
+                                        ) : (
+                                            <Link
+                                                to={link.href}
+                                                className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                                            >
+                                                {link.name}
+                                            </Link>
+                                        )}
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    ))}
                 </div>
 
+                <Separator className="my-8" />
+
                 {/* Bottom Section */}
-                <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800">
-                    <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                            © {currentYear} Based Math Game. Open source under GPL-3.0.
-                        </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                            Inspired by{' '}
-                            <a
-                                href="https://arithmetic.zetamac.com"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="hover:text-primary underline"
-                            >
-                                zetamac
-                            </a>
-                        </p>
-                    </div>
+                <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-center">
+                    <p className="text-xs text-muted-foreground">
+                        © {currentYear} Based Math Game. Open source under GPL-3.0.
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                        Inspired by{' '}
+                        <a
+                            href="https://arithmetic.zetamac.com"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline font-medium"
+                        >
+                            zetamac
+                        </a>
+                    </p>
                 </div>
             </div>
         </footer>

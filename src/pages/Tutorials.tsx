@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
+import { GraduationCap, Binary, Hexagon, Grid3x3, Zap } from 'lucide-react';
 
 export default function Tutorials() {
   const [binaryInput, setBinaryInput] = useState('1010');
@@ -10,27 +11,45 @@ export default function Tutorials() {
   const [hexInput, setHexInput] = useState('2A');
 
   return (
-    <div className="container mx-auto p-4 max-w-6xl">
-      <div className="mb-8 text-center">
-        <h1 className="text-4xl font-bold mb-2">Base Conversion Tutorials</h1>
-        <p className="text-muted-foreground">
+    <div className="container mx-auto px-4 py-8 max-w-6xl">
+      <div className="mb-12 text-center space-y-4 animate-in">
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <GraduationCap className="h-10 w-10 text-primary" />
+          <h1 className="text-5xl font-bold gradient-text">Base Conversion Tutorials</h1>
+        </div>
+        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
           Learn how to count and convert between different number systems
         </p>
       </div>
 
       <Tabs defaultValue="binary" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4">
-          <TabsTrigger value="binary">Binary (Base 2)</TabsTrigger>
-          <TabsTrigger value="octal">Octal (Base 8)</TabsTrigger>
-          <TabsTrigger value="decimal">Decimal (Base 10)</TabsTrigger>
-          <TabsTrigger value="hex">Hexadecimal (Base 16)</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 h-auto p-1">
+          <TabsTrigger value="binary" className="flex items-center gap-2 py-3">
+            <Binary className="h-4 w-4" />
+            <span className="hidden sm:inline">Binary</span>
+          </TabsTrigger>
+          <TabsTrigger value="octal" className="flex items-center gap-2 py-3">
+            <Grid3x3 className="h-4 w-4" />
+            <span className="hidden sm:inline">Octal</span>
+          </TabsTrigger>
+          <TabsTrigger value="decimal" className="flex items-center gap-2 py-3">
+            <Zap className="h-4 w-4" />
+            <span className="hidden sm:inline">Decimal</span>
+          </TabsTrigger>
+          <TabsTrigger value="hex" className="flex items-center gap-2 py-3">
+            <Hexagon className="h-4 w-4" />
+            <span className="hidden sm:inline">Hex</span>
+          </TabsTrigger>
         </TabsList>
 
         {/* Binary Tab */}
-        <TabsContent value="binary" className="space-y-6">
-          <Card>
+        <TabsContent value="binary" className="space-y-6 animate-in">
+          <Card className="border-2 shadow-lg">
             <CardHeader>
-              <CardTitle>Binary (Base 2)</CardTitle>
+              <CardTitle className="text-2xl flex items-center gap-2">
+                <Binary className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                Binary (Base 2)
+              </CardTitle>
               <CardDescription>Uses digits 0-1 • The language of computers</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -103,10 +122,13 @@ export default function Tutorials() {
         </TabsContent>
 
         {/* Octal Tab */}
-        <TabsContent value="octal" className="space-y-6">
-          <Card>
+        <TabsContent value="octal" className="space-y-6 animate-in">
+          <Card className="border-2 shadow-lg">
             <CardHeader>
-              <CardTitle>Octal (Base 8)</CardTitle>
+              <CardTitle className="text-2xl flex items-center gap-2">
+                <Grid3x3 className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+                Octal (Base 8)
+              </CardTitle>
               <CardDescription>Uses digits 0-7 • Common in Unix file permissions</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -179,10 +201,13 @@ export default function Tutorials() {
         </TabsContent>
 
         {/* Decimal Tab */}
-        <TabsContent value="decimal" className="space-y-6">
-          <Card>
+        <TabsContent value="decimal" className="space-y-6 animate-in">
+          <Card className="border-2 shadow-lg">
             <CardHeader>
-              <CardTitle>Decimal (Base 10)</CardTitle>
+              <CardTitle className="text-2xl flex items-center gap-2">
+                <Zap className="h-6 w-6 text-green-600 dark:text-green-400" />
+                Decimal (Base 10)
+              </CardTitle>
               <CardDescription>Uses digits 0-9 • The number system we use every day</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -251,10 +276,13 @@ export default function Tutorials() {
         </TabsContent>
 
         {/* Hexadecimal Tab */}
-        <TabsContent value="hex" className="space-y-6">
-          <Card>
+        <TabsContent value="hex" className="space-y-6 animate-in">
+          <Card className="border-2 shadow-lg">
             <CardHeader>
-              <CardTitle>Hexadecimal (Base 16)</CardTitle>
+              <CardTitle className="text-2xl flex items-center gap-2">
+                <Hexagon className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                Hexadecimal (Base 16)
+              </CardTitle>
               <CardDescription>Uses digits 0-9, A-F • Common in web colors and memory addresses</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">

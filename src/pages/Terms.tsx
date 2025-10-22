@@ -1,19 +1,26 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { FileText, Calendar } from 'lucide-react';
 
 export default function Terms() {
   return (
-    <div className="container mx-auto p-4 max-w-4xl">
-      <div className="mb-8 text-center">
-        <h1 className="text-4xl font-bold mb-2">Terms of Service</h1>
-        <p className="text-muted-foreground">
-          Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-        </p>
+    <div className="container mx-auto px-4 py-8 max-w-5xl">
+      <div className="mb-12 text-center space-y-4 animate-in">
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <FileText className="h-10 w-10 text-primary" />
+          <h1 className="text-5xl font-bold gradient-text">Terms of Service</h1>
+        </div>
+        <div className="flex items-center justify-center gap-2 text-muted-foreground">
+          <Calendar className="h-4 w-4" />
+          <p className="text-base">
+            Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+          </p>
+        </div>
       </div>
 
       <div className="space-y-6">
-        <Card>
+        <Card className="border-2 shadow-lg">
           <CardHeader>
-            <CardTitle>Agreement to Terms</CardTitle>
+            <CardTitle className="text-2xl">Agreement to Terms</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <p>
@@ -23,9 +30,9 @@ export default function Terms() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-2 shadow-lg">
           <CardHeader>
-            <CardTitle>Use License</CardTitle>
+            <CardTitle className="text-2xl">Use License</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <p>
@@ -60,9 +67,9 @@ export default function Terms() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-2 shadow-lg">
           <CardHeader>
-            <CardTitle>User Accounts</CardTitle>
+            <CardTitle className="text-2xl">User Accounts</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <p>
@@ -75,9 +82,9 @@ export default function Terms() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-2 shadow-lg">
           <CardHeader>
-            <CardTitle>Guest Users</CardTitle>
+            <CardTitle className="text-2xl">Guest Users</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <p>
@@ -91,9 +98,9 @@ export default function Terms() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-2 shadow-lg">
           <CardHeader>
-            <CardTitle>Leaderboards and Scores</CardTitle>
+            <CardTitle className="text-2xl">Leaderboards and Scores</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <p>
@@ -106,9 +113,9 @@ export default function Terms() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-2 shadow-lg">
           <CardHeader>
-            <CardTitle>Intellectual Property</CardTitle>
+            <CardTitle className="text-2xl">Intellectual Property</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <p>
@@ -122,9 +129,9 @@ export default function Terms() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-2 shadow-lg">
           <CardHeader>
-            <CardTitle>Disclaimer of Warranties</CardTitle>
+            <CardTitle className="text-2xl">Disclaimer of Warranties</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <p>
@@ -138,9 +145,9 @@ export default function Terms() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-2 shadow-lg">
           <CardHeader>
-            <CardTitle>Limitation of Liability</CardTitle>
+            <CardTitle className="text-2xl">Limitation of Liability</CardTitle>
           </CardHeader>
           <CardContent>
             <p>
@@ -150,9 +157,9 @@ export default function Terms() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-2 shadow-lg">
           <CardHeader>
-            <CardTitle>Modifications to Service</CardTitle>
+            <CardTitle className="text-2xl">Modifications to Service</CardTitle>
           </CardHeader>
           <CardContent>
             <p>
@@ -163,9 +170,9 @@ export default function Terms() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-2 shadow-lg">
           <CardHeader>
-            <CardTitle>Changes to Terms</CardTitle>
+            <CardTitle className="text-2xl">Changes to Terms</CardTitle>
           </CardHeader>
           <CardContent>
             <p>
@@ -178,9 +185,9 @@ export default function Terms() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-2 shadow-lg">
           <CardHeader>
-            <CardTitle>Governing Law</CardTitle>
+            <CardTitle className="text-2xl">Governing Law</CardTitle>
           </CardHeader>
           <CardContent>
             <p>
@@ -190,9 +197,9 @@ export default function Terms() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-2 shadow-lg">
           <CardHeader>
-            <CardTitle>Contact Information</CardTitle>
+            <CardTitle className="text-2xl">Contact Information</CardTitle>
           </CardHeader>
           <CardContent>
             <p>
