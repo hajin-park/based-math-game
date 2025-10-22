@@ -418,23 +418,39 @@ export interface GameMode {
   isOfficial?: boolean;
   icon?: string;
   color?: string;
+  targetQuestions?: number; // For speed run modes: game ends after this many correct answers
 }
 
+// 48 official game modes organized into:
+// - Timed Modes (24 modes): 15s and 60s variants
+// - Speed Run Modes (24 modes): 10 questions and 30 questions variants
+// Each with 4 base types (Binary, Octal, Hex, All Bases) × 3 difficulty levels (Easy 0-15, Medium 0-255, Hard 0-4095)
 export const OFFICIAL_GAME_MODES: GameMode[] = [
-  {
-    id: 'binary-basics',
-    name: 'Binary Basics',
-    description: 'Master binary to decimal conversions with small numbers',
-    difficulty: 'Easy',
-    duration: 60,
-    questions: [
-      ['Binary', 'Decimal', 0, 15],
-      ['Decimal', 'Binary', 0, 15],
-    ],
-    isOfficial: true,
-    color: 'bg-blue-500',
-  },
-  // ... 4 more official modes (hex-hero, octal-odyssey, mixed-master, ultimate-challenge)
+  // Timed - 15 Seconds (12 modes)
+  { id: 'binary-easy-15s', name: 'Binary Easy (15s)', ... },
+  { id: 'binary-medium-15s', name: 'Binary Medium (15s)', ... },
+  { id: 'binary-hard-15s', name: 'Binary Hard (15s)', ... },
+  { id: 'octal-easy-15s', name: 'Octal Easy (15s)', ... },
+  { id: 'octal-medium-15s', name: 'Octal Medium (15s)', ... },
+  { id: 'octal-hard-15s', name: 'Octal Hard (15s)', ... },
+  { id: 'hex-easy-15s', name: 'Hex Easy (15s)', ... },
+  { id: 'hex-medium-15s', name: 'Hex Medium (15s)', ... },
+  { id: 'hex-hard-15s', name: 'Hex Hard (15s)', ... },
+  { id: 'all-easy-15s', name: 'All Bases Easy (15s)', ... },
+  { id: 'all-medium-15s', name: 'All Bases Medium (15s)', ... },
+  { id: 'all-hard-15s', name: 'All Bases Hard (15s)', ... },
+
+  // Timed - 60 Seconds (12 modes)
+  { id: 'binary-easy-60s', name: 'Binary Easy (60s)', ... },
+  // ... (similar structure for 60s modes)
+
+  // Speed Run - 10 Questions (12 modes)
+  { id: 'binary-easy-10q', name: 'Binary Easy Sprint (10q)', targetQuestions: 10, ... },
+  // ... (similar structure for 10q modes)
+
+  // Speed Run - 30 Questions (12 modes)
+  { id: 'binary-easy-30q', name: 'Binary Easy Marathon (30q)', targetQuestions: 30, ... },
+  // ... (similar structure for 30q modes)
 ];
 ```
 
@@ -1273,8 +1289,21 @@ firebase emulators:start
 ### Deployment
 ```bash
 npm run build
-firebase deploy
+firebase deploy --only hosting
 ```
+
+**CRITICAL**: Before every deployment, increment the cache version in `public/sw.js`:
+```javascript
+const CACHE_NAME = 'based-math-game-vX'; // Increment X
+```
+
+This prevents the "blank screen" issue caused by stale cached JavaScript files. See `DEPLOYMENT.md` for full details.
+
+**Caching Strategy**:
+- Network-first for JS, CSS, HTML (always get latest)
+- Cache-first for static assets (images, fonts)
+- No cache for `index.html` and `sw.js`
+- 1 year cache for hashed assets (immutable)
 
 ---
 

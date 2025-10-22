@@ -297,7 +297,11 @@ export function useRoom() {
         }
 
         await set(ref(database, `rooms/${roomId}/status`), 'playing');
-        await set(ref(database, `rooms/${roomId}/startedAt`), Date.now());
+
+        // If countdown is enabled, set startedAt to future time (after countdown completes)
+        // Countdown duration: 3 counts × 600ms = 1800ms
+        const countdownDelay = room.enableCountdown ? 1800 : 0;
+        await set(ref(database, `rooms/${roomId}/startedAt`), Date.now() + countdownDelay);
       } catch (error) {
         console.error('Error starting game:', error);
         throw error;

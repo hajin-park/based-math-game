@@ -10,7 +10,7 @@ Based Math Game is an educational web application designed to help users master 
 ## Key Features
 
 ### Game Modes
-- **Singleplayer Mode**: 6 official pre-configured game modes plus custom Playground mode
+- **Singleplayer Mode**: 48 official pre-configured game modes plus custom Playground mode
 - **Multiplayer Mode**: Real-time competitive rooms with live scoring
 - **Playground Mode**: Fully customizable quiz settings (conversions, ranges, duration)
 
@@ -81,13 +81,17 @@ Based Math Game is an educational web application designed to help users master 
 - Time bonus in multiplayer mode (faster = more points)
 - Wrong answers break combo streak
 
-### Official Game Modes
-1. **Binary Basics**: Binary ↔ Decimal (0-255)
-2. **Hex Master**: Hexadecimal ↔ Decimal (0-255)
-3. **Octal Challenge**: Octal ↔ Decimal (0-511)
-4. **Mixed Bases**: All bases, small ranges
-5. **Advanced Binary**: Binary ↔ Decimal (0-65535)
-6. **Ultimate Challenge**: All bases, large ranges
+### Official Game Modes (48 Total)
+
+**Timed Modes** - Complete as many questions as possible within the time limit:
+- **15 Second Modes** (12 modes): Binary, Octal, Hex, All Bases × Easy (0-15), Medium (0-255), Hard (0-4095)
+- **60 Second Modes** (12 modes): Binary, Octal, Hex, All Bases × Easy (0-15), Medium (0-255), Hard (0-4095)
+
+**Speed Run Modes** - Race to complete a target number of questions:
+- **10 Question Sprint** (12 modes): Binary, Octal, Hex, All Bases × Easy (0-15), Medium (0-255), Hard (0-4095)
+- **30 Question Marathon** (12 modes): Binary, Octal, Hex, All Bases × Easy (0-15), Medium (0-255), Hard (0-4095)
+
+All modes feature bi-directional conversions (e.g., Binary→Decimal and Decimal→Binary)
 
 ## Guest User System
 

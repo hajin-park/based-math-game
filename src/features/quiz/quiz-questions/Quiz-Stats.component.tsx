@@ -10,9 +10,10 @@ interface QuizStatsProps {
     setRunning: (running: boolean) => void;
     score: number;
     timer?: ReturnType<typeof useTimer>;
+    shouldStartTimer?: boolean; // For singleplayer: controls when timer starts (after countdown)
 }
 
-export default function QuizStats({ expiryTimestamp, setRunning, score, timer: externalTimer }: QuizStatsProps) {
+export default function QuizStats({ expiryTimestamp, setRunning, score, timer: externalTimer, shouldStartTimer = true }: QuizStatsProps) {
     function handleOnExpire() {
         setRunning(false);
     }
@@ -31,14 +32,18 @@ export default function QuizStats({ expiryTimestamp, setRunning, score, timer: e
     const timerRef = useRef(timer);
     timerRef.current = timer;
 
-    // For singleplayer, restart the timer when component mounts
+    // Track if timer has been started
+    const hasStartedRef = useRef(false);
+
+    // For singleplayer, restart the timer when shouldStartTimer becomes true
     useEffect(() => {
-        if (!externalTimer) {
+        if (!externalTimer && shouldStartTimer && !hasStartedRef.current) {
             // Restart timer to ensure it starts counting down
             internalTimer.restart(expiryTimestamp, true);
+            hasStartedRef.current = true;
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []); // Only run on mount
+    }, [shouldStartTimer]); // Start when shouldStartTimer becomes true
 
     // Calculate total seconds from timer components
     const totalSeconds = timer.seconds + timer.minutes * 60 + timer.hours * 3600;

@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { QuizPrompt, QuizStats } from "@features/quiz";
 import { QuizContext, ResultContext } from "@/contexts/GameContexts";
 import { useGameSettings } from "@/hooks/useGameSettings";
+import { getGameModeById } from "@/types/gameMode";
 import Countdown from "@/components/Countdown";
 import ExitButton from "@/components/ExitButton";
 
@@ -31,12 +32,15 @@ export default function Quiz() {
     // Use ref to capture the latest score value to prevent race conditions
     const scoreRef = useRef(score);
 
-    // Track game start time for duration calculation
-    const startTimeRef = useRef(Date.now());
+    // Track game start time for duration calculation (set when countdown completes)
+    const startTimeRef = useRef<number | null>(null);
 
     // Track keystrokes and backspaces for accuracy calculation
     const totalKeystrokesRef = useRef(0);
     const backspaceCountRef = useRef(0);
+
+    // Track if timer should start (after countdown)
+    const [timerShouldStart, setTimerShouldStart] = useState(!gameSettings.countdownStart);
 
     // Create expiry timestamp only once to prevent timer reset
     const expiryTimestamp = useMemo(() => {
@@ -45,6 +49,13 @@ export default function Quiz() {
         return time;
     }, [settings.duration]);
 
+    // Handle countdown completion
+    const handleCountdownComplete = () => {
+        setShowCountdown(false);
+        setTimerShouldStart(true);
+        startTimeRef.current = Date.now(); // Start tracking time when countdown completes
+    };
+
     console.log(settings);
 
     // Keep scoreRef in sync with score state
@@ -52,10 +63,23 @@ export default function Quiz() {
         scoreRef.current = score;
     }, [score]);
 
+    // Check if target questions reached (for speed run modes)
+    useEffect(() => {
+        if (settings.gameModeId) {
+            const gameMode = getGameModeById(settings.gameModeId);
+            if (gameMode?.targetQuestions && score >= gameMode.targetQuestions) {
+                // Target reached, end the game
+                setRunning(false);
+            }
+        }
+    }, [score, settings.gameModeId]);
+
     useEffect(() => {
         if (!running) {
-            // Calculate game duration
-            const duration = Math.floor((Date.now() - startTimeRef.current) / 1000);
+            // Calculate game duration (only if timer actually started)
+            const duration = startTimeRef.current
+                ? Math.floor((Date.now() - startTimeRef.current) / 1000)
+                : 0;
 
             // Calculate accuracy: (total keystrokes - backspaces) / total keystrokes
             const totalKeystrokes = totalKeystrokesRef.current;
@@ -89,7 +113,7 @@ export default function Quiz() {
             <ExitButton onExit={() => navigate('/')} />
             {showCountdown && (
                 <Countdown
-                    onComplete={() => setShowCountdown(false)}
+                    onComplete={handleCountdownComplete}
                     duration={3}
                 />
             )}
@@ -99,6 +123,7 @@ export default function Quiz() {
                         expiryTimestamp={expiryTimestamp}
                         setRunning={setRunning}
                         score={score}
+                        shouldStartTimer={timerShouldStart}
                     />
                     <CardContent className="p-0">
                         <QuizPrompt

@@ -27,6 +27,7 @@ export default function MultiplayerGame() {
   };
   const [room, setRoom] = useState<Room | null>(null);
   const [showCountdown, setShowCountdown] = useState(false);
+  const [timerShouldStart, setTimerShouldStart] = useState(false);
   const [score, setScore] = useState(0);
   const [randomSetting, setRandomSetting] = useState<[string, string, number, number] | null>(null);
   const [showKickedModal, setShowKickedModal] = useState(false);
@@ -105,6 +106,12 @@ export default function MultiplayerGame() {
         countdownShownRef.current = true;
       }
 
+      // Start timer immediately if countdown is disabled
+      if (updatedRoom.status === 'playing' && !updatedRoom.enableCountdown && !countdownShownRef.current) {
+        setTimerShouldStart(true);
+        countdownShownRef.current = true;
+      }
+
       // Navigate to lobby if game was reset (host left mid-game)
       if (updatedRoom.status === 'waiting') {
         navigate(`/multiplayer/lobby/${roomId}`, { replace: true });
@@ -142,6 +149,16 @@ export default function MultiplayerGame() {
       updatePlayerScore(roomId, score);
     }
   }, [score, roomId, updatePlayerScore]);
+
+  // Check if target questions reached (for speed run modes)
+  useEffect(() => {
+    if (room?.gameMode.targetQuestions && score >= room.gameMode.targetQuestions) {
+      // Target reached, finish the game
+      if (roomId) {
+        finishGame(roomId);
+      }
+    }
+  }, [score, room?.gameMode.targetQuestions, roomId, finishGame]);
 
   // Calculate expiry timestamp based on room startedAt and duration
   // This is calculated once when the game starts and doesn't change
@@ -202,6 +219,11 @@ export default function MultiplayerGame() {
     navigate('/multiplayer', { replace: true });
   };
 
+  const handleCountdownComplete = () => {
+    setShowCountdown(false);
+    setTimerShouldStart(true);
+  };
+
   return (
     <>
       <KickedModal open={showKickedModal} onClose={handleKickedModalClose} />
@@ -211,7 +233,7 @@ export default function MultiplayerGame() {
       />
       {showCountdown && (
         <Countdown
-          onComplete={() => setShowCountdown(false)}
+          onComplete={handleCountdownComplete}
           duration={3}
         />
       )}
@@ -224,6 +246,7 @@ export default function MultiplayerGame() {
                 expiryTimestamp={expiryTimestamp}
                 setRunning={handleTimerExpire}
                 score={score}
+                shouldStartTimer={timerShouldStart}
               />
               <CardContent className="p-0">
                 <QuizPrompt

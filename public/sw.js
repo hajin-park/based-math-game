@@ -1,5 +1,6 @@
 // Service Worker for offline support and caching
-const CACHE_NAME = 'based-math-game-v1';
+// IMPORTANT: Increment version number when deploying updates to force cache refresh
+const CACHE_NAME = 'based-math-game-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -34,44 +35,84 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch event - serve from cache, fallback to network
+// Fetch event - use network-first strategy for JS/CSS, cache-first for others
 self.addEventListener('fetch', (event) => {
   // Skip non-GET requests
   if (event.request.method !== 'GET') {
     return;
   }
 
-  // Skip Firebase requests (they need real-time data)
-  if (event.request.url.includes('firebaseio.com')) {
+  // Skip Firebase and external API requests (they need real-time data)
+  const url = new URL(event.request.url);
+  if (
+    url.hostname.includes('firebaseio.com') ||
+    url.hostname.includes('googleapis.com') ||
+    url.hostname.includes('firebaseapp.com') ||
+    url.hostname.includes('cloudfunctions.net')
+  ) {
     return;
   }
 
-  event.respondWith(
-    caches.match(event.request).then((response) => {
-      if (response) {
-        return response;
-      }
+  // Network-first strategy for JS, CSS, and HTML files (always get latest)
+  const isAppAsset =
+    event.request.url.endsWith('.js') ||
+    event.request.url.endsWith('.mjs') ||
+    event.request.url.endsWith('.css') ||
+    event.request.url.endsWith('.html') ||
+    event.request.url.includes('/assets/');
 
-      return fetch(event.request).then((response) => {
-        // Don't cache non-successful responses
-        if (!response || response.status !== 200 || response.type === 'error') {
+  if (isAppAsset) {
+    // Network-first: Try network, fallback to cache
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          // Don't cache non-successful responses
+          if (!response || response.status !== 200 || response.type === 'error') {
+            return response;
+          }
+
+          // Clone and cache the response
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
+
+          return response;
+        })
+        .catch(() => {
+          // Network failed, try cache
+          return caches.match(event.request).then((cachedResponse) => {
+            return cachedResponse || caches.match('/index.html');
+          });
+        })
+    );
+  } else {
+    // Cache-first strategy for static assets (images, fonts, etc.)
+    event.respondWith(
+      caches.match(event.request).then((response) => {
+        if (response) {
           return response;
         }
 
-        // Clone the response
-        const responseToCache = response.clone();
+        return fetch(event.request).then((response) => {
+          // Don't cache non-successful responses
+          if (!response || response.status !== 200 || response.type === 'error') {
+            return response;
+          }
 
-        // Cache successful responses
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
+          // Clone and cache the response
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
+
+          return response;
+        }).catch(() => {
+          // Return offline page or cached response
+          return caches.match('/index.html');
         });
-
-        return response;
-      }).catch(() => {
-        // Return offline page or cached response
-        return caches.match('/index.html');
-      });
-    })
-  );
+      })
+    );
+  }
 });
 

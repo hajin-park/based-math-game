@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { collection, getDocs, query, orderBy, limit, doc, getDoc } from 'firebase/firestore';
 import { firestore } from '@/firebase/config';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { OFFICIAL_GAME_MODES } from '@/types/gameMode';
 import { useAuth } from '@/contexts/AuthContext';
 import { Badge } from '@/components/ui/badge';
@@ -146,20 +147,48 @@ export default function Leaderboard() {
         <CardContent>
           <div className="space-y-4">
             {/* Mode selector */}
-            <div className="flex flex-wrap gap-2">
-              {OFFICIAL_GAME_MODES.map((mode) => (
-                <button
-                  key={mode.id}
-                  onClick={() => setSelectedMode(mode.id)}
-                  className={`px-4 py-2 rounded-md transition-colors ${
-                    selectedMode === mode.id
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-secondary hover:bg-secondary/80'
-                  }`}
-                >
-                  {mode.name}
-                </button>
-              ))}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Select Game Mode</label>
+              <Select value={selectedMode} onValueChange={setSelectedMode}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select a game mode" />
+                </SelectTrigger>
+                <SelectContent className="max-h-[400px]">
+                  {/* Group by mode type */}
+                  <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                    Timed - 15 Seconds
+                  </div>
+                  {OFFICIAL_GAME_MODES.filter(m => m.id.includes('-15s')).map((mode) => (
+                    <SelectItem key={mode.id} value={mode.id}>
+                      {mode.name}
+                    </SelectItem>
+                  ))}
+                  <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground mt-2">
+                    Timed - 60 Seconds
+                  </div>
+                  {OFFICIAL_GAME_MODES.filter(m => m.id.includes('-60s')).map((mode) => (
+                    <SelectItem key={mode.id} value={mode.id}>
+                      {mode.name}
+                    </SelectItem>
+                  ))}
+                  <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground mt-2">
+                    Speed Run - 10 Questions
+                  </div>
+                  {OFFICIAL_GAME_MODES.filter(m => m.id.includes('-10q')).map((mode) => (
+                    <SelectItem key={mode.id} value={mode.id}>
+                      {mode.name}
+                    </SelectItem>
+                  ))}
+                  <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground mt-2">
+                    Speed Run - 30 Questions
+                  </div>
+                  {OFFICIAL_GAME_MODES.filter(m => m.id.includes('-30q')).map((mode) => (
+                    <SelectItem key={mode.id} value={mode.id}>
+                      {mode.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* User's Rank Card (if not in top 50) */}
