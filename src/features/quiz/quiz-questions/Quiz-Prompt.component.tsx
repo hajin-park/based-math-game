@@ -131,12 +131,12 @@ export default function QuizPrompt({
                         {setting[0]}
                     </div>
                     <div className="flex flex-col items-center gap-1">
-                        <div className="text-3xl md:text-4xl font-bold font-mono bg-muted px-6 py-4 rounded-lg min-w-[180px] text-center">
+                        <div className="text-2xl sm:text-3xl md:text-4xl font-bold font-mono bg-muted px-4 sm:px-6 py-3 sm:py-4 rounded-lg min-w-[160px] sm:min-w-[180px] text-center break-all">
                             {showGroupedDigits ? formatWithGrouping(question, setting[0]) : question}
                         </div>
                         {/* Index hints - only show if not converting from decimal */}
                         {showIndexHints && setting[0].toLowerCase() !== 'decimal' && question && (
-                            <div className="text-xs font-mono text-muted-foreground px-6 text-center whitespace-pre font-normal tracking-wider">
+                            <div className="text-xs font-mono text-muted-foreground px-4 sm:px-6 text-center whitespace-pre font-normal tracking-wider overflow-x-auto max-w-full">
                                 {getIndexHints(question, setting[0], showGroupedDigits)}
                             </div>
                         )}

@@ -156,10 +156,25 @@ export function useGameHistory() {
       if (!scoresByMode[entry.gameModeId]) {
         scoresByMode[entry.gameModeId] = [];
       }
+      // For speed run modes (those with targetQuestions), use duration instead of score
+      // We'll determine this in the Stats component based on the game mode
       scoresByMode[entry.gameModeId].push(entry.score);
     });
 
     return scoresByMode;
+  }, [history]);
+
+  const getDurationsByGameMode = useCallback(() => {
+    const durationsByMode: Record<string, number[]> = {};
+
+    history.forEach((entry) => {
+      if (!durationsByMode[entry.gameModeId]) {
+        durationsByMode[entry.gameModeId] = [];
+      }
+      durationsByMode[entry.gameModeId].push(entry.duration);
+    });
+
+    return durationsByMode;
   }, [history]);
 
   return {
@@ -168,6 +183,7 @@ export function useGameHistory() {
     fetchHistory,
     getStatsForTimeRange,
     getScoresByGameMode,
+    getDurationsByGameMode,
   };
 }
 

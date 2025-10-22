@@ -43,9 +43,11 @@ export default function Quiz() {
     const [timerShouldStart, setTimerShouldStart] = useState(!gameSettings.countdownStart);
 
     // Create expiry timestamp only once to prevent timer reset
+    // For unlimited time (duration = 0), set a very long duration (24 hours)
     const expiryTimestamp = useMemo(() => {
         const time = new Date();
-        time.setSeconds(time.getSeconds() + settings.duration);
+        const duration = settings.duration === 0 ? 86400 : settings.duration; // 24 hours for unlimited
+        time.setSeconds(time.getSeconds() + duration);
         return time;
     }, [settings.duration]);
 
@@ -124,6 +126,7 @@ export default function Quiz() {
                         setRunning={setRunning}
                         score={score}
                         shouldStartTimer={timerShouldStart}
+                        isUnlimited={settings.duration === 0}
                     />
                     <CardContent className="p-0">
                         <QuizPrompt

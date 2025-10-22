@@ -32,6 +32,12 @@ export default function CreateRoom() {
   };
 
   const handleCustomPlayground = async (settings: { questions: QuestionSetting[]; duration: number }) => {
+    // Validate: multiplayer games cannot have unlimited time
+    if (settings.duration === 0) {
+      alert('Multiplayer games require a time limit. Please select a duration.');
+      return;
+    }
+
     // Create a custom game mode from the playground settings
     const customMode: GameMode = {
       id: 'custom-playground',
@@ -233,6 +239,7 @@ export default function CreateRoom() {
                     onStartQuiz={handleCustomPlayground}
                     buttonText="Create Room with Custom Settings"
                     showHeader={false}
+                    isMultiplayer={true}
                   />
                 </CardContent>
               </Card>

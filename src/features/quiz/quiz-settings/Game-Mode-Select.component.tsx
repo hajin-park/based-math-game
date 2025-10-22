@@ -42,7 +42,8 @@ export default function GameModeSelect({ onSelectMode }: GameModeSelectProps) {
       duration: settings.duration,
       difficulty: 'Custom',
     };
-    onSelectMode(customMode, trackStats);
+    // Custom playground games are never tracked
+    onSelectMode(customMode, false);
   };
 
   // Filter game modes based on selected filters
@@ -83,34 +84,34 @@ export default function GameModeSelect({ onSelectMode }: GameModeSelectProps) {
           </TabsTrigger>
         </TabsList>
 
-        {/* Track Stats Toggle */}
-        <Card className="mt-6 border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between gap-4">
-              <div className="space-y-1 flex-1">
-                <div className="flex items-center gap-2">
-                  <BarChart3 className="h-4 w-4 text-primary" />
-                  <Label htmlFor="track-stats" className="text-base font-semibold cursor-pointer">
-                    Track Statistics
-                  </Label>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  {trackStats
-                    ? "This game will count toward your stats and leaderboard rankings"
-                    : "This game will not be saved to your stats or leaderboard"}
-                </p>
-              </div>
-              <Switch
-                id="track-stats"
-                checked={trackStats}
-                onCheckedChange={setTrackStats}
-                className="data-[state=checked]:bg-primary"
-              />
-            </div>
-          </CardContent>
-        </Card>
-
         <TabsContent value="official" className="space-y-6 mt-6">
+          {/* Track Stats Toggle - Only for Official Games */}
+          <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between gap-4">
+                <div className="space-y-1 flex-1">
+                  <div className="flex items-center gap-2">
+                    <BarChart3 className="h-4 w-4 text-primary" />
+                    <Label htmlFor="track-stats" className="text-base font-semibold cursor-pointer">
+                      Track Statistics
+                    </Label>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {trackStats
+                      ? "This game will count toward your stats and leaderboard rankings"
+                      : "This game will not be saved to your stats or leaderboard"}
+                  </p>
+                </div>
+                <Switch
+                  id="track-stats"
+                  checked={trackStats}
+                  onCheckedChange={setTrackStats}
+                  className="data-[state=checked]:bg-primary"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Filters */}
           <Card className="border-2">
             <CardHeader>
@@ -247,7 +248,23 @@ export default function GameModeSelect({ onSelectMode }: GameModeSelectProps) {
           )}
         </TabsContent>
 
-        <TabsContent value="custom" className="mt-6">
+        <TabsContent value="custom" className="mt-6 space-y-4">
+          {/* Info Notice */}
+          <Card className="border-2 border-muted-foreground/20 bg-muted/30">
+            <CardContent className="pt-6">
+              <div className="flex items-start gap-3">
+                <BarChart3 className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">Custom games are not tracked</p>
+                  <p className="text-xs text-muted-foreground">
+                    Playground games won't count toward your statistics or leaderboard rankings.
+                    Play official game modes to track your progress.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card className="border-2">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">

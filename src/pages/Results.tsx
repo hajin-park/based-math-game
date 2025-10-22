@@ -16,7 +16,6 @@ import {
     Trophy,
     Clock,
     Target,
-    Keyboard,
     Home,
     BarChart3,
     Info
@@ -131,20 +130,6 @@ export default function Quiz() {
                             </div>
                         )}
                     </div>
-
-                    {/* Keystroke Details */}
-                    {results.totalKeystrokes !== undefined && (
-                        <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
-                            <div className="flex items-center gap-2 mb-2">
-                                <Keyboard className="h-4 w-4 text-primary" />
-                                <p className="text-sm font-medium">Keystroke Analysis</p>
-                            </div>
-                            <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground">
-                                <div>Total: {results.totalKeystrokes}</div>
-                                <div>Backspaces: {results.backspaceCount}</div>
-                            </div>
-                        </div>
-                    )}
 
                     {/* Status Messages */}
                     {saving && (

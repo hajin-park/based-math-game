@@ -83,29 +83,33 @@ export default function Usage() {
             <div>
               <h3 className="font-semibold mb-2">Official Game Modes</h3>
               <p className="text-sm text-muted-foreground mb-3">
-                Choose from 6 pre-configured challenges designed to test different skills:
+                Choose from 48 official game modes across different difficulty levels and formats:
               </p>
-              <div className="grid gap-2 text-sm">
-                <div className="flex items-start gap-2 bg-muted p-2 rounded">
-                  <span className="font-bold text-primary">•</span>
-                  <div>
-                    <span className="font-semibold">Binary Basics:</span> Binary ↔ Decimal (0-255)
-                  </div>
+              <div className="grid gap-3 text-sm">
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-primary">Timed Challenges (24 modes)</h4>
+                  <p className="text-xs text-muted-foreground">
+                    Race against the clock to answer as many questions as possible within the time limit.
+                    Available in Easy, Medium, Hard, and Expert difficulties across all base conversions.
+                  </p>
                 </div>
-                <div className="flex items-start gap-2 bg-muted p-2 rounded">
-                  <span className="font-bold text-primary">•</span>
-                  <div>
-                    <span className="font-semibold">Hex Master:</span> Hexadecimal ↔ Decimal (0-255)
-                  </div>
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-success">Speed Runs (24 modes)</h4>
+                  <p className="text-xs text-muted-foreground">
+                    Complete a target number of questions as fast as possible.
+                    Available in Easy, Medium, Hard, and Expert difficulties across all base conversions.
+                  </p>
                 </div>
-                <div className="flex items-start gap-2 bg-muted p-2 rounded">
-                  <span className="font-bold text-primary">•</span>
-                  <div>
-                    <span className="font-semibold">Octal Challenge:</span> Octal ↔ Decimal (0-511)
+                <div className="bg-muted p-3 rounded-lg space-y-1">
+                  <p className="text-xs font-semibold">Supported Conversions:</p>
+                  <div className="grid grid-cols-2 gap-1 text-xs text-muted-foreground">
+                    <div>• Binary ↔ Decimal</div>
+                    <div>• Octal ↔ Decimal</div>
+                    <div>• Hexadecimal ↔ Decimal</div>
+                    <div>• Binary ↔ Hexadecimal</div>
+                    <div>• Octal ↔ Hexadecimal</div>
+                    <div>• Binary ↔ Octal</div>
                   </div>
-                </div>
-                <div className="text-xs text-muted-foreground mt-2">
-                  ...and 3 more challenging modes!
                 </div>
               </div>
             </div>

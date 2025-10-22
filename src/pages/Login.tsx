@@ -49,42 +49,42 @@ export default function Login() {
   };
 
   return (
-    <div className="container mx-auto p-4 flex items-center justify-center min-h-[calc(100vh-8rem)]">
-      <div className="w-full max-w-md space-y-6 animate-in">
+    <div className="container mx-auto px-4 py-6 flex items-center justify-center min-h-[calc(100vh-8rem)]">
+      <div className="w-full max-w-md space-y-4 animate-in">
         {/* Header */}
-        <div className="text-center space-y-2">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <Sparkles className="h-6 w-6 text-primary" />
-            <h1 className="text-3xl font-bold gradient-text">Welcome Back</h1>
+        <div className="text-center space-y-1">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <Sparkles className="h-5 w-5 text-primary" />
+            <h1 className="text-2xl font-bold gradient-text">Welcome Back</h1>
           </div>
-          <p className="text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             Sign in to your account to continue your journey
           </p>
         </div>
 
         {/* Card */}
         <Card className="border-2 shadow-lg">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl flex items-center gap-2">
-              <LogIn className="h-5 w-5 text-primary" />
+          <CardHeader className="space-y-1 pb-4">
+            <CardTitle className="text-xl flex items-center gap-2">
+              <LogIn className="h-4 w-4 text-primary" />
               Sign In
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-xs">
               Enter your credentials to access your account
             </CardDescription>
           </CardHeader>
           <form onSubmit={handleEmailLogin}>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3 pb-3">
               {error && (
-                <Alert variant="destructive">
+                <Alert variant="destructive" className="py-2">
                   <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{error}</AlertDescription>
+                  <AlertDescription className="text-xs">{error}</AlertDescription>
                 </Alert>
               )}
 
-              <div className="space-y-2">
-                <Label htmlFor="email" className="flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-muted-foreground" />
+              <div className="space-y-1.5">
+                <Label htmlFor="email" className="flex items-center gap-1.5 text-sm">
+                  <Mail className="h-3.5 w-3.5 text-muted-foreground" />
                   Email
                 </Label>
                 <Input
@@ -94,13 +94,13 @@ export default function Login() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="transition-all focus:ring-2 focus:ring-primary/20"
+                  className="h-9 transition-all focus:ring-2 focus:ring-primary/20"
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="password" className="flex items-center gap-2">
-                  <Lock className="h-4 w-4 text-muted-foreground" />
+              <div className="space-y-1.5">
+                <Label htmlFor="password" className="flex items-center gap-1.5 text-sm">
+                  <Lock className="h-3.5 w-3.5 text-muted-foreground" />
                   Password
                 </Label>
                 <Input
@@ -110,28 +110,28 @@ export default function Login() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="transition-all focus:ring-2 focus:ring-primary/20"
+                  className="h-9 transition-all focus:ring-2 focus:ring-primary/20"
                 />
               </div>
 
               <Button
                 type="submit"
-                className="w-full shadow-sm hover:shadow-md transition-all"
+                className="w-full h-9 shadow-sm hover:shadow-md transition-all"
                 disabled={loading}
               >
                 {loading ? (
                   <>
-                    <span className="animate-pulse">Signing in...</span>
+                    <span className="animate-pulse text-sm">Signing in...</span>
                   </>
                 ) : (
                   <>
-                    <LogIn className="mr-2 h-4 w-4" />
-                    Sign In
+                    <LogIn className="mr-2 h-3.5 w-3.5" />
+                    <span className="text-sm">Sign In</span>
                   </>
                 )}
               </Button>
 
-              <div className="relative">
+              <div className="relative py-2">
                 <Separator />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <span className="bg-background px-2 text-xs text-muted-foreground">
@@ -143,11 +143,11 @@ export default function Login() {
               <Button
                 type="button"
                 variant="outline"
-                className="w-full hover:bg-accent transition-all"
+                className="w-full h-9 hover:bg-accent transition-all"
                 onClick={handleGoogleLogin}
                 disabled={loading}
               >
-                <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
+                <svg className="mr-2 h-3.5 w-3.5" viewBox="0 0 24 24">
                   <path
                     fill="currentColor"
                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -165,16 +165,16 @@ export default function Login() {
                     d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                   />
                 </svg>
-                Google
+                <span className="text-sm">Google</span>
               </Button>
             </CardContent>
           </form>
-          <CardFooter className="flex flex-col space-y-3 border-t pt-6">
-            <p className="text-sm text-muted-foreground text-center">
+          <CardFooter className="flex flex-col space-y-2 border-t pt-4 pb-4">
+            <p className="text-xs text-muted-foreground text-center">
               Don't have an account?{' '}
               <Button
                 variant="link"
-                className="p-0 h-auto font-semibold text-primary"
+                className="p-0 h-auto text-xs font-semibold text-primary"
                 onClick={() => navigate('/signup')}
               >
                 Sign up
@@ -183,7 +183,7 @@ export default function Login() {
             <Button
               variant="ghost"
               onClick={() => navigate('/')}
-              className="w-full hover:bg-accent"
+              className="w-full h-8 hover:bg-accent text-sm"
             >
               Continue as Guest
             </Button>

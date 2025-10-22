@@ -175,6 +175,16 @@ export default function RoomLobby() {
   const handleCustomPlayground = async (settings: { questions: QuestionSetting[]; duration: number }) => {
     if (!roomId) return;
 
+    // Validate: multiplayer games cannot have unlimited time
+    if (settings.duration === 0) {
+      toast({
+        title: "Invalid Duration",
+        description: "Multiplayer games require a time limit. Please select a duration.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Create a custom game mode from the playground settings
     const customMode: GameMode = {
       id: 'custom-playground',
@@ -521,6 +531,7 @@ export default function RoomLobby() {
                           onStartQuiz={handleCustomPlayground}
                           buttonText="Update Room Settings"
                           showHeader={false}
+                          isMultiplayer={true}
                         />
                       </CardContent>
                     )}

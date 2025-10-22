@@ -13,10 +13,10 @@ import {
 import { QuestionSetting } from "@/contexts/GameContexts";
 
 const BASE_OPTIONS = ["Binary", "Octal", "Decimal", "Hexadecimal"];
-const DURATION_OPTIONS = [10, 15, 30, 60, 120, 180, 300];
+const DURATION_OPTIONS = [0, 10, 15, 30, 60, 120, 180, 300]; // 0 = unlimited
 
 const StartFormSchema = z.object({
-    duration: z.coerce.number().positive({
+    duration: z.coerce.number().nonnegative({
         message: "Please select a duration",
     }),
 });
@@ -26,6 +26,7 @@ interface PlaygroundSettingsProps {
     initialSettings?: { questions: QuestionSetting[]; duration: number };
     buttonText?: string;
     showHeader?: boolean;
+    isMultiplayer?: boolean;
 }
 
 export default function PlaygroundSettings({
@@ -33,6 +34,7 @@ export default function PlaygroundSettings({
     initialSettings,
     buttonText = "Start Quiz",
     showHeader = false,
+    isMultiplayer = false,
 }: PlaygroundSettingsProps) {
     const [fromBaseOptions, setFromBaseOptions] = useState(BASE_OPTIONS);
     const [toBaseOptions, setToBaseOptions] = useState(BASE_OPTIONS);
@@ -245,6 +247,8 @@ export default function PlaygroundSettings({
                             label="Quiz Duration"
                             durations={DURATION_OPTIONS}
                             settings={{ duration: startForm.watch("duration") }}
+                            allowUnlimited={true}
+                            isMultiplayer={isMultiplayer}
                         />
 
                         {/* Start Button */}

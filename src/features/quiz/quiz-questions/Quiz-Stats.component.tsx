@@ -11,9 +11,10 @@ interface QuizStatsProps {
     score: number;
     timer?: ReturnType<typeof useTimer>;
     shouldStartTimer?: boolean; // For singleplayer: controls when timer starts (after countdown)
+    isUnlimited?: boolean; // For unlimited time mode
 }
 
-export default function QuizStats({ expiryTimestamp, setRunning, score, timer: externalTimer, shouldStartTimer = true }: QuizStatsProps) {
+export default function QuizStats({ expiryTimestamp, setRunning, score, timer: externalTimer, shouldStartTimer = true, isUnlimited = false }: QuizStatsProps) {
     function handleOnExpire() {
         setRunning(false);
     }
@@ -60,14 +61,16 @@ export default function QuizStats({ expiryTimestamp, setRunning, score, timer: e
         }
     }, [externalTimer, timer.isRunning, timer.seconds, timer.minutes, totalSeconds]);
 
-    // Format time as MM:SS
+    // Format time as MM:SS or show "Unlimited"
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
-    const formattedTime = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    const formattedTime = isUnlimited
+        ? "∞"
+        : `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 
-    // Determine if time is running low (less than 10 seconds)
-    const isLowTime = totalSeconds <= 10 && totalSeconds > 0;
-    const isCriticalTime = totalSeconds <= 5 && totalSeconds > 0;
+    // Determine if time is running low (less than 10 seconds) - not applicable for unlimited
+    const isLowTime = !isUnlimited && totalSeconds <= 10 && totalSeconds > 0;
+    const isCriticalTime = !isUnlimited && totalSeconds <= 5 && totalSeconds > 0;
 
     // Cleanup timer on unmount to prevent memory leaks
     useEffect(() => {

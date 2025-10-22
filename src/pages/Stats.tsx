@@ -14,7 +14,7 @@ import { BarChart3, TrendingUp, Target, Clock, Percent, Trophy, Calendar, Gamepa
 export default function Stats() {
   const navigate = useNavigate();
   const { isGuest } = useAuth();
-  const { history, loading, fetchHistory, getStatsForTimeRange, getScoresByGameMode } = useGameHistory();
+  const { history, loading, fetchHistory, getStatsForTimeRange, getScoresByGameMode, getDurationsByGameMode } = useGameHistory();
   const [timeRange, setTimeRange] = useState<TimeRange>('all');
 
   useEffect(() => {
@@ -23,6 +23,7 @@ export default function Stats() {
 
   const rangeStats = getStatsForTimeRange(timeRange);
   const scoresByMode = getScoresByGameMode();
+  const durationsByMode = getDurationsByGameMode();
 
   const timeRanges: { value: TimeRange; label: string }[] = [
     { value: 'today', label: 'Today' },
@@ -219,64 +220,141 @@ export default function Stats() {
                   </Card>
                 </div>
 
-                {/* Scores by game mode */}
-                {Object.keys(scoresByMode).length > 0 && (
-                  <Card className="border-2">
-                    <CardHeader>
-                      <CardTitle className="text-xl flex items-center gap-2">
-                        <Trophy className="h-5 w-5 text-primary" />
-                        Performance by Game Mode
-                      </CardTitle>
-                      <CardDescription>
-                        Your average and best scores for each mode
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-6">
-                        {Object.entries(scoresByMode).map(([modeId, scores]) => {
-                          const mode = OFFICIAL_GAME_MODES.find((m) => m.id === modeId);
-                          const avgScore = scores.reduce((a, b) => a + b, 0) / scores.length;
-                          const maxScore = Math.max(...scores);
+                {/* Scores by game mode - separated by type */}
+                {Object.keys(scoresByMode).length > 0 && (() => {
+                  // Separate speed run and timed modes
+                  const speedRunModes: [string, number[]][] = [];
+                  const timedModes: [string, number[]][] = [];
 
-                          return (
-                            <div key={modeId} className="space-y-3 p-4 rounded-lg bg-muted/30 border">
-                              <div className="flex justify-between items-start">
-                                <div>
-                                  <span className="font-semibold text-base">{mode?.name || modeId}</span>
-                                  <Badge variant="secondary" className="ml-2 text-xs">
-                                    {scores.length} {scores.length === 1 ? 'game' : 'games'}
-                                  </Badge>
-                                </div>
-                              </div>
-                              <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1">
-                                  <p className="text-xs text-muted-foreground">Average</p>
-                                  <p className="text-2xl font-bold text-primary">{avgScore.toFixed(1)}</p>
-                                </div>
-                                <div className="space-y-1">
-                                  <p className="text-xs text-muted-foreground">Best</p>
-                                  <p className="text-2xl font-bold text-success">{maxScore}</p>
-                                </div>
-                              </div>
-                              <div className="space-y-2">
-                                <div className="flex justify-between text-xs text-muted-foreground">
-                                  <span>Progress to Best</span>
-                                  <span>{((avgScore / maxScore) * 100).toFixed(0)}%</span>
-                                </div>
-                                <div className="w-full bg-secondary rounded-full h-3 overflow-hidden">
-                                  <div
-                                    className="bg-gradient-to-r from-primary to-success h-3 rounded-full transition-all duration-500"
-                                    style={{ width: `${(avgScore / maxScore) * 100}%` }}
-                                  />
-                                </div>
-                              </div>
+                  Object.entries(scoresByMode).forEach(([modeId, scores]) => {
+                    const mode = OFFICIAL_GAME_MODES.find((m) => m.id === modeId);
+                    if (mode?.targetQuestions) {
+                      speedRunModes.push([modeId, scores]);
+                    } else {
+                      timedModes.push([modeId, scores]);
+                    }
+                  });
+
+                  return (
+                    <>
+                      {/* Speed Run Modes */}
+                      {speedRunModes.length > 0 && (
+                        <Card className="border-2">
+                          <CardHeader>
+                            <CardTitle className="text-xl flex items-center gap-2">
+                              <Target className="h-5 w-5 text-primary" />
+                              Speed Run Performance
+                            </CardTitle>
+                            <CardDescription>
+                              Your fastest completion times for speed run challenges
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="space-y-6">
+                              {speedRunModes.map(([modeId]) => {
+                                const mode = OFFICIAL_GAME_MODES.find((m) => m.id === modeId);
+                                // For speed runs, use durations instead of scores
+                                const durations = durationsByMode[modeId] || [];
+                                if (durations.length === 0) return null;
+
+                                const bestTime = Math.min(...durations);
+                                const avgTime = durations.reduce((a, b) => a + b, 0) / durations.length;
+
+                                return (
+                                  <div key={modeId} className="space-y-3 p-4 rounded-lg bg-muted/30 border">
+                                    <div className="flex justify-between items-start">
+                                      <div>
+                                        <span className="font-semibold text-base">{mode?.name || modeId}</span>
+                                        <Badge variant="secondary" className="ml-2 text-xs">
+                                          {durations.length} {durations.length === 1 ? 'attempt' : 'attempts'}
+                                        </Badge>
+                                      </div>
+                                      <Badge variant="outline" className="text-xs">
+                                        Target: {mode?.targetQuestions} questions
+                                      </Badge>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                      <div className="space-y-1">
+                                        <p className="text-xs text-muted-foreground">Best Time</p>
+                                        <p className="text-2xl font-bold text-success">{bestTime.toFixed(1)}s</p>
+                                      </div>
+                                      <div className="space-y-1">
+                                        <p className="text-xs text-muted-foreground">Average Time</p>
+                                        <p className="text-2xl font-bold text-primary">{avgTime.toFixed(1)}s</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
                             </div>
-                          );
-                        })}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
+                          </CardContent>
+                        </Card>
+                      )}
+
+                      {/* Timed Modes */}
+                      {timedModes.length > 0 && (
+                        <Card className="border-2">
+                          <CardHeader>
+                            <CardTitle className="text-xl flex items-center gap-2">
+                              <Trophy className="h-5 w-5 text-primary" />
+                              Timed Mode Performance
+                            </CardTitle>
+                            <CardDescription>
+                              Your average and best scores for timed challenges
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="space-y-6">
+                              {timedModes.map(([modeId, scores]) => {
+                                const mode = OFFICIAL_GAME_MODES.find((m) => m.id === modeId);
+                                const avgScore = scores.reduce((a, b) => a + b, 0) / scores.length;
+                                const maxScore = Math.max(...scores);
+
+                                return (
+                                  <div key={modeId} className="space-y-3 p-4 rounded-lg bg-muted/30 border">
+                                    <div className="flex justify-between items-start">
+                                      <div>
+                                        <span className="font-semibold text-base">{mode?.name || modeId}</span>
+                                        <Badge variant="secondary" className="ml-2 text-xs">
+                                          {scores.length} {scores.length === 1 ? 'game' : 'games'}
+                                        </Badge>
+                                      </div>
+                                      <Badge variant="outline" className="text-xs">
+                                        {mode?.duration}s time limit
+                                      </Badge>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                      <div className="space-y-1">
+                                        <p className="text-xs text-muted-foreground">Average Score</p>
+                                        <p className="text-2xl font-bold text-primary">{avgScore.toFixed(1)}</p>
+                                      </div>
+                                      <div className="space-y-1">
+                                        <p className="text-xs text-muted-foreground">Best Score</p>
+                                        <p className="text-2xl font-bold text-success">{maxScore}</p>
+                                      </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                      <div className="flex justify-between text-xs text-muted-foreground">
+                                        <span>Progress to Best</span>
+                                        <span>{((avgScore / maxScore) * 100).toFixed(0)}%</span>
+                                      </div>
+                                      <div className="w-full bg-secondary rounded-full h-3 overflow-hidden">
+                                        <div
+                                          className="bg-gradient-to-r from-primary to-success h-3 rounded-full transition-all duration-500"
+                                          style={{ width: `${(avgScore / maxScore) * 100}%` }}
+                                        />
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )}
+                    </>
+                  );
+                })()}
 
                 {/* Recent games */}
                 {history.length > 0 && (

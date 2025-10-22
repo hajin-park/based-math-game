@@ -802,6 +802,82 @@ const players = Object.values(room.players);
 
 ---
 
+## Recent Updates (2025-10-22)
+
+### Mobile Text Formatting
+- **Fixed:** Custom game text display on mobile devices
+- **Changes:**
+  - Added responsive text sizing: `text-2xl sm:text-3xl md:text-4xl`
+  - Added responsive padding: `px-4 sm:px-6`
+  - Added `break-all` class for better text wrapping
+  - Added `overflow-x-auto` and `max-w-full` to index hints for horizontal scrolling
+- **Files Modified:** `src/features/quiz/quiz-questions/Quiz-Prompt.component.tsx`
+
+### Statistics Tracking UI Reorganization
+- **Changed:** Statistics tracking option now only appears for official game modes
+- **Implementation:**
+  - Moved "Track Statistics" toggle inside the "official" tab in Game-Mode-Select
+  - Custom/playground games always have `trackStats=false`
+  - Added informational notice in custom tab explaining non-tracked games
+- **Files Modified:** `src/features/quiz/quiz-settings/Game-Mode-Select.component.tsx`
+
+### Unlimited Time Setting for Playground
+- **Added:** Unlimited time option (duration = 0) for playground/custom games
+- **Features:**
+  - Available in playground settings via DURATION_OPTIONS array
+  - Blocked for multiplayer games with validation in CreateRoom and RoomLobby
+  - Timer displays "∞" symbol for unlimited mode
+  - Unlimited time internally uses 24-hour duration (86400s)
+- **Files Modified:**
+  - `src/features/quiz/quiz-settings/Duration-Select.component.tsx` - Added `allowUnlimited` and `isMultiplayer` props
+  - `src/features/quiz/quiz-settings/Playground-Settings.component.tsx` - Added unlimited option to DURATION_OPTIONS
+  - `src/features/quiz/quiz-questions/Quiz-Stats.component.tsx` - Added `isUnlimited` prop and infinity display
+  - `src/pages/Quiz.tsx` - Handle unlimited time with 24-hour fallback
+  - `src/pages/CreateRoom.tsx` - Validate against unlimited time in multiplayer
+  - `src/pages/RoomLobby.tsx` - Validate against unlimited time in multiplayer
+
+### Statistics Page Display Improvements
+- **Redesigned:** Stats page now clearly separates speed run and timed game modes
+- **Features:**
+  - Speed Run Performance card: Shows best/average completion times for modes with `targetQuestions`
+  - Timed Mode Performance card: Shows average/best scores for time-limited modes
+  - Each card displays relevant metrics (time for speed runs, score for timed)
+  - Added difficulty badges and target/duration information
+- **Files Modified:**
+  - `src/pages/Stats.tsx` - Separated display logic for speed run vs timed modes
+  - `src/hooks/useGameHistory.ts` - Added `getDurationsByGameMode()` function
+
+### Results Page Cleanup
+- **Removed:** Keystroke analysis section from results page
+- **Changes:**
+  - Removed "Keystroke Analysis" card showing total keystrokes and backspaces
+  - Removed unused `Keyboard` icon import
+  - Accuracy calculation still maintained internally for stats tracking
+- **Files Modified:** `src/pages/Results.tsx`
+
+### How to Play Documentation Update
+- **Updated:** Usage page to reflect current 48 official game modes
+- **Changes:**
+  - Updated from "6 pre-configured challenges" to "48 official game modes"
+  - Added clear distinction between Timed Challenges (24 modes) and Speed Runs (24 modes)
+  - Listed all 6 supported conversion types
+  - Added difficulty level information (Easy, Medium, Hard, Expert)
+- **Files Modified:** `src/pages/Usage.tsx`
+
+### Login Page Layout Enhancement
+- **Improved:** Login page now fits within viewport without scrolling
+- **Changes:**
+  - Reduced spacing throughout (space-y-6 → space-y-4, space-y-4 → space-y-3)
+  - Reduced header text size (text-3xl → text-2xl, text-2xl → text-xl)
+  - Reduced padding (py-8 → py-6, pb-6 → pb-4, pt-6 → pt-4)
+  - Reduced input heights (default → h-9)
+  - Reduced button heights (default → h-9/h-8)
+  - Reduced font sizes for labels and descriptions (default → text-sm/text-xs)
+  - Reduced icon sizes (h-6 w-6 → h-5 w-5, h-5 w-5 → h-4 w-4, h-4 w-4 → h-3.5 w-3.5)
+- **Files Modified:** `src/pages/Login.tsx`
+
+---
+
 ## License & Credits
 
 **License:** GNU General Public License v3.0

@@ -6,6 +6,7 @@ import {
     FormItem,
     FormLabel,
     FormMessage,
+    FormDescription,
 } from "@/components/ui/form";
 import {
     Select,
@@ -23,6 +24,8 @@ export default function DurationSelect({
     label,
     durations,
     settings,
+    allowUnlimited = false,
+    isMultiplayer = false,
 }) {
     return (
         <FormField
@@ -43,17 +46,28 @@ export default function DurationSelect({
                         <SelectContent>
                             <SelectGroup>
                                 <SelectLabel>{label}</SelectLabel>
-                                {durations.map((duration: number) => (
-                                    <SelectItem
-                                        key={duration}
-                                        value={duration.toString()}
-                                    >
-                                        {duration} seconds
-                                    </SelectItem>
-                                ))}
+                                {durations
+                                    .filter((duration: number) => {
+                                        // Filter out unlimited (0) if multiplayer
+                                        if (duration === 0 && isMultiplayer) return false;
+                                        return true;
+                                    })
+                                    .map((duration: number) => (
+                                        <SelectItem
+                                            key={duration}
+                                            value={duration.toString()}
+                                        >
+                                            {duration === 0 ? "Unlimited" : `${duration} seconds`}
+                                        </SelectItem>
+                                    ))}
                             </SelectGroup>
                         </SelectContent>
                     </Select>
+                    {isMultiplayer && allowUnlimited && (
+                        <FormDescription className="text-xs text-muted-foreground">
+                            Unlimited time is not available for multiplayer games
+                        </FormDescription>
+                    )}
                     <FormMessage />
                 </FormItem>
             )}
