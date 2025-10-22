@@ -8,7 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 
 import { useAuth } from '@/contexts/AuthContext';
-import { UserPlus, Mail, Lock, User, AlertCircle, Sparkles, Info } from 'lucide-react';
+import { UserPlus, Mail, Lock, User, AlertCircle, Info } from 'lucide-react';
 
 export default function Signup() {
   const navigate = useNavigate();
@@ -55,10 +55,7 @@ export default function Signup() {
       <div className="w-full max-w-md space-y-6 animate-in">
         {/* Header */}
         <div className="text-center space-y-2">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <Sparkles className="h-6 w-6 text-primary" />
-            <h1 className="text-3xl font-bold gradient-text">Join Us</h1>
-          </div>
+          <h1 className="text-3xl font-bold gradient-text">Join Us</h1>
           <p className="text-muted-foreground">
             {isGuest
               ? 'Convert your guest account to save your progress permanently'

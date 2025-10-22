@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
-import { BookOpen, Sparkles, Users, Clock, Target, Lightbulb, ArrowRight } from 'lucide-react';
+import { BookOpen, Users, Clock, Target, Lightbulb, ArrowRight, Gamepad2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 
@@ -74,7 +74,7 @@ export default function Usage() {
         <Card className="border-2 shadow-lg">
           <CardHeader>
             <CardTitle className="text-2xl flex items-center gap-2">
-              <Sparkles className="h-6 w-6 text-primary" />
+              <Gamepad2  className="h-6 w-6 text-primary" />
               Singleplayer Mode
             </CardTitle>
             <CardDescription>Practice at your own pace with flexible game modes</CardDescription>

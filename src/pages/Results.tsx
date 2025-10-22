@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState, useRef } from "react";
+import { useContext, useEffect, useState, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card";
 import { QuizContext, ResultContext } from "@/contexts/GameContexts";
 import { useStats } from "@/hooks/useStats";
-import { getGameModeById } from "@/types/gameMode";
+import { getGameModeById, isSpeedrunMode } from "@/types/gameMode";
 import {
     Trophy,
     Clock,
@@ -75,6 +75,7 @@ export default function Quiz() {
 
     const gameMode = results.gameModeId ? getGameModeById(results.gameModeId) : null;
     const shouldTrack = settings.trackStats !== false;
+    const isSpeedrun = useMemo(() => isSpeedrunMode(gameMode), [gameMode]);
 
     return (
         <div className="flex justify-center items-center min-h-[calc(100vh-8rem)] p-4">
@@ -99,19 +100,26 @@ export default function Quiz() {
                     {/* Score - Primary Metric */}
                     <div className="text-center space-y-2">
                         <div className="flex items-center justify-center gap-2 text-muted-foreground">
-                            <Trophy className="h-5 w-5" />
-                            <p className="text-sm font-medium uppercase tracking-wide">Your Score</p>
+                            {isSpeedrun ? <Clock className="h-5 w-5" /> : <Trophy className="h-5 w-5" />}
+                            <p className="text-sm font-medium uppercase tracking-wide">
+                                {isSpeedrun ? "Completion Time" : "Your Score"}
+                            </p>
                         </div>
-                        <p className="text-6xl font-bold gradient-text animate-pulse-glow">
-                            {results.score}
+                        <p className="text-6xl font-bold gradient-text">
+                            {isSpeedrun ? `${results.score}s` : results.score}
                         </p>
+                        {isSpeedrun && gameMode?.targetQuestions && (
+                            <p className="text-sm text-muted-foreground">
+                                {gameMode.targetQuestions} questions completed
+                            </p>
+                        )}
                     </div>
 
                     <Separator />
 
                     {/* Secondary Metrics */}
                     <div className="grid grid-cols-2 gap-4">
-                        {results.duration && (
+                        {!isSpeedrun && results.duration && (
                             <div className="text-center space-y-2 p-4 rounded-lg bg-muted/50">
                                 <div className="flex items-center justify-center gap-2 text-muted-foreground">
                                     <Clock className="h-4 w-4" />

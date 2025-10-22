@@ -1,14 +1,14 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { Info, Sparkles, Zap, Users, TrendingUp, Trophy, UserPlus, Code, Heart, ExternalLink } from 'lucide-react';
+import { Info, Zap, Users, TrendingUp, Trophy, UserPlus, Code, Heart, ExternalLink } from 'lucide-react';
 
 export default function About() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl">
       <div className="mb-12 text-center space-y-4 animate-in">
         <div className="flex items-center justify-center gap-2 mb-2">
-          <Sparkles className="h-10 w-10 text-primary" />
+          <Info className="h-10 w-10 text-primary" />
           <h1 className="text-5xl font-bold gradient-text">About Based Math Game</h1>
         </div>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
@@ -49,7 +49,7 @@ export default function About() {
             <div className="grid gap-4 md:grid-cols-2">
               <div className="flex items-start gap-3 p-4 rounded-lg border bg-card">
                 <div className="p-2 rounded-lg bg-primary/10">
-                  <Sparkles className="h-5 w-5 text-primary" />
+                  <Code className="h-5 w-5 text-primary" />
                 </div>
                 <div className="space-y-1">
                   <p className="font-semibold">Interactive Tutorials</p>

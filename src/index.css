@@ -234,13 +234,18 @@
         }
     }
 
-    /* Remove purposeless hover effects - only use when functionally necessary */
-    .hover-scale {
-        @apply transition-transform duration-200 hover:scale-[1.02];
-    }
-
     /* Smooth transitions */
     .transition-smooth {
         @apply transition-all duration-300 ease-in-out;
+    }
+
+    /* Respect reduced motion preferences */
+    @media (prefers-reduced-motion: reduce) {
+        .animate-in,
+        .animate-in-slow,
+        .fade-in-up {
+            animation: none !important;
+            transition: none !important;
+        }
     }
 }

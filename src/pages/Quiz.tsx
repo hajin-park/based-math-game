@@ -4,13 +4,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { QuizPrompt, QuizStats } from "@features/quiz";
 import { QuizContext, ResultContext } from "@/contexts/GameContexts";
 import { useGameSettings } from "@/hooks/useGameSettings";
-import { getGameModeById } from "@/types/gameMode";
+import { getGameModeById, isSpeedrunMode } from "@/types/gameMode";
 import Countdown from "@/components/Countdown";
 import ExitButton from "@/components/ExitButton";
 
 export default function Quiz() {
     const quizContext = useContext(QuizContext);
     const resultContext = useContext(ResultContext);
+    const navigate = useNavigate();
 
     if (!quizContext || !resultContext) {
         throw new Error('Quiz must be used within QuizContext and ResultContext providers');
@@ -19,15 +20,39 @@ export default function Quiz() {
     const { settings } = quizContext;
     const { setResults } = resultContext;
     const { settings: gameSettings } = useGameSettings();
+
+    // Validate settings - if invalid, redirect to home
+    useEffect(() => {
+        if (!settings || !settings.questions || settings.questions.length === 0) {
+            console.error('Invalid quiz settings - redirecting to home');
+            navigate('/', { replace: true });
+        }
+    }, [settings, navigate]);
+
     const [showCountdown, setShowCountdown] = useState(gameSettings.countdownStart);
     const [running, setRunning] = useState(true);
     const [score, setScore] = useState(0);
-    const [randomSetting, setRandomSetting] = useState(
-        settings.questions[
-            Math.floor(Math.random() * settings.questions.length)
-        ]
+    const [randomSetting, setRandomSetting] = useState<[string, string, number, number] | null>(
+        settings?.questions?.length > 0
+            ? settings.questions[Math.floor(Math.random() * settings.questions.length)]
+            : null
     );
-    const navigate = useNavigate();
+
+    // Early return with loading state if settings are invalid
+    if (!settings || !settings.questions || settings.questions.length === 0 || !randomSetting) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            </div>
+        );
+    }
+
+    // Determine if this is a speedrun mode
+    const gameMode = useMemo(() =>
+        settings.gameModeId ? getGameModeById(settings.gameModeId) : null,
+        [settings.gameModeId]
+    );
+    const isSpeedrun = useMemo(() => isSpeedrunMode(gameMode), [gameMode]);
 
     // Use ref to capture the latest score value to prevent race conditions
     const scoreRef = useRef(score);
@@ -42,20 +67,32 @@ export default function Quiz() {
     // Track if timer should start (after countdown)
     const [timerShouldStart, setTimerShouldStart] = useState(!gameSettings.countdownStart);
 
-    // Create expiry timestamp only once to prevent timer reset
-    // For unlimited time (duration = 0), set a very long duration (24 hours)
-    const expiryTimestamp = useMemo(() => {
+    // Create expiry timestamp - will be set when countdown completes or immediately if no countdown
+    const [expiryTimestamp, setExpiryTimestamp] = useState<Date>(() => {
+        // If no countdown, create timestamp immediately
+        if (!gameSettings.countdownStart) {
+            const time = new Date();
+            const duration = (isSpeedrun || settings.duration === 0) ? 86400 : settings.duration;
+            time.setSeconds(time.getSeconds() + duration);
+            return time;
+        }
+        // Otherwise, create a placeholder timestamp (will be replaced when countdown completes)
         const time = new Date();
-        const duration = settings.duration === 0 ? 86400 : settings.duration; // 24 hours for unlimited
-        time.setSeconds(time.getSeconds() + duration);
+        time.setSeconds(time.getSeconds() + 60); // Placeholder
         return time;
-    }, [settings.duration]);
+    });
 
     // Handle countdown completion
     const handleCountdownComplete = () => {
         setShowCountdown(false);
         setTimerShouldStart(true);
         startTimeRef.current = Date.now(); // Start tracking time when countdown completes
+
+        // Create the actual expiry timestamp NOW (after countdown)
+        const time = new Date();
+        const duration = (isSpeedrun || settings.duration === 0) ? 86400 : settings.duration;
+        time.setSeconds(time.getSeconds() + duration);
+        setExpiryTimestamp(time);
     };
 
     console.log(settings);
@@ -67,14 +104,11 @@ export default function Quiz() {
 
     // Check if target questions reached (for speed run modes)
     useEffect(() => {
-        if (settings.gameModeId) {
-            const gameMode = getGameModeById(settings.gameModeId);
-            if (gameMode?.targetQuestions && score >= gameMode.targetQuestions) {
-                // Target reached, end the game
-                setRunning(false);
-            }
+        if (isSpeedrun && gameMode?.targetQuestions && score >= gameMode.targetQuestions) {
+            // Target reached, end the game
+            setRunning(false);
         }
-    }, [score, settings.gameModeId]);
+    }, [score, isSpeedrun, gameMode]);
 
     useEffect(() => {
         if (!running) {
@@ -90,9 +124,12 @@ export default function Quiz() {
                 ? ((totalKeystrokes - backspaceCount) / totalKeystrokes) * 100
                 : 0;
 
-            // Use scoreRef.current to get the final score value
+            // For speedrun modes, score is the elapsed time (lower is better)
+            // For timed modes, score is the number of correct answers
+            const finalScore = isSpeedrun ? duration : scoreRef.current;
+
             setResults({
-                score: scoreRef.current,
+                score: finalScore,
                 duration,
                 gameModeId: settings.gameModeId,
                 totalKeystrokes,
@@ -101,13 +138,15 @@ export default function Quiz() {
             });
             navigate("/results");
         }
-    }, [running, navigate, setResults, settings.gameModeId]);
+    }, [running, navigate, setResults, settings.gameModeId, isSpeedrun]);
 
     useEffect(() => {
-        const randomIndex = Math.floor(
-            Math.random() * settings.questions.length
-        );
-        setRandomSetting(settings.questions[randomIndex]);
+        if (settings?.questions?.length > 0) {
+            const randomIndex = Math.floor(
+                Math.random() * settings.questions.length
+            );
+            setRandomSetting(settings.questions[randomIndex]);
+        }
     }, [score, settings.questions]);
 
     return (
@@ -127,6 +166,8 @@ export default function Quiz() {
                         score={score}
                         shouldStartTimer={timerShouldStart}
                         isUnlimited={settings.duration === 0}
+                        isSpeedrun={isSpeedrun}
+                        targetQuestions={gameMode?.targetQuestions}
                     />
                     <CardContent className="p-0">
                         <QuizPrompt

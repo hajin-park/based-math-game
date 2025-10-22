@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/contexts/AuthContext';
-import { LogIn, Mail, Lock, AlertCircle, Sparkles } from 'lucide-react';
+import { LogIn, Mail, Lock, AlertCircle } from 'lucide-react';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -53,10 +53,7 @@ export default function Login() {
       <div className="w-full max-w-md space-y-4 animate-in">
         {/* Header */}
         <div className="text-center space-y-1">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <Sparkles className="h-5 w-5 text-primary" />
-            <h1 className="text-2xl font-bold gradient-text">Welcome Back</h1>
-          </div>
+          <h1 className="text-2xl font-bold gradient-text">Welcome Back</h1>
           <p className="text-sm text-muted-foreground">
             Sign in to your account to continue your journey
           </p>

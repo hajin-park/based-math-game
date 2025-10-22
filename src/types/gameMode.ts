@@ -756,3 +756,10 @@ export function getDifficultyColor(difficulty: GameMode['difficulty']): string {
   }
 }
 
+/**
+ * Check if a game mode is a speedrun mode (has targetQuestions)
+ */
+export function isSpeedrunMode(gameMode: GameMode | undefined | null): boolean {
+  return gameMode?.targetQuestions !== undefined && gameMode.targetQuestions > 0;
+}
+

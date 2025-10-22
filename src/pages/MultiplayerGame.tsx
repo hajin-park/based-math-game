@@ -5,6 +5,7 @@ import { useRoom, Room } from '@/hooks/useRoom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { useGameSettings } from '@/hooks/useGameSettings';
+import { isSpeedrunMode } from '@/types/gameMode';
 import Countdown from '@/components/Countdown';
 import QuizPrompt from '@/features/quiz/quiz-questions/Quiz-Prompt.component';
 import QuizStats from '@/features/quiz/quiz-questions/Quiz-Stats.component';
@@ -18,13 +19,6 @@ export default function MultiplayerGame() {
   const { toast } = useToast();
   const { subscribeToRoom, updatePlayerScore, finishGame, leaveRoom } = useRoom();
   const { settings: gameSettings } = useGameSettings();
-
-  // Handle timer expiration
-  const handleTimerExpire = async () => {
-    if (roomId) {
-      await finishGame(roomId);
-    }
-  };
   const [room, setRoom] = useState<Room | null>(null);
   const [showCountdown, setShowCountdown] = useState(false);
   const [timerShouldStart, setTimerShouldStart] = useState(false);
@@ -35,6 +29,20 @@ export default function MultiplayerGame() {
   const questionsRef = useRef<[string, string, number, number][]>([]);
   const hasNavigatedRef = useRef(false);
   const countdownShownRef = useRef(false);
+
+  // Determine if this is a speedrun mode
+  const isSpeedrun = useMemo(() =>
+    room ? isSpeedrunMode(room.gameMode) : false,
+    [room]
+  );
+
+  // Handle timer expiration
+  const handleTimerExpire = async () => {
+    // For speedrun modes, timer expiry doesn't end the game
+    if (roomId && !isSpeedrun) {
+      await finishGame(roomId);
+    }
+  };
 
   useEffect(() => {
     if (!roomId) return;
@@ -152,20 +160,26 @@ export default function MultiplayerGame() {
 
   // Check if target questions reached (for speed run modes)
   useEffect(() => {
-    if (room?.gameMode.targetQuestions && score >= room.gameMode.targetQuestions) {
-      // Target reached, finish the game
-      if (roomId) {
-        finishGame(roomId);
+    if (isSpeedrun && room?.gameMode.targetQuestions && score >= room.gameMode.targetQuestions) {
+      // Target reached, calculate elapsed time and update score
+      if (roomId && room.startedAt) {
+        const elapsedTime = Math.floor((Date.now() - room.startedAt) / 1000);
+        // Update score to elapsed time for speedrun modes
+        updatePlayerScore(roomId, elapsedTime).then(() => {
+          finishGame(roomId);
+        });
       }
     }
-  }, [score, room?.gameMode.targetQuestions, roomId, finishGame]);
+  }, [score, room?.gameMode.targetQuestions, room?.startedAt, roomId, finishGame, updatePlayerScore, isSpeedrun]);
 
   // Calculate expiry timestamp based on room startedAt and duration
-  // This is calculated once when the game starts and doesn't change
+  // For speedrun modes, set a very long duration (24 hours) since we count up
   const expiryTimestamp = useMemo(() => {
     if (room?.startedAt && room?.gameMode.duration) {
       const elapsed = Math.floor((Date.now() - room.startedAt) / 1000);
-      const remaining = Math.max(0, room.gameMode.duration - elapsed);
+      // For speedrun modes, use 24 hours minus elapsed time to create count-up effect
+      const duration = isSpeedrun ? 86400 : room.gameMode.duration;
+      const remaining = Math.max(0, duration - elapsed);
       const expiry = new Date();
       expiry.setSeconds(expiry.getSeconds() + remaining);
 
@@ -173,17 +187,18 @@ export default function MultiplayerGame() {
         startedAt: room.startedAt,
         elapsed,
         remaining,
+        isSpeedrun,
         expiry: expiry.toISOString()
       });
 
       return expiry;
     }
 
-    // Default expiry (60 seconds)
+    // Default expiry (60 seconds or 24 hours for speedrun)
     const time = new Date();
-    time.setSeconds(time.getSeconds() + 60);
+    time.setSeconds(time.getSeconds() + (isSpeedrun ? 86400 : 60));
     return time;
-  }, [room?.startedAt, room?.gameMode.duration]);
+  }, [room?.startedAt, room?.gameMode.duration, isSpeedrun]);
 
   // Generate deterministic seed for multiplayer questions
   // Combine room ID hash with score to ensure all players get same questions
@@ -247,6 +262,9 @@ export default function MultiplayerGame() {
                 setRunning={handleTimerExpire}
                 score={score}
                 shouldStartTimer={timerShouldStart}
+                isSpeedrun={isSpeedrun}
+                targetQuestions={room?.gameMode.targetQuestions}
+                gameStartTime={room?.startedAt}
               />
               <CardContent className="p-0">
                 <QuizPrompt

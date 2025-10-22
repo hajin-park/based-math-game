@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { User, Settings, LogOut, Gamepad2, Sparkles } from 'lucide-react';
+import { User, Settings, LogOut, Gamepad2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -36,10 +36,7 @@ export default function ProfileLayout() {
       {/* Sidebar */}
       <aside className="w-72 border-r border-border flex-shrink-0 flex flex-col bg-card">
         <div className="p-6 space-y-2">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-6 w-6 text-primary" />
-            <h2 className="text-2xl font-bold gradient-text">Profile</h2>
-          </div>
+          <h2 className="text-2xl font-bold gradient-text">Profile</h2>
           <p className="text-sm text-muted-foreground">Manage your account settings</p>
         </div>
 

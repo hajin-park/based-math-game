@@ -75,13 +75,13 @@ export default function GameModeSelect({ onSelectMode }: GameModeSelectProps) {
   return (
     <div className="w-full space-y-6">
       <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
-        <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 h-12">
-          <TabsTrigger value="official" className="text-base">
-            <Trophy className="mr-2 h-4 w-4" />
+        <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 h-auto p-1">
+          <TabsTrigger value="official" className="flex items-center gap-2 py-3">
+            <Trophy className="h-4 w-4" />
             Official Modes
           </TabsTrigger>
-          <TabsTrigger value="custom" className="text-base">
-            <Wrench className="mr-2 h-4 w-4" />
+          <TabsTrigger value="custom" className="flex items-center gap-2 py-3">
+            <Wrench className="h-4 w-4" />
             Custom
           </TabsTrigger>
         </TabsList>

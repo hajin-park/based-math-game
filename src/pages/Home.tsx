@@ -11,7 +11,6 @@ import {
   Zap,
   Target,
   TrendingUp,
-  Sparkles,
   ArrowRight,
   Binary,
   Hash,
@@ -91,7 +90,6 @@ export default function Home() {
             {/* Badge */}
             <div className="animate-in">
               <Badge variant="secondary" className="px-4 py-2 text-sm font-medium">
-                <Sparkles className="w-4 h-4 mr-2" />
                 Master Base Conversions
               </Badge>
             </div>

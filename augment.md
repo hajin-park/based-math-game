@@ -12,7 +12,7 @@ React-based multiplayer quiz game for practicing base conversion (Binary, Octal,
 
 **Core:** React 19.2.0 + TypeScript 5.9.3 + Vite 7.1.11 + Tailwind CSS 3.4.3
 **Backend:** Firebase JS SDK 12.4.0 (Firestore + Realtime Database + Auth + Hosting)
-**UI:** shadcn/ui (Radix primitives) + lucide-react icons
+**UI:** shadcn/ui (Radix primitives) + lucide-react icons + Framer Motion 12.23.11
 **Forms:** React Hook Form 7.51.2 + Zod 3.22.4
 **Routing:** React Router DOM 6.22.3
 **Timer:** react-timer-hook 3.0.7
@@ -115,7 +115,7 @@ Modern design system built on shadcn/ui components with Tailwind CSS and Slate p
 ### Icons
 
 **Library:** Lucide React
-**Common:** Sparkles, Trophy, Users, Gamepad2, TrendingUp, Shield, Settings, Info, AlertTriangle, Play, BookOpen, Filter, Target, Binary, Hash, Zap
+**Common:** Trophy, Users, Gamepad2, TrendingUp, Shield, Settings, Info, AlertTriangle, Play, BookOpen, Filter, Target, Binary, Hash, Zap, Clock, BarChart3, Code
 
 ### Responsive Design
 
@@ -131,6 +131,46 @@ Modern design system built on shadcn/ui components with Tailwind CSS and Slate p
 **Motion Preferences:** Respects prefers-reduced-motion
 **Dark Mode:** Full support with automatic theme switching
 **Touch Targets:** Minimum 44x44px for mobile interactions
+
+### Animation Library (Framer Motion)
+
+**Location:** `src/lib/animations.ts`
+
+**Philosophy:** Minimal, purposeful motion only - no decorative animations
+
+**Available Variants:**
+- `fadeIn` - Simple opacity fade (0 → 1)
+- `fadeInUp` - Fade with subtle upward motion (y: 20 → 0)
+- `staggerContainer` - Container for staggered children animations
+- `staggerItem` - Individual item in staggered list
+
+**Transitions:**
+- `transitions.fast` - Spring (stiffness: 400, damping: 30) - Quick interactions
+- `transitions.smooth` - Spring (stiffness: 300, damping: 25) - Standard transitions
+
+**Usage Example:**
+```tsx
+import { motion } from 'framer-motion';
+import { fadeIn, staggerContainer, staggerItem } from '@/lib/animations';
+
+<motion.div variants={fadeIn} initial="hidden" animate="visible">
+  Content
+</motion.div>
+
+<motion.ul variants={staggerContainer} initial="hidden" animate="visible">
+  {items.map(item => (
+    <motion.li key={item.id} variants={staggerItem}>
+      {item.name}
+    </motion.li>
+  ))}
+</motion.ul>
+```
+
+**Guidelines:**
+- Only use animations when they serve a functional purpose (feedback, hierarchy, transitions)
+- Avoid decorative animations that distract from the educational quiz game mission
+- All animations automatically respect `prefers-reduced-motion`
+- Keep animations subtle and fast (< 0.3s for most interactions)
 
 ---
 
@@ -165,7 +205,8 @@ src/
 │   ├── useKeyboardShortcuts.ts
 │   └── useTabVisibility.ts
 ├── lib/               # Utility libraries
-│   └── avatarGenerator.ts   # Pixel art avatar generation
+│   ├── avatarGenerator.ts   # Pixel art avatar generation
+│   └── animations.ts        # Framer Motion animation variants
 ├── pages/             # Route pages
 │   ├── profile/       # Profile pages (ProfileLayout, ProfileOverview, ProfileSettings, ProfileGameSettings)
 │   ├── Home.tsx, Quiz.tsx, Results.tsx, Leaderboard.tsx, Stats.tsx
@@ -285,9 +326,14 @@ interface GameMode {
 
 **Storage:** Firestore `/users/{userId}/gameSettings`
 **Settings:**
-- `groupedDigits` (default: false) - Groups digits with spaces/commas
-- `indexValueHints` (default: false) - Shows positional values under digits
-- `countdownStart` (default: true) - 3-2-1 countdown before game
+- `groupedDigits` (default: false) - Groups digits with spaces/commas for readability
+- `indexValueHints` (default: false) - Shows positional values under digits with proper spacing
+- `countdownStart` (default: true) - 3-2-1 countdown before game starts
+
+**Visual Formatting:**
+- Index hints use proper spacing with `result.join('').trim()` to avoid double spacing
+- Responsive text sizing for mobile devices (text-2xl sm:text-3xl md:text-4xl)
+- Horizontal scrolling for long numbers with `overflow-x-auto`
 
 **Multiplayer Host Controls:**
 - `allowVisualAids` - Enable/disable visual aids for all players
@@ -328,6 +374,13 @@ interface GameMode {
 **Status:** waiting → playing → finished
 **Host:** Auto-ready, can start game, transfer on disconnect
 **Invite Link:** `https://domain.com/multiplayer/join?code=ROOMCODE`
+
+**Game Selection Features:**
+- Filtering by base type (All, Binary, Octal, Hexadecimal, All Bases Mixed)
+- Filtering by difficulty (All, Easy, Medium, Hard, Expert)
+- Filtering by game type (All, Timed, Speed Run)
+- Collapsible details showing question types with value ranges and speed run info
+- Maximum player selection (2-10 players)
 
 ### Real-time Sync
 
@@ -379,20 +432,30 @@ button, card, form, input, label, select, scroll-area, separator, toast, dialog,
 
 ### Custom Components
 
-**Game:** ExitButton, KickedModal, Quiz-Prompt (keystroke tracking), Quiz-Stats (MM:SS timer), Base-Select, Range-Input, Duration-Select, Chosen-Settings-Table, Game-Mode-Select, Playground-Settings
+**Game:**
+- ExitButton - Exit button with confirmation dialog
+- KickedModal - Modal shown when kicked from room
+- Countdown - 3-2-1 countdown with semantic colors (destructive→warning→success), no background card
+- Quiz-Prompt - Question display with keystroke tracking
+- Quiz-Stats - Timer display (MM:SS format, supports unlimited mode with ∞ symbol)
+- Base-Select, Range-Input, Duration-Select - Form controls for game settings
+- Chosen-Settings-Table - Display table for selected question types
+- Game-Mode-Select - Game mode selection with filtering (base type, difficulty, game type) and collapsible details
+- Playground-Settings - Custom game configuration
+
 **UI:** Navigation-Bar, ProfileDropdown, Footer, ErrorBoundary, ProtectedRoute, ConnectionStatus
 **Lib:** avatarGenerator (8x8 pixel art avatars)
 
 ### Pages
 
-All pages redesigned with Slate theme, consistent patterns, functional-first design, and enhanced UX.
+All pages use Slate theme with consistent patterns, functional-first design, and optimized layouts.
 
-**Game:** Home, Quiz, Results, SingleplayerMode, MultiplayerGame
-**Multiplayer:** MultiplayerHome, CreateRoom, JoinRoom, RoomLobby, MultiplayerResults
-**Stats:** Stats, Leaderboard
+**Game:** Home, Quiz, Results, SingleplayerMode (with game filtering), MultiplayerGame
+**Multiplayer:** MultiplayerHome, CreateRoom (with filtering and collapsible details), JoinRoom, RoomLobby (viewport-optimized), MultiplayerResults
+**Stats:** Stats (separated speed run/timed modes), Leaderboard
 **Profile:** ProfileLayout, ProfileOverview, ProfileSettings, ProfileGameSettings
 **Content:** Usage, Tutorials, About, Privacy, Terms
-**Auth:** Login, Signup
+**Auth:** Login (viewport-optimized), Signup
 
 
 
@@ -875,68 +938,6 @@ const players = Object.values(room.players);
   - Reduced font sizes for labels and descriptions (default → text-sm/text-xs)
   - Reduced icon sizes (h-6 w-6 → h-5 w-5, h-5 w-5 → h-4 w-4, h-4 w-4 → h-3.5 w-3.5)
 - **Files Modified:** `src/pages/Login.tsx`
-
----
-
-## Recent UI/UX Improvements (2025)
-
-### 1. Index Value Visual Hints Alignment Fix
-**Issue:** Double spacing in index value visual hints due to joining array with spaces after already adding space separators in loop.
-**Solution:** Changed `result.join(' ')` to `result.join('').trim()` with proper spacing logic within the loop.
-**Files Modified:** `src/features/quiz/quiz-questions/formatters.ts`
-
-### 2. Countdown Timer Design Update
-**Changes:**
-- Wrapped countdown in Card component for consistency with design system
-- Applied semantic color variables: `text-destructive` (count 3), `text-warning` (count 2), `text-success` (count 1)
-- Added proper spacing (p-12, gap-6) and border radius
-- Removed raw color classes (text-red-500, text-yellow-500, text-green-500)
-**Files Modified:** `src/components/Countdown.tsx`
-
-### 3. Game Selection Tab Border Alignment Fix
-**Issue:** TabsList used `rounded-lg` while TabsTrigger used `rounded-md`, causing visual misalignment.
-**Solution:** Standardized both to `rounded-lg` and added `shadow-sm` to active state.
-**Files Modified:** `src/components/ui/tabs.tsx`
-
-### 4. Game Filtering in Multiplayer Room Creation
-**Features Added:**
-- Base type filter (All Bases, Binary Only, Octal Only, Hexadecimal Only, All Bases Mixed)
-- Difficulty filter (All Difficulties, Easy, Medium, Hard, Expert)
-- Game type filter (All Types, Timed Challenges, Speed Runs)
-- Filter UI card with 3-column grid layout
-- Empty state with "No modes match your filters" message and reset button
-- useMemo for efficient filtering of 48 official game modes
-**Files Modified:** `src/pages/CreateRoom.tsx`
-
-### 5. UI Element Reordering in Room Creation
-**Changes:**
-- Moved maximum player selection control above game selection section
-- Applied to both official and custom tabs
-- Improved user flow by setting player limit before selecting game mode
-**Files Modified:** `src/pages/CreateRoom.tsx`
-
-### 6. Room Lobby Layout Optimization
-**Changes:**
-- Reduced overall spacing for better viewport efficiency (space-y-6 → space-y-4, py-8 → py-4)
-- Reduced header sizes (text-4xl → text-3xl, text-lg → text-sm)
-- Reduced padding throughout (pb-6 → pb-4, pt-6 → pt-4, p-4 → p-3)
-- Reduced icon sizes (h-8 w-8 → h-6 w-6, h-6 w-6 → h-5 w-5, h-5 w-5 → h-4 w-4)
-- Reduced button heights (size="lg" → default size)
-- Reduced font sizes for labels and values (text-lg → text-base, text-sm → text-xs)
-- Removed sticky positioning from game summary card (sticky top-4 → normal flow)
-- Optimized for laptop screens (1366x768 and 1920x1080) without scrolling
-**Files Modified:** `src/pages/RoomLobby.tsx`
-
-### 7. Detailed Game Settings Dropdown
-**Features Added:**
-- Collapsible section in game mode cards showing:
-  - Question types with conversion directions and counts
-  - Speed run mode indicator with target questions
-- Added to both CreateRoom page (game selection cards) and RoomLobby page (game info section)
-- Uses shadcn Collapsible component with ChevronDown/ChevronUp icons
-- Compact text-xs styling for detailed information
-- Click event stopPropagation to prevent card selection when expanding details
-**Files Modified:** `src/pages/CreateRoom.tsx`, `src/pages/RoomLobby.tsx`
 
 ---
 

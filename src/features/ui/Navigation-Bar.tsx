@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import ProfileDropdown from "@/components/ProfileDropdown";
-import { Menu, Sparkles, Moon, Sun } from "lucide-react";
+import { Menu, Binary, Moon, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function NavigationBar() {
@@ -62,7 +63,7 @@ export default function NavigationBar() {
                 {/* Logo */}
                 <div className="flex items-center gap-2">
                     <NavLink to="/" className="flex items-center gap-2 font-bold text-lg hover:opacity-80 transition-opacity">
-                        <Sparkles className="h-5 w-5 text-primary" />
+                        <Binary className="h-5 w-5 text-primary" />
                         <span className="gradient-text hidden sm:inline">
                             Based Math Game
                         </span>
@@ -73,20 +74,32 @@ export default function NavigationBar() {
                 </div>
 
                 {/* Desktop Navigation */}
-                <div className="hidden lg:flex lg:items-center lg:gap-6">
+                <div className="hidden lg:flex lg:items-center lg:gap-1">
                     {navigation.map((item) => (
                         <NavLink
                             key={item.name}
                             to={item.href}
                             className={({ isActive }) =>
-                                `text-sm font-medium transition-colors hover:text-primary ${
+                                cn(
+                                    "relative px-3 py-2 text-sm font-medium transition-colors rounded-md",
                                     isActive
                                         ? "text-primary"
-                                        : "text-muted-foreground"
-                                }`
+                                        : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                                )
                             }
                         >
-                            {item.name}
+                            {({ isActive }) => (
+                                <>
+                                    {item.name}
+                                    {isActive && (
+                                        <motion.div
+                                            layoutId="activeNav"
+                                            className="absolute inset-x-1 -bottom-px h-0.5 bg-primary"
+                                            transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                                        />
+                                    )}
+                                </>
+                            )}
                         </NavLink>
                     ))}
                 </div>
@@ -100,15 +113,33 @@ export default function NavigationBar() {
                         onClick={toggleTheme}
                         aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
                     >
-                        {theme === 'light' ? (
-                            <Moon className="h-5 w-5" />
-                        ) : (
-                            <Sun className="h-5 w-5" />
-                        )}
+                        <AnimatePresence mode="wait">
+                            {theme === 'light' ? (
+                                <motion.div
+                                    key="moon"
+                                    initial={{ y: -10, opacity: 0 }}
+                                    animate={{ y: 0, opacity: 1 }}
+                                    exit={{ y: 10, opacity: 0 }}
+                                    transition={{ duration: 0.15 }}
+                                >
+                                    <Moon className="h-5 w-5" />
+                                </motion.div>
+                            ) : (
+                                <motion.div
+                                    key="sun"
+                                    initial={{ y: -10, opacity: 0 }}
+                                    animate={{ y: 0, opacity: 1 }}
+                                    exit={{ y: 10, opacity: 0 }}
+                                    transition={{ duration: 0.15 }}
+                                >
+                                    <Sun className="h-5 w-5" />
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </Button>
 
                     {isGuest ? (
-                        <Button asChild size="sm" className="shadow-sm">
+                        <Button asChild size="sm">
                             <NavLink to="/signup">Sign Up</NavLink>
                         </Button>
                     ) : (
@@ -127,7 +158,8 @@ export default function NavigationBar() {
                         </SheetTrigger>
                         <SheetContent side="right" className="w-[300px] sm:w-[400px]">
                             <SheetHeader>
-                                <SheetTitle className="text-left">
+                                <SheetTitle className="text-left flex items-center gap-2">
+                                    <Binary className="h-5 w-5 text-primary" />
                                     <span className="gradient-text">Based Math Game</span>
                                 </SheetTitle>
                             </SheetHeader>
@@ -139,11 +171,13 @@ export default function NavigationBar() {
                                             key={item.name}
                                             to={item.href}
                                             className={({ isActive }) =>
-                                                `flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-accent ${
+                                                cn(
+                                                    "flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                                                    "hover:bg-accent",
                                                     isActive
                                                         ? "bg-accent text-accent-foreground"
                                                         : "text-muted-foreground hover:text-foreground"
-                                                }`
+                                                )
                                             }
                                             onClick={() => setMobileMenuOpen(false)}
                                         >

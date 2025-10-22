@@ -17,14 +17,17 @@ interface ExitButtonProps {
   message?: string;
 }
 
-export default function ExitButton({ onExit, message = 'Exit game and return to menu? Your progress will not be saved.' }: ExitButtonProps) {
+export default function ExitButton({
+  onExit,
+  message = 'Exit game and return to menu? Your progress will not be saved.'
+}: ExitButtonProps) {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
         <Button
           variant="ghost"
           size="icon"
-          className="fixed top-4 left-4 z-50 bg-background/80 backdrop-blur-sm hover:bg-destructive/10 hover:text-destructive border border-border shadow-lg"
+          className="fixed top-4 left-4 z-50 bg-background/80 backdrop-blur-sm border border-border shadow-sm hover:bg-destructive/10 hover:text-destructive transition-colors"
           aria-label="Exit game"
         >
           <X className="h-5 w-5" />
@@ -39,7 +42,10 @@ export default function ExitButton({ onExit, message = 'Exit game and return to 
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={onExit} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+          <AlertDialogAction
+            onClick={onExit}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
             Exit
           </AlertDialogAction>
         </AlertDialogFooter>

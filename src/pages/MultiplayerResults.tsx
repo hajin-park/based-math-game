@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { useRoom, Room } from '@/hooks/useRoom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
+import { isSpeedrunMode } from '@/types/gameMode';
 import { Trophy, Crown, Medal, Home, RotateCcw, Loader2 } from 'lucide-react';
 
 export default function MultiplayerResults() {
@@ -18,6 +19,12 @@ export default function MultiplayerResults() {
   const [room, setRoom] = useState<Room | null>(null);
   const hasNavigatedRef = useRef(false);
   const hasIncrementedWinsRef = useRef(false);
+
+  // Determine if this is a speedrun mode
+  const isSpeedrun = useMemo(() =>
+    room ? isSpeedrunMode(room.gameMode) : false,
+    [room]
+  );
 
   useEffect(() => {
     if (!roomId) return;
@@ -48,7 +55,12 @@ export default function MultiplayerResults() {
       // Increment winner's wins (only once, and only by the winner themselves)
       // This prevents duplicate increments when multiple clients are viewing the results
       if (updatedRoom.status === 'finished' && !hasIncrementedWinsRef.current && user) {
-        const sortedPlayers = Object.values(updatedRoom.players).sort((a, b) => b.score - a.score);
+        // For speedrun modes, lowest score wins (fastest time)
+        // For timed modes, highest score wins (most correct answers)
+        const isSpeedrunMode = updatedRoom.gameMode.targetQuestions !== undefined;
+        const sortedPlayers = Object.values(updatedRoom.players).sort((a, b) =>
+          isSpeedrunMode ? a.score - b.score : b.score - a.score
+        );
         const winner = sortedPlayers[0];
 
         // Only the winner increments their own wins
@@ -90,7 +102,11 @@ export default function MultiplayerResults() {
     );
   }
 
-  const sortedPlayers = Object.values(room.players).sort((a, b) => b.score - a.score);
+  // For speedrun modes, lowest score wins (fastest time)
+  // For timed modes, highest score wins (most correct answers)
+  const sortedPlayers = Object.values(room.players).sort((a, b) =>
+    isSpeedrun ? a.score - b.score : b.score - a.score
+  );
   const winner = sortedPlayers[0];
   const isHost = user?.uid === room.hostUid;
 
@@ -127,10 +143,12 @@ export default function MultiplayerResults() {
               Winner
             </CardDescription>
             <div className="mt-4">
-              <p className="text-6xl font-bold gradient-text animate-pulse-glow">
-                {winner.score}
+              <p className="text-6xl font-bold gradient-text">
+                {isSpeedrun ? `${winner.score}s` : winner.score}
               </p>
-              <p className="text-sm text-muted-foreground mt-2">points</p>
+              <p className="text-sm text-muted-foreground mt-2">
+                {isSpeedrun ? 'completion time' : 'points'}
+              </p>
             </div>
           </CardHeader>
 
@@ -184,8 +202,12 @@ export default function MultiplayerResults() {
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="font-bold text-3xl">{player.score}</p>
-                          <p className="text-xs text-muted-foreground">points</p>
+                          <p className="font-bold text-3xl">
+                            {isSpeedrun ? `${player.score}s` : player.score}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {isSpeedrun ? 'time' : 'points'}
+                          </p>
                         </div>
                       </div>
                     </CardContent>

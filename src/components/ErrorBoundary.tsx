@@ -51,6 +51,10 @@ class ErrorBoundary extends Component<Props, State> {
     window.location.href = '/';
   };
 
+  handleGoHome = () => {
+    window.location.href = '/';
+  };
+
   render() {
     if (this.state.hasError) {
       // Custom fallback UI if provided
@@ -93,11 +97,11 @@ class ErrorBoundary extends Component<Props, State> {
               )}
             </CardContent>
             <CardFooter className="flex gap-2">
-              <Button onClick={this.handleReset} variant="outline">
-                Try Again
-              </Button>
-              <Button onClick={this.handleReload}>
+              <Button onClick={this.handleGoHome} className="flex-1">
                 Return to Home
+              </Button>
+              <Button onClick={this.handleReset} variant="outline" className="flex-1">
+                Try Again
               </Button>
             </CardFooter>
           </Card>

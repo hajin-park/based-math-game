@@ -93,9 +93,9 @@ export default function Stats() {
               <label className="text-sm font-semibold">Time Period</label>
             </div>
             <Tabs value={timeRange} onValueChange={(value) => setTimeRange(value as TimeRange)}>
-              <TabsList className="grid w-full max-w-md grid-cols-4 h-11">
+              <TabsList className="grid w-full max-w-md grid-cols-4 h-auto p-1">
                 {timeRanges.map((range) => (
-                  <TabsTrigger key={range.value} value={range.value} className="text-sm">
+                  <TabsTrigger key={range.value} value={range.value} className="text-sm py-3">
                     {range.label}
                   </TabsTrigger>
                 ))}
