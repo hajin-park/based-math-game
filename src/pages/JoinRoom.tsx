@@ -23,17 +23,19 @@ export default function JoinRoom() {
 
   const handleJoinRoom = async () => {
     if (!roomId.trim()) {
-      setError('Please enter a room ID');
+      setError('Please enter a room code');
       return;
     }
 
     try {
       setError('');
-      await joinRoom(roomId.trim());
-      navigate(`/multiplayer/lobby/${roomId.trim()}`);
+      // Convert to uppercase for case-insensitive matching
+      const normalizedRoomId = roomId.trim().toUpperCase();
+      await joinRoom(normalizedRoomId);
+      navigate(`/multiplayer/lobby/${normalizedRoomId}`);
     } catch (error: unknown) {
       console.error('Failed to join room:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to join room. Please check the room ID and try again.';
+      const errorMessage = error instanceof Error ? error.message : 'Failed to join room. Please check the room code and try again.';
       setError(errorMessage);
     }
   };
@@ -43,17 +45,19 @@ export default function JoinRoom() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Join Multiplayer Room</CardTitle>
-          <CardDescription>Enter the room ID to join a game</CardDescription>
+          <CardDescription>Enter the 8-character room code to join a game</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="roomId">Room ID</Label>
+            <Label htmlFor="roomId">Room Code</Label>
             <Input
               id="roomId"
-              placeholder="Enter room ID"
+              placeholder="Enter 8-character code"
               value={roomId}
-              onChange={(e) => setRoomId(e.target.value)}
+              onChange={(e) => setRoomId(e.target.value.toUpperCase())}
               onKeyDown={(e) => e.key === 'Enter' && handleJoinRoom()}
+              maxLength={8}
+              className="uppercase font-mono tracking-wider"
             />
             {error && (
               <p className="text-sm text-destructive">{error}</p>

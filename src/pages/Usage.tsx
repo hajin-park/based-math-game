@@ -139,15 +139,19 @@ export default function Usage() {
                 </div>
                 <div className="flex items-start gap-2">
                   <span className="text-primary font-bold">2.</span>
-                  <span>Select a game mode (official or custom)</span>
+                  <span>Select a game mode (official or custom Playground)</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <span className="text-primary font-bold">3.</span>
-                  <span>Share the room code with friends</span>
+                  <span>Share the 8-character room code or invite link with friends</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <span className="text-primary font-bold">4.</span>
-                  <span>Wait for players to join, then start the game</span>
+                  <span>Wait for players to join and mark themselves ready</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-primary font-bold">5.</span>
+                  <span>Start the game when all players are ready</span>
                 </div>
               </div>
             </div>
@@ -161,11 +165,11 @@ export default function Usage() {
                 </div>
                 <div className="flex items-start gap-2">
                   <span className="text-primary font-bold">2.</span>
-                  <span>Enter the room code shared by the host</span>
+                  <span>Enter the 8-character room code (case-insensitive)</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <span className="text-primary font-bold">3.</span>
-                  <span>Mark yourself as ready</span>
+                  <span>Mark yourself as ready when you're prepared to play</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <span className="text-primary font-bold">4.</span>
@@ -175,10 +179,10 @@ export default function Usage() {
             </div>
 
             <div className="bg-purple-50 dark:bg-purple-950 p-4 rounded-lg border border-purple-200 dark:border-purple-800">
-              <p className="text-sm font-semibold mb-2">Scoring:</p>
+              <p className="text-sm font-semibold mb-2">Real-Time Competition:</p>
               <p className="text-sm">
-                All players answer the same questions simultaneously. Fastest correct answers earn the most points.
-                Results are shown in real-time on the leaderboard!
+                All players see the same questions in the same order. Your score updates in real-time on the live leaderboard.
+                The player with the most correct answers when time runs out wins!
               </p>
             </div>
           </CardContent>
@@ -201,7 +205,7 @@ export default function Usage() {
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-primary font-bold">•</span>
-                    <span>Press <kbd className="px-2 py-1 bg-muted rounded text-xs font-mono">Enter</kbd> to submit</span>
+                    <span>Answers are auto-validated as you type (no submit button needed)</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-primary font-bold">•</span>
@@ -209,7 +213,11 @@ export default function Usage() {
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-primary font-bold">•</span>
-                    <span>Wrong answers clear the input for retry</span>
+                    <span>Wrong answers let you keep trying with no penalty</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary font-bold">•</span>
+                    <span>Click the <kbd className="px-2 py-1 bg-muted rounded text-xs font-mono">✕</kbd> button in the top-left to exit</span>
                   </li>
                 </ul>
               </div>
@@ -218,20 +226,20 @@ export default function Usage() {
                 <h3 className="font-semibold mb-2">Scoring System</h3>
                 <ul className="space-y-2 text-sm">
                   <li className="flex items-start gap-2">
-                    <span className="text-green-600 dark:text-green-400 font-bold">+</span>
-                    <span><strong>Correct answer:</strong> +1 point</span>
+                    <span className="text-green-600 dark:text-green-400 font-bold">✓</span>
+                    <span><strong>Correct answer:</strong> +1 point (auto-validated on keystroke)</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-orange-600 dark:text-orange-400 font-bold">×</span>
-                    <span><strong>Combo bonus:</strong> Consecutive correct answers increase your combo multiplier</span>
+                    <span className="text-red-600 dark:text-red-400 font-bold">✗</span>
+                    <span><strong>Wrong answer:</strong> No penalty, just try again</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-red-600 dark:text-red-400 font-bold">−</span>
-                    <span><strong>Wrong answer:</strong> Breaks combo, no points</span>
+                    <span className="text-blue-600 dark:text-blue-400 font-bold">⏱</span>
+                    <span><strong>Pure speed:</strong> Score as many correct answers as possible before time runs out</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-blue-600 dark:text-blue-400 font-bold">⏲</span>
-                    <span><strong>Time bonus:</strong> Faster answers in multiplayer earn more points</span>
+                    <span className="text-purple-600 dark:text-purple-400 font-bold">🏆</span>
+                    <span><strong>No partial credit:</strong> Only complete, correct answers count</span>
                   </li>
                 </ul>
               </div>
@@ -241,8 +249,8 @@ export default function Usage() {
               <h3 className="font-semibold mb-2 text-sm">On-Screen Information</h3>
               <div className="grid grid-cols-2 gap-4 text-xs">
                 <div className="text-center">
-                  <div className="font-mono text-2xl font-bold">45s</div>
-                  <div className="text-muted-foreground">Time Remaining</div>
+                  <div className="font-mono text-2xl font-bold">00:45</div>
+                  <div className="text-muted-foreground">Time Remaining (MM:SS)</div>
                 </div>
                 <div className="text-center">
                   <div className="font-mono text-2xl font-bold text-green-600 dark:text-green-400">12</div>

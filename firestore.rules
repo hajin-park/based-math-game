@@ -31,7 +31,7 @@ service cloud.firestore {
     match /userStats/{userId} {
       // Users can read their own stats
       allow read: if isOwner(userId);
-      
+
       // Users can create/update their own stats (authenticated users only)
       allow create, update: if isOwner(userId) && isNotGuest()
         && request.resource.data.keys().hasAll(['gamesPlayed', 'totalScore', 'highScore', 'averageScore', 'lastPlayed'])
@@ -39,8 +39,12 @@ service cloud.firestore {
         && request.resource.data.totalScore is number
         && request.resource.data.highScore is number
         && request.resource.data.averageScore is number
-        && request.resource.data.lastPlayed is number;
-      
+        && request.resource.data.lastPlayed is number
+        // Optional accuracy fields
+        && (!request.resource.data.keys().hasAny(['totalKeystrokes']) || request.resource.data.totalKeystrokes is number)
+        && (!request.resource.data.keys().hasAny(['totalBackspaces']) || request.resource.data.totalBackspaces is number)
+        && (!request.resource.data.keys().hasAny(['averageAccuracy']) || request.resource.data.averageAccuracy is number);
+
       // Users can delete their own stats
       allow delete: if isOwner(userId);
     }
@@ -49,15 +53,19 @@ service cloud.firestore {
     match /userStats/{userId}/gameHistory/{gameId} {
       // Users can read their own game history
       allow read: if isOwner(userId);
-      
+
       // Users can create game history entries (authenticated users only)
       allow create: if isOwner(userId) && isNotGuest()
         && request.resource.data.keys().hasAll(['score', 'duration', 'gameModeId', 'timestamp'])
         && request.resource.data.score is number
         && request.resource.data.duration is number
         && request.resource.data.gameModeId is string
-        && request.resource.data.timestamp is number;
-      
+        && request.resource.data.timestamp is number
+        // Optional accuracy fields
+        && (!request.resource.data.keys().hasAny(['totalKeystrokes']) || request.resource.data.totalKeystrokes is number)
+        && (!request.resource.data.keys().hasAny(['backspaceCount']) || request.resource.data.backspaceCount is number)
+        && (!request.resource.data.keys().hasAny(['accuracy']) || request.resource.data.accuracy is number);
+
       // Users can delete their own game history
       allow delete: if isOwner(userId);
     }

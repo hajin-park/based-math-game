@@ -8,13 +8,15 @@ import { useGameSettings } from '@/hooks/useGameSettings';
 import Countdown from '@/components/Countdown';
 import QuizPrompt from '@/features/quiz/quiz-questions/Quiz-Prompt.component';
 import QuizStats from '@/features/quiz/quiz-questions/Quiz-Stats.component';
+import ExitButton from '@/components/ExitButton';
+import KickedModal from '@/components/KickedModal';
 
 export default function MultiplayerGame() {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  const { subscribeToRoom, updatePlayerScore, finishGame } = useRoom();
+  const { subscribeToRoom, updatePlayerScore, finishGame, leaveRoom } = useRoom();
   const { settings: gameSettings } = useGameSettings();
 
   // Handle timer expiration
@@ -27,6 +29,7 @@ export default function MultiplayerGame() {
   const [showCountdown, setShowCountdown] = useState(false);
   const [score, setScore] = useState(0);
   const [randomSetting, setRandomSetting] = useState<[string, string, number, number] | null>(null);
+  const [showKickedModal, setShowKickedModal] = useState(false);
   const scoreRef = useRef(0);
   const questionsRef = useRef<[string, string, number, number][]>([]);
   const hasNavigatedRef = useRef(false);
@@ -53,6 +56,17 @@ export default function MultiplayerGame() {
             variant: 'destructive',
           });
         }, 100);
+        return;
+      }
+
+      // Check if current user was kicked
+      if (user && updatedRoom.players[user.uid]?.kicked) {
+        // Prevent multiple navigations
+        if (hasNavigatedRef.current) return;
+        hasNavigatedRef.current = true;
+
+        // Show modal first
+        setShowKickedModal(true);
         return;
       }
 
@@ -108,7 +122,7 @@ export default function MultiplayerGame() {
     });
 
     return () => unsubscribe();
-  }, [roomId, subscribeToRoom, navigate, toast]);
+  }, [roomId, subscribeToRoom, navigate, toast, user]);
 
   // Initialize question based on current score - deterministic for all players
   useEffect(() => {
@@ -176,8 +190,25 @@ export default function MultiplayerGame() {
     );
   }
 
+  const handleExit = async () => {
+    if (roomId) {
+      await leaveRoom(roomId);
+    }
+    navigate('/multiplayer');
+  };
+
+  const handleKickedModalClose = () => {
+    setShowKickedModal(false);
+    navigate('/multiplayer', { replace: true });
+  };
+
   return (
     <>
+      <KickedModal open={showKickedModal} onClose={handleKickedModalClose} />
+      <ExitButton
+        onExit={handleExit}
+        message="Exit game and return to multiplayer menu? You will leave the room."
+      />
       {showCountdown && (
         <Countdown
           onComplete={() => setShowCountdown(false)}

@@ -134,7 +134,7 @@ export default function Stats() {
             ) : (
               <div className="space-y-6 animate-in fade-in duration-300">
               {/* Stats cards */}
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
                 <Card>
                   <CardHeader className="pb-2">
                     <CardDescription>Games Played</CardDescription>
@@ -168,6 +168,17 @@ export default function Stats() {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">{rangeStats.highScore}</div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardDescription>Accuracy</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {rangeStats.averageAccuracy !== undefined ? `${rangeStats.averageAccuracy.toFixed(1)}%` : 'N/A'}
+                    </div>
                   </CardContent>
                 </Card>
               </div>

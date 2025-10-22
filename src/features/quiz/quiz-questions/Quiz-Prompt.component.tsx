@@ -30,6 +30,8 @@ interface QuizPromptProps {
     seed?: number;
     gameSettings?: GameSettings;
     allowVisualAids?: boolean; // For multiplayer: host can disable visual aids
+    onKeystroke?: () => void; // Callback for tracking keystrokes
+    onBackspace?: () => void; // Callback for tracking backspaces
 }
 
 export default function QuizPrompt({
@@ -38,11 +40,14 @@ export default function QuizPrompt({
     setting,
     seed,
     gameSettings,
-    allowVisualAids = true
+    allowVisualAids = true,
+    onKeystroke,
+    onBackspace
 }: QuizPromptProps) {
     const [question, setQuestion] = useState("");
     const [answer, setAnswer] = useState("");
     const [showSuccess, setShowSuccess] = useState(false);
+    const [previousAnswerLength, setPreviousAnswerLength] = useState(0);
     const inputRef = useRef<HTMLInputElement>(null);
 
     // Determine if visual aids should be shown
@@ -59,6 +64,23 @@ export default function QuizPrompt({
     function handleOnChange(event: React.ChangeEvent<HTMLInputElement>) {
         const input = event.currentTarget.value.toLowerCase();
         const targetBase = setting[1].toLowerCase();
+
+        // Track keystrokes and backspaces
+        const currentLength = input.length;
+        if (currentLength > previousAnswerLength) {
+            // User added characters (keystroke)
+            const addedChars = currentLength - previousAnswerLength;
+            for (let i = 0; i < addedChars; i++) {
+                onKeystroke?.();
+            }
+        } else if (currentLength < previousAnswerLength) {
+            // User removed characters (backspace)
+            const removedChars = previousAnswerLength - currentLength;
+            for (let i = 0; i < removedChars; i++) {
+                onBackspace?.();
+            }
+        }
+        setPreviousAnswerLength(currentLength);
 
         // Get max length for target base
         const maxLength = MAX_INPUT_LENGTHS[targetBase] || 20;
@@ -83,6 +105,7 @@ export default function QuizPrompt({
             )
         ) {
             setAnswer("");
+            setPreviousAnswerLength(0); // Reset for next question
             setScore((e: number) => e + 1);
 
             // Show success animation

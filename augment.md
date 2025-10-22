@@ -8,6 +8,34 @@ A React-based multiplayer quiz game for practicing base conversion (Binary, Octa
 
 ---
 
+## Recent Features
+
+### User Experience Improvements
+- **Exit Button**: Visible exit button in top-left corner for both single-player and multiplayer games with confirmation dialog
+- **Kicked User Modal**: Proper modal dialog when user is kicked from a room (replaces toast notifications)
+- **Pixel Art Avatars**: Automatic deterministic pixel art avatar generation for users without profile pictures
+- **Leaderboard Rank Display**: Shows user's current rank and highlights their position on leaderboards
+
+### Multiplayer Enhancements
+- **8-Character Room Codes**: Updated from 6-digit to 8-character alphanumeric codes (A-Z, 0-9) with collision detection
+- **Playground Mode in Rooms**: Added "Custom Playground" option in room game settings for fully customizable quiz configurations
+- **Improved Disconnection Handling**:
+  - Guest users: Completely removed from rooms on disconnect
+  - Authenticated users: Marked as disconnected with reconnection capability
+
+### Statistics & Analytics
+- **Accuracy Tracking**: New metric tracking keystroke accuracy
+  - Formula: `(total keystrokes - backspaces) / total keystrokes * 100`
+  - Displayed in results page and stats dashboard
+  - Stored in user stats and game history
+
+### Technical Improvements
+- **PWA Manifest**: Fixed manifest icon references with generated SVG icon
+- **Security Rules**: Updated Firestore rules to support new accuracy fields
+- **Database Cleanup**: Polished cleanup logic for empty rooms and ghost players
+
+---
+
 ## Tech Stack
 
 **Core:** React 19.2.0 + TypeScript 5.9.3 + Vite 7.1.11 + Tailwind CSS 3.4.3
@@ -31,7 +59,9 @@ src/
 │   ├── ProtectedRoute.tsx
 │   ├── ConnectionStatus.tsx
 │   ├── ProfileDropdown.tsx
-│   └── Countdown.tsx
+│   ├── Countdown.tsx
+│   ├── ExitButton.tsx       # Exit button with confirmation dialog for games
+│   └── KickedModal.tsx      # Modal shown when user is kicked from room
 ├── contexts/           # React contexts
 │   ├── AuthContext.tsx      # Authentication & guest user system
 │   ├── GameContexts.tsx     # Quiz & Result contexts
@@ -48,6 +78,8 @@ src/
 │   ├── useGameSettings.ts
 │   ├── useKeyboardShortcuts.ts
 │   └── useTabVisibility.ts
+├── lib/               # Utility libraries
+│   └── avatarGenerator.ts   # Pixel art avatar generation
 ├── pages/             # Route pages
 │   ├── profile/       # Profile pages (ProfileLayout, ProfileOverview, ProfileSettings, ProfileGameSettings)
 │   ├── Home.tsx, Quiz.tsx, Results.tsx, Leaderboard.tsx, Stats.tsx
@@ -105,6 +137,18 @@ src/
   gameModeId?: string,           // optional game mode ID
   trackStats?: boolean,          // whether to track stats (default: true)
   isMultiplayer?: boolean        // whether this is a multiplayer game
+}
+```
+
+**QuizResults:**
+```typescript
+{
+  score: number,
+  duration?: number,
+  gameModeId?: string,
+  totalKeystrokes?: number,      // total keystrokes entered
+  backspaceCount?: number,       // number of backspaces
+  accuracy?: number              // (totalKeystrokes - backspaceCount) / totalKeystrokes * 100
 }
 ```
 
@@ -183,13 +227,19 @@ if (import.meta.env.DEV && import.meta.env.VITE_USE_FIREBASE_EMULATORS === 'true
   ├── totalScore: number
   ├── highScore: number
   ├── averageScore: number
-  └── lastPlayed: timestamp
+  ├── lastPlayed: timestamp
+  ├── totalKeystrokes: number (optional)
+  ├── totalBackspaces: number (optional)
+  └── averageAccuracy: number (optional, percentage)
 
 /userStats/{userId}/gameHistory/{gameId}  # Authenticated users only
   ├── score: number
   ├── duration: number
   ├── gameModeId: string
-  └── timestamp: timestamp
+  ├── timestamp: timestamp
+  ├── totalKeystrokes: number (optional)
+  ├── backspaceCount: number (optional)
+  └── accuracy: number (optional, percentage)
 
 /leaderboard-{gameModeId}/{userId}  # Authenticated users only
   ├── displayName: string
@@ -602,6 +652,12 @@ interface RoomPlayer {
 6. Host clicks "Return to Lobby" → resets room to "waiting", all players return to lobby
 7. Repeat from step 3 for another game (or players leave room)
 
+**Room Code Format:**
+- **8-character alphanumeric codes** (A-Z, 0-9)
+- Case-insensitive (normalized to uppercase)
+- Collision detection with retry logic (max 10 attempts)
+- Example: `ABC12XYZ`, `GAME2024`
+
 **Invite Link Feature:**
 - **Copy Room Code:** Copies just the room ID to clipboard with toast notification
 - **Copy Invite Link:** Copies full URL with pre-filled room code
@@ -815,6 +871,33 @@ const DEFAULT_GAME_SETTINGS: GameSettings = {
 button, card, form, input, label, select, scroll-area, separator, toast, dialog, tabs, badge, table, drawer, dropdown-menu, navigation-menu, avatar, skeleton, switch, alert, alert-dialog, popover, sheet
 
 ### Custom Components
+
+**Game Controls:**
+- `ExitButton.tsx` - Exit button with confirmation dialog
+  - Fixed position in top-left corner
+  - AlertDialog confirmation before exiting
+  - Customizable exit message
+  - Used in both Quiz and MultiplayerGame pages
+  - Prevents accidental exits with "Your progress will not be saved" warning
+
+- `KickedModal.tsx` - Modal for kicked users
+  - AlertDialog-based modal
+  - Displays when user is kicked from a room
+  - Single "OK" button to acknowledge and return to multiplayer menu
+  - Replaces toast notifications for better UX
+
+**User Interface:**
+- `avatarGenerator.ts` - Pixel art avatar generation (`src/lib/`)
+  - Generates deterministic 8x8 pixel art avatars based on user UID
+  - Uses seeded random number generator for consistency
+  - 5 color palettes with background and foreground colors
+  - Symmetric design (mirrored left-right)
+  - Returns SVG as base64 data URL
+  - Used as fallback when user has no photoURL
+  - Functions:
+    - `generatePixelAvatar(uid, size)` - Generate pixel art SVG
+    - `getUserAvatarUrl(user, uid)` - Get photoURL or generate avatar
+
 **Quiz:**
 - `Quiz-Prompt.component.tsx` - Enhanced question display with improved layout
   - Large, centered question display with clear base labels
@@ -824,6 +907,10 @@ button, card, form, input, label, select, scroll-area, separator, toast, dialog,
   - Arrow indicator between from/to bases
   - Helper text with keyboard shortcuts
   - Auto-focus on input for better UX
+  - **Keystroke tracking**: Optional callbacks for tracking keystrokes and backspaces
+    - `onKeystroke` callback fired when characters are added
+    - `onBackspace` callback fired when characters are removed
+    - Used for accuracy calculation in single-player mode
 
 - `Quiz-Stats.component.tsx` - Enhanced timer and score display
   - MM:SS formatted countdown timer (not raw seconds)

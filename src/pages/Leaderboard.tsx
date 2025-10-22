@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react';
-import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
+import { useState, useEffect, useCallback } from 'react';
+import { collection, getDocs, query, orderBy, limit, doc, getDoc } from 'firebase/firestore';
 import { firestore } from '@/firebase/config';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { OFFICIAL_GAME_MODES } from '@/types/gameMode';
+import { useAuth } from '@/contexts/AuthContext';
+import { Badge } from '@/components/ui/badge';
 
 interface LeaderboardEntry {
   uid: string;
@@ -11,16 +13,69 @@ interface LeaderboardEntry {
   timestamp: number;
 }
 
+interface UserRank {
+  rank: number;
+  score: number;
+  totalPlayers: number;
+}
+
 export default function Leaderboard() {
+  const { user, isGuest } = useAuth();
   const [selectedMode, setSelectedMode] = useState(OFFICIAL_GAME_MODES[0].id);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [userRank, setUserRank] = useState<UserRank | null>(null);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    fetchLeaderboard(selectedMode);
-  }, [selectedMode]);
+  const fetchUserRank = useCallback(async (gameModeId: string) => {
+    if (!user || isGuest) return;
 
-  const fetchLeaderboard = async (gameModeId: string) => {
+    try {
+      // Get user's score
+      const userDocRef = doc(firestore, `leaderboard-${gameModeId}`, user.uid);
+      const userDoc = await getDoc(userDocRef);
+
+      if (!userDoc.exists()) {
+        setUserRank(null);
+        return;
+      }
+
+      const userScore = userDoc.data().score as number;
+
+      // Count how many users have a higher score
+      const leaderboardRef = collection(firestore, `leaderboard-${gameModeId}`);
+      const higherScoresQuery = query(
+        leaderboardRef,
+        orderBy('score', 'desc')
+      );
+
+      const snapshot = await getDocs(higherScoresQuery);
+
+      // Filter out guest users and count rank
+      const validEntries = snapshot.docs.filter((doc) => {
+        const data = doc.data();
+        const isGuestUid = doc.id.startsWith('guest_');
+        const isGuestMarked = data.isGuest === true;
+        return !isGuestUid && !isGuestMarked;
+      });
+
+      const rank = validEntries.findIndex((doc) => doc.id === user.uid) + 1;
+
+      if (rank > 0) {
+        setUserRank({
+          rank,
+          score: userScore,
+          totalPlayers: validEntries.length,
+        });
+      } else {
+        setUserRank(null);
+      }
+    } catch (error) {
+      console.error('Error fetching user rank:', error);
+      setUserRank(null);
+    }
+  }, [user, isGuest]);
+
+  const fetchLeaderboard = useCallback(async (gameModeId: string) => {
     setLoading(true);
     try {
       // Use flat collection structure: leaderboard-{gameModeId}
@@ -59,13 +114,25 @@ export default function Leaderboard() {
       } else {
         setLeaderboard([]);
       }
+
+      // Fetch user's rank if authenticated and not a guest
+      if (user && !isGuest) {
+        await fetchUserRank(gameModeId);
+      } else {
+        setUserRank(null);
+      }
     } catch (error) {
       console.error('Error fetching leaderboard:', error);
       setLeaderboard([]);
+      setUserRank(null);
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, isGuest, fetchUserRank]);
+
+  useEffect(() => {
+    fetchLeaderboard(selectedMode);
+  }, [selectedMode, fetchLeaderboard]);
 
   const selectedModeData = OFFICIAL_GAME_MODES.find((mode) => mode.id === selectedMode);
 
@@ -95,6 +162,27 @@ export default function Leaderboard() {
               ))}
             </div>
 
+            {/* User's Rank Card (if not in top 50) */}
+            {!isGuest && userRank && userRank.rank > 50 && (
+              <Card className="bg-primary/5 border-primary/20">
+                <CardContent className="pt-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Your Rank</p>
+                      <p className="text-2xl font-bold">#{userRank.rank}</p>
+                      <p className="text-xs text-muted-foreground">
+                        out of {userRank.totalPlayers} players
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm text-muted-foreground">Your Score</p>
+                      <p className="text-2xl font-bold">{userRank.score}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Leaderboard table */}
             {loading ? (
               <div className="flex justify-center py-8">
@@ -112,20 +200,35 @@ export default function Leaderboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {leaderboard.map((entry, index) => (
-                      <tr key={entry.uid} className="border-b last:border-0 hover:bg-muted/50">
-                        <td className="p-4">
-                          <span className={`font-bold ${index < 3 ? 'text-yellow-600' : ''}`}>
-                            #{index + 1}
-                          </span>
-                        </td>
-                        <td className="p-4">{entry.displayName}</td>
-                        <td className="p-4 text-right font-semibold">{entry.score}</td>
-                        <td className="p-4 text-right text-sm text-muted-foreground">
-                          {new Date(entry.timestamp).toLocaleDateString()}
-                        </td>
-                      </tr>
-                    ))}
+                    {leaderboard.map((entry, index) => {
+                      const isCurrentUser = user && entry.uid === user.uid;
+                      return (
+                        <tr
+                          key={entry.uid}
+                          className={`border-b last:border-0 ${
+                            isCurrentUser
+                              ? 'bg-primary/10 hover:bg-primary/15 border-primary/20'
+                              : 'hover:bg-muted/50'
+                          }`}
+                        >
+                          <td className="p-4">
+                            <div className="flex items-center gap-2">
+                              <span className={`font-bold ${index < 3 ? 'text-yellow-600' : ''}`}>
+                                #{index + 1}
+                              </span>
+                              {isCurrentUser && (
+                                <Badge variant="outline" className="text-xs">You</Badge>
+                              )}
+                            </div>
+                          </td>
+                          <td className="p-4 font-medium">{entry.displayName}</td>
+                          <td className="p-4 text-right font-semibold">{entry.score}</td>
+                          <td className="p-4 text-right text-sm text-muted-foreground">
+                            {new Date(entry.timestamp).toLocaleDateString()}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

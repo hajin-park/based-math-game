@@ -3,6 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { Mail, Calendar, Hash } from 'lucide-react';
+import { getUserAvatarUrl } from '@/lib/avatarGenerator';
 
 export default function ProfileOverview() {
   const { user } = useAuth();
@@ -18,10 +19,11 @@ export default function ProfileOverview() {
   };
 
   const getUserPhotoURL = () => {
-    if (user && 'photoURL' in user) {
-      return user.photoURL || undefined;
-    }
-    return undefined;
+    if (!user) return undefined;
+
+    // Get photoURL or generate pixel art avatar
+    const photoURL = user && 'photoURL' in user ? user.photoURL : null;
+    return getUserAvatarUrl({ photoURL }, user.uid);
   };
 
   const formatDate = (timestamp: number | undefined) => {

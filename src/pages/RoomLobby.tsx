@@ -20,6 +20,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { Copy, Check, Link2, Settings, ChevronDown, ChevronUp, X, Eye, Timer, UserCog } from 'lucide-react';
 import { OFFICIAL_GAME_MODES, GameMode, getDifficultyColor } from '@/types/gameMode';
+import KickedModal from '@/components/KickedModal';
+import { PlaygroundSettings } from '@features/quiz';
+import { QuestionSetting } from '@/contexts/GameContexts';
 
 export default function RoomLobby() {
   const { roomId } = useParams<{ roomId: string }>();
@@ -32,6 +35,8 @@ export default function RoomLobby() {
   const [linkCopied, setLinkCopied] = useState(false);
   const [showSettings, setShowSettings] = useState(true);
   const [transferHostUid, setTransferHostUid] = useState<string | null>(null);
+  const [showKickedModal, setShowKickedModal] = useState(false);
+  const [showPlaygroundSettings, setShowPlaygroundSettings] = useState(false);
   const { toast } = useToast();
   const hasNavigatedRef = useRef(false);
 
@@ -65,17 +70,8 @@ export default function RoomLobby() {
         if (hasNavigatedRef.current) return;
         hasNavigatedRef.current = true;
 
-        // Navigate first, then show toast
-        navigate('/multiplayer', { replace: true });
-
-        // Show toast after navigation
-        setTimeout(() => {
-          toast({
-            title: 'Removed from Room',
-            description: 'You have been removed from the room by the host.',
-            variant: 'destructive',
-          });
-        }, 100);
+        // Show modal first
+        setShowKickedModal(true);
         return;
       }
 
@@ -165,6 +161,39 @@ export default function RoomLobby() {
         description: `Changed to ${mode.name}`,
       });
       setShowSettings(false);
+      setShowPlaygroundSettings(false);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update game mode';
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCustomPlayground = async (settings: { questions: QuestionSetting[]; duration: number }) => {
+    if (!roomId) return;
+
+    // Create a custom game mode from the playground settings
+    const customMode: GameMode = {
+      id: 'custom-playground',
+      name: 'Custom Playground',
+      description: 'Your custom quiz settings',
+      isOfficial: false,
+      questions: settings.questions,
+      duration: settings.duration,
+      difficulty: 'Custom',
+    };
+
+    try {
+      await updateGameMode(roomId, customMode);
+      toast({
+        title: "Game mode updated!",
+        description: "Changed to Custom Playground",
+      });
+      setShowSettings(false);
+      setShowPlaygroundSettings(false);
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to update game mode';
       toast({
@@ -213,9 +242,16 @@ export default function RoomLobby() {
   // Count only active (non-kicked) players
   const playerCount = Object.values(room.players).filter((p) => !p.kicked).length;
 
+  const handleKickedModalClose = () => {
+    setShowKickedModal(false);
+    navigate('/multiplayer', { replace: true });
+  };
+
   return (
-    <div className="container mx-auto p-4">
-      <Card>
+    <>
+      <KickedModal open={showKickedModal} onClose={handleKickedModalClose} />
+      <div className="container mx-auto p-4">
+        <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
@@ -226,12 +262,12 @@ export default function RoomLobby() {
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Room ID & Invite */}
+          {/* Room Code & Invite */}
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <div className="flex-1">
                 <p className="text-sm text-muted-foreground">Room Code</p>
-                <p className="font-mono font-bold text-lg">{roomId}</p>
+                <p className="font-mono font-bold text-lg tracking-wider uppercase">{roomId}</p>
               </div>
               <Button
                 onClick={handleCopyRoomId}
@@ -286,7 +322,7 @@ export default function RoomLobby() {
                 {showSettings ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
               </Button>
 
-              {showSettings && (
+              {showSettings && !showPlaygroundSettings && (
                 <div className="p-4 pt-0 space-y-4">
                   {/* Game Mode Selection */}
                   <div>
@@ -315,6 +351,25 @@ export default function RoomLobby() {
                           </div>
                         </Button>
                       ))}
+
+                      {/* Custom Playground Button */}
+                      <Button
+                        onClick={() => setShowPlaygroundSettings(true)}
+                        variant={room.gameMode.id === 'custom-playground' ? "default" : "outline"}
+                        className="justify-start h-auto p-3"
+                      >
+                        <div className="flex flex-col items-start gap-1 w-full">
+                          <div className="flex items-center justify-between w-full">
+                            <span className="font-semibold">Custom Playground</span>
+                            <Badge className={getDifficultyColor('Custom')} variant="outline">
+                              Custom
+                            </Badge>
+                          </div>
+                          <span className="text-xs text-muted-foreground">
+                            Create your own custom quiz settings
+                          </span>
+                        </div>
+                      </Button>
                     </div>
                   </div>
 
@@ -386,6 +441,27 @@ export default function RoomLobby() {
                       />
                     </div>
                   </div>
+                </div>
+              )}
+
+              {/* Custom Playground Settings */}
+              {showSettings && showPlaygroundSettings && (
+                <div className="p-4 pt-0 space-y-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold">Custom Playground Settings</h3>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowPlaygroundSettings(false)}
+                    >
+                      Back to Modes
+                    </Button>
+                  </div>
+                  <PlaygroundSettings
+                    onStartQuiz={handleCustomPlayground}
+                    buttonText="Update Room Settings"
+                    showHeader={false}
+                  />
                 </div>
               )}
             </div>
@@ -539,7 +615,8 @@ export default function RoomLobby() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+      </div>
+    </>
   );
 }
 

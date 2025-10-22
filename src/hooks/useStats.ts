@@ -8,6 +8,9 @@ export interface GameResult {
   duration: number;
   gameModeId?: string;
   timestamp?: number;
+  totalKeystrokes?: number;
+  backspaceCount?: number;
+  accuracy?: number;
 }
 
 export interface UserStats {
@@ -16,6 +19,9 @@ export interface UserStats {
   highScore: number;
   averageScore: number;
   lastPlayed: number;
+  totalKeystrokes?: number;
+  totalBackspaces?: number;
+  averageAccuracy?: number;
 }
 
 export function useStats() {
@@ -46,6 +52,9 @@ export function useStats() {
           duration: result.duration,
           gameModeId: result.gameModeId || 'custom',
           timestamp,
+          totalKeystrokes: result.totalKeystrokes,
+          backspaceCount: result.backspaceCount,
+          accuracy: result.accuracy,
         });
 
         // Update user stats (Firestore transaction)
@@ -58,6 +67,9 @@ export function useStats() {
             highScore: 0,
             averageScore: 0,
             lastPlayed: 0,
+            totalKeystrokes: 0,
+            totalBackspaces: 0,
+            averageAccuracy: 0,
           };
 
           const newGamesPlayed = currentStats.gamesPlayed + 1;
@@ -65,12 +77,22 @@ export function useStats() {
           const newHighScore = Math.max(currentStats.highScore, result.score);
           const newAverageScore = newTotalScore / newGamesPlayed;
 
+          // Calculate accuracy stats
+          const newTotalKeystrokes = (currentStats.totalKeystrokes || 0) + (result.totalKeystrokes || 0);
+          const newTotalBackspaces = (currentStats.totalBackspaces || 0) + (result.backspaceCount || 0);
+          const newAverageAccuracy = newTotalKeystrokes > 0
+            ? ((newTotalKeystrokes - newTotalBackspaces) / newTotalKeystrokes) * 100
+            : 0;
+
           const updatedStats: UserStats = {
             gamesPlayed: newGamesPlayed,
             totalScore: newTotalScore,
             highScore: newHighScore,
             averageScore: Math.round(newAverageScore * 100) / 100,
             lastPlayed: timestamp,
+            totalKeystrokes: newTotalKeystrokes,
+            totalBackspaces: newTotalBackspaces,
+            averageAccuracy: Math.round(newAverageAccuracy * 100) / 100,
           };
 
           transaction.set(statsRef, updatedStats);

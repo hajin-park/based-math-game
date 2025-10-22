@@ -3,9 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { QuizPrompt, QuizStats } from "@features/quiz";
 import { QuizContext, ResultContext } from "@/contexts/GameContexts";
-import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { useGameSettings } from "@/hooks/useGameSettings";
 import Countdown from "@/components/Countdown";
+import ExitButton from "@/components/ExitButton";
 
 export default function Quiz() {
     const quizContext = useContext(QuizContext);
@@ -34,6 +34,10 @@ export default function Quiz() {
     // Track game start time for duration calculation
     const startTimeRef = useRef(Date.now());
 
+    // Track keystrokes and backspaces for accuracy calculation
+    const totalKeystrokesRef = useRef(0);
+    const backspaceCountRef = useRef(0);
+
     // Create expiry timestamp only once to prevent timer reset
     const expiryTimestamp = useMemo(() => {
         const time = new Date();
@@ -53,11 +57,21 @@ export default function Quiz() {
             // Calculate game duration
             const duration = Math.floor((Date.now() - startTimeRef.current) / 1000);
 
+            // Calculate accuracy: (total keystrokes - backspaces) / total keystrokes
+            const totalKeystrokes = totalKeystrokesRef.current;
+            const backspaceCount = backspaceCountRef.current;
+            const accuracy = totalKeystrokes > 0
+                ? ((totalKeystrokes - backspaceCount) / totalKeystrokes) * 100
+                : 0;
+
             // Use scoreRef.current to get the final score value
             setResults({
                 score: scoreRef.current,
                 duration,
-                gameModeId: settings.gameModeId
+                gameModeId: settings.gameModeId,
+                totalKeystrokes,
+                backspaceCount,
+                accuracy: Math.round(accuracy * 100) / 100 // Round to 2 decimal places
             });
             navigate("/results");
         }
@@ -70,17 +84,9 @@ export default function Quiz() {
         setRandomSetting(settings.questions[randomIndex]);
     }, [score, settings.questions]);
 
-    // Add keyboard shortcuts (Escape to exit)
-    useKeyboardShortcuts({
-        'escape': () => {
-            if (window.confirm('Exit game and return to menu? Your progress will not be saved.')) {
-                navigate('/');
-            }
-        }
-    });
-
     return (
         <>
+            <ExitButton onExit={() => navigate('/')} />
             {showCountdown && (
                 <Countdown
                     onComplete={() => setShowCountdown(false)}
@@ -100,6 +106,8 @@ export default function Quiz() {
                             setScore={setScore}
                             setting={randomSetting}
                             gameSettings={gameSettings}
+                            onKeystroke={() => totalKeystrokesRef.current++}
+                            onBackspace={() => backspaceCountRef.current++}
                         />
                     </CardContent>
                 </Card>

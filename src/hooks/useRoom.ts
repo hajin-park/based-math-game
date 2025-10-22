@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { ref, set, get, onValue, off, remove, push, onDisconnect, update } from 'firebase/database';
+import { ref, set, get, onValue, off, remove, onDisconnect, update } from 'firebase/database';
 import { database } from '@/firebase/config';
 import { useAuth } from '@/contexts/AuthContext';
 import { GameMode } from '@/types/gameMode';
@@ -34,6 +34,21 @@ export function useRoom() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
 
+  // Generate 8-character alphanumeric room code (A-Z, 0-9)
+  const generateRoomCode = (): string => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let code = '';
+    for (let i = 0; i < 8; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return code;
+  };
+
+  // Helper to check if user is a guest
+  const isGuestUser = (user: { uid: string } | null): boolean => {
+    return user !== null && user.uid.startsWith('guest_');
+  };
+
   const createRoom = useCallback(
     async (gameMode: GameMode, maxPlayers: number = 4): Promise<string> => {
       if (!user) throw new Error('Must be authenticated to create room');
@@ -45,9 +60,28 @@ export function useRoom() {
 
       setLoading(true);
       try {
-        const roomsRef = ref(database, 'rooms');
-        const newRoomRef = push(roomsRef);
-        const roomId = newRoomRef.key!;
+        // Generate unique room code with collision detection
+        let roomId: string | null = null;
+        let attempts = 0;
+        const maxAttempts = 10;
+
+        while (roomId === null && attempts < maxAttempts) {
+          const candidateId = generateRoomCode();
+          const roomRef = ref(database, `rooms/${candidateId}`);
+          const snapshot = await get(roomRef);
+
+          if (!snapshot.exists()) {
+            roomId = candidateId;
+          } else {
+            attempts++;
+          }
+        }
+
+        if (roomId === null) {
+          throw new Error('Failed to generate unique room code. Please try again.');
+        }
+
+        const newRoomRef = ref(database, `rooms/${roomId}`);
 
         const room: Omit<Room, 'id'> = {
           hostUid: user.uid,
@@ -72,13 +106,19 @@ export function useRoom() {
 
         await set(newRoomRef, room);
 
-        // Set up host disconnect handler - mark as disconnected
-        // Client-side listeners will handle host transfer
+        // Set up host disconnect handler
         const hostPlayerRef = ref(database, `rooms/${roomId}/players/${user.uid}`);
-        onDisconnect(hostPlayerRef).update({
-          disconnected: true,
-          disconnectedAt: Date.now(),
-        });
+
+        if (isGuestUser(user)) {
+          // Guest users: Remove completely on disconnect
+          onDisconnect(hostPlayerRef).remove();
+        } else {
+          // Authenticated users: Mark as disconnected
+          onDisconnect(hostPlayerRef).update({
+            disconnected: true,
+            disconnectedAt: Date.now(),
+          });
+        }
 
         return roomId;
       } catch (error) {
@@ -146,11 +186,17 @@ export function useRoom() {
           });
         }
 
-        // Set up disconnect handler - mark as disconnected instead of removing
-        onDisconnect(playerRef).update({
-          disconnected: true,
-          disconnectedAt: Date.now(),
-        });
+        // Set up disconnect handler
+        if (isGuestUser(user)) {
+          // Guest users: Remove completely on disconnect
+          onDisconnect(playerRef).remove();
+        } else {
+          // Authenticated users: Mark as disconnected
+          onDisconnect(playerRef).update({
+            disconnected: true,
+            disconnectedAt: Date.now(),
+          });
+        }
       } catch (error) {
         console.error('Error joining room:', error);
         throw error;

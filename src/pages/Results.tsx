@@ -46,6 +46,9 @@ export default function Quiz() {
                         score: results.score,
                         duration: results.duration,
                         gameModeId: results.gameModeId,
+                        totalKeystrokes: results.totalKeystrokes,
+                        backspaceCount: results.backspaceCount,
+                        accuracy: results.accuracy,
                     });
                 } catch (error) {
                     console.error('Failed to save game results:', error);
@@ -81,6 +84,15 @@ export default function Quiz() {
                         <div>
                             <p className="text-sm text-muted-foreground">Time</p>
                             <p className="text-xl">{results.duration}s</p>
+                        </div>
+                    )}
+                    {results.accuracy !== undefined && (
+                        <div>
+                            <p className="text-sm text-muted-foreground">Accuracy</p>
+                            <p className="text-xl font-semibold">{results.accuracy.toFixed(1)}%</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                                {results.totalKeystrokes} keystrokes, {results.backspaceCount} backspaces
+                            </p>
                         </div>
                     )}
                     {saving && (

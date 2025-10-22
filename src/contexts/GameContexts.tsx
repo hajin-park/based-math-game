@@ -15,6 +15,9 @@ export interface QuizResults {
   score: number;
   duration?: number;
   gameModeId?: string;
+  totalKeystrokes?: number;
+  backspaceCount?: number;
+  accuracy?: number;
 }
 
 export interface QuizContextType {

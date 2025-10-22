@@ -11,6 +11,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
+import { getUserAvatarUrl } from '@/lib/avatarGenerator';
 
 export default function ProfileDropdown() {
   const navigate = useNavigate();
@@ -33,10 +34,11 @@ export default function ProfileDropdown() {
   };
 
   const getUserPhotoURL = () => {
-    if (user && 'photoURL' in user) {
-      return user.photoURL || undefined;
-    }
-    return undefined;
+    if (!user) return undefined;
+
+    // Get photoURL or generate pixel art avatar
+    const photoURL = user && 'photoURL' in user ? user.photoURL : null;
+    return getUserAvatarUrl({ photoURL }, user.uid);
   };
 
   return (
