@@ -11,7 +11,7 @@ A React-based multiplayer quiz game for practicing base conversion (Binary, Octa
 ## Tech Stack
 
 **Core:** React 19.2.0 + TypeScript 5.9.3 + Vite 7.1.11 + Tailwind CSS 3.4.3
-**Backend:** Firebase JS SDK 12.4.0 (Realtime Database + Auth + Hosting)
+**Backend:** Firebase JS SDK 12.4.0 (Firestore + Realtime Database + Auth + Hosting)
 **UI:** shadcn UI (Radix primitives) + lucide-react icons
 **Forms:** React Hook Form 7.51.2 + Zod 3.22.4
 **Routing:** React Router DOM 6.22.3
@@ -30,7 +30,8 @@ src/
 │   ├── ErrorBoundary.tsx
 │   ├── ProtectedRoute.tsx
 │   ├── ConnectionStatus.tsx
-│   └── ProfileDropdown.tsx
+│   ├── ProfileDropdown.tsx
+│   └── Countdown.tsx
 ├── contexts/           # React contexts
 │   ├── AuthContext.tsx      # Authentication & guest user system
 │   ├── GameContexts.tsx     # Quiz & Result contexts
@@ -44,10 +45,11 @@ src/
 │   ├── useRoom.ts
 │   ├── useStats.ts
 │   ├── useGameHistory.ts
+│   ├── useGameSettings.ts
 │   ├── useKeyboardShortcuts.ts
 │   └── useTabVisibility.ts
 ├── pages/             # Route pages
-│   ├── profile/       # Profile pages (ProfileLayout, ProfileOverview, ProfileSettings)
+│   ├── profile/       # Profile pages (ProfileLayout, ProfileOverview, ProfileSettings, ProfileGameSettings)
 │   ├── Home.tsx, Quiz.tsx, Results.tsx, Leaderboard.tsx, Stats.tsx
 │   ├── Login.tsx, Signup.tsx
 │   ├── MultiplayerHome.tsx, CreateRoom.tsx, JoinRoom.tsx, RoomLobby.tsx
@@ -83,6 +85,7 @@ src/
 /profile → ProfileLayout (sidebar layout)
   /profile → ProfileOverview (account info)
   /profile/settings → ProfileSettings (display name, delete account)
+  /profile/game-settings → ProfileGameSettings (gameplay preferences)
 /login → Login (email/Google sign-in)
 /signup → Signup (guest account linking)
 ```
@@ -109,11 +112,31 @@ src/
 
 ## Firebase Integration
 
+### Dual-Database Architecture
+The app uses **two Firebase databases** for different purposes:
+
+1. **Firestore** - Persistent data for authenticated users:
+   - User profiles (`/users/{userId}`)
+   - User statistics (`/userStats/{userId}`)
+   - Game history (`/userStats/{userId}/gameHistory/{gameId}`)
+   - Global leaderboards (`/leaderboard-{gameModeId}/{userId}`)
+   - Game settings (`/users/{userId}/gameSettings`)
+
+2. **Realtime Database** - Ephemeral/real-time data:
+   - Guest user sessions (`/users/{guestId}`)
+   - Multiplayer rooms (`/rooms/{roomId}`)
+   - Presence tracking (`/presence/{userId}`)
+
+**Why two databases?**
+- Firestore: Better for structured queries, permanent storage, and complex data models
+- Realtime Database: Better for real-time sync, presence detection, and temporary data
+
 ### Configuration (`src/firebase/config.ts`)
 ```typescript
 import { initializeApp } from 'firebase/app';
 import { getAuth, connectAuthEmulator } from 'firebase/auth';
 import { getDatabase, connectDatabaseEmulator } from 'firebase/database';
+import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 
 // Environment variables from .env
 const firebaseConfig = {
@@ -128,71 +151,88 @@ const firebaseConfig = {
 
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
-export const database = getDatabase(app);
+export const database = getDatabase(app);  // Realtime Database
+export const firestore = getFirestore(app); // Firestore
 
 // Emulators in development (controlled by VITE_USE_FIREBASE_EMULATORS env var)
 if (import.meta.env.DEV && import.meta.env.VITE_USE_FIREBASE_EMULATORS === 'true') {
   connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
   connectDatabaseEmulator(database, '127.0.0.1', 9000);
+  connectFirestoreEmulator(firestore, '127.0.0.1', 8080);
 }
 ```
 
 ### Database Schema
+
+#### Firestore (Persistent Data)
 ```
-/users/{userId}
-  ├── uid: string (required for guest validation)
+/users/{userId}  # Authenticated users only
+  ├── uid: string
   ├── displayName: string
   ├── email: string | null
   ├── photoURL: string | null
-  ├── isGuest: boolean (true for guest users, false/undefined for authenticated)
   ├── createdAt: timestamp
   ├── lastSeen: timestamp
-  ├── stats
-  │   ├── gamesPlayed: number
-  │   ├── totalScore: number
-  │   ├── highScore: number
-  │   ├── averageScore: number
-  │   └── lastPlayed: timestamp
-  └── gameHistory/{gameId}
-      ├── score: number
-      ├── duration: number
-      ├── gameModeId: string
-      └── timestamp: timestamp
+  └── gameSettings  # User game preferences
+      ├── groupedDigits: boolean (default: false)
+      ├── indexValueHints: boolean (default: false)
+      └── countdownStart: boolean (default: true)
 
-/rooms/{roomId}
+/userStats/{userId}  # Authenticated users only
+  ├── gamesPlayed: number
+  ├── totalScore: number
+  ├── highScore: number
+  ├── averageScore: number
+  └── lastPlayed: timestamp
+
+/userStats/{userId}/gameHistory/{gameId}  # Authenticated users only
+  ├── score: number
+  ├── duration: number
+  ├── gameModeId: string
+  └── timestamp: timestamp
+
+/leaderboard-{gameModeId}/{userId}  # Authenticated users only
+  ├── displayName: string
+  ├── score: number (high score for this mode)
+  ├── timestamp: timestamp
+  ├── gameModeId: string
+  └── isGuest: false (explicitly false, guest entries rejected by rules)
+```
+
+#### Realtime Database (Ephemeral/Real-time Data)
+```
+/rooms/{roomId}  # Multiplayer rooms (guests + authenticated)
   ├── hostUid: userId (can be guest or authenticated)
   ├── createdAt: timestamp
   ├── status: "waiting" | "playing" | "finished"
   ├── gameMode: GameMode object
+  ├── maxPlayers: number (2-10)
+  ├── allowVisualAids: boolean (default: true)  # Host control
+  ├── enableCountdown: boolean (default: true)  # Host control
   ├── players/{userId}
   │   ├── uid: string
   │   ├── displayName: string
   │   ├── ready: boolean
   │   ├── score: number
-  │   └── finished: boolean
+  │   ├── finished: boolean
+  │   ├── disconnected: boolean
+  │   ├── kicked: boolean
+  │   └── wins: number
   ├── startedAt: timestamp | null
   └── gameState (optional)
       ├── startedAt: timestamp | null
       ├── currentQuestion: number
       └── timeRemaining: number
 
-/leaderboards/{gameModeId}/{userId}
+/users/{guestId}  # Guest users only (temporary)
+  ├── uid: string (starts with "guest_")
   ├── displayName: string
-  ├── score: number (high score for this mode)
-  ├── timestamp: timestamp
-  └── isGuest: false (explicitly false, guest entries rejected by rules)
+  ├── isGuest: true
+  ├── createdAt: timestamp
+  └── lastSeen: timestamp
 
-/gameModes/{gameModeId}
-  ├── name: string
-  ├── description: string
-  ├── isOfficial: boolean
-  ├── settings
-  │   ├── questions: QuestionSetting[]
-  │   └── duration: number
-  └── createdAt: timestamp
-
-/presence/{userId}
-  ├── uid: string (required for guest validation)
+/presence/{userId}  # Presence tracking (guests + authenticated)
+  ├── uid: string
   ├── online: boolean
   └── lastSeen: timestamp
 ```
@@ -210,25 +250,7 @@ if (import.meta.env.DEV && import.meta.env.VITE_USE_FIREBASE_EMULATORS === 'true
     "users": {
       "$uid": {
         ".read": "$uid === auth.uid || $uid.beginsWith('guest_')",
-        ".write": "$uid === auth.uid || ($uid.beginsWith('guest_') && newData.child('uid').val() === $uid && newData.child('isGuest').val() === true)",
-        "stats": {
-          ".validate": "newData.hasChildren(['gamesPlayed', 'totalScore'])"
-        },
-        "gameHistory": {
-          ".indexOn": ["timestamp"],
-          "$gameId": {
-            ".validate": "newData.hasChildren(['score', 'timestamp']) && newData.child('score').isNumber() && newData.child('timestamp').isNumber()"
-          }
-        }
-      }
-    },
-    "leaderboards": {
-      "$gameModeId": {
-        ".read": true,
-        "$uid": {
-          ".write": "($uid === auth.uid && !$uid.beginsWith('guest_')) || ($uid.beginsWith('guest_') && newData.child('isGuest').val() !== true)",
-          ".validate": "newData.hasChildren(['displayName', 'score', 'timestamp']) && newData.child('score').isNumber() && (!newData.hasChild('isGuest') || newData.child('isGuest').val() === false)"
-        }
+        ".write": "$uid === auth.uid || ($uid.beginsWith('guest_') && newData.child('uid').val() === $uid && newData.child('isGuest').val() === true)"
       }
     },
     "rooms": {
@@ -238,8 +260,7 @@ if (import.meta.env.DEV && import.meta.env.VITE_USE_FIREBASE_EMULATORS === 'true
         ".validate": "newData.hasChildren(['hostUid', 'gameMode', 'status'])",
         "players": {
           "$playerId": {
-            ".write": "$playerId === auth.uid || ($playerId.beginsWith('guest_') && newData.child('uid').val() === $playerId) || root.child('rooms').child($roomId).child('hostUid').val() === auth.uid || root.child('rooms').child($roomId).child('hostUid').val() === $playerId",
-            ".validate": "newData.hasChildren(['displayName', 'ready'])"
+            ".write": "$playerId === auth.uid || ($playerId.beginsWith('guest_') && newData.child('uid').val() === $playerId) || root.child('rooms').child($roomId).child('hostUid').val() === auth.uid || root.child('rooms').child($roomId).child('hostUid').val() === $playerId"
           }
         },
         "gameState": {
@@ -254,7 +275,7 @@ if (import.meta.env.DEV && import.meta.env.VITE_USE_FIREBASE_EMULATORS === 'true
     "presence": {
       "$uid": {
         ".read": true,
-        ".write": "$uid === auth.uid || ($uid.beginsWith('guest_') && newData.child('uid').val() === $uid)"
+        ".write": "$uid === auth.uid || ($uid.beginsWith('guest_') && (!newData.exists() || newData.child('uid').val() === $uid))"
       }
     }
   }
@@ -376,6 +397,65 @@ type QuestionSetting = [
   rangeUpper: number   // max value (decimal)
 ];
 ```
+
+---
+
+## Game Settings & Visual Aids
+
+### User Game Settings
+Authenticated users can customize their gameplay experience through the Profile > Game Settings page. Settings are stored in Firestore at `/users/{userId}/gameSettings`.
+
+**Available Settings:**
+1. **Grouped Digits** (default: false)
+   - Binary/Hex: Groups of 4 digits with spaces (e.g., `1010 1100`)
+   - Octal: Groups of 3 digits with spaces (e.g., `123 456`)
+   - Decimal: Comma-separated thousands (e.g., `1,234`)
+   - Automatically pads with leading zeros to complete groups
+
+2. **Index Value Hints** (default: false)
+   - Shows the positional value (power of base) under each digit
+   - Not shown when converting FROM decimal
+   - Example for binary `1010`: shows `8 4 2 1` underneath
+
+3. **Countdown Start** (default: true)
+   - Shows 3-2-1 countdown before game starts
+   - Applies to both singleplayer and multiplayer
+
+**Implementation:**
+- `useGameSettings` hook - Loads settings from Firestore for authenticated users
+- `ProfileGameSettings.tsx` - Settings UI with toggle switches
+- `formatters.ts` - Utility functions for number formatting and index hints
+- Guest users see default settings with a prompt to sign up
+
+### Visual Aids in Quiz
+Visual aids are applied in the `Quiz-Prompt` component based on user settings and multiplayer host controls.
+
+**Formatting Functions (`formatters.ts`):**
+```typescript
+formatWithGrouping(value: string, base: string): string
+// Groups digits based on base type with appropriate separators
+// Binary/Hex: groups of 4, Octal: groups of 3, Decimal: commas
+
+getIndexHints(value: string, base: string, grouped: boolean): string
+// Returns formatted string of positional values aligned with each digit
+// When grouped=true, adds spaces to match the grouped number format
+```
+
+**Multiplayer Host Controls:**
+In multiplayer lobbies, the host can control visual aids for all players:
+- `allowVisualAids` - Toggle to enable/disable visual aids for all players
+- `enableCountdown` - Toggle to enable/disable countdown before game starts
+- These settings override individual player preferences
+
+### Countdown Component
+A reusable countdown component (`Countdown.tsx`) that displays a 3-2-1 countdown before the game starts.
+
+**Features:**
+- Fast countdown: 0.6 seconds per number (1.8 seconds total)
+- Minimal animations with color transitions (red → yellow → green)
+- Backdrop blur overlay
+- Calls `onComplete` callback when countdown finishes
+- Configurable duration (default: 3 counts)
 
 ---
 
@@ -635,6 +715,9 @@ interface Room {
   status: 'waiting' | 'playing' | 'finished';
   createdAt: number;
   startedAt?: number;
+  maxPlayers: number;           // 2-10 players
+  allowVisualAids: boolean;     // Host control for visual aids
+  enableCountdown: boolean;     // Host control for countdown
 }
 
 interface RoomPlayer {
@@ -643,11 +726,14 @@ interface RoomPlayer {
   ready: boolean;
   score: number;
   finished: boolean;
+  disconnected: boolean;
+  kicked: boolean;
+  wins: number;
 }
 ```
 
 **Methods:**
-- `createRoom(gameMode)` - Create new room, returns roomId, sets up onDisconnect for host
+- `createRoom(gameMode, maxPlayers)` - Create new room, returns roomId, sets up onDisconnect for host
 - `joinRoom(roomId)` - Join existing room, sets up onDisconnect for player
 - `leaveRoom(roomId)` - Leave room, transfer host or delete room if host leaves
 - `setPlayerReady(roomId, ready)` - Set player ready status
@@ -655,7 +741,20 @@ interface RoomPlayer {
 - `updatePlayerScore(roomId, score)` - Update player score
 - `finishGame(roomId)` - Mark player as finished
 - `resetRoom(roomId)` - Reset room to waiting state (host only)
+- `updateGameMode(roomId, gameMode)` - Update game mode (host only)
+- `kickPlayer(roomId, playerId)` - Kick player from room (host only)
+- `updateRoomSettings(roomId, settings)` - Update room settings (host only)
+- `transferHost(roomId, newHostUid)` - Transfer host privileges (host only)
 - `subscribeToRoom(roomId, callback)` - Real-time room updates, callback receives Room | null
+
+**Host Controls:**
+- Host can change game mode in lobby
+- Host can kick players from lobby
+- Host can transfer host privileges to another player (old host becomes not ready)
+- Host can toggle visual aids for all players
+- Host can toggle countdown before game starts
+- When host leaves, host is automatically transferred to next player
+- Game Settings section is expanded by default for hosts
 
 ### useStats (`src/hooks/useStats.ts`)
 **User statistics tracking:**
@@ -672,6 +771,32 @@ interface RoomPlayer {
 - `getThisWeekGames(gameModeId)` - This week's games
 - `getThisMonthGames(gameModeId)` - This month's games
 - Uses Firebase `.orderByChild("timestamp")` with `.indexOn` rule
+
+### useGameSettings (`src/hooks/useGameSettings.ts`)
+**User game settings management:**
+```typescript
+interface GameSettings {
+  groupedDigits: boolean;
+  indexValueHints: boolean;
+  countdownStart: boolean;
+}
+
+const DEFAULT_GAME_SETTINGS: GameSettings = {
+  groupedDigits: false,
+  indexValueHints: false,
+  countdownStart: true,
+};
+```
+
+**Methods:**
+- `settings` - Current game settings (defaults for guests)
+- `loading` - Loading state
+
+**Behavior:**
+- Uses Firestore `onSnapshot` for real-time updates
+- Automatically syncs when settings change in Firestore
+- Returns default settings for guest users
+- No manual reload needed
 
 ### useKeyboardShortcuts
 - Escape key: Navigate to home

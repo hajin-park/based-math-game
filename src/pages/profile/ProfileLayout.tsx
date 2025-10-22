@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { User, Settings, LogOut } from 'lucide-react';
+import { User, Settings, LogOut, Gamepad2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { useEffect } from 'react';
@@ -27,6 +27,7 @@ export default function ProfileLayout() {
   const navItems = [
     { name: 'Overview', href: '/profile', icon: User, end: true },
     { name: 'Settings', href: '/profile/settings', icon: Settings },
+    { name: 'Game Settings', href: '/profile/game-settings', icon: Gamepad2 },
   ];
 
   return (

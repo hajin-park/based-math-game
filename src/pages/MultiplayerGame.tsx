@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRoom, Room } from '@/hooks/useRoom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
+import { useGameSettings } from '@/hooks/useGameSettings';
+import Countdown from '@/components/Countdown';
 import QuizPrompt from '@/features/quiz/quiz-questions/Quiz-Prompt.component';
 import QuizStats from '@/features/quiz/quiz-questions/Quiz-Stats.component';
 
@@ -13,6 +15,7 @@ export default function MultiplayerGame() {
   const { user } = useAuth();
   const { toast } = useToast();
   const { subscribeToRoom, updatePlayerScore, finishGame } = useRoom();
+  const { settings: gameSettings } = useGameSettings();
 
   // Handle timer expiration
   const handleTimerExpire = async () => {
@@ -21,11 +24,13 @@ export default function MultiplayerGame() {
     }
   };
   const [room, setRoom] = useState<Room | null>(null);
+  const [showCountdown, setShowCountdown] = useState(false);
   const [score, setScore] = useState(0);
   const [randomSetting, setRandomSetting] = useState<[string, string, number, number] | null>(null);
   const scoreRef = useRef(0);
   const questionsRef = useRef<[string, string, number, number][]>([]);
   const hasNavigatedRef = useRef(false);
+  const countdownShownRef = useRef(false);
 
   useEffect(() => {
     if (!roomId) return;
@@ -78,6 +83,12 @@ export default function MultiplayerGame() {
       } else {
         // Game hasn't started yet, use original order
         questionsRef.current = updatedRoom.gameMode.questions;
+      }
+
+      // Show countdown when game starts (only once)
+      if (updatedRoom.status === 'playing' && updatedRoom.enableCountdown && !countdownShownRef.current) {
+        setShowCountdown(true);
+        countdownShownRef.current = true;
       }
 
       // Navigate to lobby if game was reset (host left mid-game)
@@ -166,26 +177,35 @@ export default function MultiplayerGame() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 min-h-screen">
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Main game area */}
-        <div className="lg:col-span-2">
-          <Card className="shadow-lg">
-            <QuizStats
-              expiryTimestamp={expiryTimestamp}
-              setRunning={handleTimerExpire}
-              score={score}
-            />
-            <CardContent className="p-0">
-              <QuizPrompt
+    <>
+      {showCountdown && (
+        <Countdown
+          onComplete={() => setShowCountdown(false)}
+          duration={3}
+        />
+      )}
+      <div className="container mx-auto px-4 py-8 min-h-screen">
+        <div className="grid gap-6 lg:grid-cols-3">
+          {/* Main game area */}
+          <div className="lg:col-span-2">
+            <Card className="shadow-lg">
+              <QuizStats
+                expiryTimestamp={expiryTimestamp}
+                setRunning={handleTimerExpire}
                 score={score}
-                setScore={setScore}
-                setting={randomSetting}
-                seed={questionSeed}
               />
-            </CardContent>
-          </Card>
-        </div>
+              <CardContent className="p-0">
+                <QuizPrompt
+                  score={score}
+                  setScore={setScore}
+                  setting={randomSetting}
+                  seed={questionSeed}
+                  gameSettings={gameSettings}
+                  allowVisualAids={room?.allowVisualAids ?? true}
+                />
+              </CardContent>
+            </Card>
+          </div>
 
         {/* Leaderboard */}
         <div className="lg:sticky lg:top-8 lg:self-start">
@@ -234,6 +254,7 @@ export default function MultiplayerGame() {
         </div>
       </div>
     </div>
+    </>
   );
 }
 

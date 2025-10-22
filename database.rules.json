@@ -1,5 +1,11 @@
 {
   "rules": {
+    "users": {
+      "$uid": {
+        ".read": "$uid === auth.uid || $uid.beginsWith('guest_')",
+        ".write": "$uid === auth.uid || ($uid.beginsWith('guest_') && newData.child('uid').val() === $uid && newData.child('isGuest').val() === true)"
+      }
+    },
     "rooms": {
       ".read": "true",
       "$roomId": {

@@ -3,22 +3,35 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useRoom, Room } from '@/hooks/useRoom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
-import { Copy, Check, Link2, Settings, ChevronDown, ChevronUp, X } from 'lucide-react';
+import { Copy, Check, Link2, Settings, ChevronDown, ChevronUp, X, Eye, Timer, UserCog } from 'lucide-react';
 import { OFFICIAL_GAME_MODES, GameMode, getDifficultyColor } from '@/types/gameMode';
 
 export default function RoomLobby() {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { leaveRoom, setPlayerReady, startGame, subscribeToRoom, updateGameMode, kickPlayer } = useRoom();
+  const { leaveRoom, setPlayerReady, startGame, subscribeToRoom, updateGameMode, kickPlayer, updateRoomSettings, transferHost } = useRoom();
   const [room, setRoom] = useState<Room | null>(null);
   const [isReady, setIsReady] = useState(false);
   const [copied, setCopied] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
+  const [showSettings, setShowSettings] = useState(true);
+  const [transferHostUid, setTransferHostUid] = useState<string | null>(null);
   const { toast } = useToast();
   const hasNavigatedRef = useRef(false);
 
@@ -162,6 +175,26 @@ export default function RoomLobby() {
     }
   };
 
+  const handleTransferHost = async () => {
+    if (!roomId || !transferHostUid) return;
+
+    try {
+      await transferHost(roomId, transferHostUid);
+      toast({
+        title: "Host transferred!",
+        description: "You are no longer the host.",
+      });
+      setTransferHostUid(null);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to transfer host';
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
+  };
+
   if (!room) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -254,32 +287,104 @@ export default function RoomLobby() {
               </Button>
 
               {showSettings && (
-                <div className="p-4 pt-0 space-y-3">
-                  <p className="text-sm text-muted-foreground mb-3">
-                    Select a different game mode (win counters will be preserved)
-                  </p>
-                  <div className="grid gap-2 max-h-64 overflow-y-auto">
-                    {OFFICIAL_GAME_MODES.map((mode) => (
-                      <Button
-                        key={mode.id}
-                        onClick={() => handleChangeGameMode(mode)}
-                        variant={room.gameMode.id === mode.id ? "default" : "outline"}
-                        className="justify-start h-auto p-3"
-                        disabled={room.gameMode.id === mode.id}
-                      >
-                        <div className="flex flex-col items-start gap-1 w-full">
-                          <div className="flex items-center justify-between w-full">
-                            <span className="font-semibold">{mode.name}</span>
-                            <Badge className={getDifficultyColor(mode.difficulty)} variant="outline">
-                              {mode.difficulty}
-                            </Badge>
+                <div className="p-4 pt-0 space-y-4">
+                  {/* Game Mode Selection */}
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Select a different game mode (win counters will be preserved)
+                    </p>
+                    <div className="grid gap-2 max-h-64 overflow-y-auto">
+                      {OFFICIAL_GAME_MODES.map((mode) => (
+                        <Button
+                          key={mode.id}
+                          onClick={() => handleChangeGameMode(mode)}
+                          variant={room.gameMode.id === mode.id ? "default" : "outline"}
+                          className="justify-start h-auto p-3"
+                          disabled={room.gameMode.id === mode.id}
+                        >
+                          <div className="flex flex-col items-start gap-1 w-full">
+                            <div className="flex items-center justify-between w-full">
+                              <span className="font-semibold">{mode.name}</span>
+                              <Badge className={getDifficultyColor(mode.difficulty)} variant="outline">
+                                {mode.difficulty}
+                              </Badge>
+                            </div>
+                            <span className="text-xs text-muted-foreground">
+                              {mode.duration}s • {mode.questions.length} question types
+                            </span>
                           </div>
-                          <span className="text-xs text-muted-foreground">
-                            {mode.duration}s • {mode.questions.length} question types
-                          </span>
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Host Controls */}
+                  <div className="border-t pt-4 space-y-3">
+                    <p className="text-sm font-semibold">Host Controls</p>
+
+                    {/* Allow Visual Aids Toggle */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Eye className="h-4 w-4 text-muted-foreground" />
+                        <div>
+                          <Label htmlFor="allow-visual-aids" className="cursor-pointer">
+                            Allow Visual Aids
+                          </Label>
+                          <p className="text-xs text-muted-foreground">
+                            Let players use grouped digits and index hints
+                          </p>
                         </div>
-                      </Button>
-                    ))}
+                      </div>
+                      <Switch
+                        id="allow-visual-aids"
+                        checked={room.allowVisualAids ?? true}
+                        onCheckedChange={async (checked) => {
+                          if (roomId) {
+                            try {
+                              await updateRoomSettings(roomId, { allowVisualAids: checked });
+                            } catch {
+                              toast({
+                                title: 'Error',
+                                description: 'Failed to update visual aids setting',
+                                variant: 'destructive',
+                              });
+                            }
+                          }
+                        }}
+                      />
+                    </div>
+
+                    {/* Enable Countdown Toggle */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Timer className="h-4 w-4 text-muted-foreground" />
+                        <div>
+                          <Label htmlFor="enable-countdown" className="cursor-pointer">
+                            Enable Countdown
+                          </Label>
+                          <p className="text-xs text-muted-foreground">
+                            Show 3-2-1 countdown before game starts
+                          </p>
+                        </div>
+                      </div>
+                      <Switch
+                        id="enable-countdown"
+                        checked={room.enableCountdown ?? true}
+                        onCheckedChange={async (checked) => {
+                          if (roomId) {
+                            try {
+                              await updateRoomSettings(roomId, { enableCountdown: checked });
+                            } catch {
+                              toast({
+                                title: 'Error',
+                                description: 'Failed to update countdown setting',
+                                variant: 'destructive',
+                              });
+                            }
+                          }
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
               )}
@@ -335,6 +440,18 @@ export default function RoomLobby() {
                         <Badge className="bg-green-600">Ready</Badge>
                       ) : (
                         <Badge variant="outline">Not Ready</Badge>
+                      )}
+                      {/* Transfer host button - only show for host, not for themselves, and not for disconnected players */}
+                      {isHost && !isPlayerHost && !isDisconnected && (
+                        <Button
+                          onClick={() => setTransferHostUid(player.uid)}
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 hover:bg-primary hover:text-primary-foreground"
+                          title="Transfer host to this player"
+                        >
+                          <UserCog className="h-4 w-4" />
+                        </Button>
                       )}
                       {/* Kick button - only show for host, not for themselves */}
                       {isHost && !isPlayerHost && (
@@ -400,6 +517,28 @@ export default function RoomLobby() {
           )}
         </CardContent>
       </Card>
+
+      {/* Transfer Host Confirmation Dialog */}
+      <AlertDialog open={transferHostUid !== null} onOpenChange={(open) => !open && setTransferHostUid(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Transfer Host Privileges?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to transfer host privileges to{' '}
+              <span className="font-semibold">
+                {transferHostUid && room?.players[transferHostUid]?.displayName}
+              </span>
+              ? You will no longer be the host and will need to ready up to start the game.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleTransferHost}>
+              Transfer Host
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

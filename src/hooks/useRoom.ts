@@ -26,6 +26,8 @@ export interface Room {
   createdAt: number;
   startedAt?: number;
   maxPlayers: number; // Maximum number of players (2-10)
+  allowVisualAids: boolean; // Host control: allow visual aids for all players
+  enableCountdown: boolean; // Host control: enable countdown before game starts
 }
 
 export function useRoom() {
@@ -51,6 +53,8 @@ export function useRoom() {
           hostUid: user.uid,
           gameMode,
           maxPlayers,
+          allowVisualAids: true, // Default: allow visual aids
+          enableCountdown: true, // Default: enable countdown
           players: {
             [user.uid]: {
               uid: user.uid,
@@ -511,6 +515,71 @@ export function useRoom() {
     return () => off(roomRef, 'value', listener);
   }, []);
 
+  const updateRoomSettings = useCallback(
+    async (roomId: string, settings: { allowVisualAids?: boolean; enableCountdown?: boolean }) => {
+      if (!user) return;
+
+      const roomRef = ref(database, `rooms/${roomId}`);
+
+      try {
+        // Get current room to verify user is host
+        const snapshot = await get(roomRef);
+        if (!snapshot.exists()) {
+          throw new Error('Room not found');
+        }
+
+        const room = snapshot.val();
+        if (room.hostUid !== user.uid) {
+          throw new Error('Only the host can update room settings');
+        }
+
+        // Update settings
+        await update(roomRef, settings);
+      } catch (error) {
+        console.error('Error updating room settings:', error);
+        throw error;
+      }
+    },
+    [user]
+  );
+
+  const transferHost = useCallback(
+    async (roomId: string, newHostUid: string) => {
+      if (!user) return;
+
+      const roomRef = ref(database, `rooms/${roomId}`);
+
+      try {
+        // Get current room to verify user is host
+        const snapshot = await get(roomRef);
+        if (!snapshot.exists()) {
+          throw new Error('Room not found');
+        }
+
+        const room = snapshot.val();
+        if (room.hostUid !== user.uid) {
+          throw new Error('Only the host can transfer host privileges');
+        }
+
+        // Verify new host is in the room
+        if (!room.players[newHostUid] || room.players[newHostUid].kicked || room.players[newHostUid].disconnected) {
+          throw new Error('New host must be an active player in the room');
+        }
+
+        // Transfer host, set new host as ready, and set old host as not ready
+        await update(roomRef, {
+          hostUid: newHostUid,
+          [`players/${newHostUid}/ready`]: true,
+          [`players/${user.uid}/ready`]: false,
+        });
+      } catch (error) {
+        console.error('Error transferring host:', error);
+        throw error;
+      }
+    },
+    [user]
+  );
+
   return {
     loading,
     createRoom,
@@ -524,6 +593,8 @@ export function useRoom() {
     incrementWins,
     updateGameMode,
     kickPlayer,
+    updateRoomSettings,
+    transferHost,
     subscribeToRoom,
   };
 }

@@ -3,7 +3,9 @@ import { Input } from "@/components/ui/input";
 import { generateQuestion } from "./generator";
 import { validateAnswer } from "./validator";
 import { convertBase } from "./converter";
+import { formatWithGrouping, getIndexHints } from "./formatters";
 import { cn } from "@/lib/utils";
+import { GameSettings } from "@/hooks/useGameSettings";
 
 // Maximum input lengths per base type to prevent performance issues
 const MAX_INPUT_LENGTHS: { [key: string]: number } = {
@@ -21,11 +23,31 @@ const VALID_PATTERNS: { [key: string]: RegExp } = {
     hexadecimal: /^[0-9a-fx]*$/, // Allow 'x' for '0x' prefix
 };
 
-export default function QuizPrompt({ score, setScore, setting, seed }) {
+interface QuizPromptProps {
+    score: number;
+    setScore: (score: number | ((prev: number) => number)) => void;
+    setting: [string, string, number, number];
+    seed?: number;
+    gameSettings?: GameSettings;
+    allowVisualAids?: boolean; // For multiplayer: host can disable visual aids
+}
+
+export default function QuizPrompt({
+    score,
+    setScore,
+    setting,
+    seed,
+    gameSettings,
+    allowVisualAids = true
+}: QuizPromptProps) {
     const [question, setQuestion] = useState("");
     const [answer, setAnswer] = useState("");
     const [showSuccess, setShowSuccess] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
+
+    // Determine if visual aids should be shown
+    const showGroupedDigits = allowVisualAids && gameSettings?.groupedDigits;
+    const showIndexHints = allowVisualAids && gameSettings?.indexValueHints;
 
     useEffect(() => {
         // Generate question with optional seed for multiplayer determinism
@@ -85,8 +107,16 @@ export default function QuizPrompt({ score, setScore, setting, seed }) {
                     <div className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
                         {setting[0]}
                     </div>
-                    <div className="text-3xl md:text-4xl font-bold font-mono bg-muted px-6 py-4 rounded-lg min-w-[180px] text-center">
-                        {question}
+                    <div className="flex flex-col items-center gap-1">
+                        <div className="text-3xl md:text-4xl font-bold font-mono bg-muted px-6 py-4 rounded-lg min-w-[180px] text-center">
+                            {showGroupedDigits ? formatWithGrouping(question, setting[0]) : question}
+                        </div>
+                        {/* Index hints - only show if not converting from decimal */}
+                        {showIndexHints && setting[0].toLowerCase() !== 'decimal' && question && (
+                            <div className="text-xs font-mono text-muted-foreground px-6 text-center whitespace-pre font-normal tracking-wider">
+                                {getIndexHints(question, setting[0], showGroupedDigits)}
+                            </div>
+                        )}
                     </div>
                 </div>
 

@@ -4,6 +4,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { QuizPrompt, QuizStats } from "@features/quiz";
 import { QuizContext, ResultContext } from "@/contexts/GameContexts";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { useGameSettings } from "@/hooks/useGameSettings";
+import Countdown from "@/components/Countdown";
 
 export default function Quiz() {
     const quizContext = useContext(QuizContext);
@@ -15,6 +17,8 @@ export default function Quiz() {
 
     const { settings } = quizContext;
     const { setResults } = resultContext;
+    const { settings: gameSettings } = useGameSettings();
+    const [showCountdown, setShowCountdown] = useState(gameSettings.countdownStart);
     const [running, setRunning] = useState(true);
     const [score, setScore] = useState(0);
     const [randomSetting, setRandomSetting] = useState(
@@ -76,21 +80,30 @@ export default function Quiz() {
     });
 
     return (
-        <div className="container mx-auto px-4 py-8 min-h-screen flex items-center justify-center">
-            <Card className="w-full max-w-4xl shadow-lg">
-                <QuizStats
-                    expiryTimestamp={expiryTimestamp}
-                    setRunning={setRunning}
-                    score={score}
+        <>
+            {showCountdown && (
+                <Countdown
+                    onComplete={() => setShowCountdown(false)}
+                    duration={3}
                 />
-                <CardContent className="p-0">
-                    <QuizPrompt
+            )}
+            <div className="container mx-auto px-4 py-8 min-h-screen flex items-center justify-center">
+                <Card className="w-full max-w-4xl shadow-lg">
+                    <QuizStats
+                        expiryTimestamp={expiryTimestamp}
+                        setRunning={setRunning}
                         score={score}
-                        setScore={setScore}
-                        setting={randomSetting}
                     />
-                </CardContent>
-            </Card>
-        </div>
+                    <CardContent className="p-0">
+                        <QuizPrompt
+                            score={score}
+                            setScore={setScore}
+                            setting={randomSetting}
+                            gameSettings={gameSettings}
+                        />
+                    </CardContent>
+                </Card>
+            </div>
+        </>
     );
 }

@@ -21,6 +21,7 @@ import Stats from "./pages/Stats";
 import ProfileLayout from "./pages/profile/ProfileLayout";
 import ProfileOverview from "./pages/profile/ProfileOverview";
 import ProfileSettings from "./pages/profile/ProfileSettings";
+import ProfileGameSettings from "./pages/profile/ProfileGameSettings";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import MultiplayerHome from "./pages/MultiplayerHome";
@@ -76,6 +77,10 @@ const router = createBrowserRouter([
                     {
                         path: "settings",
                         element: <ProfileSettings />,
+                    },
+                    {
+                        path: "game-settings",
+                        element: <ProfileGameSettings />,
                     },
                 ],
             },
