@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { User, Settings, Moon, Sun, LogOut } from 'lucide-react';
+import { User, Settings, LogOut } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,13 +10,11 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
-import { useTheme } from '@/contexts/ThemeContext';
 import { getUserAvatarUrl } from '@/lib/avatarGenerator';
 
 export default function ProfileDropdown() {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
-  const { theme, toggleTheme } = useTheme();
 
   const handleSignOut = async () => {
     await signOut();
@@ -70,19 +68,6 @@ export default function ProfileDropdown() {
         <DropdownMenuItem onClick={() => navigate('/profile/settings')} className="cursor-pointer">
           <Settings className="mr-2 h-4 w-4" />
           <span>Settings</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={toggleTheme} className="cursor-pointer">
-          {theme === 'light' ? (
-            <>
-              <Moon className="mr-2 h-4 w-4" />
-              <span>Dark Mode</span>
-            </>
-          ) : (
-            <>
-              <Sun className="mr-2 h-4 w-4" />
-              <span>Light Mode</span>
-            </>
-          )}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive focus:text-destructive">

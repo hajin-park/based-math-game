@@ -21,7 +21,7 @@ export default function MultiplayerHome() {
         </div>
 
         {/* Main Card */}
-        <Card className="border-2 shadow-xl">
+        <Card className="border-2 shadow-lg">
           <CardHeader className="text-center pb-6">
             <CardTitle className="text-2xl flex items-center justify-center gap-2">
               <Zap className="h-6 w-6 text-primary" />
@@ -33,15 +33,15 @@ export default function MultiplayerHome() {
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Create Room */}
-            <Card className="group hover:shadow-lg hover:border-primary/50 transition-all duration-300 hover-lift border-2 cursor-pointer"
+            <Card className="group hover:shadow-lg hover:border-primary/50 transition-all duration-200 border-2 cursor-pointer"
                   onClick={() => navigate('/multiplayer/create')}>
               <CardHeader>
                 <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                  <div className="p-3 rounded-lg bg-primary/10">
                     <Plus className="h-6 w-6 text-primary" />
                   </div>
                   <div className="flex-1">
-                    <CardTitle className="text-xl group-hover:text-primary transition-colors">
+                    <CardTitle className="text-xl">
                       Create Room
                     </CardTitle>
                     <CardDescription className="text-base">
@@ -53,15 +53,15 @@ export default function MultiplayerHome() {
             </Card>
 
             {/* Join Room */}
-            <Card className="group hover:shadow-lg hover:border-primary/50 transition-all duration-300 hover-lift border-2 cursor-pointer"
+            <Card className="group hover:shadow-lg hover:border-primary/50 transition-all duration-200 border-2 cursor-pointer"
                   onClick={() => navigate('/multiplayer/join')}>
               <CardHeader>
                 <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                  <div className="p-3 rounded-lg bg-primary/10">
                     <LogIn className="h-6 w-6 text-primary" />
                   </div>
                   <div className="flex-1">
-                    <CardTitle className="text-xl group-hover:text-primary transition-colors">
+                    <CardTitle className="text-xl">
                       Join Room
                     </CardTitle>
                     <CardDescription className="text-base">

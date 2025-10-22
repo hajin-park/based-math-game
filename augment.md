@@ -23,100 +23,114 @@ React-based multiplayer quiz game for practicing base conversion (Binary, Octal,
 ## Design System
 
 ### Overview
-Modern design system built on shadcn/ui components with Tailwind CSS and Cyan primary color theme (HSL 189 94% 43%).
+Modern design system built on shadcn/ui components with Tailwind CSS and Slate primary color theme using OKLCH color space.
 
 **Features:**
 - Glassmorphism with backdrop blur effects
-- Clean minimalist layouts
-- Smooth animations (fade-in, slide-in, pulse-glow)
+- Clean minimalist layouts with functional-first design
+- Smooth animations (fade-in, slide-in) - only when purposeful
 - Mobile-first responsive design
 - WCAG 2.1 AA accessibility compliance
 - Full light/dark theme support
 
-### Color Palette
+### Color Palette (OKLCH)
 
-#### Primary Colors
+#### Primary Colors - Slate Theme
 ```css
---primary: 189 94% 43%;           /* Cyan - Main brand color */
---primary-foreground: 0 0% 100%;  /* White text on primary */
---accent: 189 94% 53%;            /* Lighter cyan for accents */
---accent-foreground: 0 0% 100%;   /* White text on accent */
+/* Light Mode */
+--primary: oklch(0.208 0.042 265.755);           /* Slate 900 */
+--primary-foreground: oklch(0.984 0.003 247.858); /* Slate 50 */
+--background: oklch(1 0 0);                      /* Pure white */
+--foreground: oklch(0.129 0.042 264.695);        /* Slate 950 */
+
+/* Dark Mode */
+--primary: oklch(0.929 0.013 255.508);           /* Slate 200 */
+--primary-foreground: oklch(0.208 0.042 265.755); /* Slate 900 */
+--background: oklch(0.129 0.042 264.695);        /* Slate 950 */
+--foreground: oklch(0.984 0.003 247.858);        /* Slate 50 */
 ```
 
-#### Semantic Colors
+#### Semantic Colors (OKLCH)
 ```css
---success: 142 76% 36%;           /* Green for success states */
---success-foreground: 0 0% 100%;
---warning: 38 92% 50%;            /* Orange/Yellow for warnings */
---warning-foreground: 0 0% 100%;
---info: 217 91% 60%;              /* Blue for informational messages */
---info-foreground: 0 0% 100%;
---destructive: 0 84% 60%;         /* Red for destructive actions */
---destructive-foreground: 0 0% 100%;
+--success: oklch(0.6 0.118 184.704);             /* Green */
+--success-foreground: oklch(0.984 0.003 247.858);
+--warning: oklch(0.828 0.189 84.429);            /* Amber */
+--warning-foreground: oklch(0.129 0.042 264.695);
+--info: oklch(0.488 0.243 264.376);              /* Blue */
+--info-foreground: oklch(0.984 0.003 247.858);
+--destructive: oklch(0.577 0.245 27.325);        /* Red */
+--destructive-foreground: oklch(0.984 0.003 247.858);
 ```
 
-#### Neutral Colors
+#### Neutral Colors (OKLCH)
 ```css
---background: 0 0% 100%;          /* Page background (light mode) */
---foreground: 222 47% 11%;        /* Main text color */
---card: 0 0% 100%;                /* Card background */
---card-foreground: 222 47% 11%;   /* Card text */
---muted: 210 40% 96%;             /* Muted backgrounds */
---muted-foreground: 215 16% 47%;  /* Muted text */
---border: 214 32% 91%;            /* Border color */
+--muted: oklch(0.968 0.007 247.896);             /* Slate 100 (light) */
+--muted-foreground: oklch(0.554 0.046 257.417);  /* Slate 500 (light) */
+--border: oklch(0.929 0.013 255.508);            /* Slate 200 (light) */
+--card: oklch(1 0 0);                            /* White (light) */
 ```
 
 ### Typography
 
 **Font Family:** System font stack (primary), Monospace (code/numbers)
-**Font Sizes:** text-xs (12px) to text-5xl (48px)
-**Font Weights:** 400 (normal) to 900 (black)
+**Font Sizes:** text-xs (12px) to text-8xl (96px)
+**Font Weights:** 400 (normal), 500 (medium), 600 (semibold), 700 (bold)
+**Tracking:** tracking-tight for headings
 
 ### Spacing & Layout
 
-**Container Widths:** max-w-4xl (896px) to max-w-5xl (1024px)
-**Page Padding:** px-4 py-8 (16px horizontal, 32px vertical)
-**Border Radius:** --radius: 0.75rem (12px)
-
-### Shadows
-```css
---shadow-glow: 0 0 20px rgb(6 182 212 / 0.3);      /* Cyan glow */
---shadow-glow-lg: 0 0 40px rgb(6 182 212 / 0.4);   /* Larger glow */
-```
+**Container Widths:** max-w-4xl (896px) to max-w-6xl (1152px)
+**Page Padding:** px-4 py-8 (16px horizontal, 32px vertical) to py-20 (80px vertical)
+**Border Radius:** --radius: 0.625rem (10px)
 
 ### Custom Utility Classes
 
 ```css
-.gradient-text { @apply bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent; }
-.hover-lift { @apply transition-transform duration-200 hover:-translate-y-1; }
-.glass { @apply bg-white/80 dark:bg-gray-900/80 backdrop-blur-md; }
-.animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+/* Glassmorphism */
+.glass { @apply bg-background/80 backdrop-blur-md border border-border/50; }
+.glass-card { @apply bg-card/80 backdrop-blur-md border border-border/50; }
+.glass-nav { @apply bg-background/60 backdrop-blur-lg border-b border-border/50; }
+
+/* Gradients */
+.gradient-text { @apply bg-gradient-to-r from-primary via-primary/90 to-primary/80 bg-clip-text text-transparent; }
+.gradient-subtle { @apply bg-gradient-to-b from-background to-muted/30; }
+
+/* Animations - Only use when purposeful */
+.animate-in { animation: animate-in 0.3s ease-out; }
+.animate-in-slow { animation: animate-in 0.6s ease-out; }
+.fade-in-up { animation: fade-in-up 0.6s ease-out; }
+
+/* Transitions - Only use when functionally necessary */
+.transition-smooth { @apply transition-all duration-300 ease-in-out; }
 ```
 
 ### Component Patterns
 
 **Page Headers:** Icon + gradient text + description
-**Cards:** border-2 shadow-lg with CardHeader/CardContent
-**Interactive Cards:** hover:shadow-md hover:border-primary/50 transition-all hover-lift
-**Buttons:** Primary (default), Secondary (outline), Destructive variants
+**Cards:** Clean borders with subtle shadows, no purposeless hover effects
+**Interactive Cards:** hover:shadow-lg hover:border-primary/50 transition-all duration-200 (functional feedback only)
+**Buttons:** Primary (default), Secondary (outline), Ghost, Destructive variants
+**Separators:** Used between major sections for visual hierarchy
 
 ### Icons
 
 **Library:** Lucide React
-**Common:** Sparkles, Trophy, Users, Gamepad2, TrendingUp, Shield, Settings, Info, AlertTriangle
+**Common:** Sparkles, Trophy, Users, Gamepad2, TrendingUp, Shield, Settings, Info, AlertTriangle, Play, BookOpen, Filter, Target, Binary, Hash, Zap
 
 ### Responsive Design
 
 **Breakpoints:** sm (640px), md (768px), lg (1024px), xl (1280px), 2xl (1536px)
-**Approach:** Mobile-first with responsive grids
+**Approach:** Mobile-first with responsive grids (grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4)
+**Container Padding:** Responsive padding (1rem default, 2rem sm, 4rem lg, 5rem xl, 6rem 2xl)
 
 ### Accessibility
 
 **Focus States:** focus:ring-2 focus:ring-primary focus:ring-offset-2
-**Color Contrast:** WCAG 2.1 AA compliance
+**Color Contrast:** WCAG 2.1 AA compliance with OKLCH color space
 **Semantic HTML:** Proper heading hierarchy, ARIA labels, keyboard navigation
 **Motion Preferences:** Respects prefers-reduced-motion
 **Dark Mode:** Full support with automatic theme switching
+**Touch Targets:** Minimum 44x44px for mobile interactions
 
 ---
 
@@ -371,7 +385,7 @@ button, card, form, input, label, select, scroll-area, separator, toast, dialog,
 
 ### Pages
 
-All pages redesigned with Cyan theme, consistent patterns, and enhanced UX.
+All pages redesigned with Slate theme, consistent patterns, functional-first design, and enhanced UX.
 
 **Game:** Home, Quiz, Results, SingleplayerMode, MultiplayerGame
 **Multiplayer:** MultiplayerHome, CreateRoom, JoinRoom, RoomLobby, MultiplayerResults
@@ -427,7 +441,7 @@ Firebase config in `.env`: API_KEY, AUTH_DOMAIN, DATABASE_URL, PROJECT_ID, STORA
 Strict mode, target ES2020, module ESNext
 
 ### Tailwind
-Base color Stone, class-based dark mode, CSS variables, radius 0.5rem
+Base color Slate (OKLCH), class-based dark mode, CSS variables, radius 0.625rem
 
 ### Firebase Hosting
 SPA rewrites, clean URLs, content-type headers, emulators (Auth 9099, Database 9000, UI 4000)
@@ -543,41 +557,240 @@ try {
 
 ## Troubleshooting
 
-**Build fails:** Check types, imports, Hook dependencies
-**Firebase fails:** Verify `.env`, project settings, emulators
-**Timer issues:** Check `react-timer-hook`, expiry calculation, useEffect cleanup
-**Multiplayer sync:** Verify RTDB rules, presence system, room status
-**PWA issues:** Check service worker, manifest.json, HTTPS
+### Common Issues
+
+**Build fails with TypeScript errors:**
+- Check all `any` types are replaced with proper types
+- Verify all imports are correct
+- Check React Hook dependency arrays
+
+**Firebase connection fails:**
+- Verify `.env` file exists with correct values
+- Check Firebase project settings
+- Verify emulators are running (dev mode)
+
+**Timer doesn't work:**
+- Check `react-timer-hook` is installed
+- Verify expiry timestamp calculation with `useMemo` to prevent recreation
+- Check useEffect cleanup
+- Timer displays in MM:SS format calculated from `timer.seconds + timer.minutes * 60 + timer.hours * 3600`
+- Visual feedback: orange text when < 10s, red pulsing when < 5s
+- **Singleplayer**:
+  - `Quiz.tsx` creates `expiryTimestamp` with `useMemo` and passes to `QuizStats`
+  - `QuizStats` creates internal timer with `autoStart: false`
+  - `useEffect` calls `internalTimer.restart(expiryTimestamp, true)` to start countdown
+- **Multiplayer**:
+  - `MultiplayerGame.tsx` creates timer with `autoStart: false`
+  - `useEffect` calls `timer.restart()` when `room.startedAt` changes
+  - Calculates remaining time from `room.startedAt` timestamp for sync across clients
+
+**Multiplayer sync issues:**
+- Verify Firebase Realtime Database rules
+- Check presence system is working
+- Verify room status updates
+
+**PWA not working:**
+- Check service worker registration
+- Verify manifest.json is served
+- Check HTTPS (required for PWA)
 
 ---
 
+## Future Enhancements
 
+### Potential Features
+- Sound effects for correct/incorrect answers
+- Difficulty levels (easy/medium/hard)
+- Custom themes and color schemes
+- Social features (friends, challenges)
+- Achievements and badges
+- Practice mode (no timer)
+- Tutorial system
+- Mobile app (React Native)
+
+### Performance Optimizations
+- Code splitting with React.lazy()
+- Image optimization with next-gen formats
+- Bundle size reduction
+- Server-side rendering (SSR)
+- Edge caching with CDN
+
+### Analytics Enhancements
+- Detailed performance metrics
+- User behavior tracking
+- A/B testing framework
+- Conversion funnel analysis
 
 ---
 
-## Best Practices
+## Development Best Practices
 
-**Hook Dependencies:** Use specific properties (`[user?.uid]`) instead of entire objects
-**Duplicate Prevention:** Use `useRef` flags for one-time operations
-**Stats Tracking:** Check `trackStats` before saving
-**Layout Stability:** Minimum heights, skeleton loaders, smooth transitions
+### React Hook Dependencies
+- Use specific properties in dependency arrays instead of entire objects
+- Example: Use `[user?.uid]` instead of `[user]` to prevent unnecessary re-renders
+- In `useGameHistory.ts`: Dependencies use `[user?.uid]`
+- In `useStats.ts`: `saveGameResult` uses `[user?.uid, user?.displayName, isGuest]`, `getUserStats` uses `[user?.uid]`
 
-### Multiplayer
+### Preventing Duplicate Operations
+- Use `useRef` flags to track one-time operations in effects
+- Example in `Results.tsx`: `hasSavedRef` prevents duplicate stat saves in React.StrictMode
+- Pattern:
+  ```typescript
+  const hasSavedRef = useRef(false);
+  useEffect(() => {
+    if (hasSavedRef.current) return;
+    hasSavedRef.current = true;
+    // Perform operation
+  }, []);
+  ```
 
-**Win Counter:** Room-specific, persists on reset, stored at `/rooms/{roomId}/players/{playerId}/wins`
-**Host Settings:** updateGameMode() for waiting rooms, real-time sync, security validated
-**Cleanup:** Guest users remove all data on disconnect, authenticated users set offline, host disconnect deletes room
+### Stats Tracking Implementation
+- `Results.tsx` checks `settings.trackStats` before saving results
+- Only saves to database if `trackStats !== false`
+- Displays "This game was not tracked" message when appropriate
+- `Game-Mode-Select.component.tsx` includes Switch UI for tracking toggle
+- Default behavior: tracking enabled (`trackStats: true`)
 
-### Timer
+### Layout Stability
+- Use minimum heights (`min-h-[600px]`) to prevent layout shifts
+- Implement skeleton loaders that match final content structure
+- Add smooth transitions (`animate-in fade-in duration-300`)
+- Use absolute positioning for loading states to overlay reserved space
+- Example in `Stats.tsx`: Skeleton loaders for stats cards, performance data, and recent games
 
-**Multiplayer:** `autoStart: false`, manual restart with `lastStartedAtRef` tracking, sync via `room.startedAt`
-**Effects:** Use `useRef` to store timer object, prevent infinite loops
+### Multiplayer Features
 
-### Room Management
+#### Win Counter System
+- **RoomPlayer Interface**: Includes `wins: number` field
+- **Initialization**: Set to `0` when creating/joining rooms
+- **Increment**: `incrementWins()` function updates winner's count after each game
+- **Display**: Win count shown next to player names in lobby (e.g., "PlayerName (3 wins)")
+- **Persistence**: Win counters persist when game settings are changed or room is reset
+- **Scope**: Room-specific (not global), reset when new room is created
 
-**Host Transfer:** subscribeToRoom detects missing host, transfers to first player, auto-ready
-**Player Limit:** 2-10 players, validated in joinRoom()
-**Null Safety:** Always check `room.players` exists
+**Database Structure:**
+```
+/rooms/{roomId}/players/{playerId}/wins: number
+```
+
+#### Host Game Settings Management
+- **updateGameMode() Function**: Allows host to change game mode in waiting rooms
+- **Host-Only UI**: Collapsible settings panel visible only to host
+- **Real-Time Sync**: All players see updated settings immediately via Firebase listeners
+- **Win Counter Preservation**: Win counters persist when settings are changed
+- **Visual Indicators**: Current game mode is highlighted, disabled button prevents re-selection
+- **Security**: Only host can update game mode (validated in `updateGameMode()`), cannot update while game is in progress (status must be 'waiting')
+
+#### Guest User and Room Cleanup
+- **Security Rules**: Allow deletion for guest users with `!newData.exists()` check
+- **Cleanup Logic**: Guest users clean up user data, presence data, and room data on disconnect
+- **Separate Handling**: Authenticated users set presence to offline; guest users remove all data
+- **Edge Cases**:
+  - Guest user closes browser/tab → Data cleaned up via `onDisconnect`
+  - Guest user loses internet → Firebase automatically triggers `onDisconnect`
+  - Host leaves room → Entire room deleted (simpler than host transfer on disconnect)
+  - All players leave room → Room deleted via `leaveRoom()` logic
+  - Guest in room when disconnecting → Player removed, room cleaned up if empty
+- **Technical Details**:
+  - `onDisconnect()` can only perform simple operations (set, remove, update)
+  - Cannot run complex logic like "check if room is empty" in `onDisconnect`
+  - Solution: Delete entire room when host disconnects (host is always required)
+  - Client-side `leaveRoom()` handles host transfer for intentional leaves
+
+### Timer Implementation Patterns
+
+#### Multiplayer Timer
+- **Manual Restart Pattern**: Use `autoStart: false` and manually call `timer.restart()` when game starts
+- **Ref Tracking**: Track `lastStartedAtRef` to prevent duplicate restarts
+- **Expiry Calculation**: Calculate remaining time from `room.startedAt` timestamp for sync across clients
+```typescript
+const lastStartedAtRef = useRef<number | null>(null);
+
+const timer = useTimer({
+  expiryTimestamp,
+  onExpire: async () => { await finishGame(roomId); },
+  autoStart: false,
+});
+
+useEffect(() => {
+  if (room?.startedAt && room?.gameMode.duration) {
+    if (lastStartedAtRef.current !== room.startedAt) {
+      lastStartedAtRef.current = room.startedAt;
+      const elapsed = Math.floor((Date.now() - room.startedAt) / 1000);
+      const remaining = Math.max(0, room.gameMode.duration - elapsed);
+      const newExpiry = new Date();
+      newExpiry.setSeconds(newExpiry.getSeconds() + remaining);
+      timer.restart(newExpiry, true);
+    }
+  }
+}, [room?.startedAt, room?.gameMode.duration]);
+```
+
+#### Timer Object in Effects
+- **Problem**: Timer object from `react-timer-hook` changes on every render, causing infinite loops
+- **Solution**: Use `useRef` to store timer object and access via `.current` in effects
+```typescript
+const timerRef = useRef(timer);
+timerRef.current = timer;
+
+useEffect(() => {
+  return () => {
+    timerRef.current.pause();
+  };
+}, []); // Empty dependency array
+```
+
+### Room Management Patterns
+
+#### Host Transfer Logic
+- **onDisconnect Handler**: Remove only the player, not the entire room
+- **subscribeToRoom Listener**: Detects missing host and transfers to first remaining player
+- **Automatic Ready**: New host is automatically marked as ready
+- **Room Deletion**: Only when no players remain
+```typescript
+const listener = onValue(roomRef, async (snapshot) => {
+  if (!snapshot.exists()) {
+    callback(null);
+    return;
+  }
+
+  const room: Room = { id: roomId, ...snapshot.val() };
+  const players = Object.values(room.players);
+  const hostExists = players.some((p: any) => p.uid === room.hostUid);
+
+  if (!hostExists && players.length > 0) {
+    const newHost = players[0] as RoomPlayer;
+    await update(roomRef, {
+      hostUid: newHost.uid,
+      [`players/${newHost.uid}/ready`]: true,
+    });
+    return;
+  } else if (players.length === 0) {
+    await remove(roomRef);
+    callback(null);
+    return;
+  }
+
+  callback(room);
+});
+```
+
+#### Player Limit Configuration
+- **Room Interface**: Includes `maxPlayers: number` (2-10)
+- **Creation**: Host selects player limit at room creation
+- **Display**: Shown in lobby as "Players (X/Y)" format
+- **Validation**: Checked in `joinRoom()` to prevent overfilling
+
+#### Null Safety
+- Always check if `room.players` exists before accessing
+```typescript
+if (!room.players) {
+  await remove(roomRef);
+  callback(null);
+  return;
+}
+const players = Object.values(room.players);
+```
 
 ### Question Randomization
 

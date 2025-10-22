@@ -56,7 +56,7 @@ export default function JoinRoom() {
           </p>
         </div>
 
-        <Card className="border-2 shadow-xl">
+        <Card className="border-2 shadow-lg">
           <CardHeader>
             <CardTitle className="text-2xl flex items-center gap-2">
               <Hash className="h-6 w-6 text-primary" />

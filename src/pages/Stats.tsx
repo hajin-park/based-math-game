@@ -156,7 +156,7 @@ export default function Stats() {
               <div className="space-y-6 animate-in fade-in duration-300">
                 {/* Stats cards */}
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-                  <Card className="border-2 hover:shadow-md transition-shadow">
+                  <Card className="border-2">
                     <CardHeader className="pb-3">
                       <div className="flex items-center gap-2">
                         <Gamepad2 className="h-4 w-4 text-primary" />
@@ -168,7 +168,7 @@ export default function Stats() {
                     </CardContent>
                   </Card>
 
-                  <Card className="border-2 hover:shadow-md transition-shadow">
+                  <Card className="border-2">
                     <CardHeader className="pb-3">
                       <div className="flex items-center gap-2">
                         <TrendingUp className="h-4 w-4 text-primary" />
@@ -180,7 +180,7 @@ export default function Stats() {
                     </CardContent>
                   </Card>
 
-                  <Card className="border-2 hover:shadow-md transition-shadow">
+                  <Card className="border-2">
                     <CardHeader className="pb-3">
                       <div className="flex items-center gap-2">
                         <Target className="h-4 w-4 text-primary" />
@@ -192,7 +192,7 @@ export default function Stats() {
                     </CardContent>
                   </Card>
 
-                  <Card className="border-2 hover:shadow-md transition-shadow">
+                  <Card className="border-2">
                     <CardHeader className="pb-3">
                       <div className="flex items-center gap-2">
                         <Trophy className="h-4 w-4 text-success" />
@@ -204,7 +204,7 @@ export default function Stats() {
                     </CardContent>
                   </Card>
 
-                  <Card className="border-2 hover:shadow-md transition-shadow">
+                  <Card className="border-2">
                     <CardHeader className="pb-3">
                       <div className="flex items-center gap-2">
                         <Percent className="h-4 w-4 text-primary" />
@@ -297,7 +297,7 @@ export default function Stats() {
                           return (
                             <Card
                               key={game.id}
-                              className="border-2 hover:border-primary/50 transition-all hover:shadow-md"
+                              className="border-2"
                             >
                               <CardContent className="p-4">
                                 <div className="flex justify-between items-center">

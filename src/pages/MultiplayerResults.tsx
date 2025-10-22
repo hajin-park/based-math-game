@@ -115,7 +115,7 @@ export default function MultiplayerResults() {
           </p>
         </div>
 
-        <Card className="border-2 shadow-xl">
+        <Card className="border-2 shadow-lg">
           <CardHeader className="text-center pb-6">
             <div className="flex items-center justify-center gap-2 mb-4">
               <Trophy className="h-12 w-12 text-yellow-600 animate-pulse" />
@@ -147,10 +147,10 @@ export default function MultiplayerResults() {
                 {sortedPlayers.map((player, index) => (
                   <Card
                     key={player.uid}
-                    className={`border-2 transition-all ${
+                    className={`border-2 ${
                       index === 0
                         ? 'border-yellow-600/50 bg-gradient-to-r from-yellow-500/10 to-orange-500/10'
-                        : 'border-muted hover:border-primary/30'
+                        : 'border-muted'
                     }`}
                   >
                     <CardContent className="p-4">
@@ -166,7 +166,7 @@ export default function MultiplayerResults() {
                           <div>
                             <p className="font-semibold text-lg">{player.displayName}</p>
                             {index === 0 && (
-                              <Badge className="bg-yellow-600 hover:bg-yellow-700">
+                              <Badge className="bg-yellow-600">
                                 <Crown className="h-3 w-3 mr-1" />
                                 Champion
                               </Badge>

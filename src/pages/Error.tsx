@@ -1,27 +1,61 @@
-import { useRouteError, NavLink } from "react-router-dom";
+import { useRouteError, useNavigate } from "react-router-dom";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { AlertTriangle, Home, RefreshCw } from "lucide-react";
 
 const Error = () => {
-    const error = useRouteError();
+    const error = useRouteError() as Error | { statusText?: string; message?: string } | null;
+    const navigate = useNavigate();
     console.error(error);
 
+    const errorMessage = error instanceof Error
+        ? error.message
+        : (error && typeof error === 'object' && 'message' in error && error.message)
+            ? error.message
+            : (error && typeof error === 'object' && 'statusText' in error && error.statusText)
+                ? error.statusText
+                : "An unexpected error occurred";
+
     return (
-        <div
-            id="error-page"
-            className="w-screen min-h-screen flex flex-col gap-y-8 justify-center text-center"
-        >
-            <h1 className="font-black text-4xl">Oops!</h1>
-            <p className="font-bold text-2xl">
-                Sorry, an unexpected error has occurred.
-            </p>
-            <p className="font-normal text-lg">
-                <i>{(error as Error).message}</i>
-            </p>
-            <NavLink
-                to="/"
-                className="max-w-sm mx-auto rounded-md bg-indigo-500 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400"
-            >
-                Return to Home Page
-            </NavLink>
+        <div className="container mx-auto px-4 flex items-center justify-center min-h-screen">
+            <Card className="w-full max-w-lg border-2 shadow-lg">
+                <CardHeader className="text-center space-y-4">
+                    <div className="flex justify-center">
+                        <div className="p-4 rounded-full bg-destructive/10">
+                            <AlertTriangle className="h-12 w-12 text-destructive" />
+                        </div>
+                    </div>
+                    <CardTitle className="text-3xl">Oops! Something Went Wrong</CardTitle>
+                    <CardDescription className="text-base">
+                        We encountered an unexpected error
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    <div className="p-4 rounded-lg bg-muted">
+                        <p className="text-sm text-muted-foreground font-mono break-words">
+                            {errorMessage}
+                        </p>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-3">
+                        <Button
+                            onClick={() => window.location.reload()}
+                            variant="outline"
+                            className="flex-1"
+                        >
+                            <RefreshCw className="mr-2 h-4 w-4" />
+                            Reload Page
+                        </Button>
+                        <Button
+                            onClick={() => navigate('/')}
+                            className="flex-1"
+                        >
+                            <Home className="mr-2 h-4 w-4" />
+                            Go Home
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
         </div>
     );
 };

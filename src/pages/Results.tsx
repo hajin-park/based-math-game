@@ -79,7 +79,7 @@ export default function Quiz() {
 
     return (
         <div className="flex justify-center items-center min-h-[calc(100vh-8rem)] p-4">
-            <Card className="w-full max-w-lg border-2 shadow-xl animate-in">
+            <Card className="w-full max-w-lg border-2 shadow-lg animate-in">
                 <CardHeader className="text-center space-y-4 pb-6">
                     <div className="flex items-center justify-center gap-2">
                         <Trophy className="h-8 w-8 text-success" />

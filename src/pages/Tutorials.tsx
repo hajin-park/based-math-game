@@ -47,7 +47,7 @@ export default function Tutorials() {
           <Card className="border-2 shadow-lg">
             <CardHeader>
               <CardTitle className="text-2xl flex items-center gap-2">
-                <Binary className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                <Binary className="h-6 w-6 text-info" />
                 Binary (Base 2)
               </CardTitle>
               <CardDescription>Uses digits 0-1 • The language of computers</CardDescription>
@@ -59,9 +59,9 @@ export default function Tutorials() {
                 <p className="text-sm text-muted-foreground mb-4">
                   Each position represents a power of 2. Multiply each digit by its place value and sum them.
                 </p>
-                <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                <div className="bg-info/10 p-4 rounded-lg border border-info/30">
                   <p className="text-sm font-mono mb-2">
-                    <strong>Example:</strong> 1011₂ = (1×8) + (0×4) + (1×2) + (1×1) = <strong className="text-blue-600 dark:text-blue-400">11₁₀</strong>
+                    <strong>Example:</strong> 1011₂ = (1×8) + (0×4) + (1×2) + (1×1) = <strong className="text-info">11₁₀</strong>
                   </p>
                 </div>
               </div>
@@ -74,8 +74,8 @@ export default function Tutorials() {
                     dec: i,
                     bin: i.toString(2).padStart(4, '0'),
                   })).map(({ dec, bin }) => (
-                    <div key={dec} className="bg-blue-100 dark:bg-blue-900 p-2 rounded text-center">
-                      <div className="font-mono text-sm font-bold text-blue-600 dark:text-blue-400">{bin}</div>
+                    <div key={dec} className="bg-info/10 p-2 rounded text-center border border-info/20">
+                      <div className="font-mono text-sm font-bold text-info">{bin}</div>
                       <div className="text-xs text-muted-foreground">= {dec}</div>
                     </div>
                   ))}
@@ -126,7 +126,7 @@ export default function Tutorials() {
           <Card className="border-2 shadow-lg">
             <CardHeader>
               <CardTitle className="text-2xl flex items-center gap-2">
-                <Grid3x3 className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+                <Grid3x3 className="h-6 w-6 text-warning" />
                 Octal (Base 8)
               </CardTitle>
               <CardDescription>Uses digits 0-7 • Common in Unix file permissions</CardDescription>
@@ -138,9 +138,9 @@ export default function Tutorials() {
                 <p className="text-sm text-muted-foreground mb-4">
                   Each position represents a power of 8. Each octal digit equals exactly 3 binary digits.
                 </p>
-                <div className="bg-orange-50 dark:bg-orange-950 p-4 rounded-lg border border-orange-200 dark:border-orange-800">
+                <div className="bg-warning/10 p-4 rounded-lg border border-warning/30">
                   <p className="text-sm font-mono mb-2">
-                    <strong>Example:</strong> 17₈ = (1×8) + (7×1) = <strong className="text-orange-600 dark:text-orange-400">15₁₀</strong>
+                    <strong>Example:</strong> 17₈ = (1×8) + (7×1) = <strong className="text-warning">15₁₀</strong>
                   </p>
                 </div>
               </div>
@@ -153,8 +153,8 @@ export default function Tutorials() {
                     dec: i,
                     oct: i.toString(8),
                   })).map(({ dec, oct }) => (
-                    <div key={dec} className="bg-orange-100 dark:bg-orange-900 p-2 rounded text-center">
-                      <div className="font-mono text-sm font-bold text-orange-600 dark:text-orange-400">{oct}</div>
+                    <div key={dec} className="bg-warning/10 p-2 rounded text-center border border-warning/20">
+                      <div className="font-mono text-sm font-bold text-warning">{oct}</div>
                       <div className="text-xs text-muted-foreground">= {dec}</div>
                     </div>
                   ))}
@@ -205,7 +205,7 @@ export default function Tutorials() {
           <Card className="border-2 shadow-lg">
             <CardHeader>
               <CardTitle className="text-2xl flex items-center gap-2">
-                <Zap className="h-6 w-6 text-green-600 dark:text-green-400" />
+                <Zap className="h-6 w-6 text-success" />
                 Decimal (Base 10)
               </CardTitle>
               <CardDescription>Uses digits 0-9 • The number system we use every day</CardDescription>
@@ -217,9 +217,9 @@ export default function Tutorials() {
                 <p className="text-sm text-muted-foreground mb-4">
                   Each position represents a power of 10. This is the standard number system used in everyday life.
                 </p>
-                <div className="bg-green-50 dark:bg-green-950 p-4 rounded-lg border border-green-200 dark:border-green-800">
+                <div className="bg-success/10 p-4 rounded-lg border border-success/30">
                   <p className="text-sm font-mono mb-2">
-                    <strong>Example:</strong> 123₁₀ = (1×100) + (2×10) + (3×1) = <strong className="text-green-600 dark:text-green-400">123₁₀</strong>
+                    <strong>Example:</strong> 123₁₀ = (1×100) + (2×10) + (3×1) = <strong className="text-success">123₁₀</strong>
                   </p>
                 </div>
               </div>
@@ -229,8 +229,8 @@ export default function Tutorials() {
                 <h3 className="text-lg font-semibold mb-3">Counting in Decimal</h3>
                 <div className="grid grid-cols-5 md:grid-cols-10 gap-2">
                   {Array.from({ length: 20 }, (_, i) => i).map((num) => (
-                    <div key={num} className="bg-green-100 dark:bg-green-900 p-2 rounded text-center">
-                      <div className="font-mono text-sm font-bold text-green-600 dark:text-green-400">{num}</div>
+                    <div key={num} className="bg-success/10 p-2 rounded text-center border border-success/20">
+                      <div className="font-mono text-sm font-bold text-success">{num}</div>
                     </div>
                   ))}
                 </div>
@@ -280,7 +280,7 @@ export default function Tutorials() {
           <Card className="border-2 shadow-lg">
             <CardHeader>
               <CardTitle className="text-2xl flex items-center gap-2">
-                <Hexagon className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                <Hexagon className="h-6 w-6 text-primary" />
                 Hexadecimal (Base 16)
               </CardTitle>
               <CardDescription>Uses digits 0-9, A-F • Common in web colors and memory addresses</CardDescription>
@@ -292,9 +292,9 @@ export default function Tutorials() {
                 <p className="text-sm text-muted-foreground mb-4">
                   Each position represents a power of 16. Letters A-F represent values 10-15. Each hex digit equals exactly 4 binary digits.
                 </p>
-                <div className="bg-purple-50 dark:bg-purple-950 p-4 rounded-lg border border-purple-200 dark:border-purple-800">
+                <div className="bg-primary/10 p-4 rounded-lg border border-primary/30">
                   <p className="text-sm font-mono mb-2">
-                    <strong>Example:</strong> 2F₁₆ = (2×16) + (15×1) = <strong className="text-purple-600 dark:text-purple-400">47₁₀</strong>
+                    <strong>Example:</strong> 2F₁₆ = (2×16) + (15×1) = <strong className="text-primary">47₁₀</strong>
                   </p>
                 </div>
               </div>
@@ -307,8 +307,8 @@ export default function Tutorials() {
                     dec: i,
                     hex: i.toString(16).toUpperCase(),
                   })).map(({ dec, hex }) => (
-                    <div key={dec} className="bg-purple-100 dark:bg-purple-900 p-2 rounded text-center">
-                      <div className="font-mono text-sm font-bold text-purple-600 dark:text-purple-400">{hex}</div>
+                    <div key={dec} className="bg-primary/10 p-2 rounded text-center border border-primary/20">
+                      <div className="font-mono text-sm font-bold text-primary">{hex}</div>
                       <div className="text-xs text-muted-foreground">= {dec}</div>
                     </div>
                   ))}

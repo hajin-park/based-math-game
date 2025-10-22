@@ -340,7 +340,7 @@ export default function RoomLobby() {
                 {isHost && (
                   <Card className="border-2">
                     <CardHeader
-                      className="cursor-pointer hover:bg-muted/50 transition-colors"
+                      className="cursor-pointer"
                       onClick={() => setShowSettings(!showSettings)}
                     >
                       <div className="flex items-center justify-between">
@@ -368,10 +368,10 @@ export default function RoomLobby() {
                             {OFFICIAL_GAME_MODES.map((mode) => (
                               <Card
                                 key={mode.id}
-                                className={`cursor-pointer transition-all duration-300 border-2 ${
+                                className={`cursor-pointer transition-all duration-200 border-2 ${
                                   room.gameMode.id === mode.id
                                     ? 'border-primary bg-primary/5'
-                                    : 'hover:border-primary/50 hover:shadow-md'
+                                    : 'hover:border-primary/50'
                                 }`}
                                 onClick={() => room.gameMode.id !== mode.id && handleChangeGameMode(mode)}
                               >
@@ -403,10 +403,10 @@ export default function RoomLobby() {
 
                             {/* Custom Playground Button */}
                             <Card
-                              className={`cursor-pointer transition-all duration-300 border-2 ${
+                              className={`cursor-pointer transition-all duration-200 border-2 ${
                                 room.gameMode.id === 'custom-playground'
                                   ? 'border-primary bg-primary/5'
-                                  : 'hover:border-primary/50 hover:shadow-md'
+                                  : 'hover:border-primary/50'
                               }`}
                               onClick={() => setShowPlaygroundSettings(true)}
                             >
@@ -557,10 +557,10 @@ export default function RoomLobby() {
                       return (
                         <div
                           key={player.uid}
-                          className={`flex items-center justify-between p-4 rounded-lg border-2 transition-all ${
+                          className={`flex items-center justify-between p-4 rounded-lg border-2 ${
                             isDisconnected
                               ? 'bg-muted/30 border-muted'
-                              : 'bg-muted/50 border-muted hover:border-primary/30'
+                              : 'bg-muted/50 border-muted'
                           }`}
                         >
                           <div className="flex items-center gap-3">

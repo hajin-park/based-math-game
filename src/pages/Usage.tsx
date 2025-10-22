@@ -29,28 +29,28 @@ export default function Usage() {
               Based Math Game tests your ability to convert numbers between different bases:
             </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
-              <Card className="border-2 hover:shadow-md transition-shadow">
+              <Card className="border-2">
                 <CardContent className="pt-6 text-center">
                   <Badge className="mb-2 bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">Base 2</Badge>
                   <p className="font-bold text-lg">Binary</p>
                   <p className="text-xs text-muted-foreground mt-1">Digits: 0-1</p>
                 </CardContent>
               </Card>
-              <Card className="border-2 hover:shadow-md transition-shadow">
+              <Card className="border-2">
                 <CardContent className="pt-6 text-center">
                   <Badge className="mb-2 bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300">Base 8</Badge>
                   <p className="font-bold text-lg">Octal</p>
                   <p className="text-xs text-muted-foreground mt-1">Digits: 0-7</p>
                 </CardContent>
               </Card>
-              <Card className="border-2 hover:shadow-md transition-shadow">
+              <Card className="border-2">
                 <CardContent className="pt-6 text-center">
                   <Badge className="mb-2 bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">Base 10</Badge>
                   <p className="font-bold text-lg">Decimal</p>
                   <p className="text-xs text-muted-foreground mt-1">Digits: 0-9</p>
                 </CardContent>
               </Card>
-              <Card className="border-2 hover:shadow-md transition-shadow">
+              <Card className="border-2">
                 <CardContent className="pt-6 text-center">
                   <Badge className="mb-2 bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300">Base 16</Badge>
                   <p className="font-bold text-lg">Hexadecimal</p>

@@ -90,10 +90,10 @@ export default function CreateRoom() {
                 {OFFICIAL_GAME_MODES.map((mode) => (
                   <Card
                     key={mode.id}
-                    className={`cursor-pointer transition-all duration-300 hover-lift border-2 ${
+                    className={`cursor-pointer transition-all duration-200 border-2 ${
                       selectedMode?.id === mode.id
                         ? 'ring-2 ring-primary border-primary shadow-lg'
-                        : 'hover:shadow-xl hover:border-primary/50'
+                        : 'hover:shadow-lg hover:border-primary/50'
                     }`}
                     onClick={() => setSelectedMode(mode)}
                   >

@@ -160,7 +160,7 @@ export default function ProfileOverview() {
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="border-2 hover:shadow-md transition-shadow">
+            <Card className="border-2">
               <CardContent className="pt-6 text-center space-y-2">
                 <div className="flex justify-center">
                   <div className="p-3 rounded-full bg-primary/10">
@@ -171,7 +171,7 @@ export default function ProfileOverview() {
                 <p className="text-sm font-medium text-muted-foreground">Games Played</p>
               </CardContent>
             </Card>
-            <Card className="border-2 hover:shadow-md transition-shadow">
+            <Card className="border-2">
               <CardContent className="pt-6 text-center space-y-2">
                 <div className="flex justify-center">
                   <div className="p-3 rounded-full bg-success/10">
@@ -182,7 +182,7 @@ export default function ProfileOverview() {
                 <p className="text-sm font-medium text-muted-foreground">High Score</p>
               </CardContent>
             </Card>
-            <Card className="border-2 hover:shadow-md transition-shadow">
+            <Card className="border-2">
               <CardContent className="pt-6 text-center space-y-2">
                 <div className="flex justify-center">
                   <div className="p-3 rounded-full bg-primary/10">

@@ -47,89 +47,65 @@ export default function About() {
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 md:grid-cols-2">
-              <Card className="border-2 hover:shadow-md transition-shadow">
-                <CardContent className="pt-6">
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 rounded-lg bg-primary/10">
-                      <Sparkles className="h-5 w-5 text-primary" />
-                    </div>
-                    <div className="space-y-1">
-                      <p className="font-semibold">Interactive Tutorials</p>
-                      <p className="text-sm text-muted-foreground">Learn each number base with clear explanations and examples</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="flex items-start gap-3 p-4 rounded-lg border bg-card">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                </div>
+                <div className="space-y-1">
+                  <p className="font-semibold">Interactive Tutorials</p>
+                  <p className="text-sm text-muted-foreground">Learn each number base with clear explanations and examples</p>
+                </div>
+              </div>
 
-              <Card className="border-2 hover:shadow-md transition-shadow">
-                <CardContent className="pt-6">
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 rounded-lg bg-primary/10">
-                      <Zap className="h-5 w-5 text-primary" />
-                    </div>
-                    <div className="space-y-1">
-                      <p className="font-semibold">Timed Quizzes</p>
-                      <p className="text-sm text-muted-foreground">Practice with official game modes or create custom challenges</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="flex items-start gap-3 p-4 rounded-lg border bg-card">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <Zap className="h-5 w-5 text-primary" />
+                </div>
+                <div className="space-y-1">
+                  <p className="font-semibold">Timed Quizzes</p>
+                  <p className="text-sm text-muted-foreground">Practice with official game modes or create custom challenges</p>
+                </div>
+              </div>
 
-              <Card className="border-2 hover:shadow-md transition-shadow">
-                <CardContent className="pt-6">
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 rounded-lg bg-primary/10">
-                      <Users className="h-5 w-5 text-primary" />
-                    </div>
-                    <div className="space-y-1">
-                      <p className="font-semibold">Multiplayer Mode</p>
-                      <p className="text-sm text-muted-foreground">Compete with friends in real-time conversion challenges</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="flex items-start gap-3 p-4 rounded-lg border bg-card">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <Users className="h-5 w-5 text-primary" />
+                </div>
+                <div className="space-y-1">
+                  <p className="font-semibold">Multiplayer Mode</p>
+                  <p className="text-sm text-muted-foreground">Compete with friends in real-time conversion challenges</p>
+                </div>
+              </div>
 
-              <Card className="border-2 hover:shadow-md transition-shadow">
-                <CardContent className="pt-6">
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 rounded-lg bg-primary/10">
-                      <TrendingUp className="h-5 w-5 text-primary" />
-                    </div>
-                    <div className="space-y-1">
-                      <p className="font-semibold">Progress Tracking</p>
-                      <p className="text-sm text-muted-foreground">Monitor your improvement with detailed statistics and game history</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="flex items-start gap-3 p-4 rounded-lg border bg-card">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <TrendingUp className="h-5 w-5 text-primary" />
+                </div>
+                <div className="space-y-1">
+                  <p className="font-semibold">Progress Tracking</p>
+                  <p className="text-sm text-muted-foreground">Monitor your improvement with detailed statistics and game history</p>
+                </div>
+              </div>
 
-              <Card className="border-2 hover:shadow-md transition-shadow">
-                <CardContent className="pt-6">
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 rounded-lg bg-primary/10">
-                      <Trophy className="h-5 w-5 text-primary" />
-                    </div>
-                    <div className="space-y-1">
-                      <p className="font-semibold">Global Leaderboards</p>
-                      <p className="text-sm text-muted-foreground">See how you rank against players worldwide</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="flex items-start gap-3 p-4 rounded-lg border bg-card">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <Trophy className="h-5 w-5 text-primary" />
+                </div>
+                <div className="space-y-1">
+                  <p className="font-semibold">Global Leaderboards</p>
+                  <p className="text-sm text-muted-foreground">See how you rank against players worldwide</p>
+                </div>
+              </div>
 
-              <Card className="border-2 hover:shadow-md transition-shadow">
-                <CardContent className="pt-6">
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 rounded-lg bg-primary/10">
-                      <UserPlus className="h-5 w-5 text-primary" />
-                    </div>
-                    <div className="space-y-1">
-                      <p className="font-semibold">Guest Mode</p>
-                      <p className="text-sm text-muted-foreground">Try the game without creating an account</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="flex items-start gap-3 p-4 rounded-lg border bg-card">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <UserPlus className="h-5 w-5 text-primary" />
+                </div>
+                <div className="space-y-1">
+                  <p className="font-semibold">Guest Mode</p>
+                  <p className="text-sm text-muted-foreground">Try the game without creating an account</p>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>

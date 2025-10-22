@@ -264,12 +264,12 @@ export default function Leaderboard() {
                 return (
                   <Card
                     key={entry.uid}
-                    className={`border-2 transition-all ${
+                    className={`border-2 ${
                       isCurrentUser
                         ? 'border-primary bg-primary/10 shadow-md'
                         : index < 3
                         ? 'border-yellow-600/30 bg-gradient-to-r from-yellow-500/5 to-orange-500/5'
-                        : 'border-muted hover:border-primary/30 hover:shadow-sm'
+                        : 'border-muted'
                     }`}
                   >
                     <CardContent className="p-4">

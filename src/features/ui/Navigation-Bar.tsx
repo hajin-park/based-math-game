@@ -1,15 +1,21 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import ProfileDropdown from "@/components/ProfileDropdown";
-import { Menu, Sparkles } from "lucide-react";
+import { Menu, Sparkles, Moon, Sun } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export default function NavigationBar() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [scrolled, setScrolled] = useState(false);
+    const [scrollDirection, setScrollDirection] = useState<'up' | 'down'>('up');
+    const [lastScrollY, setLastScrollY] = useState(0);
     const { isGuest } = useAuth();
+    const { theme, toggleTheme } = useTheme();
 
     const navigation = [
         { name: "Home", href: "/" },
@@ -21,8 +27,37 @@ export default function NavigationBar() {
         { name: "Tutorials", href: "/tutorials" },
     ];
 
+    useEffect(() => {
+        const handleScroll = () => {
+            const currentScrollY = window.scrollY;
+
+            // Determine if scrolled past threshold
+            setScrolled(currentScrollY > 10);
+
+            // Determine scroll direction
+            if (currentScrollY > lastScrollY && currentScrollY > 50) {
+                setScrollDirection('down');
+            } else {
+                setScrollDirection('up');
+            }
+
+            setLastScrollY(currentScrollY);
+        };
+
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, [lastScrollY]);
+
     return (
-        <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <nav
+            className={cn(
+                "sticky top-0 z-50 w-full border-b transition-all duration-300",
+                scrolled && scrollDirection === 'down'
+                    ? "bg-background/40 backdrop-blur-md border-border/30"
+                    : "bg-background/95 backdrop-blur-lg border-border/50",
+                scrolled && "shadow-sm"
+            )}
+        >
             <div className="container flex h-16 items-center justify-between px-4">
                 {/* Logo */}
                 <div className="flex items-center gap-2">
@@ -56,8 +91,22 @@ export default function NavigationBar() {
                     ))}
                 </div>
 
-                {/* Desktop Auth */}
-                <div className="hidden lg:flex lg:items-center lg:gap-4">
+                {/* Desktop Auth & Theme Toggle */}
+                <div className="hidden lg:flex lg:items-center lg:gap-3">
+                    {/* Theme Toggle */}
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={toggleTheme}
+                        aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+                    >
+                        {theme === 'light' ? (
+                            <Moon className="h-5 w-5" />
+                        ) : (
+                            <Sun className="h-5 w-5" />
+                        )}
+                    </Button>
+
                     {isGuest ? (
                         <Button asChild size="sm" className="shadow-sm">
                             <NavLink to="/signup">Sign Up</NavLink>
@@ -102,6 +151,27 @@ export default function NavigationBar() {
                                         </NavLink>
                                     ))}
                                 </nav>
+
+                                <Separator />
+
+                                {/* Theme Toggle */}
+                                <Button
+                                    variant="outline"
+                                    className="w-full justify-start"
+                                    onClick={toggleTheme}
+                                >
+                                    {theme === 'light' ? (
+                                        <>
+                                            <Moon className="mr-2 h-4 w-4" />
+                                            <span>Dark Mode</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Sun className="mr-2 h-4 w-4" />
+                                            <span>Light Mode</span>
+                                        </>
+                                    )}
+                                </Button>
 
                                 <Separator />
 

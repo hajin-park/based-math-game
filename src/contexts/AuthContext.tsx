@@ -125,13 +125,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
             console.error('Error setting guest presence:', error);
           });
 
-          // Clean up guest data on disconnect
-          onDisconnect(userRef).remove().catch((error) => {
-            console.error('Error setting onDisconnect for guest user removal:', error);
-          });
-          onDisconnect(presenceRef).remove().catch((error) => {
-            console.error('Error setting onDisconnect for guest presence removal:', error);
-          });
+          // Note: Guest users cannot use onDisconnect() as they are not authenticated
+          // Guest data will be cleaned up through other means (TTL, manual cleanup, etc.)
         } else {
           // For authenticated users: Store profile in Firestore (persistent)
           const userProfileRef = doc(firestore, `users/${user.uid}`);
