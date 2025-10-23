@@ -21,14 +21,7 @@ export default function Quiz() {
     const { setResults } = resultContext;
     const { settings: gameSettings } = useGameSettings();
 
-    // Validate settings - if invalid, redirect to home
-    useEffect(() => {
-        if (!settings || !settings.questions || settings.questions.length === 0) {
-            console.error('Invalid quiz settings - redirecting to home');
-            navigate('/', { replace: true });
-        }
-    }, [settings, navigate]);
-
+    // Initialize all state and refs before any conditional returns
     const [showCountdown, setShowCountdown] = useState(gameSettings.countdownStart);
     const [running, setRunning] = useState(true);
     const [score, setScore] = useState(0);
@@ -37,15 +30,6 @@ export default function Quiz() {
             ? settings.questions[Math.floor(Math.random() * settings.questions.length)]
             : null
     );
-
-    // Early return with loading state if settings are invalid
-    if (!settings || !settings.questions || settings.questions.length === 0 || !randomSetting) {
-        return (
-            <div className="flex items-center justify-center min-h-screen">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-            </div>
-        );
-    }
 
     // Determine if this is a speedrun mode
     const gameMode = useMemo(() =>
@@ -82,20 +66,13 @@ export default function Quiz() {
         return time;
     });
 
-    // Handle countdown completion
-    const handleCountdownComplete = () => {
-        setShowCountdown(false);
-        setTimerShouldStart(true);
-        startTimeRef.current = Date.now(); // Start tracking time when countdown completes
-
-        // Create the actual expiry timestamp NOW (after countdown)
-        const time = new Date();
-        const duration = (isSpeedrun || settings.duration === 0) ? 86400 : settings.duration;
-        time.setSeconds(time.getSeconds() + duration);
-        setExpiryTimestamp(time);
-    };
-
-    console.log(settings);
+    // Validate settings - if invalid, redirect to home
+    useEffect(() => {
+        if (!settings || !settings.questions || settings.questions.length === 0) {
+            console.error('Invalid quiz settings - redirecting to home');
+            navigate('/', { replace: true });
+        }
+    }, [settings, navigate]);
 
     // Keep scoreRef in sync with score state
     useEffect(() => {
@@ -148,6 +125,30 @@ export default function Quiz() {
             setRandomSetting(settings.questions[randomIndex]);
         }
     }, [score, settings.questions]);
+
+    // Early return with loading state if settings are invalid
+    if (!settings || !settings.questions || settings.questions.length === 0 || !randomSetting) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            </div>
+        );
+    }
+
+    // Handle countdown completion
+    const handleCountdownComplete = () => {
+        setShowCountdown(false);
+        setTimerShouldStart(true);
+        startTimeRef.current = Date.now(); // Start tracking time when countdown completes
+
+        // Create the actual expiry timestamp NOW (after countdown)
+        const time = new Date();
+        const duration = (isSpeedrun || settings.duration === 0) ? 86400 : settings.duration;
+        time.setSeconds(time.getSeconds() + duration);
+        setExpiryTimestamp(time);
+    };
+
+    console.log(settings);
 
     return (
         <>
