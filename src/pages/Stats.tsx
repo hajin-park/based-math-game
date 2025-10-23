@@ -8,18 +8,28 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useGameHistory, TimeRange } from '@/hooks/useGameHistory';
 import { useAuth } from '@/contexts/AuthContext';
-import { OFFICIAL_GAME_MODES } from '@/types/gameMode';
+import { OFFICIAL_GAME_MODES, isSpeedrunMode } from '@/types/gameMode';
 import { BarChart3, TrendingUp, Target, Clock, Percent, Trophy, Calendar, Gamepad2, Info } from 'lucide-react';
 
 export default function Stats() {
   const navigate = useNavigate();
   const { isGuest } = useAuth();
-  const { history, loading, fetchHistory, getStatsForTimeRange, getScoresByGameMode, getDurationsByGameMode } = useGameHistory();
+  const { history, loading, fetchHistory, getStatsForTimeRange, getScoresByGameMode, getDurationsByGameMode, getLeaderboardPlacements } = useGameHistory();
   const [timeRange, setTimeRange] = useState<TimeRange>('all');
+  const [leaderboardPlacements, setLeaderboardPlacements] = useState<number>(0);
 
   useEffect(() => {
     fetchHistory(timeRange);
   }, [timeRange, fetchHistory]);
+
+  useEffect(() => {
+    // Fetch leaderboard placements when component mounts
+    const fetchPlacements = async () => {
+      const count = await getLeaderboardPlacements();
+      setLeaderboardPlacements(count);
+    };
+    fetchPlacements();
+  }, [getLeaderboardPlacements]);
 
   const rangeStats = getStatsForTimeRange(timeRange);
   const scoresByMode = getScoresByGameMode();
@@ -172,12 +182,14 @@ export default function Stats() {
                   <Card className="border-2">
                     <CardHeader className="pb-3">
                       <div className="flex items-center gap-2">
-                        <TrendingUp className="h-4 w-4 text-primary" />
-                        <CardDescription className="text-xs font-medium">Total Score</CardDescription>
+                        <Percent className="h-4 w-4 text-primary" />
+                        <CardDescription className="text-xs font-medium">Average Accuracy</CardDescription>
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-3xl font-bold gradient-text">{rangeStats.totalScore}</div>
+                      <div className="text-3xl font-bold gradient-text">
+                        {rangeStats.averageAccuracy !== undefined ? `${rangeStats.averageAccuracy.toFixed(1)}%` : 'N/A'}
+                      </div>
                     </CardContent>
                   </Card>
 
@@ -185,11 +197,11 @@ export default function Stats() {
                     <CardHeader className="pb-3">
                       <div className="flex items-center gap-2">
                         <Target className="h-4 w-4 text-primary" />
-                        <CardDescription className="text-xs font-medium">Average Score</CardDescription>
+                        <CardDescription className="text-xs font-medium">Questions Answered</CardDescription>
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-3xl font-bold gradient-text">{rangeStats.averageScore}</div>
+                      <div className="text-3xl font-bold gradient-text">{rangeStats.questionsAnswered}</div>
                     </CardContent>
                   </Card>
 
@@ -197,25 +209,27 @@ export default function Stats() {
                     <CardHeader className="pb-3">
                       <div className="flex items-center gap-2">
                         <Trophy className="h-4 w-4 text-success" />
-                        <CardDescription className="text-xs font-medium">High Score</CardDescription>
+                        <CardDescription className="text-xs font-medium">Leaderboard Placements</CardDescription>
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-3xl font-bold text-success">{rangeStats.highScore}</div>
+                      <div className="text-3xl font-bold text-success">{leaderboardPlacements}</div>
+                      <p className="text-xs text-muted-foreground mt-1">Top 10 finishes</p>
                     </CardContent>
                   </Card>
 
                   <Card className="border-2">
                     <CardHeader className="pb-3">
                       <div className="flex items-center gap-2">
-                        <Percent className="h-4 w-4 text-primary" />
-                        <CardDescription className="text-xs font-medium">Accuracy</CardDescription>
+                        <Clock className="h-4 w-4 text-primary" />
+                        <CardDescription className="text-xs font-medium">Time in Game</CardDescription>
                       </div>
                     </CardHeader>
                     <CardContent>
                       <div className="text-3xl font-bold gradient-text">
-                        {rangeStats.averageAccuracy !== undefined ? `${rangeStats.averageAccuracy.toFixed(1)}%` : 'N/A'}
+                        {Math.floor(rangeStats.timeSpentInGame / 60)}m
                       </div>
+                      <p className="text-xs text-muted-foreground mt-1">{rangeStats.timeSpentInGame % 60}s</p>
                     </CardContent>
                   </Card>
                 </div>
@@ -372,6 +386,7 @@ export default function Stats() {
                       <div className="space-y-3">
                         {history.slice(0, 10).map((game) => {
                           const mode = OFFICIAL_GAME_MODES.find((m) => m.id === game.gameModeId);
+                          const isSpeedrun = isSpeedrunMode(mode);
                           return (
                             <Card
                               key={game.id}
@@ -385,12 +400,23 @@ export default function Stats() {
                                       <Calendar className="h-3 w-3" />
                                       {new Date(game.timestamp).toLocaleString()}
                                     </div>
+                                    {game.accuracy !== undefined && (
+                                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                        <Percent className="h-3 w-3" />
+                                        {game.accuracy.toFixed(1)}% accuracy
+                                      </div>
+                                    )}
                                   </div>
                                   <div className="text-right space-y-1">
-                                    <div className="font-bold text-2xl gradient-text">{game.score}</div>
+                                    <div className="font-bold text-2xl gradient-text">
+                                      {isSpeedrun ? `${game.score}s` : game.score}
+                                    </div>
+                                    <div className="text-xs text-muted-foreground">
+                                      {isSpeedrun ? 'Time' : 'Points'}
+                                    </div>
                                     <div className="flex items-center gap-1 text-xs text-muted-foreground justify-end">
                                       <Clock className="h-3 w-3" />
-                                      {game.duration}s
+                                      {game.duration}s duration
                                     </div>
                                   </div>
                                 </div>

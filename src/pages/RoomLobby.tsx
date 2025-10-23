@@ -24,6 +24,7 @@ import KickedModal from '@/components/KickedModal';
 import { PlaygroundSettings } from '@features/quiz';
 import { QuestionSetting } from '@/contexts/GameContexts';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import ChatBox from '@/components/ChatBox';
 
 export default function RoomLobby() {
   const { roomId } = useParams<{ roomId: string }>();
@@ -814,6 +815,9 @@ export default function RoomLobby() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Chat Box */}
+            {roomId && <ChatBox roomId={roomId} />}
           </div>
         </div>
 

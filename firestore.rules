@@ -85,7 +85,8 @@ service cloud.firestore {
         && request.resource.data.score is number
         && request.resource.data.timestamp is number
         && request.resource.data.gameModeId is string
-        && (!request.resource.data.keys().hasAny(['isGuest']) || request.resource.data.isGuest == false);
+        && (!request.resource.data.keys().hasAny(['isGuest']) || request.resource.data.isGuest == false)
+        && (!request.resource.data.keys().hasAny(['accuracy']) || request.resource.data.accuracy is number);
 
       // Users can delete their own leaderboard entries
       allow delete: if leaderboardCollection.matches('leaderboard-.*') && isOwner(userId);

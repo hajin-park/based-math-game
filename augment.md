@@ -188,6 +188,7 @@ src/
 │   ├── Countdown.tsx
 │   ├── ExitButton.tsx       # Exit button with confirmation dialog for games
 │   ├── KickedModal.tsx      # Modal shown when user is kicked from room
+│   ├── ChatBox.tsx          # Real-time chat component for multiplayer rooms
 │   └── CookieConsent.tsx    # Cookie consent banner with preferences
 ├── contexts/           # React contexts
 │   ├── AuthContext.tsx      # Authentication & guest user system with cookie support
@@ -200,6 +201,7 @@ src/
 ├── firebase/          # Firebase config
 ├── hooks/             # Custom hooks
 │   ├── useRoom.ts
+│   ├── useChat.ts
 │   ├── useStats.ts
 │   ├── useGameHistory.ts
 │   ├── useGameSettings.ts
@@ -262,12 +264,13 @@ src/
 
 #### Firestore (Persistent)
 - `/users/{userId}` - User profiles (uid, displayName, email, photoURL, gameSettings)
-- `/userStats/{userId}` - User stats (gamesPlayed, totalScore, highScore, averageScore, accuracy)
-- `/userStats/{userId}/gameHistory/{gameId}` - Game history (score, duration, gameModeId, accuracy)
-- `/leaderboard-{gameModeId}/{userId}` - Leaderboards (displayName, score, timestamp)
+- `/userStats/{userId}` - User stats (gamesPlayed, totalScore, highScore, averageScore, totalKeystrokes, totalBackspaces, averageAccuracy)
+- `/userStats/{userId}/gameHistory/{gameId}` - Game history (score, duration, gameModeId, timestamp, totalKeystrokes, backspaceCount, accuracy)
+- `/leaderboard-{gameModeId}/{userId}` - Leaderboards (displayName, score, timestamp, gameModeId, accuracy, isGuest)
 
 #### Realtime Database (Ephemeral)
 - `/rooms/{roomId}` - Multiplayer rooms (hostUid, gameMode, players, status, maxPlayers, allowVisualAids, enableCountdown)
+- `/rooms/{roomId}/chat/{messageId}` - Chat messages (senderId, displayName, message, timestamp) - auto-deleted with room
 - `/users/{guestId}` - Guest users (uid starts with "guest_", displayName, isGuest: true)
 - `/presence/{userId}` - Presence tracking (uid, online, lastSeen)
 
@@ -396,6 +399,20 @@ interface GameMode {
 - Host disconnect handling (transfer or delete room)
 - Room reset after game
 
+### Chat System
+
+**Hook:** `useChat.ts`
+**Component:** `ChatBox.tsx`
+**Functions:** sendMessage, subscribeToMessages
+**Storage:** `/rooms/{roomId}/chat/{messageId}` (auto-deleted with room)
+**Features:**
+- Real-time messaging in lobby and during games
+- Persists across multiple games within same room
+- Auto-scroll to latest messages
+- 500 character message limit
+- Supports both authenticated and guest users
+**Locations:** RoomLobby sidebar, MultiplayerGame sidebar (under Live Scores)
+
 ---
 
 ## Stats & Leaderboards
@@ -404,26 +421,43 @@ interface GameMode {
 
 **Hook:** `useStats.ts`
 **Function:** `saveGameResult(result: GameResult)`
-**Updates:** User stats, game history (all users), leaderboards (authenticated only)
-**Guest Behavior:** Stats tracked, leaderboard updates blocked, data cleaned on disconnect
+**Updates:** User stats, game history, leaderboards (authenticated only)
+**Guest Behavior:** Stats tracked locally, leaderboard updates blocked
+**Leaderboard Logic:**
+- Speedrun modes: Lower score is better (faster time)
+- Timed modes: Higher score is better (more points)
+- Always updates displayName to keep current
+- Stores accuracy with each leaderboard entry
 
 ### Leaderboard
 
-**Filtering:** Filters out guest users (UID starts with `guest_` or `isGuest: true`), top 50 by score
+**Page:** `Leaderboard.tsx`
+**Features:**
+- Pagination: 20 entries per page with navigation controls
+- Jump to rank: Button to navigate to user's rank page
+- Filtering: Excludes guest users (UID starts with `guest_` or `isGuest: true`)
+- Sorting: Ascending for speedrun (lower time), descending for timed (higher score)
+- Display: Shows "Time: #s" for speedrun, "Points" for timed, accuracy percentage
+**Storage:** Firestore collection `leaderboard-{gameModeId}/{userId}`
 
 ### Game History
 
 **Hook:** `useGameHistory.ts`
-**Queries:** getRecentGames, getGamesInTimeRange, getTodayGames, getThisWeekGames, getThisMonthGames
-**Analytics:** Time-based filtering, calculates totals and averages
+**Functions:**
+- `fetchHistory(timeRange, limit)` - Fetch game history with time filtering
+- `getStatsForTimeRange(timeRange)` - Calculate stats: games played, average accuracy, questions answered, time spent
+- `getLeaderboardPlacements()` - Count top 10 finishes across all game modes
+**Analytics:** Time-based filtering (today, week, month, all), accuracy tracking, leaderboard placement counting
+**Storage:** Firestore subcollection `userStats/{userId}/gameHistory/{gameId}`
 
 ---
 
 ## Key Hooks
 
 **useRoom:** Room management (createRoom, joinRoom, leaveRoom, setPlayerReady, startGame, updatePlayerScore, finishGame, resetRoom, subscribeToRoom)
-**useStats:** User statistics tracking (gamesPlayed, totalScore, averageScore, highScore)
-**useGameHistory:** Time-based game history queries (getRecentGames, getTodayGames, getThisWeekGames, getThisMonthGames)
+**useChat:** Chat messaging (sendMessage, subscribeToMessages) with auto-cleanup
+**useStats:** Stats tracking (saveGameResult, getUserStats) with speedrun/timed mode handling and accuracy tracking
+**useGameHistory:** Game history queries (fetchHistory, getStatsForTimeRange, getLeaderboardPlacements) with time filtering and analytics
 **useGameSettings:** User game settings (groupedDigits, indexValueHints, countdownStart) with Firestore sync
 **useKeyboardShortcuts:** Global keyboard shortcuts (Escape to home)
 **useTabVisibility:** Pauses timer when tab hidden (singleplayer only)
@@ -440,13 +474,14 @@ button, card, form, input, label, select, scroll-area, separator, toast, dialog,
 **Game:**
 - ExitButton - Exit button with confirmation dialog
 - KickedModal - Modal shown when kicked from room
-- Countdown - 3-2-1 countdown with semantic colors (destructive→warning→success), no background card
+- Countdown - 3-2-1 countdown with semantic colors (destructive→warning→success)
 - Quiz-Prompt - Question display with keystroke tracking
 - Quiz-Stats - Timer display (MM:SS format, supports unlimited mode with ∞ symbol)
 - Base-Select, Range-Input, Duration-Select - Form controls for game settings
 - Chosen-Settings-Table - Display table for selected question types
 - Game-Mode-Select - Game mode selection with filtering (base type, difficulty, game type) and collapsible details
 - Playground-Settings - Custom game configuration
+- ChatBox - Real-time chat component with message list, input field, auto-scroll (500 char limit)
 
 **UI:** Navigation-Bar, ProfileDropdown, Footer, ErrorBoundary, ProtectedRoute, ConnectionStatus
 **Lib:** avatarGenerator (8x8 pixel art avatars)
@@ -456,11 +491,11 @@ button, card, form, input, label, select, scroll-area, separator, toast, dialog,
 All pages use Slate theme with consistent patterns, functional-first design, and optimized layouts.
 
 **Game:** Home, Quiz, Results, SingleplayerMode (with game filtering), MultiplayerGame
-**Multiplayer:** MultiplayerHome, CreateRoom (with filtering and collapsible details), JoinRoom, RoomLobby (viewport-optimized), MultiplayerResults
-**Stats:** Stats (separated speed run/timed modes), Leaderboard
+**Multiplayer:** MultiplayerHome, CreateRoom (with filtering and collapsible details), JoinRoom, RoomLobby (with chat), MultiplayerResults
+**Stats:** Stats (time-range filtering, accuracy tracking, leaderboard placements), Leaderboard (paginated, 20 per page, jump to rank)
 **Profile:** ProfileLayout, ProfileOverview, ProfileSettings, ProfileGameSettings
 **Content:** Usage, Tutorials, About, Privacy, Terms
-**Auth:** Login (viewport-optimized), Signup
+**Auth:** Login, Signup
 
 
 

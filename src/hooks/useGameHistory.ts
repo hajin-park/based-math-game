@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { collection, query, orderBy, limit as firestoreLimit, where, getDocs, Query, DocumentData } from 'firebase/firestore';
 import { firestore } from '@/firebase/config';
 import { useAuth } from '@/contexts/AuthContext';
+import { OFFICIAL_GAME_MODES, isSpeedrunMode } from '@/types/gameMode';
 
 export interface GameHistoryEntry {
   id: string;
@@ -126,6 +127,8 @@ export function useGameHistory() {
           averageScore: 0,
           highScore: 0,
           averageAccuracy: undefined,
+          questionsAnswered: 0,
+          timeSpentInGame: 0,
         };
       }
 
@@ -138,12 +141,30 @@ export function useGameHistory() {
         ? gamesWithAccuracy.reduce((sum, entry) => sum + (entry.accuracy || 0), 0) / gamesWithAccuracy.length
         : undefined;
 
+      // Calculate questions answered (for timed modes, score = questions answered)
+      // For speedrun modes, we need to count the targetQuestions
+      const questionsAnswered = filteredHistory.reduce((sum, entry) => {
+        const mode = OFFICIAL_GAME_MODES.find((m) => m.id === entry.gameModeId);
+        if (mode && isSpeedrunMode(mode)) {
+          // For speedrun modes, count targetQuestions if completed
+          return sum + (mode.targetQuestions || 0);
+        } else {
+          // For timed modes, score = number of correct answers
+          return sum + entry.score;
+        }
+      }, 0);
+
+      // Calculate total time spent in games (in seconds)
+      const timeSpentInGame = filteredHistory.reduce((sum, entry) => sum + entry.duration, 0);
+
       return {
         gamesPlayed: filteredHistory.length,
         totalScore,
         averageScore: Math.round((totalScore / filteredHistory.length) * 100) / 100,
         highScore,
         averageAccuracy: averageAccuracy !== undefined ? Math.round(averageAccuracy * 100) / 100 : undefined,
+        questionsAnswered,
+        timeSpentInGame,
       };
     },
     [history]
@@ -177,6 +198,48 @@ export function useGameHistory() {
     return durationsByMode;
   }, [history]);
 
+  const getLeaderboardPlacements = useCallback(async (): Promise<number> => {
+    if (!user || isGuest || user.uid.startsWith('guest_')) {
+      return 0;
+    }
+
+    try {
+      let placementsCount = 0;
+
+      // Check each official game mode
+      for (const mode of OFFICIAL_GAME_MODES) {
+        const leaderboardRef = collection(firestore, `leaderboard-${mode.id}`);
+        const isSpeedrun = isSpeedrunMode(mode);
+
+        // Query for top 10 entries
+        const leaderboardQuery = query(
+          leaderboardRef,
+          orderBy('score', isSpeedrun ? 'asc' : 'desc'),
+          firestoreLimit(10)
+        );
+
+        const snapshot = await getDocs(leaderboardQuery);
+
+        // Check if user is in top 10 (excluding guests)
+        const validEntries = snapshot.docs.filter((doc) => {
+          const isGuestUid = doc.id.startsWith('guest_');
+          const isGuestMarked = doc.data().isGuest === true;
+          return !isGuestUid && !isGuestMarked;
+        });
+
+        const userInTop10 = validEntries.some((doc) => doc.id === user.uid);
+        if (userInTop10) {
+          placementsCount++;
+        }
+      }
+
+      return placementsCount;
+    } catch (error) {
+      console.error('Error fetching leaderboard placements:', error);
+      return 0;
+    }
+  }, [user, isGuest]);
+
   return {
     history,
     loading,
@@ -184,6 +247,7 @@ export function useGameHistory() {
     getStatsForTimeRange,
     getScoresByGameMode,
     getDurationsByGameMode,
+    getLeaderboardPlacements,
   };
 }
 

@@ -1,6 +1,6 @@
 // Service Worker for offline support and caching
 // IMPORTANT: Increment version number when deploying updates to force cache refresh
-const CACHE_NAME = 'based-math-game-v4';
+const CACHE_NAME = 'based-math-game-v5';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',

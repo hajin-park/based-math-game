@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { doc, setDoc, getDoc, runTransaction, collection, addDoc } from 'firebase/firestore';
 import { firestore } from '@/firebase/config';
 import { useAuth } from '@/contexts/AuthContext';
+import { getGameModeById, isSpeedrunMode } from '@/types/gameMode';
 
 export interface GameResult {
   score: number;
@@ -101,6 +102,9 @@ export function useStats() {
         // Update leaderboard ONLY if game mode is specified
         // Guest check already done above
         if (result.gameModeId) {
+          const gameMode = getGameModeById(result.gameModeId);
+          const isSpeedrun = isSpeedrunMode(gameMode);
+
           // Use flat collection structure: leaderboard-{gameModeId} to avoid odd segment count
           const leaderboardRef = doc(
             firestore,
@@ -109,15 +113,30 @@ export function useStats() {
           );
           const currentLeaderboardEntry = await getDoc(leaderboardRef);
           const currentBestScore = currentLeaderboardEntry.exists()
-            ? currentLeaderboardEntry.data()?.score || 0
-            : 0;
+            ? currentLeaderboardEntry.data()?.score || (isSpeedrun ? Infinity : 0)
+            : (isSpeedrun ? Infinity : 0);
 
-          if (result.score > currentBestScore) {
+          // For speedrun modes: lower score is better (faster time)
+          // For timed modes: higher score is better (more points)
+          const isBetterScore = isSpeedrun
+            ? result.score < currentBestScore
+            : result.score > currentBestScore;
+
+          // Always update displayName to keep it current, even if score didn't improve
+          if (currentLeaderboardEntry.exists()) {
+            await setDoc(leaderboardRef, {
+              displayName: user.displayName || 'User',
+            }, { merge: true });
+          }
+
+          // Update score if it's better
+          if (isBetterScore) {
             await setDoc(leaderboardRef, {
               displayName: user.displayName || 'User',
               score: result.score,
               timestamp,
               gameModeId: result.gameModeId, // Store game mode for reference
+              accuracy: result.accuracy || 0, // Store accuracy
               isGuest: false, // Explicitly mark as not a guest for validation
             });
           }

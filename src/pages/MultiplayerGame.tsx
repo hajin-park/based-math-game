@@ -11,6 +11,7 @@ import QuizPrompt from '@/features/quiz/quiz-questions/Quiz-Prompt.component';
 import QuizStats from '@/features/quiz/quiz-questions/Quiz-Stats.component';
 import ExitButton from '@/components/ExitButton';
 import KickedModal from '@/components/KickedModal';
+import ChatBox from '@/components/ChatBox';
 
 export default function MultiplayerGame() {
   const { roomId } = useParams<{ roomId: string }>();
@@ -280,7 +281,7 @@ export default function MultiplayerGame() {
           </div>
 
         {/* Leaderboard */}
-        <div className="lg:sticky lg:top-8 lg:self-start">
+        <div className="lg:sticky lg:top-8 lg:self-start space-y-4">
           <Card className="shadow-lg">
             <CardHeader className="border-b">
               <CardTitle className="flex items-center gap-2">
@@ -349,6 +350,9 @@ export default function MultiplayerGame() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Chat Box */}
+          {roomId && <ChatBox roomId={roomId} />}
         </div>
       </div>
     </div>

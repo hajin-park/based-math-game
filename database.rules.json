@@ -18,6 +18,13 @@
         },
         "gameState": {
           ".write": "root.child('rooms').child($roomId).child('hostUid').val() === auth.uid || root.child('rooms').child($roomId).child('hostUid').val().beginsWith('guest_')"
+        },
+        "chat": {
+          ".read": "true",
+          "$messageId": {
+            ".write": "(auth != null && root.child('rooms').child($roomId).child('players').child(auth.uid).exists()) || (newData.child('senderId').val().beginsWith('guest_') && root.child('rooms').child($roomId).child('players').hasChild(newData.child('senderId').val()))",
+            ".validate": "newData.hasChildren(['senderId', 'displayName', 'message', 'timestamp']) && newData.child('message').isString() && newData.child('message').val().length > 0 && newData.child('message').val().length <= 500"
+          }
         }
       }
     },
