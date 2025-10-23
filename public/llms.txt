@@ -1,5 +1,5 @@
 # Based Math Game
-# A React-based multiplayer quiz game for practicing base conversion
+# Educational web application for mastering base conversion
 # https://based-math-game.web.app
 # https://github.com/hajin-park/based-math-game
 
@@ -7,181 +7,381 @@
 
 Based Math Game is an educational web application designed to help users master number base conversion between Binary (Base 2), Octal (Base 8), Decimal (Base 10), and Hexadecimal (Base 16). The application features both singleplayer and multiplayer modes, comprehensive tutorials, progress tracking, and global leaderboards.
 
+Inspired by [zetamac](https://arithmetic.zetamac.com), this game provides an engaging way to practice essential computer science and programming skills through timed challenges and competitive gameplay.
+
 ## Key Features
 
 ### Game Modes
-- **Singleplayer Mode**: 48 official pre-configured game modes plus custom Playground mode
-- **Multiplayer Mode**: Real-time competitive rooms with live scoring
-- **Playground Mode**: Fully customizable quiz settings (conversions, ranges, duration)
+- **Singleplayer Mode**: 48 official pre-configured game modes across different difficulty levels
+  - 24 Timed Modes (15-second and 60-second challenges)
+  - 24 Speed Run Modes (10-question sprints and 30-question marathons)
+  - Custom Playground mode with fully customizable settings
+- **Multiplayer Mode**: Real-time competitive rooms with live scoring and friend challenges
+  - Create private rooms with custom settings
+  - Join existing rooms with room codes
+  - Live player presence and scoring
+  - Real-time game synchronization
 
 ### Learning Resources
-- **Tutorials**: Interactive tutorials for each number base with live converters
-- **How to Play**: Comprehensive guide covering all game features and mechanics
+- **Interactive Tutorials**: Step-by-step guides for each number base with live converters
+  - Binary (Base 2) tutorial with conversion examples
+  - Octal (Base 8) tutorial with conversion examples
+  - Decimal (Base 10) reference
+  - Hexadecimal (Base 16) tutorial with conversion examples
+- **How to Play Guide**: Comprehensive documentation covering all game features and mechanics
 
 ### Progress Tracking
-- **Stats Page**: Personal analytics with game history and performance trends
-- **Leaderboards**: Global rankings for each official game mode
-- **Guest Mode**: Play without account, with option to sign up for permanent stats
+- **Stats Page**: Personal analytics with detailed game history and performance trends
+  - Separate tracking for timed and speed run modes
+  - Game history with timestamps and scores
+  - Performance metrics and accuracy tracking
+- **Global Leaderboards**: Rankings for each official game mode
+  - Top scores displayed per game mode
+  - Real-time leaderboard updates
+- **Guest Mode**: Play without account registration
+  - Stats tracked locally with option to sign up for permanent saving
+  - Guest users can create/join multiplayer rooms
+  - Guest stats don't count towards global leaderboards
 
-### Authentication
-- **Guest Users**: Instant play without registration (localStorage-based)
-- **Email/Password**: Traditional account creation
-- **Google Sign-In**: OAuth authentication
-- **Account Linking**: Convert guest account to permanent account
+### Authentication & User Management
+- **Guest Users**: Instant play without registration
+  - Uses Firebase Realtime Database with connect/disconnect API
+  - Guest UIDs format: `guest_{timestamp}_{random}`
+  - Full multiplayer support
+  - Seamless upgrade to permanent account
+- **Email/Password**: Traditional account creation and authentication
+- **Google Sign-In**: OAuth authentication via Firebase
+- **Account Linking**: Convert guest account to permanent account while preserving stats
+- **Profile Management**: User profiles with customizable display names and avatars
 
 ## Technology Stack
 
 - **Frontend**: React 19.2.0, TypeScript 5.2.2, Vite 7.1.7
-- **Styling**: Tailwind CSS 3.4.3, shadcn UI components
+- **Styling**: Tailwind CSS 3.4.3, shadcn UI components (New York style, Slate theme)
 - **Backend**: Firebase (Realtime Database, Authentication, Hosting, Analytics)
-- **Routing**: React Router 6
-- **State Management**: React Context API
-- **PWA**: Service Worker, Web Manifest
+- **Routing**: React Router 6.22.3
+- **State Management**: React Context API (AuthContext, QuizContext, ResultContext, ThemeContext)
+- **UI Components**: Radix UI primitives, Lucide React icons, Framer Motion animations
+- **PWA**: Service Worker, Web Manifest for installable app experience
+- **Form Handling**: React Hook Form with Zod validation
 
-## Main Pages
+## Application Routes
 
-### Public Pages
-- `/` - Home page with game mode selection
+### Public Pages (SEO-Indexed)
+- `/` - Home page with feature showcase and game mode selection
+- `/singleplayer` - Singleplayer game mode selection with 48 official modes + custom playground
+- `/multiplayer` - Multiplayer home with create/join room options
+- `/multiplayer/create` - Create new multiplayer room with custom settings
+- `/multiplayer/join` - Join existing room with room code
 - `/tutorials` - Interactive base conversion tutorials (Binary, Octal, Decimal, Hexadecimal)
-- `/how-to-play` - Complete gameplay guide
-- `/singleplayer` - Singleplayer game mode selection
-- `/multiplayer` - Multiplayer lobby (create/join rooms)
-- `/leaderboard` - Global leaderboards by game mode
-- `/stats` - Personal statistics and game history
-- `/about` - Project information and mission
-- `/privacy` - Privacy policy
+- `/how-to-play` - Complete gameplay guide and feature documentation
+- `/leaderboard` - Global leaderboards by game mode with top scores
+- `/stats` - Personal statistics, game history, and performance analytics
+- `/about` - Project information, mission, and technology stack
+- `/privacy` - Privacy policy and data handling information
 - `/terms` - Terms of service
 
 ### Authentication Pages
-- `/login` - Sign in with email or Google
-- `/signup` - Create account or link guest account
+- `/login` - Sign in with email/password or Google OAuth
+- `/signup` - Create new account or link guest account to permanent account
 
-### Protected Pages
-- `/profile` - User profile overview
-- `/profile/settings` - Account settings and preferences
+### Protected Pages (Require Authentication)
+- `/profile` - User profile overview with stats summary
+- `/profile/settings` - Account settings, display name, and preferences
+- `/profile/game-settings` - Game-specific settings and customization
 
-### Dynamic Pages
-- `/quiz` - Active quiz gameplay
-- `/results` - Quiz results display
-- `/multiplayer/lobby/:roomId` - Multiplayer room lobby
-- `/multiplayer/game/:roomId` - Multiplayer game session
-- `/multiplayer/results/:roomId` - Multiplayer results
+### Dynamic/Session Pages (Not Indexed)
+- `/settings` - Quiz settings configuration (redirects to /singleplayer)
+- `/quiz` - Active quiz gameplay session
+- `/results` - Quiz results display with score and performance metrics
+- `/multiplayer/lobby/:roomId` - Multiplayer room lobby with player list and ready status
+- `/multiplayer/game/:roomId` - Active multiplayer game session
+- `/multiplayer/results/:roomId` - Multiplayer game results with rankings
 
 ## Game Mechanics
 
-### Base Conversion
-- Questions randomly generated from configured settings
-- Support for all combinations of Binary, Octal, Decimal, Hexadecimal
+### Base Conversion System
+- Questions randomly generated from configured conversion settings
+- Support for all combinations of Binary (2), Octal (8), Decimal (10), Hexadecimal (16)
+- Bi-directional conversions (e.g., Binary→Decimal and Decimal→Binary)
 - Configurable number ranges per conversion type
-- Real-time answer validation
+- Real-time answer validation with instant feedback
+- Keystroke and backspace tracking for accuracy metrics
 
 ### Scoring System
-- +1 point per correct answer
-- Combo multiplier for consecutive correct answers
-- Time bonus in multiplayer mode (faster = more points)
-- Wrong answers break combo streak
+- **Singleplayer Timed Modes**: +1 point per correct answer, score = total correct answers
+- **Singleplayer Speed Run Modes**: Score = time taken to complete target questions (lower is better)
+- **Multiplayer**: Points based on correctness and speed, with live leaderboard updates
+- **Accuracy Tracking**: (total keystrokes - backspaces) / total keystrokes × 100%
+- Wrong answers don't penalize score but affect accuracy
 
 ### Official Game Modes (48 Total)
 
-**Timed Modes** - Complete as many questions as possible within the time limit:
-- **15 Second Modes** (12 modes): Binary, Octal, Hex, All Bases × Easy (0-15), Medium (0-255), Hard (0-4095)
-- **60 Second Modes** (12 modes): Binary, Octal, Hex, All Bases × Easy (0-15), Medium (0-255), Hard (0-4095)
+**Timed Modes (24 modes)** - Complete as many questions as possible within the time limit:
+- **15 Second Challenges** (12 modes):
+  - Binary Easy (0-15), Medium (0-255), Hard (0-4095)
+  - Octal Easy (0-15), Medium (0-255), Hard (0-4095)
+  - Hexadecimal Easy (0-15), Medium (0-255), Hard (0-4095)
+  - All Bases Easy (0-15), Medium (0-255), Hard (0-4095)
+- **60 Second Challenges** (12 modes):
+  - Binary Easy (0-15), Medium (0-255), Hard (0-4095)
+  - Octal Easy (0-15), Medium (0-255), Hard (0-4095)
+  - Hexadecimal Easy (0-15), Medium (0-255), Hard (0-4095)
+  - All Bases Easy (0-15), Medium (0-255), Hard (0-4095)
 
-**Speed Run Modes** - Race to complete a target number of questions:
-- **10 Question Sprint** (12 modes): Binary, Octal, Hex, All Bases × Easy (0-15), Medium (0-255), Hard (0-4095)
-- **30 Question Marathon** (12 modes): Binary, Octal, Hex, All Bases × Easy (0-15), Medium (0-255), Hard (0-4095)
+**Speed Run Modes (24 modes)** - Race to complete a target number of questions as fast as possible:
+- **10 Question Sprint** (12 modes):
+  - Binary Easy (0-15), Medium (0-255), Hard (0-4095)
+  - Octal Easy (0-15), Medium (0-255), Hard (0-4095)
+  - Hexadecimal Easy (0-15), Medium (0-255), Hard (0-4095)
+  - All Bases Easy (0-15), Medium (0-255), Hard (0-4095)
+- **30 Question Marathon** (12 modes):
+  - Binary Easy (0-15), Medium (0-255), Hard (0-4095)
+  - Octal Easy (0-15), Medium (0-255), Hard (0-4095)
+  - Hexadecimal Easy (0-15), Medium (0-255), Hard (0-4095)
+  - All Bases Easy (0-15), Medium (0-255), Hard (0-4095)
 
-All modes feature bi-directional conversions (e.g., Binary→Decimal and Decimal→Binary)
+### Custom Playground Mode
+- Fully customizable quiz settings
+- Select specific conversion types (e.g., only Binary→Decimal)
+- Configure number ranges for each conversion
+- Set custom time limits or unlimited time
+- Choose to track stats or practice without recording
 
 ## Guest User System
 
-- No Firebase Anonymous Authentication (uses localStorage + Realtime Database)
-- Guest UIDs format: `guest_{timestamp}_{random}`
-- Full multiplayer support (create/join rooms)
-- Stats tracked locally and in database
-- Cannot appear on global leaderboards
-- Seamless upgrade to permanent account
+Based Math Game uses a custom guest user system instead of Firebase Anonymous Authentication:
 
-## API & Data Structure
+- **Implementation**: localStorage + Firebase Realtime Database with connect/disconnect API
+- **Guest UID Format**: `guest_{timestamp}_{random}`
+- **Capabilities**:
+  - Full multiplayer support (create/join rooms)
+  - Stats tracked locally and in database
+  - View global leaderboards
+  - Play all game modes
+- **Limitations**:
+  - Cannot appear on global leaderboards
+  - Stats not permanently saved unless account is created
+- **Account Upgrade**: Seamless conversion to permanent account while preserving stats
 
-### Firebase Realtime Database
-- `/users/{uid}` - User profiles and stats
-- `/leaderboards/{gameModeId}/{uid}` - Global leaderboard entries
-- `/rooms/{roomId}` - Multiplayer room data
-- `/presence/{uid}` - User online/offline status
-- `/gameModes` - Official game mode configurations
+## Firebase Data Structure
+
+### Realtime Database Schema
+```
+/users/{uid}
+  - displayName: string
+  - email: string (authenticated users only)
+  - photoURL: string
+  - createdAt: timestamp
+  - stats: object (game statistics)
+  - gameHistory: array (recent games)
+
+/leaderboards/{gameModeId}/{uid}
+  - score: number
+  - displayName: string
+  - timestamp: number
+  - duration: number (for speed run modes)
+
+/rooms/{roomId}
+  - hostId: string
+  - settings: object (game configuration)
+  - players: object (player data and ready status)
+  - gameState: string (waiting/playing/finished)
+  - createdAt: timestamp
+  - questions: array (shared questions for all players)
+
+/presence/{uid}
+  - online: boolean
+  - lastSeen: timestamp
+
+/gameModes
+  - Official game mode configurations (read-only)
+```
 
 ### Security Rules
-- Guest users can read/write own data
-- Guest users cannot write to global leaderboards
+- Guest users can read/write own data in `/users/{uid}`
+- Guest users **cannot** write to `/leaderboards` (only authenticated users)
 - Authenticated users have full access to own data
 - All users can read leaderboards and game modes
-- Room hosts control game state
+- Room hosts control game state and settings
+- Players can only update their own player data within rooms
+
+## Component Architecture
+
+### Core Components
+- **ErrorBoundary**: Global error handling with fallback UI
+- **ProtectedRoute**: Route guard for authenticated-only pages
+- **ConnectionStatus**: Real-time Firebase connection status indicator
+- **ProfileDropdown**: User menu with profile, settings, and sign out
+- **Countdown**: Pre-game countdown timer (3-2-1-GO)
+- **ExitButton**: Game exit with confirmation dialog
+- **KickedModal**: Modal shown when user is kicked from multiplayer room
+
+### UI Components (shadcn)
+- Button, Card, Input, Label, Select, Switch, Tabs
+- Alert Dialog, Dialog, Dropdown Menu, Popover, Tooltip
+- Avatar, Badge, Progress, Separator, Toast
+- Navigation Menu, Scroll Area, Collapsible, Hover Card
+
+### Feature Modules
+- **quiz/**: Quiz gameplay components (QuizPrompt, QuizStats, QuizSettings)
+- **tutorials/**: Interactive tutorial components for each base
+- **ui/**: Shared UI components (Navigation, Footer, ThemeToggle)
+
+### Contexts
+- **AuthContext**: User authentication state and guest user management
+- **QuizContext**: Quiz settings and configuration
+- **ResultContext**: Quiz results and performance data
+- **ThemeContext**: Light/dark mode theme management
+
+### Custom Hooks
+- **useGameSettings**: Manage game-specific settings (countdown, sound, etc.)
+- **useGameHistory**: Fetch and manage user's game history
+- **useStats**: Fetch and calculate user statistics
+- **useRoom**: Manage multiplayer room state and real-time updates
+- **useKeyboardShortcuts**: Global keyboard shortcuts (Ctrl+K for search, etc.)
+- **useTabVisibility**: Detect when user switches tabs (for multiplayer presence)
 
 ## Development
 
 ### Local Setup
 ```bash
 npm install
-# Configure .env with Firebase credentials
+# Configure Firebase credentials in src/firebase/config.ts
 npm run dev  # Start dev server on localhost:5173
 ```
 
 ### Build & Deploy
 ```bash
 npm run build  # TypeScript + Vite build → dist/
+npm run lint   # ESLint type checking
+npm run preview  # Preview production build locally
 firebase deploy  # Deploy to Firebase Hosting
 ```
 
 ### Firebase Emulators
 ```bash
 firebase emulators:start  # Auth (9099), Database (9000), UI (4000)
+# Update firebase/config.ts to use emulator endpoints
+```
+
+### Project Structure
+```
+src/
+├── components/       # Shared components
+│   ├── ui/          # shadcn UI components
+│   └── *.tsx        # Core components (ErrorBoundary, ProtectedRoute, etc.)
+├── contexts/        # React contexts (Auth, Quiz, Result, Theme)
+├── features/        # Feature modules (quiz, tutorials, ui)
+├── firebase/        # Firebase configuration
+├── hooks/           # Custom React hooks
+├── pages/           # Page components (Home, Quiz, Results, etc.)
+│   └── profile/     # Profile sub-pages
+├── types/           # TypeScript type definitions
+├── utils/           # Utilities (Layout, analytics, ScrollToTop)
+└── main.tsx         # App entry point and router configuration
 ```
 
 ## License & Attribution
 
 - **License**: GPL-3.0 (Open Source)
-- **Inspiration**: zetamac (https://arithmetic.zetamac.com)
+- **Inspiration**: [zetamac](https://arithmetic.zetamac.com) - Arithmetic practice game
 - **Repository**: https://github.com/hajin-park/based-math-game
+- **Live Site**: https://based-math-game.web.app
 
-## Contact
+## Contact & Support
 
-- **GitHub**: https://github.com/hajin-park/based-math-game
-- **Issues**: https://github.com/hajin-park/based-math-game/issues
+- **GitHub Repository**: https://github.com/hajin-park/based-math-game
+- **Issue Tracker**: https://github.com/hajin-park/based-math-game/issues
+- **Developer**: Hajin Park ([@hajin-park](https://github.com/hajin-park))
 
-## SEO Keywords
+## SEO & Discoverability
 
-base conversion, binary, octal, decimal, hexadecimal, number systems, math game, educational game, quiz game, multiplayer quiz, base converter, computer science education, programming practice, number base tutorial, binary converter, hex converter, octal converter, math practice, competitive learning, real-time multiplayer, Firebase game, React game, TypeScript game, web-based learning, STEM education
+### Primary Keywords
+base conversion, binary converter, octal converter, decimal converter, hexadecimal converter, number systems, base conversion game, math game, educational game, quiz game, multiplayer quiz, computer science education, programming practice, number base tutorial, math practice, competitive learning, real-time multiplayer, STEM education
+
+### Secondary Keywords
+binary to decimal, decimal to binary, hex to decimal, decimal to hex, octal to decimal, base 2, base 8, base 10, base 16, number base practice, programming fundamentals, computer science game, educational web app, React game, TypeScript game, Firebase game, web-based learning, interactive tutorials
+
+### Target Audience
+- Computer science students
+- Programming beginners
+- Software engineering learners
+- Math enthusiasts
+- Competitive learners
+- Educators and teachers
 
 ## Accessibility
 
-- ARIA labels on all interactive elements
-- Keyboard navigation support
-- Screen reader compatible
-- Dark mode support
-- Responsive design (mobile, tablet, desktop)
+- **ARIA Labels**: All interactive elements properly labeled for screen readers
+- **Keyboard Navigation**: Full keyboard support with shortcuts
+- **Screen Reader Compatible**: Semantic HTML and ARIA attributes
+- **Theme Support**: Light and dark mode with system preference detection
+- **Responsive Design**: Mobile-first design supporting all screen sizes
+- **Focus Management**: Clear focus indicators and logical tab order
+- **Color Contrast**: WCAG AA compliant color contrast ratios
 
-## Performance
+## Performance Metrics
 
-- Bundle size: 950 kB (260 kB gzipped)
-- Lighthouse score target: 90+ for all metrics
-- Service Worker for offline support
-- Real-time database for instant updates
-- Optimized React rendering
+- **Bundle Size**: ~950 kB total (~260 kB gzipped)
+- **Lighthouse Scores**: Target 90+ for Performance, Accessibility, Best Practices, SEO
+- **Service Worker**: Offline support and caching for core assets
+- **Real-time Updates**: Firebase Realtime Database for instant synchronization
+- **Optimized Rendering**: React 19 with concurrent features and automatic batching
+- **Code Splitting**: Route-based code splitting with React.lazy
+- **Image Optimization**: SVG icons and optimized assets
 
-## Privacy & Data
+## Privacy & Data Handling
 
-- Minimal data collection (only necessary for gameplay)
-- Guest users: localStorage only, no permanent storage
-- Authenticated users: Firebase Auth + Realtime Database
-- No third-party tracking (except Firebase Analytics)
+### Data Collection
+- **Guest Users**:
+  - Data stored in localStorage only
+  - No permanent server-side storage
+  - Can create/join multiplayer rooms
+  - Stats not saved to global leaderboards
+- **Authenticated Users**:
+  - Email and display name (required)
+  - Profile photo URL (optional)
+  - Game statistics and history
+  - Leaderboard entries
+
+### Data Usage
+- Minimal data collection (only necessary for gameplay and features)
+- No third-party tracking or advertising
+- Firebase Analytics for anonymous usage statistics
 - User data deletion available in profile settings
-- GDPR compliant
+- GDPR and CCPA compliant
 
-## Browser Support
+### Security
+- Firebase Authentication for secure user management
+- Firebase Security Rules for data access control
+- HTTPS-only connections
+- No sensitive data stored client-side (except guest localStorage)
 
-- Modern browsers (Chrome, Firefox, Safari, Edge)
-- ES2020+ JavaScript support required
-- Progressive Web App (PWA) installable
-- Mobile-responsive design
+## Browser & Platform Support
+
+### Supported Browsers
+- Chrome/Edge 90+ (recommended)
+- Firefox 88+
+- Safari 14+
+- Opera 76+
+
+### Requirements
+- ES2020+ JavaScript support
+- CSS Grid and Flexbox support
+- LocalStorage API
+- WebSocket support (for Firebase Realtime Database)
+
+### Progressive Web App (PWA)
+- Installable on desktop and mobile devices
+- Offline support via Service Worker
+- App-like experience with standalone display mode
+- Custom app icon and splash screen
+- Mobile-optimized with viewport-fit=cover
+
+### Platform Compatibility
+- Desktop (Windows, macOS, Linux)
+- Mobile (iOS 14+, Android 8+)
+- Tablet (iPad, Android tablets)
+- Responsive design adapts to all screen sizes
 
