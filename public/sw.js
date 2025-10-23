@@ -1,6 +1,7 @@
 // Service Worker for offline support and caching
-// IMPORTANT: Increment version number when deploying updates to force cache refresh
-const CACHE_NAME = "based-math-game-v5";
+// Cache version is automatically updated during build
+const CACHE_VERSION = "__BUILD_TIMESTAMP__";
+const CACHE_NAME = `based-math-game-${CACHE_VERSION}`;
 const ASSETS_TO_CACHE = ["/", "/index.html", "/manifest.json"];
 
 // Install event - cache assets
