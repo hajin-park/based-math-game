@@ -6,25 +6,28 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 import { OFFICIAL_GAME_MODES, getDifficultyColor, GameMode } from '@/types/gameMode';
 import { PlaygroundSettings } from '@features/quiz';
 import { QuestionSetting } from '@/contexts/GameContexts';
-import { Trophy, Clock, Layers, Play, BarChart3, Wrench, Filter, Target, ChevronDown, ChevronUp } from 'lucide-react';
+import { Trophy, Clock, Layers, Play, BarChart3, Wrench, Target, ChevronDown, ChevronUp, Search, Binary, Hash, Hexagon, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface GameModeSelectProps {
   onSelectMode: (mode: GameMode, trackStats: boolean) => void;
 }
 
-type BaseFilter = 'all' | 'binary' | 'octal' | 'hex' | 'mixed';
+type CategoryFilter = 'explore' | 'binary' | 'octal' | 'hexadecimal' | 'mixed';
 type DifficultyFilter = 'all' | 'Easy' | 'Medium' | 'Hard';
-type TypeFilter = 'all' | 'timed' | 'sprint';
+type TypeFilter = 'all' | 'timed' | 'speedrun';
 
 export default function GameModeSelect({ onSelectMode }: GameModeSelectProps) {
   const [selectedTab, setSelectedTab] = useState('official');
   const [trackStats, setTrackStats] = useState(true);
-  const [baseFilter, setBaseFilter] = useState<BaseFilter>('all');
+  const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('explore');
+  const [searchQuery, setSearchQuery] = useState('');
   const [difficultyFilter, setDifficultyFilter] = useState<DifficultyFilter>('all');
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
   const [expandedModeId, setExpandedModeId] = useState<string | null>(null);
@@ -51,26 +54,50 @@ export default function GameModeSelect({ onSelectMode }: GameModeSelectProps) {
   // Filter game modes based on selected filters
   const filteredModes = useMemo(() => {
     return OFFICIAL_GAME_MODES.filter((mode) => {
-      // Base filter
-      if (baseFilter !== 'all') {
-        if (baseFilter === 'binary' && !mode.id.includes('binary')) return false;
-        if (baseFilter === 'octal' && !mode.id.includes('octal')) return false;
-        if (baseFilter === 'hex' && !mode.id.includes('hex')) return false;
-        if (baseFilter === 'mixed' && !mode.id.includes('all')) return false;
+      // Search filter
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase();
+        const nameMatch = mode.name.toLowerCase().includes(query);
+        const descMatch = mode.description.toLowerCase().includes(query);
+        if (!nameMatch && !descMatch) return false;
+      }
+
+      // Category filter
+      if (categoryFilter !== 'explore') {
+        if (categoryFilter === 'mixed') {
+          // Mixed bases: show "All Bases" games (games with multiple base types excluding decimal)
+          const bases = new Set<string>();
+          mode.questions.forEach((q) => {
+            const fromBase = q[0].toLowerCase();
+            const toBase = q[1].toLowerCase();
+            if (fromBase !== 'decimal') bases.add(fromBase);
+            if (toBase !== 'decimal') bases.add(toBase);
+          });
+          if (bases.size <= 1) return false;
+        } else {
+          // Single base filter
+          const hasBase = mode.questions.some((q) => {
+            const fromBase = q[0].toLowerCase();
+            const toBase = q[1].toLowerCase();
+            return fromBase === categoryFilter || toBase === categoryFilter;
+          });
+          if (!hasBase) return false;
+        }
       }
 
       // Difficulty filter
       if (difficultyFilter !== 'all' && mode.difficulty !== difficultyFilter) return false;
 
-      // Type filter
+      // Type filter (timed vs speedrun)
       if (typeFilter !== 'all') {
-        if (typeFilter === 'timed' && mode.id.includes('q')) return false;
-        if (typeFilter === 'sprint' && !mode.id.includes('q')) return false;
+        const isSpeedRun = mode.targetQuestions !== undefined;
+        if (typeFilter === 'speedrun' && !isSpeedRun) return false;
+        if (typeFilter === 'timed' && isSpeedRun) return false;
       }
 
       return true;
     });
-  }, [baseFilter, difficultyFilter, typeFilter]);
+  }, [categoryFilter, searchQuery, difficultyFilter, typeFilter]);
 
   return (
     <div className="w-full space-y-6">
@@ -86,105 +113,157 @@ export default function GameModeSelect({ onSelectMode }: GameModeSelectProps) {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="official" className="space-y-6 mt-6">
-          {/* Track Stats Toggle - Only for Official Games */}
-          <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between gap-4">
-                <div className="space-y-1 flex-1">
-                  <div className="flex items-center gap-2">
-                    <BarChart3 className="h-4 w-4 text-primary" />
-                    <Label htmlFor="track-stats" className="text-base font-semibold cursor-pointer">
-                      Track Statistics
-                    </Label>
+        <TabsContent value="official" className="space-y-0">
+          <div className="flex gap-6">
+            {/* Sidebar */}
+            <Card className="w-64 flex-shrink-0 border-2 shadow-lg h-fit sticky top-4">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg">Browse</CardTitle>
+                  <Badge variant="secondary" className="text-xs">
+                    {filteredModes.length}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Search */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search modes..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+
+                {/* Categories */}
+                <div className="space-y-1">
+                  <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                    Categories
+                  </Label>
+                  <div className="space-y-1">
+                    <Button
+                      variant={categoryFilter === 'explore' ? 'secondary' : 'ghost'}
+                      className="w-full justify-start"
+                      onClick={() => setCategoryFilter('explore')}
+                    >
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Explore All
+                    </Button>
+                    <Button
+                      variant={categoryFilter === 'binary' ? 'secondary' : 'ghost'}
+                      className="w-full justify-start"
+                      onClick={() => setCategoryFilter('binary')}
+                    >
+                      <Binary className="h-4 w-4 mr-2" />
+                      Binary
+                    </Button>
+                    <Button
+                      variant={categoryFilter === 'octal' ? 'secondary' : 'ghost'}
+                      className="w-full justify-start"
+                      onClick={() => setCategoryFilter('octal')}
+                    >
+                      <Hash className="h-4 w-4 mr-2" />
+                      Octal
+                    </Button>
+                    <Button
+                      variant={categoryFilter === 'hexadecimal' ? 'secondary' : 'ghost'}
+                      className="w-full justify-start"
+                      onClick={() => setCategoryFilter('hexadecimal')}
+                    >
+                      <Hexagon className="h-4 w-4 mr-2" />
+                      Hexadecimal
+                    </Button>
+                    <Button
+                      variant={categoryFilter === 'mixed' ? 'secondary' : 'ghost'}
+                      className="w-full justify-start"
+                      onClick={() => setCategoryFilter('mixed')}
+                    >
+                      <Layers className="h-4 w-4 mr-2" />
+                      Mixed Bases
+                    </Button>
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    {trackStats
-                      ? "This game will count toward your stats and leaderboard rankings"
-                      : "This game will not be saved to your stats or leaderboard"}
-                  </p>
-                </div>
-                <Switch
-                  id="track-stats"
-                  checked={trackStats}
-                  onCheckedChange={setTrackStats}
-                  className="data-[state=checked]:bg-primary"
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Filters */}
-          <Card className="border-2">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Filter className="h-5 w-5 text-primary" />
-                <CardTitle className="text-lg">Filter Games</CardTitle>
-              </div>
-              <CardDescription>
-                Narrow down from 48 official modes
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 sm:grid-cols-3">
-                {/* Base Type Filter */}
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Base Type</Label>
-                  <Select value={baseFilter} onValueChange={(value) => setBaseFilter(value as BaseFilter)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Bases</SelectItem>
-                      <SelectItem value="binary">Binary Only</SelectItem>
-                      <SelectItem value="octal">Octal Only</SelectItem>
-                      <SelectItem value="hex">Hexadecimal Only</SelectItem>
-                      <SelectItem value="mixed">Mixed Bases</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
 
-                {/* Difficulty Filter */}
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Difficulty</Label>
-                  <Select value={difficultyFilter} onValueChange={(value) => setDifficultyFilter(value as DifficultyFilter)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Levels</SelectItem>
-                      <SelectItem value="Easy">Easy</SelectItem>
-                      <SelectItem value="Medium">Medium</SelectItem>
-                      <SelectItem value="Hard">Hard</SelectItem>
-                    </SelectContent>
-                  </Select>
+                {/* Additional Filters */}
+                <div className="space-y-3 pt-2 border-t">
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                      Difficulty
+                    </Label>
+                    <Select value={difficultyFilter} onValueChange={(value) => setDifficultyFilter(value as DifficultyFilter)}>
+                      <SelectTrigger className="h-9">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                        <SelectItem value="Easy">Easy</SelectItem>
+                        <SelectItem value="Medium">Medium</SelectItem>
+                        <SelectItem value="Hard">Hard</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                      Type
+                    </Label>
+                    <Select value={typeFilter} onValueChange={(value) => setTypeFilter(value as TypeFilter)}>
+                      <SelectTrigger className="h-9">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                        <SelectItem value="timed">Timed</SelectItem>
+                        <SelectItem value="speedrun">Speed Run</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
-                {/* Type Filter */}
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Game Type</Label>
-                  <Select value={typeFilter} onValueChange={(value) => setTypeFilter(value as TypeFilter)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Types</SelectItem>
-                      <SelectItem value="timed">Timed (15s/60s)</SelectItem>
-                      <SelectItem value="sprint">Sprint (10q/30q)</SelectItem>
-                    </SelectContent>
-                  </Select>
+                {/* Track Stats Toggle */}
+                <div className="space-y-2 pt-2 border-t">
+                  <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+                    <BarChart3 className="h-3 w-3" />
+                    Track Stats
+                  </Label>
+                  <div className="flex items-center justify-between p-2 rounded-md bg-muted/30">
+                    <span className="text-xs">{trackStats ? 'Enabled' : 'Disabled'}</span>
+                    <Switch
+                      id="track-stats"
+                      checked={trackStats}
+                      onCheckedChange={setTrackStats}
+                      className="data-[state=checked]:bg-primary"
+                    />
+                  </div>
                 </div>
-              </div>
 
-              {/* Results count */}
-              <div className="mt-4 text-sm text-muted-foreground text-center">
-                Showing {filteredModes.length} of {OFFICIAL_GAME_MODES.length} modes
-              </div>
-            </CardContent>
-          </Card>
+                {/* Reset Filters Button */}
+                {(categoryFilter !== 'explore' || difficultyFilter !== 'all' || typeFilter !== 'all' || searchQuery) && (
+                  <div className="pt-2 border-t">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => {
+                        setCategoryFilter('explore');
+                        setDifficultyFilter('all');
+                        setTypeFilter('all');
+                        setSearchQuery('');
+                      }}
+                    >
+                      Clear Filters
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
-          {/* Game Mode Grid */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {/* Main Content */}
+            <div className="flex-1 space-y-4">
+              <ScrollArea className="h-[calc(100vh-300px)]">
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 pr-4">
             {filteredModes.map((mode) => (
               <Card
                 key={mode.id}
@@ -270,29 +349,33 @@ export default function GameModeSelect({ onSelectMode }: GameModeSelectProps) {
                 </CardContent>
               </Card>
             ))}
-          </div>
 
-          {filteredModes.length === 0 && (
-            <Card className="border-2 border-dashed">
-              <CardContent className="py-12 text-center">
-                <Target className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <p className="text-lg font-medium mb-2">No modes match your filters</p>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Try adjusting your filter settings
-                </p>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setBaseFilter('all');
-                    setDifficultyFilter('all');
-                    setTypeFilter('all');
-                  }}
-                >
-                  Reset Filters
-                </Button>
-              </CardContent>
-            </Card>
-          )}
+                  {filteredModes.length === 0 && (
+                    <Card className="border-2 border-dashed">
+                      <CardContent className="py-12 text-center">
+                        <Target className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                        <p className="text-lg font-medium mb-2">No modes match your filters</p>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          Try adjusting your filter settings
+                        </p>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setCategoryFilter('explore');
+                            setDifficultyFilter('all');
+                            setTypeFilter('all');
+                            setSearchQuery('');
+                          }}
+                        >
+                          Reset Filters
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              </ScrollArea>
+            </div>
+          </div>
         </TabsContent>
 
         <TabsContent value="custom" className="mt-6 space-y-4">

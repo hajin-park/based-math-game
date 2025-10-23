@@ -36,7 +36,8 @@ export default function ProfileSettings() {
       setIsEditing(false);
     } catch (error) {
       console.error('Failed to update display name:', error);
-      alert('Failed to update display name');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update display name';
+      alert(errorMessage);
     } finally {
       setSaving(false);
     }

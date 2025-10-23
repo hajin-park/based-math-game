@@ -5,6 +5,7 @@ import ScrollToTop from "./ScrollToTop.jsx";
 import { QuizContext, ResultContext, QuizSettings, QuizResults } from "@/contexts/GameContexts";
 import { useAuth } from "@/contexts/AuthContext";
 import ConnectionStatus from "@/components/ConnectionStatus";
+import { CookieConsent } from "@/components/CookieConsent";
 
 export const Layout = () => {
     const [settings, setSettings] = useState<QuizSettings>({
@@ -28,6 +29,7 @@ export const Layout = () => {
         <main className="flex flex-col w-full h-screen">
             <ScrollToTop />
             <ConnectionStatus />
+            <CookieConsent />
             <div className="flex-none">
                 <NavigationBar />
             </div>

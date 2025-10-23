@@ -187,11 +187,12 @@ src/
 │   ├── ProfileDropdown.tsx
 │   ├── Countdown.tsx
 │   ├── ExitButton.tsx       # Exit button with confirmation dialog for games
-│   └── KickedModal.tsx      # Modal shown when user is kicked from room
+│   ├── KickedModal.tsx      # Modal shown when user is kicked from room
+│   └── CookieConsent.tsx    # Cookie consent banner with preferences
 ├── contexts/           # React contexts
-│   ├── AuthContext.tsx      # Authentication & guest user system
+│   ├── AuthContext.tsx      # Authentication & guest user system with cookie support
 │   ├── GameContexts.tsx     # Quiz & Result contexts
-│   └── ThemeContext.tsx     # Light/Dark mode
+│   └── ThemeContext.tsx     # Light/Dark mode with cookie persistence
 ├── features/           # Feature modules
 │   ├── quiz/          # Quiz settings, questions, results components
 │   ├── tutorials/     # Tutorial components
@@ -207,6 +208,11 @@ src/
 ├── lib/               # Utility libraries
 │   ├── avatarGenerator.ts   # Pixel art avatar generation
 │   └── animations.ts        # Framer Motion animation variants
+├── utils/             # Utilities
+│   ├── displayNameValidator.ts  # Display name content moderation
+│   ├── Layout.tsx           # Main layout with cookie consent
+│   ├── analytics.ts
+│   └── ScrollToTop.jsx
 ├── pages/             # Route pages
 │   ├── profile/       # Profile pages (ProfileLayout, ProfileOverview, ProfileSettings, ProfileGameSettings)
 │   ├── Home.tsx, Quiz.tsx, Results.tsx, Leaderboard.tsx, Stats.tsx
@@ -217,7 +223,6 @@ src/
 │   ├── About.tsx, Privacy.tsx, Terms.tsx
 │   └── Error.tsx
 ├── types/             # TypeScript types (gameMode.ts)
-├── utils/             # Utilities (Layout, analytics, ScrollToTop)
 └── main.tsx           # App entry + router config
 ```
 
@@ -656,6 +661,56 @@ try {
 - Check service worker registration
 - Verify manifest.json is served
 - Check HTTPS (required for PWA)
+
+---
+
+## Recent Updates
+
+### Sprint Mode Display (Multiplayer)
+- **Room Lobby**: Shows "Target: X questions" instead of duration for sprint modes
+- **Live Game**: Displays "#answered/#target" for active players, finish time (e.g., "45s") for completed players
+- **Create Room**: Game mode cards show Target icon and question count for sprint modes
+- **Detection**: Uses `gameMode.targetQuestions` property to identify sprint modes
+
+### Google Sign-up Flow
+- **Random Display Names**: New Google sign-ups receive randomly generated display names (e.g., "SwiftNinja42")
+- **No Profile Pictures**: Google profile pictures are not used; users get auto-generated pixel art avatars
+- **Implementation**: `generateRandomDisplayName()` creates names from adjectives + nouns + numbers
+
+### Leaderboard Username Updates
+- **Automatic Sync**: When users change display names, all leaderboard entries update automatically
+- **Batch Updates**: Uses Firebase batch writes to update entries across all game mode leaderboards
+- **User Stats**: Updates userStats document as source of truth for display names
+
+### Display Name Content Moderation
+- **Validation**: Checks for profanity, slurs, and inappropriate content
+- **Length Limits**: 2-30 characters
+- **Special Characters**: Maximum 5 special characters allowed
+- **Error Feedback**: Clear error messages shown to users in ProfileSettings
+- **Implementation**: `src/utils/displayNameValidator.ts` with blocked words list
+
+### Guest User Room Management
+- **Room Persistence**: Guest room IDs stored in localStorage for reconnection
+- **Cleanup**: Room ID removed when guest leaves room
+- **Duplicate Prevention**: Prevents guests from creating duplicate rooms on reconnect
+
+### Cookie Support & Consent
+- **Cookie Consent Banner**: Customizable preferences for necessary, functional, and analytics cookies
+- **Theme Persistence**: Theme preference stored in cookies (365 days) when functional cookies enabled
+- **Guest Account Persistence**: Guest user data stored in cookies (30 days) for cross-session persistence
+- **TTL Management**: Guest data in RTDB marked with expiration timestamp (1 day) on disconnect
+- **Implementation**: `src/components/CookieConsent.tsx` with localStorage-based consent tracking
+
+### Game Selection UI Redesign
+- **Sidebar Navigation**: Left sidebar with search and category filters (both multiplayer and singleplayer)
+- **Categories**: Explore All, Binary, Octal, Hexadecimal, Mixed Bases
+- **Search**: Real-time search across game mode names and descriptions
+- **Filters**: Difficulty (Easy/Medium/Hard), Type (Timed/Speed Run), and Max Players (multiplayer only)
+- **Responsive Grid**: 2-column grid for multiplayer, 3-column for singleplayer with ScrollArea
+- **Clear Filters**: One-click reset button in sidebar
+- **Mode Counter**: Badge in sidebar header showing filtered count
+- **Mixed Bases Logic**: Shows "All Bases" games with multiple non-decimal base types
+- **Track Stats Toggle**: Integrated into singleplayer sidebar for easy access
 
 ---
 

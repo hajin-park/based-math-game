@@ -18,7 +18,7 @@ import {
 import { useRoom, Room } from '@/hooks/useRoom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
-import { Copy, Check, Link2, Settings, ChevronDown, ChevronUp, X, Eye, Timer, UserCog, Users, Crown, Shield, WifiOff, Trophy, Clock, Layers, Play } from 'lucide-react';
+import { Copy, Check, Link2, Settings, ChevronDown, ChevronUp, X, Eye, Timer, UserCog, Users, Crown, Shield, WifiOff, Trophy, Clock, Layers, Play, Target } from 'lucide-react';
 import { OFFICIAL_GAME_MODES, GameMode, getDifficultyColor } from '@/types/gameMode';
 import KickedModal from '@/components/KickedModal';
 import { PlaygroundSettings } from '@features/quiz';
@@ -649,11 +649,23 @@ export default function RoomLobby() {
                   <CardContent className="pt-4 space-y-3">
                     <div className="grid grid-cols-2 gap-3">
                       <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-primary" />
-                        <div>
-                          <p className="text-xs text-muted-foreground">Duration</p>
-                          <p className="text-base font-bold">{room.gameMode.duration}s</p>
-                        </div>
+                        {room.gameMode.targetQuestions ? (
+                          <>
+                            <Target className="h-4 w-4 text-primary" />
+                            <div>
+                              <p className="text-xs text-muted-foreground">Target</p>
+                              <p className="text-base font-bold">{room.gameMode.targetQuestions} questions</p>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <Clock className="h-4 w-4 text-primary" />
+                            <div>
+                              <p className="text-xs text-muted-foreground">Duration</p>
+                              <p className="text-base font-bold">{room.gameMode.duration}s</p>
+                            </div>
+                          </>
+                        )}
                       </div>
                       <div className="flex items-center gap-2">
                         <Layers className="h-4 w-4 text-primary" />

@@ -106,6 +106,11 @@ export function useRoom() {
 
         await set(newRoomRef, room);
 
+        // Store room ID in localStorage for guest users to enable reconnection
+        if (isGuestUser(user)) {
+          localStorage.setItem(`guestRoom_${user.uid}`, roomId);
+        }
+
         // Set up host disconnect handler
         const hostPlayerRef = ref(database, `rooms/${roomId}/players/${user.uid}`);
 
@@ -186,6 +191,11 @@ export function useRoom() {
           });
         }
 
+        // Store room ID in localStorage for guest users to enable reconnection
+        if (isGuestUser(user)) {
+          localStorage.setItem(`guestRoom_${user.uid}`, roomId);
+        }
+
         // Set up disconnect handler
         if (isGuestUser(user)) {
           // Guest users: Remove completely on disconnect
@@ -220,6 +230,11 @@ export function useRoom() {
 
         const playerRef = ref(database, `rooms/${roomId}/players/${user.uid}`);
         await remove(playerRef);
+
+        // Clear stored room ID for guest users
+        if (isGuestUser(user)) {
+          localStorage.removeItem(`guestRoom_${user.uid}`);
+        }
 
         // If host leaves, transfer host or delete room
         if (room.hostUid === user.uid) {

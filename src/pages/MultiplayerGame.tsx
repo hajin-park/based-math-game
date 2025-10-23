@@ -291,10 +291,36 @@ export default function MultiplayerGame() {
             <CardContent className="pt-4">
               <div className="space-y-2">
                 {Object.values(room.players)
-                  .sort((a, b) => b.score - a.score)
+                  .sort((a, b) => {
+                    // For speedrun: sort by finished status first, then by score (time)
+                    if (isSpeedrun) {
+                      if (a.finished && !b.finished) return -1;
+                      if (!a.finished && b.finished) return 1;
+                      if (a.finished && b.finished) return a.score - b.score; // Lower time is better
+                      return b.score - a.score; // More questions answered is better
+                    }
+                    // For timed: sort by score descending
+                    return b.score - a.score;
+                  })
                   .map((player, index) => {
                     const isCurrentUser = player.uid === user?.uid;
                     const isLeader = index === 0 && player.score > 0;
+
+                    // Display logic for speedrun vs timed modes
+                    let displayScore: string;
+                    if (isSpeedrun) {
+                      if (player.finished) {
+                        // Show finish time
+                        displayScore = `${player.score}s`;
+                      } else {
+                        // Show progress: #answered/#target
+                        const targetQuestions = room.gameMode.targetQuestions || 0;
+                        displayScore = `${player.score}/${targetQuestions}`;
+                      }
+                    } else {
+                      // Timed mode: just show score
+                      displayScore = `${player.score}`;
+                    }
 
                     return (
                       <div
@@ -316,7 +342,7 @@ export default function MultiplayerGame() {
                             {isCurrentUser && ' (You)'}
                           </span>
                         </div>
-                        <span className="font-bold text-xl tabular-nums">{player.score}</span>
+                        <span className="font-bold text-xl tabular-nums">{displayScore}</span>
                       </div>
                     );
                   })}

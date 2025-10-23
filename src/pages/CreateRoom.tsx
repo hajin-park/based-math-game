@@ -4,17 +4,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 import { useRoom } from '@/hooks/useRoom';
 import { OFFICIAL_GAME_MODES, GameMode, getDifficultyColor } from '@/types/gameMode';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PlaygroundSettings } from '@features/quiz';
 import { QuestionSetting } from '@/contexts/GameContexts';
-import { Plus, Trophy, Wrench, Users, Clock, Layers, CheckCircle2, Filter, Target, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Trophy, Wrench, Users, Clock, Layers, CheckCircle2, Target, ChevronDown, ChevronUp, Search, Binary, Hash, Hexagon, Sparkles } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
-type BaseFilter = 'all' | 'binary' | 'octal' | 'hexadecimal' | 'all-bases';
-type DifficultyFilter = 'all' | 'Easy' | 'Medium' | 'Hard' | 'Expert';
+type CategoryFilter = 'explore' | 'binary' | 'octal' | 'hexadecimal' | 'mixed';
+type DifficultyFilter = 'all' | 'Easy' | 'Medium' | 'Hard';
 type TypeFilter = 'all' | 'timed' | 'speedrun';
 
 export default function CreateRoom() {
@@ -23,7 +25,8 @@ export default function CreateRoom() {
   const [selectedMode, setSelectedMode] = useState<GameMode | null>(null);
   const [selectedTab, setSelectedTab] = useState('official');
   const [maxPlayers, setMaxPlayers] = useState<number>(4);
-  const [baseFilter, setBaseFilter] = useState<BaseFilter>('all');
+  const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('explore');
+  const [searchQuery, setSearchQuery] = useState('');
   const [difficultyFilter, setDifficultyFilter] = useState<DifficultyFilter>('all');
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
   const [expandedModeId, setExpandedModeId] = useState<string | null>(null);
@@ -70,18 +73,37 @@ export default function CreateRoom() {
   // Filter game modes based on selected filters
   const filteredModes = useMemo(() => {
     return OFFICIAL_GAME_MODES.filter((mode) => {
-      // Base filter
-      if (baseFilter !== 'all') {
-        const hasBase = mode.questions.some((q) => {
-          const fromBase = q[0].toLowerCase();
-          const toBase = q[1].toLowerCase();
-          if (baseFilter === 'all-bases') {
-            return (fromBase === 'binary' || fromBase === 'octal' || fromBase === 'hexadecimal') &&
-                   (toBase === 'binary' || toBase === 'octal' || toBase === 'hexadecimal');
-          }
-          return fromBase === baseFilter || toBase === baseFilter;
-        });
-        if (!hasBase) return false;
+      // Search filter
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase();
+        const nameMatch = mode.name.toLowerCase().includes(query);
+        const descMatch = mode.description.toLowerCase().includes(query);
+        if (!nameMatch && !descMatch) return false;
+      }
+
+      // Category filter
+      if (categoryFilter !== 'explore') {
+        if (categoryFilter === 'mixed') {
+          // Mixed bases: show "All Bases" games (games with multiple base types excluding decimal)
+          // Count unique non-decimal bases in the questions
+          const bases = new Set<string>();
+          mode.questions.forEach((q) => {
+            const fromBase = q[0].toLowerCase();
+            const toBase = q[1].toLowerCase();
+            if (fromBase !== 'decimal') bases.add(fromBase);
+            if (toBase !== 'decimal') bases.add(toBase);
+          });
+          // Must have more than one non-decimal base type
+          if (bases.size <= 1) return false;
+        } else {
+          // Single base filter
+          const hasBase = mode.questions.some((q) => {
+            const fromBase = q[0].toLowerCase();
+            const toBase = q[1].toLowerCase();
+            return fromBase === categoryFilter || toBase === categoryFilter;
+          });
+          if (!hasBase) return false;
+        }
       }
 
       // Difficulty filter
@@ -98,12 +120,12 @@ export default function CreateRoom() {
 
       return true;
     });
-  }, [baseFilter, difficultyFilter, typeFilter]);
+  }, [categoryFilter, searchQuery, difficultyFilter, typeFilter]);
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-6">
+    <div className="container mx-auto px-4 py-8">
       {/* Header */}
-      <div className="text-center space-y-2 animate-in">
+      <div className="text-center space-y-2 animate-in mb-6">
         <div className="flex items-center justify-center gap-2 mb-2">
           <Plus className="h-8 w-8 text-primary" />
           <h1 className="text-4xl font-bold gradient-text">Create Room</h1>
@@ -113,122 +135,176 @@ export default function CreateRoom() {
         </p>
       </div>
 
-      <Card className="border-2 shadow-lg">
-        <CardHeader>
-          <CardTitle className="text-2xl">Room Configuration</CardTitle>
-          <CardDescription className="text-base">
-            Choose your game mode and settings
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
-            <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 h-auto p-1">
-              <TabsTrigger value="official" className="flex items-center gap-2 py-3">
-                <Trophy className="h-4 w-4" />
-                Official Modes
-              </TabsTrigger>
-              <TabsTrigger value="custom" className="flex items-center gap-2 py-3">
-                <Wrench className="h-4 w-4" />
-                Custom
-              </TabsTrigger>
-            </TabsList>
+      <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
+        <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 h-auto p-1 mb-6">
+          <TabsTrigger value="official" className="flex items-center gap-2 py-3">
+            <Trophy className="h-4 w-4" />
+            Official Modes
+          </TabsTrigger>
+          <TabsTrigger value="custom" className="flex items-center gap-2 py-3">
+            <Wrench className="h-4 w-4" />
+            Custom
+          </TabsTrigger>
+        </TabsList>
 
-            <TabsContent value="official" className="space-y-6 mt-6">
-              {/* Player Limit Selector */}
-              <Card className="border-primary/20 bg-primary/5">
-                <CardContent className="pt-6">
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <Users className="h-5 w-5 text-primary" />
-                      <Label htmlFor="maxPlayers" className="text-base font-semibold">
-                        Maximum Players
-                      </Label>
-                    </div>
-                    <Select
-                      value={maxPlayers.toString()}
-                      onValueChange={(value) => setMaxPlayers(parseInt(value))}
+        <TabsContent value="official" className="space-y-0">
+          <div className="flex gap-6">
+            {/* Sidebar */}
+            <Card className="w-64 flex-shrink-0 border-2 shadow-lg h-fit sticky top-4">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg">Browse</CardTitle>
+                  <Badge variant="secondary" className="text-xs">
+                    {filteredModes.length}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Search */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search modes..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+
+                {/* Categories */}
+                <div className="space-y-1">
+                  <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                    Categories
+                  </Label>
+                  <div className="space-y-1">
+                    <Button
+                      variant={categoryFilter === 'explore' ? 'secondary' : 'ghost'}
+                      className="w-full justify-start"
+                      onClick={() => setCategoryFilter('explore')}
                     >
-                      <SelectTrigger id="maxPlayers" className="w-full">
-                        <SelectValue placeholder="Select max players" />
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Explore All
+                    </Button>
+                    <Button
+                      variant={categoryFilter === 'binary' ? 'secondary' : 'ghost'}
+                      className="w-full justify-start"
+                      onClick={() => setCategoryFilter('binary')}
+                    >
+                      <Binary className="h-4 w-4 mr-2" />
+                      Binary
+                    </Button>
+                    <Button
+                      variant={categoryFilter === 'octal' ? 'secondary' : 'ghost'}
+                      className="w-full justify-start"
+                      onClick={() => setCategoryFilter('octal')}
+                    >
+                      <Hash className="h-4 w-4 mr-2" />
+                      Octal
+                    </Button>
+                    <Button
+                      variant={categoryFilter === 'hexadecimal' ? 'secondary' : 'ghost'}
+                      className="w-full justify-start"
+                      onClick={() => setCategoryFilter('hexadecimal')}
+                    >
+                      <Hexagon className="h-4 w-4 mr-2" />
+                      Hexadecimal
+                    </Button>
+                    <Button
+                      variant={categoryFilter === 'mixed' ? 'secondary' : 'ghost'}
+                      className="w-full justify-start"
+                      onClick={() => setCategoryFilter('mixed')}
+                    >
+                      <Layers className="h-4 w-4 mr-2" />
+                      Mixed Bases
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Additional Filters */}
+                <div className="space-y-3 pt-2 border-t">
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                      Difficulty
+                    </Label>
+                    <Select value={difficultyFilter} onValueChange={(value) => setDifficultyFilter(value as DifficultyFilter)}>
+                      <SelectTrigger className="h-9">
+                        <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {[2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
-                          <SelectItem key={num} value={num.toString()}>
-                            {num} Players
-                          </SelectItem>
-                        ))}
+                        <SelectItem value="all">All</SelectItem>
+                        <SelectItem value="Easy">Easy</SelectItem>
+                        <SelectItem value="Medium">Medium</SelectItem>
+                        <SelectItem value="Hard">Hard</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                </CardContent>
-              </Card>
 
-              {/* Filters */}
-              <Card className="border-2">
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <Filter className="h-5 w-5 text-primary" />
-                    <CardTitle className="text-lg">Filter Games</CardTitle>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                      Type
+                    </Label>
+                    <Select value={typeFilter} onValueChange={(value) => setTypeFilter(value as TypeFilter)}>
+                      <SelectTrigger className="h-9">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                        <SelectItem value="timed">Timed</SelectItem>
+                        <SelectItem value="speedrun">Speed Run</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                  <CardDescription>
-                    Narrow down from 48 official modes
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid gap-4 sm:grid-cols-3">
-                    {/* Base Type Filter */}
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium">Base Type</Label>
-                      <Select value={baseFilter} onValueChange={(value) => setBaseFilter(value as BaseFilter)}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Bases</SelectItem>
-                          <SelectItem value="binary">Binary Only</SelectItem>
-                          <SelectItem value="octal">Octal Only</SelectItem>
-                          <SelectItem value="hexadecimal">Hexadecimal Only</SelectItem>
-                          <SelectItem value="all-bases">All Bases Mixed</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                </div>
 
-                    {/* Difficulty Filter */}
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium">Difficulty</Label>
-                      <Select value={difficultyFilter} onValueChange={(value) => setDifficultyFilter(value as DifficultyFilter)}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Difficulties</SelectItem>
-                          <SelectItem value="Easy">Easy</SelectItem>
-                          <SelectItem value="Medium">Medium</SelectItem>
-                          <SelectItem value="Hard">Hard</SelectItem>
-                          <SelectItem value="Expert">Expert</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                {/* Player Count */}
+                <div className="space-y-2 pt-2 border-t">
+                  <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+                    <Users className="h-3 w-3" />
+                    Max Players
+                  </Label>
+                  <Select
+                    value={maxPlayers.toString()}
+                    onValueChange={(value) => setMaxPlayers(parseInt(value))}
+                  >
+                    <SelectTrigger className="h-9">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
+                        <SelectItem key={num} value={num.toString()}>
+                          {num} Players
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-                    {/* Type Filter */}
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium">Game Type</Label>
-                      <Select value={typeFilter} onValueChange={(value) => setTypeFilter(value as TypeFilter)}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Types</SelectItem>
-                          <SelectItem value="timed">Timed Challenges</SelectItem>
-                          <SelectItem value="speedrun">Speed Runs</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                {/* Reset Filters Button */}
+                {(categoryFilter !== 'explore' || difficultyFilter !== 'all' || typeFilter !== 'all' || searchQuery) && (
+                  <div className="pt-2 border-t">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => {
+                        setCategoryFilter('explore');
+                        setDifficultyFilter('all');
+                        setTypeFilter('all');
+                        setSearchQuery('');
+                      }}
+                    >
+                      Clear Filters
+                    </Button>
                   </div>
-                </CardContent>
-              </Card>
+                )}
+              </CardContent>
+            </Card>
 
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {/* Main Content */}
+            <div className="flex-1 space-y-4">
+
+              <ScrollArea className="h-[calc(100vh-300px)]">
+                <div className="grid gap-4 md:grid-cols-2 pr-4">
                 {filteredModes.map((mode) => (
                   <Card
                     key={mode.id}
@@ -258,8 +334,17 @@ export default function CreateRoom() {
                     <CardContent className="space-y-3">
                       <div className="grid grid-cols-2 gap-3">
                         <div className="flex items-center gap-2 text-sm">
-                          <Clock className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-muted-foreground">{mode.duration}s</span>
+                          {mode.targetQuestions ? (
+                            <>
+                              <Target className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-muted-foreground">{mode.targetQuestions}q</span>
+                            </>
+                          ) : (
+                            <>
+                              <Clock className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-muted-foreground">{mode.duration}s</span>
+                            </>
+                          )}
                         </div>
                         <div className="flex items-center gap-2 text-sm">
                           <Layers className="h-4 w-4 text-muted-foreground" />
@@ -320,31 +405,34 @@ export default function CreateRoom() {
                     </CardContent>
                   </Card>
                 ))}
-              </div>
+                  {filteredModes.length === 0 && (
+                    <div className="col-span-full">
+                      <Card className="border-2 border-dashed">
+                        <CardContent className="py-12 text-center">
+                          <Target className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                          <p className="text-lg font-medium mb-2">No modes match your filters</p>
+                          <p className="text-sm text-muted-foreground mb-4">
+                            Try adjusting your filter settings
+                          </p>
+                          <Button
+                            variant="outline"
+                            onClick={() => {
+                              setCategoryFilter('explore');
+                              setDifficultyFilter('all');
+                              setTypeFilter('all');
+                              setSearchQuery('');
+                            }}
+                          >
+                            Reset Filters
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
 
-              {filteredModes.length === 0 && (
-                <Card className="border-2 border-dashed">
-                  <CardContent className="py-12 text-center">
-                    <Target className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                    <p className="text-lg font-medium mb-2">No modes match your filters</p>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Try adjusting your filter settings
-                    </p>
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setBaseFilter('all');
-                        setDifficultyFilter('all');
-                        setTypeFilter('all');
-                      }}
-                    >
-                      Reset Filters
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
-
-              <div className="flex gap-3 justify-end">
+              <div className="flex gap-3 justify-end mt-4">
                 <Button onClick={() => navigate('/multiplayer')} variant="outline" size="lg">
                   Cancel
                 </Button>
@@ -366,7 +454,9 @@ export default function CreateRoom() {
                   )}
                 </Button>
               </div>
-            </TabsContent>
+            </div>
+          </div>
+        </TabsContent>
 
             <TabsContent value="custom" className="space-y-6 mt-6">
               {/* Player Limit Selector */}
@@ -425,8 +515,6 @@ export default function CreateRoom() {
               </div>
             </TabsContent>
           </Tabs>
-        </CardContent>
-      </Card>
     </div>
   );
 }
