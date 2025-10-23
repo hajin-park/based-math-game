@@ -1,34 +1,42 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Separator } from '@/components/ui/separator';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Separator } from "@/components/ui/separator";
 
-import { useAuth } from '@/contexts/AuthContext';
-import { UserPlus, Mail, Lock, User, AlertCircle, Info } from 'lucide-react';
+import { useAuth } from "@/contexts/AuthContext";
+import { UserPlus, Mail, Lock, User, AlertCircle, Info } from "lucide-react";
 
 export default function Signup() {
   const navigate = useNavigate();
   const { signUpWithEmail, signInWithGoogle, isGuest } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [displayName, setDisplayName] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const handleEmailSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     try {
       await signUpWithEmail(email, password, displayName);
-      navigate('/');
+      navigate("/");
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to create account';
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to create account";
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -36,14 +44,17 @@ export default function Signup() {
   };
 
   const handleGoogleSignup = async () => {
-    setError('');
+    setError("");
     setLoading(true);
 
     try {
       await signInWithGoogle();
-      navigate('/');
+      navigate("/");
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to sign up with Google';
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Failed to sign up with Google";
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -58,8 +69,8 @@ export default function Signup() {
           <h1 className="text-3xl font-bold gradient-text">Join Us</h1>
           <p className="text-muted-foreground">
             {isGuest
-              ? 'Convert your guest account to save your progress permanently'
-              : 'Create an account to track your progress and compete on leaderboards'}
+              ? "Convert your guest account to save your progress permanently"
+              : "Create an account to track your progress and compete on leaderboards"}
           </p>
         </div>
 
@@ -68,7 +79,8 @@ export default function Signup() {
           <Alert className="border-primary/50 bg-primary/5">
             <Info className="h-4 w-4 text-primary" />
             <AlertDescription className="text-sm">
-              You're currently playing as a guest. Create an account to save your progress!
+              You're currently playing as a guest. Create an account to save
+              your progress!
             </AlertDescription>
           </Alert>
         )}
@@ -80,9 +92,7 @@ export default function Signup() {
               <UserPlus className="h-5 w-5 text-primary" />
               Create Account
             </CardTitle>
-            <CardDescription>
-              Enter your details to get started
-            </CardDescription>
+            <CardDescription>Enter your details to get started</CardDescription>
           </CardHeader>
           <form onSubmit={handleEmailSignup}>
             <CardContent className="space-y-4">
@@ -94,7 +104,10 @@ export default function Signup() {
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="displayName" className="flex items-center gap-2">
+                <Label
+                  htmlFor="displayName"
+                  className="flex items-center gap-2"
+                >
                   <User className="h-4 w-4 text-muted-foreground" />
                   Display Name
                 </Label>
@@ -203,11 +216,11 @@ export default function Signup() {
           </form>
           <CardFooter className="flex flex-col space-y-3 border-t pt-6">
             <p className="text-sm text-muted-foreground text-center">
-              Already have an account?{' '}
+              Already have an account?{" "}
               <Button
                 variant="link"
                 className="p-0 h-auto font-semibold text-primary"
-                onClick={() => navigate('/login')}
+                onClick={() => navigate("/login")}
               >
                 Sign in
               </Button>
@@ -215,7 +228,7 @@ export default function Signup() {
             {!isGuest && (
               <Button
                 variant="ghost"
-                onClick={() => navigate('/')}
+                onClick={() => navigate("/")}
                 className="w-full hover:bg-accent"
               >
                 Continue as Guest
@@ -227,4 +240,3 @@ export default function Signup() {
     </div>
   );
 }
-

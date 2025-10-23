@@ -1,13 +1,16 @@
-import { ReactNode } from 'react';
-import { Navigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { ReactNode } from "react";
+import { Navigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ProtectedRouteProps {
   children: ReactNode;
   requireNonGuest?: boolean;
 }
 
-export default function ProtectedRoute({ children, requireNonGuest = false }: ProtectedRouteProps) {
+export default function ProtectedRoute({
+  children,
+  requireNonGuest = false,
+}: ProtectedRouteProps) {
   const { user, loading, isGuest } = useAuth();
 
   if (loading) {
@@ -28,4 +31,3 @@ export default function ProtectedRoute({ children, requireNonGuest = false }: Pr
 
   return <>{children}</>;
 }
-

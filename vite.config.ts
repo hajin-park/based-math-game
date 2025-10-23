@@ -4,14 +4,14 @@ import react from "@vitejs/plugin-react-swc";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-    plugins: [react()],
-    resolve: {
-        alias: {
-            "@": path.resolve(__dirname, "./src"),
-            "@features": path.resolve(__dirname, "./src/features"),
-        },
+  plugins: [react()],
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+      "@features": path.resolve(__dirname, "./src/features"),
     },
-    optimizeDeps: {
-        include: ['react', 'react-dom', '@radix-ui/react-collapsible'],
-    },
+  },
+  optimizeDeps: {
+    include: ["react", "react-dom", "@radix-ui/react-collapsible"],
+  },
 });

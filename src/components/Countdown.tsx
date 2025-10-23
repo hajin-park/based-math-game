@@ -1,13 +1,16 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from '@/lib/utils';
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 interface CountdownProps {
   onComplete: () => void;
   duration?: number; // Duration in seconds (default: 3)
 }
 
-export default function Countdown({ onComplete, duration = 3 }: CountdownProps) {
+export default function Countdown({
+  onComplete,
+  duration = 3,
+}: CountdownProps) {
   const [count, setCount] = useState(duration);
 
   useEffect(() => {
@@ -37,7 +40,7 @@ export default function Countdown({ onComplete, duration = 3 }: CountdownProps) 
               "text-9xl font-bold font-mono tabular-nums",
               count === 3 && "text-muted-foreground",
               count === 2 && "text-foreground",
-              count === 1 && "text-primary"
+              count === 1 && "text-primary",
             )}
           >
             {count}
@@ -50,4 +53,3 @@ export default function Countdown({ onComplete, duration = 3 }: CountdownProps) 
     </div>
   );
 }
-

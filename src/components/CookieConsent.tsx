@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Cookie, X } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Cookie, X } from "lucide-react";
 
 interface CookiePreferences {
   necessary: boolean; // Always true, can't be disabled
@@ -18,11 +18,12 @@ const DEFAULT_PREFERENCES: CookiePreferences = {
 export function CookieConsent() {
   const [showBanner, setShowBanner] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
-  const [preferences, setPreferences] = useState<CookiePreferences>(DEFAULT_PREFERENCES);
+  const [preferences, setPreferences] =
+    useState<CookiePreferences>(DEFAULT_PREFERENCES);
 
   useEffect(() => {
     // Check if user has already made a choice
-    const consent = localStorage.getItem('cookieConsent');
+    const consent = localStorage.getItem("cookieConsent");
     if (!consent) {
       // Show banner after a short delay
       setTimeout(() => setShowBanner(true), 1000);
@@ -39,15 +40,15 @@ export function CookieConsent() {
   }, []);
 
   const savePreferences = (prefs: CookiePreferences) => {
-    localStorage.setItem('cookieConsent', JSON.stringify(prefs));
+    localStorage.setItem("cookieConsent", JSON.stringify(prefs));
     setPreferences(prefs);
     setShowBanner(false);
-    
+
     // Apply preferences
     if (!prefs.analytics) {
       // Clear any analytics cookies if user opts out
       // This would be where you'd disable analytics tracking
-      console.log('Analytics disabled');
+      console.log("Analytics disabled");
     }
   };
 
@@ -81,10 +82,13 @@ export function CookieConsent() {
             <Cookie className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
             <div className="flex-1 space-y-4">
               <div>
-                <h3 className="text-lg font-semibold mb-2">Cookie Preferences</h3>
+                <h3 className="text-lg font-semibold mb-2">
+                  Cookie Preferences
+                </h3>
                 <p className="text-sm text-muted-foreground">
-                  We use cookies to enhance your experience. Necessary cookies are required for the site to function.
-                  You can choose to enable optional cookies for additional features.
+                  We use cookies to enhance your experience. Necessary cookies
+                  are required for the site to function. You can choose to
+                  enable optional cookies for additional features.
                 </p>
               </div>
 
@@ -100,7 +104,8 @@ export function CookieConsent() {
                     <div className="flex-1">
                       <p className="font-medium text-sm">Necessary Cookies</p>
                       <p className="text-xs text-muted-foreground">
-                        Required for authentication and basic site functionality. Cannot be disabled.
+                        Required for authentication and basic site
+                        functionality. Cannot be disabled.
                       </p>
                     </div>
                   </div>
@@ -109,13 +114,19 @@ export function CookieConsent() {
                     <input
                       type="checkbox"
                       checked={preferences.functional}
-                      onChange={(e) => setPreferences({ ...preferences, functional: e.target.checked })}
+                      onChange={(e) =>
+                        setPreferences({
+                          ...preferences,
+                          functional: e.target.checked,
+                        })
+                      }
                       className="mt-1"
                     />
                     <div className="flex-1">
                       <p className="font-medium text-sm">Functional Cookies</p>
                       <p className="text-xs text-muted-foreground">
-                        Used to remember your theme preference and guest account data for a better experience.
+                        Used to remember your theme preference and guest account
+                        data for a better experience.
                       </p>
                     </div>
                   </div>
@@ -124,13 +135,19 @@ export function CookieConsent() {
                     <input
                       type="checkbox"
                       checked={preferences.analytics}
-                      onChange={(e) => setPreferences({ ...preferences, analytics: e.target.checked })}
+                      onChange={(e) =>
+                        setPreferences({
+                          ...preferences,
+                          analytics: e.target.checked,
+                        })
+                      }
                       className="mt-1"
                     />
                     <div className="flex-1">
                       <p className="font-medium text-sm">Analytics Cookies</p>
                       <p className="text-xs text-muted-foreground">
-                        Help us understand how you use the site so we can improve it.
+                        Help us understand how you use the site so we can
+                        improve it.
                       </p>
                     </div>
                   </div>
@@ -143,10 +160,18 @@ export function CookieConsent() {
                     <Button onClick={acceptAll} size="sm">
                       Accept All
                     </Button>
-                    <Button onClick={acceptNecessary} variant="outline" size="sm">
+                    <Button
+                      onClick={acceptNecessary}
+                      variant="outline"
+                      size="sm"
+                    >
                       Necessary Only
                     </Button>
-                    <Button onClick={() => setShowDetails(true)} variant="ghost" size="sm">
+                    <Button
+                      onClick={() => setShowDetails(true)}
+                      variant="ghost"
+                      size="sm"
+                    >
                       Customize
                     </Button>
                   </>
@@ -158,7 +183,11 @@ export function CookieConsent() {
                     <Button onClick={acceptAll} variant="outline" size="sm">
                       Accept All
                     </Button>
-                    <Button onClick={() => setShowDetails(false)} variant="ghost" size="sm">
+                    <Button
+                      onClick={() => setShowDetails(false)}
+                      variant="ghost"
+                      size="sm"
+                    >
                       Back
                     </Button>
                   </>
@@ -179,4 +208,3 @@ export function CookieConsent() {
     </div>
   );
 }
-

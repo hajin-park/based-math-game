@@ -1,14 +1,48 @@
-import { useState, useEffect, useCallback } from 'react';
-import { collection, getDocs, query, orderBy, doc, getDoc } from 'firebase/firestore';
-import { firestore } from '@/firebase/config';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import { OFFICIAL_GAME_MODES, getGameModeById, isSpeedrunMode } from '@/types/gameMode';
-import { useAuth } from '@/contexts/AuthContext';
-import { Badge } from '@/components/ui/badge';
-import { Trophy, Crown, Medal, Loader2, Target, Users, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { useState, useEffect, useCallback } from "react";
+import {
+  collection,
+  getDocs,
+  query,
+  orderBy,
+  doc,
+  getDoc,
+} from "firebase/firestore";
+import { firestore } from "@/firebase/config";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import {
+  OFFICIAL_GAME_MODES,
+  getGameModeById,
+  isSpeedrunMode,
+} from "@/types/gameMode";
+import { useAuth } from "@/contexts/AuthContext";
+import { Badge } from "@/components/ui/badge";
+import {
+  Trophy,
+  Crown,
+  Medal,
+  Loader2,
+  Target,
+  Users,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+} from "lucide-react";
 
 interface LeaderboardEntry {
   uid: string;
@@ -36,124 +70,140 @@ export default function Leaderboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalEntries, setTotalEntries] = useState(0);
 
-  const fetchUserRank = useCallback(async (gameModeId: string) => {
-    if (!user || isGuest) return;
+  const fetchUserRank = useCallback(
+    async (gameModeId: string) => {
+      if (!user || isGuest) return;
 
-    try {
-      const gameMode = getGameModeById(gameModeId);
-      const isSpeedrun = isSpeedrunMode(gameMode);
+      try {
+        const gameMode = getGameModeById(gameModeId);
+        const isSpeedrun = isSpeedrunMode(gameMode);
 
-      // Get user's score
-      const userDocRef = doc(firestore, `leaderboard-${gameModeId}`, user.uid);
-      const userDoc = await getDoc(userDocRef);
+        // Get user's score
+        const userDocRef = doc(
+          firestore,
+          `leaderboard-${gameModeId}`,
+          user.uid,
+        );
+        const userDoc = await getDoc(userDocRef);
 
-      if (!userDoc.exists()) {
-        setUserRank(null);
-        return;
-      }
+        if (!userDoc.exists()) {
+          setUserRank(null);
+          return;
+        }
 
-      const userData = userDoc.data();
-      const userScore = userData.score as number;
-      const userAccuracy = userData.accuracy as number | undefined;
+        const userData = userDoc.data();
+        const userScore = userData.score as number;
+        const userAccuracy = userData.accuracy as number | undefined;
 
-      // Get all leaderboard entries
-      const leaderboardRef = collection(firestore, `leaderboard-${gameModeId}`);
-      const leaderboardQuery = query(
-        leaderboardRef,
-        orderBy('score', isSpeedrun ? 'asc' : 'desc')
-      );
+        // Get all leaderboard entries
+        const leaderboardRef = collection(
+          firestore,
+          `leaderboard-${gameModeId}`,
+        );
+        const leaderboardQuery = query(
+          leaderboardRef,
+          orderBy("score", isSpeedrun ? "asc" : "desc"),
+        );
 
-      const snapshot = await getDocs(leaderboardQuery);
+        const snapshot = await getDocs(leaderboardQuery);
 
-      // Filter out guest users and count rank
-      const validEntries = snapshot.docs.filter((doc) => {
-        const data = doc.data();
-        const isGuestUid = doc.id.startsWith('guest_');
-        const isGuestMarked = data.isGuest === true;
-        return !isGuestUid && !isGuestMarked;
-      });
-
-      const rank = validEntries.findIndex((doc) => doc.id === user.uid) + 1;
-
-      if (rank > 0) {
-        setUserRank({
-          rank,
-          score: userScore,
-          totalPlayers: validEntries.length,
-          accuracy: userAccuracy,
-        });
-      } else {
-        setUserRank(null);
-      }
-    } catch (error) {
-      console.error('Error fetching user rank:', error);
-      setUserRank(null);
-    }
-  }, [user, isGuest]);
-
-  const fetchLeaderboard = useCallback(async (gameModeId: string, page: number = 1) => {
-    setLoading(true);
-    try {
-      const gameMode = getGameModeById(gameModeId);
-      const isSpeedrun = isSpeedrunMode(gameMode);
-
-      // Use flat collection structure: leaderboard-{gameModeId}
-      const leaderboardRef = collection(firestore, `leaderboard-${gameModeId}`);
-
-      // First, get all entries to calculate total count and support pagination
-      // For speedrun: order by score ascending (lower is better)
-      // For timed: order by score descending (higher is better)
-      const allEntriesQuery = query(
-        leaderboardRef,
-        orderBy('score', isSpeedrun ? 'asc' : 'desc')
-      );
-
-      const snapshot = await getDocs(allEntriesQuery);
-
-      // Filter out guest users
-      const allEntries: LeaderboardEntry[] = snapshot.docs
-        .filter((doc) => {
+        // Filter out guest users and count rank
+        const validEntries = snapshot.docs.filter((doc) => {
           const data = doc.data();
-          const isGuestUid = doc.id.startsWith('guest_');
+          const isGuestUid = doc.id.startsWith("guest_");
           const isGuestMarked = data.isGuest === true;
           return !isGuestUid && !isGuestMarked;
-        })
-        .map((doc) => {
-          const data = doc.data();
-          return {
-            uid: doc.id,
-            displayName: data.displayName as string,
-            score: data.score as number,
-            timestamp: data.timestamp as number,
-            accuracy: data.accuracy as number | undefined,
-          };
         });
 
-      // Set total entries count
-      setTotalEntries(allEntries.length);
+        const rank = validEntries.findIndex((doc) => doc.id === user.uid) + 1;
 
-      // Paginate the results
-      const startIndex = (page - 1) * ENTRIES_PER_PAGE;
-      const endIndex = startIndex + ENTRIES_PER_PAGE;
-      const paginatedEntries = allEntries.slice(startIndex, endIndex);
-
-      setLeaderboard(paginatedEntries);
-
-      // Fetch user's rank if authenticated and not a guest
-      if (user && !isGuest) {
-        await fetchUserRank(gameModeId);
-      } else {
+        if (rank > 0) {
+          setUserRank({
+            rank,
+            score: userScore,
+            totalPlayers: validEntries.length,
+            accuracy: userAccuracy,
+          });
+        } else {
+          setUserRank(null);
+        }
+      } catch (error) {
+        console.error("Error fetching user rank:", error);
         setUserRank(null);
       }
-    } catch (error) {
-      console.error('Error fetching leaderboard:', error);
-      setLeaderboard([]);
-      setUserRank(null);
-      setTotalEntries(0);
-    } finally {
-      setLoading(false);
-    }
-  }, [user, isGuest, fetchUserRank]);
+    },
+    [user, isGuest],
+  );
+
+  const fetchLeaderboard = useCallback(
+    async (gameModeId: string, page: number = 1) => {
+      setLoading(true);
+      try {
+        const gameMode = getGameModeById(gameModeId);
+        const isSpeedrun = isSpeedrunMode(gameMode);
+
+        // Use flat collection structure: leaderboard-{gameModeId}
+        const leaderboardRef = collection(
+          firestore,
+          `leaderboard-${gameModeId}`,
+        );
+
+        // First, get all entries to calculate total count and support pagination
+        // For speedrun: order by score ascending (lower is better)
+        // For timed: order by score descending (higher is better)
+        const allEntriesQuery = query(
+          leaderboardRef,
+          orderBy("score", isSpeedrun ? "asc" : "desc"),
+        );
+
+        const snapshot = await getDocs(allEntriesQuery);
+
+        // Filter out guest users
+        const allEntries: LeaderboardEntry[] = snapshot.docs
+          .filter((doc) => {
+            const data = doc.data();
+            const isGuestUid = doc.id.startsWith("guest_");
+            const isGuestMarked = data.isGuest === true;
+            return !isGuestUid && !isGuestMarked;
+          })
+          .map((doc) => {
+            const data = doc.data();
+            return {
+              uid: doc.id,
+              displayName: data.displayName as string,
+              score: data.score as number,
+              timestamp: data.timestamp as number,
+              accuracy: data.accuracy as number | undefined,
+            };
+          });
+
+        // Set total entries count
+        setTotalEntries(allEntries.length);
+
+        // Paginate the results
+        const startIndex = (page - 1) * ENTRIES_PER_PAGE;
+        const endIndex = startIndex + ENTRIES_PER_PAGE;
+        const paginatedEntries = allEntries.slice(startIndex, endIndex);
+
+        setLeaderboard(paginatedEntries);
+
+        // Fetch user's rank if authenticated and not a guest
+        if (user && !isGuest) {
+          await fetchUserRank(gameModeId);
+        } else {
+          setUserRank(null);
+        }
+      } catch (error) {
+        console.error("Error fetching leaderboard:", error);
+        setLeaderboard([]);
+        setUserRank(null);
+        setTotalEntries(0);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [user, isGuest, fetchUserRank],
+  );
 
   // Reset to page 1 when mode changes
   useEffect(() => {
@@ -165,7 +215,9 @@ export default function Leaderboard() {
     fetchLeaderboard(selectedMode, currentPage);
   }, [selectedMode, currentPage, fetchLeaderboard]);
 
-  const selectedModeData = OFFICIAL_GAME_MODES.find((mode) => mode.id === selectedMode);
+  const selectedModeData = OFFICIAL_GAME_MODES.find(
+    (mode) => mode.id === selectedMode,
+  );
   const totalPages = Math.ceil(totalEntries / ENTRIES_PER_PAGE);
 
   const getRankIcon = (index: number) => {
@@ -180,7 +232,7 @@ export default function Leaderboard() {
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setCurrentPage(newPage);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
@@ -189,7 +241,7 @@ export default function Leaderboard() {
       const userPage = Math.ceil(userRank.rank / ENTRIES_PER_PAGE);
       if (userPage !== currentPage) {
         setCurrentPage(userPage);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        window.scrollTo({ top: 0, behavior: "smooth" });
       }
     }
   };
@@ -224,7 +276,9 @@ export default function Leaderboard() {
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <Trophy className="h-5 w-5 text-primary" />
-                  <Label className="text-base font-semibold">Select Game Mode</Label>
+                  <Label className="text-base font-semibold">
+                    Select Game Mode
+                  </Label>
                 </div>
                 <Select value={selectedMode} onValueChange={setSelectedMode}>
                   <SelectTrigger className="w-full h-11">
@@ -235,7 +289,9 @@ export default function Leaderboard() {
                     <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
                       Timed - 15 Seconds
                     </div>
-                    {OFFICIAL_GAME_MODES.filter(m => m.id.includes('-15s')).map((mode) => (
+                    {OFFICIAL_GAME_MODES.filter((m) =>
+                      m.id.includes("-15s"),
+                    ).map((mode) => (
                       <SelectItem key={mode.id} value={mode.id}>
                         {mode.name}
                       </SelectItem>
@@ -243,7 +299,9 @@ export default function Leaderboard() {
                     <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground mt-2">
                       Timed - 60 Seconds
                     </div>
-                    {OFFICIAL_GAME_MODES.filter(m => m.id.includes('-60s')).map((mode) => (
+                    {OFFICIAL_GAME_MODES.filter((m) =>
+                      m.id.includes("-60s"),
+                    ).map((mode) => (
                       <SelectItem key={mode.id} value={mode.id}>
                         {mode.name}
                       </SelectItem>
@@ -251,7 +309,9 @@ export default function Leaderboard() {
                     <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground mt-2">
                       Speed Run - 10 Questions
                     </div>
-                    {OFFICIAL_GAME_MODES.filter(m => m.id.includes('-10q')).map((mode) => (
+                    {OFFICIAL_GAME_MODES.filter((m) =>
+                      m.id.includes("-10q"),
+                    ).map((mode) => (
                       <SelectItem key={mode.id} value={mode.id}>
                         {mode.name}
                       </SelectItem>
@@ -259,7 +319,9 @@ export default function Leaderboard() {
                     <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground mt-2">
                       Speed Run - 30 Questions
                     </div>
-                    {OFFICIAL_GAME_MODES.filter(m => m.id.includes('-30q')).map((mode) => (
+                    {OFFICIAL_GAME_MODES.filter((m) =>
+                      m.id.includes("-30q"),
+                    ).map((mode) => (
                       <SelectItem key={mode.id} value={mode.id}>
                         {mode.name}
                       </SelectItem>
@@ -271,58 +333,66 @@ export default function Leaderboard() {
           </Card>
 
           {/* User's Rank Card */}
-          {!isGuest && userRank && (() => {
-            const gameMode = getGameModeById(selectedMode);
-            const isSpeedrun = isSpeedrunMode(gameMode);
-            const userPage = Math.ceil(userRank.rank / ENTRIES_PER_PAGE);
-            const isOnUserPage = userPage === currentPage;
+          {!isGuest &&
+            userRank &&
+            (() => {
+              const gameMode = getGameModeById(selectedMode);
+              const isSpeedrun = isSpeedrunMode(gameMode);
+              const userPage = Math.ceil(userRank.rank / ENTRIES_PER_PAGE);
+              const isOnUserPage = userPage === currentPage;
 
-            return (
-              <Card className="bg-primary/10 border-primary/50 border-2">
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4 text-primary" />
-                        <p className="text-sm font-medium text-muted-foreground">Your Rank</p>
-                      </div>
-                      <p className="text-4xl font-bold gradient-text">#{userRank.rank}</p>
-                      <p className="text-xs text-muted-foreground">
-                        out of {userRank.totalPlayers} players
-                      </p>
-                      {!isOnUserPage && (
-                        <Button
-                          onClick={handleJumpToUserRank}
-                          variant="outline"
-                          size="sm"
-                          className="mt-2"
-                        >
-                          Jump to My Rank
-                        </Button>
-                      )}
-                    </div>
-                    <div className="text-right space-y-2">
-                      <div className="flex items-center gap-2 justify-end">
-                        <Trophy className="h-4 w-4 text-primary" />
-                        <p className="text-sm font-medium text-muted-foreground">Your Score</p>
-                      </div>
-                      <p className="text-4xl font-bold gradient-text">
-                        {isSpeedrun ? `${userRank.score}s` : userRank.score}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {isSpeedrun ? 'time' : 'points'}
-                      </p>
-                      {userRank.accuracy !== undefined && (
-                        <p className="text-sm text-muted-foreground">
-                          {userRank.accuracy.toFixed(1)}% accuracy
+              return (
+                <Card className="bg-primary/10 border-primary/50 border-2">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Users className="h-4 w-4 text-primary" />
+                          <p className="text-sm font-medium text-muted-foreground">
+                            Your Rank
+                          </p>
+                        </div>
+                        <p className="text-4xl font-bold gradient-text">
+                          #{userRank.rank}
                         </p>
-                      )}
+                        <p className="text-xs text-muted-foreground">
+                          out of {userRank.totalPlayers} players
+                        </p>
+                        {!isOnUserPage && (
+                          <Button
+                            onClick={handleJumpToUserRank}
+                            variant="outline"
+                            size="sm"
+                            className="mt-2"
+                          >
+                            Jump to My Rank
+                          </Button>
+                        )}
+                      </div>
+                      <div className="text-right space-y-2">
+                        <div className="flex items-center gap-2 justify-end">
+                          <Trophy className="h-4 w-4 text-primary" />
+                          <p className="text-sm font-medium text-muted-foreground">
+                            Your Score
+                          </p>
+                        </div>
+                        <p className="text-4xl font-bold gradient-text">
+                          {isSpeedrun ? `${userRank.score}s` : userRank.score}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {isSpeedrun ? "time" : "points"}
+                        </p>
+                        {userRank.accuracy !== undefined && (
+                          <p className="text-sm text-muted-foreground">
+                            {userRank.accuracy.toFixed(1)}% accuracy
+                          </p>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })()}
+                  </CardContent>
+                </Card>
+              );
+            })()}
 
           {/* Pagination Controls */}
           {totalPages > 1 && (
@@ -353,7 +423,9 @@ export default function Leaderboard() {
                       Page {currentPage} of {totalPages}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      Showing {((currentPage - 1) * ENTRIES_PER_PAGE) + 1}-{Math.min(currentPage * ENTRIES_PER_PAGE, totalEntries)} of {totalEntries} players
+                      Showing {(currentPage - 1) * ENTRIES_PER_PAGE + 1}-
+                      {Math.min(currentPage * ENTRIES_PER_PAGE, totalEntries)}{" "}
+                      of {totalEntries} players
                     </p>
                   </div>
 
@@ -384,13 +456,16 @@ export default function Leaderboard() {
           {loading ? (
             <div className="flex flex-col items-center justify-center py-12">
               <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-              <p className="text-sm text-muted-foreground">Loading leaderboard...</p>
+              <p className="text-sm text-muted-foreground">
+                Loading leaderboard...
+              </p>
             </div>
           ) : leaderboard.length > 0 ? (
             <div className="space-y-3">
               {leaderboard.map((entry, index) => {
                 const isCurrentUser = user && entry.uid === user.uid;
-                const globalRank = (currentPage - 1) * ENTRIES_PER_PAGE + index + 1;
+                const globalRank =
+                  (currentPage - 1) * ENTRIES_PER_PAGE + index + 1;
                 const rankIcon = getRankIcon(index);
                 const gameMode = getGameModeById(selectedMode);
                 const isSpeedrun = isSpeedrunMode(gameMode);
@@ -400,10 +475,10 @@ export default function Leaderboard() {
                     key={entry.uid}
                     className={`border-2 ${
                       isCurrentUser
-                        ? 'border-primary bg-primary/10 shadow-md'
+                        ? "border-primary bg-primary/10 shadow-md"
                         : globalRank <= 3
-                        ? 'border-yellow-600/30 bg-gradient-to-r from-yellow-500/5 to-orange-500/5'
-                        : 'border-muted'
+                          ? "border-yellow-600/30 bg-gradient-to-r from-yellow-500/5 to-orange-500/5"
+                          : "border-muted"
                     }`}
                   >
                     <CardContent className="p-4">
@@ -418,7 +493,9 @@ export default function Leaderboard() {
                           </div>
                           <div className="space-y-1">
                             <div className="flex items-center gap-2">
-                              <p className="font-semibold text-lg">{entry.displayName}</p>
+                              <p className="font-semibold text-lg">
+                                {entry.displayName}
+                              </p>
                               {isCurrentUser && (
                                 <Badge variant="default" className="text-xs">
                                   You
@@ -427,15 +504,20 @@ export default function Leaderboard() {
                             </div>
                             <div className="flex items-center gap-2">
                               <p className="text-xs text-muted-foreground">
-                                {new Date(entry.timestamp).toLocaleDateString('en-US', {
-                                  year: 'numeric',
-                                  month: 'short',
-                                  day: 'numeric'
-                                })}
+                                {new Date(entry.timestamp).toLocaleDateString(
+                                  "en-US",
+                                  {
+                                    year: "numeric",
+                                    month: "short",
+                                    day: "numeric",
+                                  },
+                                )}
                               </p>
                               {entry.accuracy !== undefined && (
                                 <>
-                                  <span className="text-xs text-muted-foreground">•</span>
+                                  <span className="text-xs text-muted-foreground">
+                                    •
+                                  </span>
                                   <p className="text-xs text-muted-foreground">
                                     {entry.accuracy.toFixed(1)}% accuracy
                                   </p>
@@ -449,7 +531,7 @@ export default function Leaderboard() {
                             {isSpeedrun ? `${entry.score}s` : entry.score}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {isSpeedrun ? 'time' : 'points'}
+                            {isSpeedrun ? "time" : "points"}
                           </p>
                         </div>
                       </div>
@@ -475,4 +557,3 @@ export default function Leaderboard() {
     </div>
   );
 }
-

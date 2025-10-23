@@ -1,34 +1,72 @@
-import { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { useRoom } from '@/hooks/useRoom';
-import { OFFICIAL_GAME_MODES, GameMode, getDifficultyColor } from '@/types/gameMode';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { PlaygroundSettings } from '@features/quiz';
-import { QuestionSetting } from '@/contexts/GameContexts';
-import { Plus, Trophy, Wrench, Users, Clock, Layers, CheckCircle2, Target, ChevronDown, ChevronUp, Search, Binary, Hash, Hexagon, Sparkles } from 'lucide-react';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { useRoom } from "@/hooks/useRoom";
+import {
+  OFFICIAL_GAME_MODES,
+  GameMode,
+  getDifficultyColor,
+} from "@/types/gameMode";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PlaygroundSettings } from "@features/quiz";
+import { QuestionSetting } from "@/contexts/GameContexts";
+import {
+  Plus,
+  Trophy,
+  Wrench,
+  Users,
+  Clock,
+  Layers,
+  CheckCircle2,
+  Target,
+  ChevronDown,
+  ChevronUp,
+  Search,
+  Binary,
+  Hash,
+  Hexagon,
+  Sparkles,
+} from "lucide-react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
-type CategoryFilter = 'explore' | 'binary' | 'octal' | 'hexadecimal' | 'mixed';
-type DifficultyFilter = 'all' | 'Easy' | 'Medium' | 'Hard';
-type TypeFilter = 'all' | 'timed' | 'speedrun';
+type CategoryFilter = "explore" | "binary" | "octal" | "hexadecimal" | "mixed";
+type DifficultyFilter = "all" | "Easy" | "Medium" | "Hard";
+type TypeFilter = "all" | "timed" | "speedrun";
 
 export default function CreateRoom() {
   const navigate = useNavigate();
   const { createRoom, loading } = useRoom();
   const [selectedMode, setSelectedMode] = useState<GameMode | null>(null);
-  const [selectedTab, setSelectedTab] = useState('official');
+  const [selectedTab, setSelectedTab] = useState("official");
   const [maxPlayers, setMaxPlayers] = useState<number>(4);
-  const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('explore');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [difficultyFilter, setDifficultyFilter] = useState<DifficultyFilter>('all');
-  const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
+  const [categoryFilter, setCategoryFilter] =
+    useState<CategoryFilter>("explore");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [difficultyFilter, setDifficultyFilter] =
+    useState<DifficultyFilter>("all");
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
   const [expandedModeId, setExpandedModeId] = useState<string | null>(null);
 
   const handleCreateRoom = async () => {
@@ -38,35 +76,40 @@ export default function CreateRoom() {
       const roomId = await createRoom(selectedMode, maxPlayers);
       navigate(`/multiplayer/lobby/${roomId}`);
     } catch (error) {
-      console.error('Failed to create room:', error);
-      alert('Failed to create room. Please try again.');
+      console.error("Failed to create room:", error);
+      alert("Failed to create room. Please try again.");
     }
   };
 
-  const handleCustomPlayground = async (settings: { questions: QuestionSetting[]; duration: number }) => {
+  const handleCustomPlayground = async (settings: {
+    questions: QuestionSetting[];
+    duration: number;
+  }) => {
     // Validate: multiplayer games cannot have unlimited time
     if (settings.duration === 0) {
-      alert('Multiplayer games require a time limit. Please select a duration.');
+      alert(
+        "Multiplayer games require a time limit. Please select a duration.",
+      );
       return;
     }
 
     // Create a custom game mode from the playground settings
     const customMode: GameMode = {
-      id: 'custom-playground',
-      name: 'Custom Playground',
-      description: 'Your custom quiz settings',
+      id: "custom-playground",
+      name: "Custom Playground",
+      description: "Your custom quiz settings",
       isOfficial: false,
       questions: settings.questions,
       duration: settings.duration,
-      difficulty: 'Custom',
+      difficulty: "Custom",
     };
 
     try {
       const roomId = await createRoom(customMode, maxPlayers);
       navigate(`/multiplayer/lobby/${roomId}`);
     } catch (error) {
-      console.error('Failed to create room:', error);
-      alert('Failed to create room. Please try again.');
+      console.error("Failed to create room:", error);
+      alert("Failed to create room. Please try again.");
     }
   };
 
@@ -82,16 +125,16 @@ export default function CreateRoom() {
       }
 
       // Category filter
-      if (categoryFilter !== 'explore') {
-        if (categoryFilter === 'mixed') {
+      if (categoryFilter !== "explore") {
+        if (categoryFilter === "mixed") {
           // Mixed bases: show "All Bases" games (games with multiple base types excluding decimal)
           // Count unique non-decimal bases in the questions
           const bases = new Set<string>();
           mode.questions.forEach((q) => {
             const fromBase = q[0].toLowerCase();
             const toBase = q[1].toLowerCase();
-            if (fromBase !== 'decimal') bases.add(fromBase);
-            if (toBase !== 'decimal') bases.add(toBase);
+            if (fromBase !== "decimal") bases.add(fromBase);
+            if (toBase !== "decimal") bases.add(toBase);
           });
           // Must have more than one non-decimal base type
           if (bases.size <= 1) return false;
@@ -107,15 +150,15 @@ export default function CreateRoom() {
       }
 
       // Difficulty filter
-      if (difficultyFilter !== 'all' && mode.difficulty !== difficultyFilter) {
+      if (difficultyFilter !== "all" && mode.difficulty !== difficultyFilter) {
         return false;
       }
 
       // Type filter (timed vs speedrun)
-      if (typeFilter !== 'all') {
+      if (typeFilter !== "all") {
         const isSpeedRun = mode.targetQuestions !== undefined;
-        if (typeFilter === 'speedrun' && !isSpeedRun) return false;
-        if (typeFilter === 'timed' && isSpeedRun) return false;
+        if (typeFilter === "speedrun" && !isSpeedRun) return false;
+        if (typeFilter === "timed" && isSpeedRun) return false;
       }
 
       return true;
@@ -135,9 +178,16 @@ export default function CreateRoom() {
         </p>
       </div>
 
-      <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
+      <Tabs
+        value={selectedTab}
+        onValueChange={setSelectedTab}
+        className="w-full"
+      >
         <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 h-auto p-1 mb-6">
-          <TabsTrigger value="official" className="flex items-center gap-2 py-3">
+          <TabsTrigger
+            value="official"
+            className="flex items-center gap-2 py-3"
+          >
             <Trophy className="h-4 w-4" />
             Official Modes
           </TabsTrigger>
@@ -178,41 +228,51 @@ export default function CreateRoom() {
                   </Label>
                   <div className="space-y-1">
                     <Button
-                      variant={categoryFilter === 'explore' ? 'secondary' : 'ghost'}
+                      variant={
+                        categoryFilter === "explore" ? "secondary" : "ghost"
+                      }
                       className="w-full justify-start"
-                      onClick={() => setCategoryFilter('explore')}
+                      onClick={() => setCategoryFilter("explore")}
                     >
                       <Sparkles className="h-4 w-4 mr-2" />
                       Explore All
                     </Button>
                     <Button
-                      variant={categoryFilter === 'binary' ? 'secondary' : 'ghost'}
+                      variant={
+                        categoryFilter === "binary" ? "secondary" : "ghost"
+                      }
                       className="w-full justify-start"
-                      onClick={() => setCategoryFilter('binary')}
+                      onClick={() => setCategoryFilter("binary")}
                     >
                       <Binary className="h-4 w-4 mr-2" />
                       Binary
                     </Button>
                     <Button
-                      variant={categoryFilter === 'octal' ? 'secondary' : 'ghost'}
+                      variant={
+                        categoryFilter === "octal" ? "secondary" : "ghost"
+                      }
                       className="w-full justify-start"
-                      onClick={() => setCategoryFilter('octal')}
+                      onClick={() => setCategoryFilter("octal")}
                     >
                       <Hash className="h-4 w-4 mr-2" />
                       Octal
                     </Button>
                     <Button
-                      variant={categoryFilter === 'hexadecimal' ? 'secondary' : 'ghost'}
+                      variant={
+                        categoryFilter === "hexadecimal" ? "secondary" : "ghost"
+                      }
                       className="w-full justify-start"
-                      onClick={() => setCategoryFilter('hexadecimal')}
+                      onClick={() => setCategoryFilter("hexadecimal")}
                     >
                       <Hexagon className="h-4 w-4 mr-2" />
                       Hexadecimal
                     </Button>
                     <Button
-                      variant={categoryFilter === 'mixed' ? 'secondary' : 'ghost'}
+                      variant={
+                        categoryFilter === "mixed" ? "secondary" : "ghost"
+                      }
                       className="w-full justify-start"
-                      onClick={() => setCategoryFilter('mixed')}
+                      onClick={() => setCategoryFilter("mixed")}
                     >
                       <Layers className="h-4 w-4 mr-2" />
                       Mixed Bases
@@ -226,7 +286,12 @@ export default function CreateRoom() {
                     <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                       Difficulty
                     </Label>
-                    <Select value={difficultyFilter} onValueChange={(value) => setDifficultyFilter(value as DifficultyFilter)}>
+                    <Select
+                      value={difficultyFilter}
+                      onValueChange={(value) =>
+                        setDifficultyFilter(value as DifficultyFilter)
+                      }
+                    >
                       <SelectTrigger className="h-9">
                         <SelectValue />
                       </SelectTrigger>
@@ -243,7 +308,12 @@ export default function CreateRoom() {
                     <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                       Type
                     </Label>
-                    <Select value={typeFilter} onValueChange={(value) => setTypeFilter(value as TypeFilter)}>
+                    <Select
+                      value={typeFilter}
+                      onValueChange={(value) =>
+                        setTypeFilter(value as TypeFilter)
+                      }
+                    >
                       <SelectTrigger className="h-9">
                         <SelectValue />
                       </SelectTrigger>
@@ -280,17 +350,20 @@ export default function CreateRoom() {
                 </div>
 
                 {/* Reset Filters Button */}
-                {(categoryFilter !== 'explore' || difficultyFilter !== 'all' || typeFilter !== 'all' || searchQuery) && (
+                {(categoryFilter !== "explore" ||
+                  difficultyFilter !== "all" ||
+                  typeFilter !== "all" ||
+                  searchQuery) && (
                   <div className="pt-2 border-t">
                     <Button
                       variant="outline"
                       size="sm"
                       className="w-full"
                       onClick={() => {
-                        setCategoryFilter('explore');
-                        setDifficultyFilter('all');
-                        setTypeFilter('all');
-                        setSearchQuery('');
+                        setCategoryFilter("explore");
+                        setDifficultyFilter("all");
+                        setTypeFilter("all");
+                        setSearchQuery("");
                       }}
                     >
                       Clear Filters
@@ -302,125 +375,137 @@ export default function CreateRoom() {
 
             {/* Main Content */}
             <div className="flex-1 space-y-4">
-
               <ScrollArea className="h-[calc(100vh-300px)]">
                 <div className="grid gap-4 md:grid-cols-2 pr-4">
-                {filteredModes.map((mode) => (
-                  <Card
-                    key={mode.id}
-                    className={`cursor-pointer transition-all duration-200 border-2 ${
-                      selectedMode?.id === mode.id
-                        ? 'ring-2 ring-primary border-primary shadow-lg'
-                        : 'hover:shadow-lg hover:border-primary/50'
-                    }`}
-                    onClick={() => setSelectedMode(mode)}
-                  >
-                    <CardHeader className="space-y-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <CardTitle className="text-xl">
-                          {mode.name}
-                        </CardTitle>
-                        <Badge
-                          className={getDifficultyColor(mode.difficulty)}
-                          variant="secondary"
-                        >
-                          {mode.difficulty}
-                        </Badge>
-                      </div>
-                      <CardDescription className="text-base">
-                        {mode.description}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="flex items-center gap-2 text-sm">
-                          {mode.targetQuestions ? (
-                            <>
-                              <Target className="h-4 w-4 text-muted-foreground" />
-                              <span className="text-muted-foreground">{mode.targetQuestions}q</span>
-                            </>
-                          ) : (
-                            <>
-                              <Clock className="h-4 w-4 text-muted-foreground" />
-                              <span className="text-muted-foreground">{mode.duration}s</span>
-                            </>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2 text-sm">
-                          <Layers className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-muted-foreground">{mode.questions.length} types</span>
-                        </div>
-                      </div>
-
-                      {/* Detailed Settings Collapsible */}
-                      <Collapsible
-                        open={expandedModeId === mode.id}
-                        onOpenChange={(open) => setExpandedModeId(open ? mode.id : null)}
-                      >
-                        <CollapsibleTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="w-full justify-between h-8 text-xs"
-                            onClick={(e) => e.stopPropagation()}
+                  {filteredModes.map((mode) => (
+                    <Card
+                      key={mode.id}
+                      className={`cursor-pointer transition-all duration-200 border-2 ${
+                        selectedMode?.id === mode.id
+                          ? "ring-2 ring-primary border-primary shadow-lg"
+                          : "hover:shadow-lg hover:border-primary/50"
+                      }`}
+                      onClick={() => setSelectedMode(mode)}
+                    >
+                      <CardHeader className="space-y-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <CardTitle className="text-xl">{mode.name}</CardTitle>
+                          <Badge
+                            className={getDifficultyColor(mode.difficulty)}
+                            variant="secondary"
                           >
-                            <span>View Details</span>
-                            {expandedModeId === mode.id ? (
-                              <ChevronUp className="h-3 w-3" />
+                            {mode.difficulty}
+                          </Badge>
+                        </div>
+                        <CardDescription className="text-base">
+                          {mode.description}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="flex items-center gap-2 text-sm">
+                            {mode.targetQuestions ? (
+                              <>
+                                <Target className="h-4 w-4 text-muted-foreground" />
+                                <span className="text-muted-foreground">
+                                  {mode.targetQuestions}q
+                                </span>
+                              </>
                             ) : (
-                              <ChevronDown className="h-3 w-3" />
-                            )}
-                          </Button>
-                        </CollapsibleTrigger>
-                        <CollapsibleContent className="pt-2">
-                          <div className="space-y-2 text-xs">
-                            <div className="p-2 rounded-md bg-muted/50">
-                              <p className="font-semibold mb-1">Question Types:</p>
-                              <ul className="space-y-0.5 text-muted-foreground">
-                                {mode.questions.map((q, idx) => (
-                                  <li key={idx}>
-                                    • {q[0]} → {q[1]} (Range: {q[2]}-{q[3]})
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                            {mode.targetQuestions && (
-                              <div className="p-2 rounded-md bg-muted/50">
-                                <p className="font-semibold">Speed Run Mode</p>
-                                <p className="text-muted-foreground">
-                                  Complete {mode.targetQuestions} questions as fast as possible
-                                </p>
-                              </div>
+                              <>
+                                <Clock className="h-4 w-4 text-muted-foreground" />
+                                <span className="text-muted-foreground">
+                                  {mode.duration}s
+                                </span>
+                              </>
                             )}
                           </div>
-                        </CollapsibleContent>
-                      </Collapsible>
-
-                      {selectedMode?.id === mode.id && (
-                        <div className="flex items-center gap-2 text-sm text-primary font-medium">
-                          <CheckCircle2 className="h-4 w-4" />
-                          Selected
+                          <div className="flex items-center gap-2 text-sm">
+                            <Layers className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-muted-foreground">
+                              {mode.questions.length} types
+                            </span>
+                          </div>
                         </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
+
+                        {/* Detailed Settings Collapsible */}
+                        <Collapsible
+                          open={expandedModeId === mode.id}
+                          onOpenChange={(open) =>
+                            setExpandedModeId(open ? mode.id : null)
+                          }
+                        >
+                          <CollapsibleTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="w-full justify-between h-8 text-xs"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <span>View Details</span>
+                              {expandedModeId === mode.id ? (
+                                <ChevronUp className="h-3 w-3" />
+                              ) : (
+                                <ChevronDown className="h-3 w-3" />
+                              )}
+                            </Button>
+                          </CollapsibleTrigger>
+                          <CollapsibleContent className="pt-2">
+                            <div className="space-y-2 text-xs">
+                              <div className="p-2 rounded-md bg-muted/50">
+                                <p className="font-semibold mb-1">
+                                  Question Types:
+                                </p>
+                                <ul className="space-y-0.5 text-muted-foreground">
+                                  {mode.questions.map((q, idx) => (
+                                    <li key={idx}>
+                                      • {q[0]} → {q[1]} (Range: {q[2]}-{q[3]})
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                              {mode.targetQuestions && (
+                                <div className="p-2 rounded-md bg-muted/50">
+                                  <p className="font-semibold">
+                                    Speed Run Mode
+                                  </p>
+                                  <p className="text-muted-foreground">
+                                    Complete {mode.targetQuestions} questions as
+                                    fast as possible
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          </CollapsibleContent>
+                        </Collapsible>
+
+                        {selectedMode?.id === mode.id && (
+                          <div className="flex items-center gap-2 text-sm text-primary font-medium">
+                            <CheckCircle2 className="h-4 w-4" />
+                            Selected
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
                   {filteredModes.length === 0 && (
                     <div className="col-span-full">
                       <Card className="border-2 border-dashed">
                         <CardContent className="py-12 text-center">
                           <Target className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                          <p className="text-lg font-medium mb-2">No modes match your filters</p>
+                          <p className="text-lg font-medium mb-2">
+                            No modes match your filters
+                          </p>
                           <p className="text-sm text-muted-foreground mb-4">
                             Try adjusting your filter settings
                           </p>
                           <Button
                             variant="outline"
                             onClick={() => {
-                              setCategoryFilter('explore');
-                              setDifficultyFilter('all');
-                              setTypeFilter('all');
-                              setSearchQuery('');
+                              setCategoryFilter("explore");
+                              setDifficultyFilter("all");
+                              setTypeFilter("all");
+                              setSearchQuery("");
                             }}
                           >
                             Reset Filters
@@ -433,7 +518,11 @@ export default function CreateRoom() {
               </ScrollArea>
 
               <div className="flex gap-3 justify-end mt-4">
-                <Button onClick={() => navigate('/multiplayer')} variant="outline" size="lg">
+                <Button
+                  onClick={() => navigate("/multiplayer")}
+                  variant="outline"
+                  size="lg"
+                >
                   Cancel
                 </Button>
                 <Button
@@ -458,64 +547,70 @@ export default function CreateRoom() {
           </div>
         </TabsContent>
 
-            <TabsContent value="custom" className="space-y-6 mt-6">
-              {/* Player Limit Selector */}
-              <Card className="border-primary/20 bg-primary/5">
-                <CardContent className="pt-6">
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <Users className="h-5 w-5 text-primary" />
-                      <Label htmlFor="maxPlayersCustom" className="text-base font-semibold">
-                        Maximum Players
-                      </Label>
-                    </div>
-                    <Select
-                      value={maxPlayers.toString()}
-                      onValueChange={(value) => setMaxPlayers(parseInt(value))}
-                    >
-                      <SelectTrigger id="maxPlayersCustom" className="w-full">
-                        <SelectValue placeholder="Select max players" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {[2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
-                          <SelectItem key={num} value={num.toString()}>
-                            {num} Players
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-2">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Wrench className="h-5 w-5 text-primary" />
-                    Custom Settings
-                  </CardTitle>
-                  <CardDescription>
-                    Configure your own quiz parameters
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <PlaygroundSettings
-                    onStartQuiz={handleCustomPlayground}
-                    buttonText="Create Room with Custom Settings"
-                    showHeader={false}
-                    isMultiplayer={true}
-                  />
-                </CardContent>
-              </Card>
-
-              <div className="flex gap-3 justify-end">
-                <Button onClick={() => navigate('/multiplayer')} variant="outline" size="lg">
-                  Cancel
-                </Button>
+        <TabsContent value="custom" className="space-y-6 mt-6">
+          {/* Player Limit Selector */}
+          <Card className="border-primary/20 bg-primary/5">
+            <CardContent className="pt-6">
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Users className="h-5 w-5 text-primary" />
+                  <Label
+                    htmlFor="maxPlayersCustom"
+                    className="text-base font-semibold"
+                  >
+                    Maximum Players
+                  </Label>
+                </div>
+                <Select
+                  value={maxPlayers.toString()}
+                  onValueChange={(value) => setMaxPlayers(parseInt(value))}
+                >
+                  <SelectTrigger id="maxPlayersCustom" className="w-full">
+                    <SelectValue placeholder="Select max players" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
+                      <SelectItem key={num} value={num.toString()}>
+                        {num} Players
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-            </TabsContent>
-          </Tabs>
+            </CardContent>
+          </Card>
+
+          <Card className="border-2">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Wrench className="h-5 w-5 text-primary" />
+                Custom Settings
+              </CardTitle>
+              <CardDescription>
+                Configure your own quiz parameters
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <PlaygroundSettings
+                onStartQuiz={handleCustomPlayground}
+                buttonText="Create Room with Custom Settings"
+                showHeader={false}
+                isMultiplayer={true}
+              />
+            </CardContent>
+          </Card>
+
+          <div className="flex gap-3 justify-end">
+            <Button
+              onClick={() => navigate("/multiplayer")}
+              variant="outline"
+              size="lg"
+            >
+              Cancel
+            </Button>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
-

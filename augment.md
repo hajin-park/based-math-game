@@ -1,6 +1,7 @@
 # Based Math Game - Technical Reference
 
 ## Project Overview
+
 React-based multiplayer quiz game for practicing base conversion (Binary, Octal, Decimal, Hexadecimal) with Firebase backend, real-time multiplayer, stats tracking, and leaderboards.
 
 **Project:** `ts_based_website` | **Firebase:** `based-math-game` | **License:** GPL-3.0
@@ -23,9 +24,11 @@ React-based multiplayer quiz game for practicing base conversion (Binary, Octal,
 ## Design System
 
 ### Overview
+
 Modern design system built on shadcn/ui components with Tailwind CSS and Slate primary color theme using OKLCH color space.
 
 **Features:**
+
 - Glassmorphism with backdrop blur effects
 - Clean minimalist layouts with functional-first design
 - Smooth animations (fade-in, slide-in) - only when purposeful
@@ -36,38 +39,41 @@ Modern design system built on shadcn/ui components with Tailwind CSS and Slate p
 ### Color Palette (OKLCH)
 
 #### Primary Colors - Slate Theme
+
 ```css
 /* Light Mode */
---primary: oklch(0.208 0.042 265.755);           /* Slate 900 */
+--primary: oklch(0.208 0.042 265.755); /* Slate 900 */
 --primary-foreground: oklch(0.984 0.003 247.858); /* Slate 50 */
---background: oklch(1 0 0);                      /* Pure white */
---foreground: oklch(0.129 0.042 264.695);        /* Slate 950 */
+--background: oklch(1 0 0); /* Pure white */
+--foreground: oklch(0.129 0.042 264.695); /* Slate 950 */
 
 /* Dark Mode */
---primary: oklch(0.929 0.013 255.508);           /* Slate 200 */
+--primary: oklch(0.929 0.013 255.508); /* Slate 200 */
 --primary-foreground: oklch(0.208 0.042 265.755); /* Slate 900 */
---background: oklch(0.129 0.042 264.695);        /* Slate 950 */
---foreground: oklch(0.984 0.003 247.858);        /* Slate 50 */
+--background: oklch(0.129 0.042 264.695); /* Slate 950 */
+--foreground: oklch(0.984 0.003 247.858); /* Slate 50 */
 ```
 
 #### Semantic Colors (OKLCH)
+
 ```css
---success: oklch(0.6 0.118 184.704);             /* Green */
+--success: oklch(0.6 0.118 184.704); /* Green */
 --success-foreground: oklch(0.984 0.003 247.858);
---warning: oklch(0.828 0.189 84.429);            /* Amber */
+--warning: oklch(0.828 0.189 84.429); /* Amber */
 --warning-foreground: oklch(0.129 0.042 264.695);
---info: oklch(0.488 0.243 264.376);              /* Blue */
+--info: oklch(0.488 0.243 264.376); /* Blue */
 --info-foreground: oklch(0.984 0.003 247.858);
---destructive: oklch(0.577 0.245 27.325);        /* Red */
+--destructive: oklch(0.577 0.245 27.325); /* Red */
 --destructive-foreground: oklch(0.984 0.003 247.858);
 ```
 
 #### Neutral Colors (OKLCH)
+
 ```css
---muted: oklch(0.968 0.007 247.896);             /* Slate 100 (light) */
---muted-foreground: oklch(0.554 0.046 257.417);  /* Slate 500 (light) */
---border: oklch(0.929 0.013 255.508);            /* Slate 200 (light) */
---card: oklch(1 0 0);                            /* White (light) */
+--muted: oklch(0.968 0.007 247.896); /* Slate 100 (light) */
+--muted-foreground: oklch(0.554 0.046 257.417); /* Slate 500 (light) */
+--border: oklch(0.929 0.013 255.508); /* Slate 200 (light) */
+--card: oklch(1 0 0); /* White (light) */
 ```
 
 ### Typography
@@ -87,21 +93,39 @@ Modern design system built on shadcn/ui components with Tailwind CSS and Slate p
 
 ```css
 /* Glassmorphism */
-.glass { @apply bg-background/80 backdrop-blur-md border border-border/50; }
-.glass-card { @apply bg-card/80 backdrop-blur-md border border-border/50; }
-.glass-nav { @apply bg-background/60 backdrop-blur-lg border-b border-border/50; }
+.glass {
+  @apply bg-background/80 backdrop-blur-md border border-border/50;
+}
+.glass-card {
+  @apply bg-card/80 backdrop-blur-md border border-border/50;
+}
+.glass-nav {
+  @apply bg-background/60 backdrop-blur-lg border-b border-border/50;
+}
 
 /* Gradients */
-.gradient-text { @apply bg-gradient-to-r from-primary via-primary/90 to-primary/80 bg-clip-text text-transparent; }
-.gradient-subtle { @apply bg-gradient-to-b from-background to-muted/30; }
+.gradient-text {
+  @apply bg-gradient-to-r from-primary via-primary/90 to-primary/80 bg-clip-text text-transparent;
+}
+.gradient-subtle {
+  @apply bg-gradient-to-b from-background to-muted/30;
+}
 
 /* Animations - Only use when purposeful */
-.animate-in { animation: animate-in 0.3s ease-out; }
-.animate-in-slow { animation: animate-in 0.6s ease-out; }
-.fade-in-up { animation: fade-in-up 0.6s ease-out; }
+.animate-in {
+  animation: animate-in 0.3s ease-out;
+}
+.animate-in-slow {
+  animation: animate-in 0.6s ease-out;
+}
+.fade-in-up {
+  animation: fade-in-up 0.6s ease-out;
+}
 
 /* Transitions - Only use when functionally necessary */
-.transition-smooth { @apply transition-all duration-300 ease-in-out; }
+.transition-smooth {
+  @apply transition-all duration-300 ease-in-out;
+}
 ```
 
 ### Component Patterns
@@ -139,16 +163,19 @@ Modern design system built on shadcn/ui components with Tailwind CSS and Slate p
 **Philosophy:** Minimal, purposeful motion only - no decorative animations
 
 **Available Variants:**
+
 - `fadeIn` - Simple opacity fade (0 → 1)
 - `fadeInUp` - Fade with subtle upward motion (y: 20 → 0)
 - `staggerContainer` - Container for staggered children animations
 - `staggerItem` - Individual item in staggered list
 
 **Transitions:**
+
 - `transitions.fast` - Spring (stiffness: 400, damping: 30) - Quick interactions
 - `transitions.smooth` - Spring (stiffness: 300, damping: 25) - Standard transitions
 
 **Usage Example:**
+
 ```tsx
 import { motion } from 'framer-motion';
 import { fadeIn, staggerContainer, staggerItem } from '@/lib/animations';
@@ -167,6 +194,7 @@ import { fadeIn, staggerContainer, staggerItem } from '@/lib/animations';
 ```
 
 **Guidelines:**
+
 - Only use animations when they serve a functional purpose (feedback, hierarchy, transitions)
 - Avoid decorative animations that distract from the educational quiz game mission
 - All animations automatically respect `prefers-reduced-motion`
@@ -177,6 +205,7 @@ import { fadeIn, staggerContainer, staggerItem } from '@/lib/animations';
 ## Architecture
 
 ### Directory Structure
+
 ```
 src/
 ├── components/          # Shared components
@@ -240,6 +269,7 @@ src/
 ### State Management
 
 **Contexts:**
+
 - `AuthContext` - User auth, sign-in/out, guest system
 - `ThemeContext` - Light/Dark mode with localStorage
 - `QuizContext` - Quiz settings (questions, duration, gameModeId)
@@ -263,21 +293,24 @@ src/
 ### Database Schema
 
 #### Firestore (Persistent)
+
 - `/users/{userId}` - User profiles (uid, displayName, email, photoURL, gameSettings)
 - `/userStats/{userId}` - User stats (gamesPlayed, totalScore, highScore, averageScore, totalKeystrokes, totalBackspaces, averageAccuracy)
 - `/userStats/{userId}/gameHistory/{gameId}` - Game history (score, duration, gameModeId, timestamp, totalKeystrokes, backspaceCount, accuracy)
 - `/leaderboard-{gameModeId}/{userId}` - Leaderboards (displayName, score, timestamp, gameModeId, accuracy, isGuest)
 
 #### Realtime Database (Ephemeral)
+
 - `/rooms/{roomId}` - Multiplayer rooms (hostUid, gameMode, players, status, maxPlayers, allowVisualAids, enableCountdown)
 - `/rooms/{roomId}/chat/{messageId}` - Chat messages (senderId, displayName, message, timestamp) - auto-deleted with room
-- `/users/{guestId}` - Guest users (uid starts with "guest_", displayName, isGuest: true)
+- `/users/{guestId}` - Guest users (uid starts with "guest\_", displayName, isGuest: true)
 - `/presence/{userId}` - Presence tracking (uid, online, lastSeen)
 
 ### Security Rules
 
 **Files:** `database.rules.json` (RTDB), `firestore.rules` (Firestore)
 **Key Features:**
+
 - Supports authenticated users and guest users (UIDs starting with `guest_`)
 - Guest users CANNOT write to global leaderboards
 - All users can create/join rooms
@@ -307,22 +340,24 @@ src/
 **File:** `src/types/gameMode.ts`
 **Total:** 48 official modes
 **Categories:**
+
 - Timed (24 modes): 15s and 60s variants
 - Speed Run (24 modes): 10q and 30q variants
 - Base Types: Binary, Octal, Hex, All Bases
 - Difficulty: Easy (0-15), Medium (0-255), Hard (0-4095)
 
 **Interface:**
+
 ```typescript
 interface GameMode {
   id: string;
   name: string;
   description: string;
-  difficulty: 'Easy' | 'Medium' | 'Hard' | 'Expert' | 'Custom';
+  difficulty: "Easy" | "Medium" | "Hard" | "Expert" | "Custom";
   duration: number;
-  questions: QuestionSetting[];  // [fromBase, toBase, rangeLower, rangeUpper][]
+  questions: QuestionSetting[]; // [fromBase, toBase, rangeLower, rangeUpper][]
   isOfficial?: boolean;
-  targetQuestions?: number;  // For speed run modes
+  targetQuestions?: number; // For speed run modes
 }
 ```
 
@@ -334,16 +369,19 @@ interface GameMode {
 
 **Storage:** Firestore `/users/{userId}/gameSettings`
 **Settings:**
+
 - `groupedDigits` (default: false) - Groups digits with spaces/commas for readability
 - `indexValueHints` (default: false) - Shows positional values under digits with proper spacing
 - `countdownStart` (default: true) - 3-2-1 countdown before game starts
 
 **Visual Formatting:**
+
 - Index hints use proper spacing with `result.join('').trim()` to avoid double spacing
 - Responsive text sizing for mobile devices (text-2xl sm:text-3xl md:text-4xl)
 - Horizontal scrolling for long numbers with `overflow-x-auto`
 
 **Multiplayer Host Controls:**
+
 - `allowVisualAids` - Enable/disable visual aids for all players
 - `enableCountdown` - Enable/disable countdown
 
@@ -365,6 +403,7 @@ interface GameMode {
 ### Custom Playground
 
 **Components:**
+
 - `Playground-Settings.component.tsx` - Form for custom settings (base selection, ranges, duration)
 - `Chosen-Settings-Table.component.tsx` - Settings display with badges
 
@@ -384,6 +423,7 @@ interface GameMode {
 **Invite Link:** `https://domain.com/multiplayer/join?code=ROOMCODE`
 
 **Game Selection Features:**
+
 - Filtering by base type (All, Binary, Octal, Hexadecimal, All Bases Mixed)
 - Filtering by difficulty (All, Easy, Medium, Hard, Expert)
 - Filtering by game type (All, Timed, Speed Run)
@@ -393,6 +433,7 @@ interface GameMode {
 ### Real-time Sync
 
 **Features:**
+
 - Room state synced via RTDB
 - Deterministic questions (seeded random using roomId + score)
 - Timer sync using `startedAt` timestamp
@@ -406,12 +447,13 @@ interface GameMode {
 **Functions:** sendMessage, subscribeToMessages
 **Storage:** `/rooms/{roomId}/chat/{messageId}` (auto-deleted with room)
 **Features:**
+
 - Real-time messaging in lobby and during games
 - Persists across multiple games within same room
 - Auto-scroll to latest messages
 - 500 character message limit
 - Supports both authenticated and guest users
-**Locations:** RoomLobby sidebar, MultiplayerGame sidebar (under Live Scores)
+  **Locations:** RoomLobby sidebar, MultiplayerGame sidebar (under Live Scores)
 
 ---
 
@@ -424,6 +466,7 @@ interface GameMode {
 **Updates:** User stats, game history, leaderboards (authenticated only)
 **Guest Behavior:** Stats tracked locally, leaderboard updates blocked
 **Leaderboard Logic:**
+
 - Speedrun modes: Lower score is better (faster time)
 - Timed modes: Higher score is better (more points)
 - Always updates displayName to keep current
@@ -433,22 +476,24 @@ interface GameMode {
 
 **Page:** `Leaderboard.tsx`
 **Features:**
+
 - Pagination: 20 entries per page with navigation controls
 - Jump to rank: Button to navigate to user's rank page
 - Filtering: Excludes guest users (UID starts with `guest_` or `isGuest: true`)
 - Sorting: Ascending for speedrun (lower time), descending for timed (higher score)
 - Display: Shows "Time: #s" for speedrun, "Points" for timed, accuracy percentage
-**Storage:** Firestore collection `leaderboard-{gameModeId}/{userId}`
+  **Storage:** Firestore collection `leaderboard-{gameModeId}/{userId}`
 
 ### Game History
 
 **Hook:** `useGameHistory.ts`
 **Functions:**
+
 - `fetchHistory(timeRange, limit)` - Fetch game history with time filtering
 - `getStatsForTimeRange(timeRange)` - Calculate stats: games played, average accuracy, questions answered, time spent
 - `getLeaderboardPlacements()` - Count top 10 finishes across all game modes
-**Analytics:** Time-based filtering (today, week, month, all), accuracy tracking, leaderboard placement counting
-**Storage:** Firestore subcollection `userStats/{userId}/gameHistory/{gameId}`
+  **Analytics:** Time-based filtering (today, week, month, all), accuracy tracking, leaderboard placement counting
+  **Storage:** Firestore subcollection `userStats/{userId}/gameHistory/{gameId}`
 
 ---
 
@@ -467,11 +512,13 @@ interface GameMode {
 ## UI Components
 
 ### shadcn Components
+
 button, card, form, input, label, select, scroll-area, separator, toast, dialog, tabs, badge, table, drawer, dropdown-menu, navigation-menu, avatar, skeleton, switch, alert, alert-dialog, popover, sheet
 
 ### Custom Components
 
 **Game:**
+
 - ExitButton - Exit button with confirmation dialog
 - KickedModal - Modal shown when kicked from room
 - Countdown - 3-2-1 countdown with semantic colors (destructive→warning→success)
@@ -496,8 +543,6 @@ All pages use Slate theme with consistent patterns, functional-first design, and
 **Profile:** ProfileLayout, ProfileOverview, ProfileSettings, ProfileGameSettings
 **Content:** Usage, Tutorials, About, Privacy, Terms
 **Auth:** Login, Signup
-
-
 
 ---
 
@@ -535,30 +580,39 @@ All pages use Slate theme with consistent patterns, functional-first design, and
 ## Configuration
 
 ### Environment Variables
+
 Firebase config in `.env`: API_KEY, AUTH_DOMAIN, DATABASE_URL, PROJECT_ID, STORAGE_BUCKET, MESSAGING_SENDER_ID, APP_ID, USE_FIREBASE_EMULATORS
 
 ### Path Aliases
+
 `@` → `./src`, `@features` → `./src/features`
 
 ### TypeScript
+
 Strict mode, target ES2020, module ESNext
 
 ### Tailwind
+
 Base color Slate (OKLCH), class-based dark mode, CSS variables, radius 0.625rem
 
 ### Firebase Hosting
+
 SPA rewrites, clean URLs, content-type headers, emulators (Auth 9099, Database 9000, UI 4000)
 
 ### Code Quality
+
 No `any` types, proper error handling, React Hook dependencies, memory cleanup
 
 ### Mobile
+
 `height: 100dvh`, `inputMode="numeric"`, `pattern="[0-9a-fA-F]*"`, 44x44px touch targets
 
 ### Accessibility
+
 ARIA labels, keyboard navigation, semantic HTML, WCAG 2.1 AA
 
 ### Performance
+
 Bundle ~285 kB gzipped, target Lighthouse 90+
 
 ---
@@ -576,6 +630,7 @@ Bundle ~285 kB gzipped, target Lighthouse 90+
 ## Common Patterns
 
 ### Firebase Realtime Database Queries
+
 ```typescript
 // Read once
 const snapshot = await get(ref(database, `users/${userId}`));
@@ -595,7 +650,7 @@ await set(ref(database, `users/${userId}/stats`), statsData);
 // Update specific fields (use relative paths from ref)
 await update(ref(database, `rooms/${roomId}`), {
   status: "playing",
-  'players/uid123/score': 10  // Relative path from roomId
+  "players/uid123/score": 10, // Relative path from roomId
 });
 
 // Delete data
@@ -607,13 +662,14 @@ onDisconnect(playerRef).remove();
 ```
 
 ### Authentication Patterns
+
 ```typescript
 // Get current user (can be Firebase User or GuestUser)
 const { user, isGuest } = useAuth();
 
 // Check if user is a guest
 function isGuestUser(user: AppUser | null): user is GuestUser {
-  return user !== null && 'isGuest' in user && user.isGuest === true;
+  return user !== null && "isGuest" in user && user.isGuest === true;
 }
 
 // Sign in with email
@@ -636,6 +692,7 @@ await deleteAccount();
 ```
 
 ### Context Usage
+
 ```typescript
 // Access context
 const { settings, setSettings } = useContext(QuizContext);
@@ -646,6 +703,7 @@ setSettings({ questions: [...], duration: 60 });
 ```
 
 ### Error Handling
+
 ```typescript
 try {
   // Firebase operation
@@ -663,16 +721,19 @@ try {
 ### Common Issues
 
 **Build fails with TypeScript errors:**
+
 - Check all `any` types are replaced with proper types
 - Verify all imports are correct
 - Check React Hook dependency arrays
 
 **Firebase connection fails:**
+
 - Verify `.env` file exists with correct values
 - Check Firebase project settings
 - Verify emulators are running (dev mode)
 
 **Timer doesn't work:**
+
 - Check `react-timer-hook` is installed
 - Verify expiry timestamp calculation with `useMemo` to prevent recreation
 - Check useEffect cleanup
@@ -688,11 +749,13 @@ try {
   - Calculates remaining time from `room.startedAt` timestamp for sync across clients
 
 **Multiplayer sync issues:**
+
 - Verify Firebase Realtime Database rules
 - Check presence system is working
 - Verify room status updates
 
 **PWA not working:**
+
 - Check service worker registration
 - Verify manifest.json is served
 - Check HTTPS (required for PWA)
@@ -702,22 +765,26 @@ try {
 ## Recent Updates
 
 ### Sprint Mode Display (Multiplayer)
+
 - **Room Lobby**: Shows "Target: X questions" instead of duration for sprint modes
 - **Live Game**: Displays "#answered/#target" for active players, finish time (e.g., "45s") for completed players
 - **Create Room**: Game mode cards show Target icon and question count for sprint modes
 - **Detection**: Uses `gameMode.targetQuestions` property to identify sprint modes
 
 ### Google Sign-up Flow
+
 - **Random Display Names**: New Google sign-ups receive randomly generated display names (e.g., "SwiftNinja42")
 - **No Profile Pictures**: Google profile pictures are not used; users get auto-generated pixel art avatars
 - **Implementation**: `generateRandomDisplayName()` creates names from adjectives + nouns + numbers
 
 ### Leaderboard Username Updates
+
 - **Automatic Sync**: When users change display names, all leaderboard entries update automatically
 - **Batch Updates**: Uses Firebase batch writes to update entries across all game mode leaderboards
 - **User Stats**: Updates userStats document as source of truth for display names
 
 ### Display Name Content Moderation
+
 - **Validation**: Checks for profanity, slurs, and inappropriate content
 - **Length Limits**: 2-30 characters
 - **Special Characters**: Maximum 5 special characters allowed
@@ -725,11 +792,13 @@ try {
 - **Implementation**: `src/utils/displayNameValidator.ts` with blocked words list
 
 ### Guest User Room Management
+
 - **Room Persistence**: Guest room IDs stored in localStorage for reconnection
 - **Cleanup**: Room ID removed when guest leaves room
 - **Duplicate Prevention**: Prevents guests from creating duplicate rooms on reconnect
 
 ### Cookie Support & Consent
+
 - **Cookie Consent Banner**: Customizable preferences for necessary, functional, and analytics cookies
 - **Theme Persistence**: Theme preference stored in cookies (365 days) when functional cookies enabled
 - **Guest Account Persistence**: Guest user data stored in cookies (30 days) for cross-session persistence
@@ -737,6 +806,7 @@ try {
 - **Implementation**: `src/components/CookieConsent.tsx` with localStorage-based consent tracking
 
 ### Game Selection UI Redesign
+
 - **Sidebar Navigation**: Left sidebar with search and category filters (both multiplayer and singleplayer)
 - **Categories**: Explore All, Binary, Octal, Hexadecimal, Mixed Bases
 - **Search**: Real-time search across game mode names and descriptions
@@ -752,6 +822,7 @@ try {
 ## Future Enhancements
 
 ### Potential Features
+
 - Sound effects for correct/incorrect answers
 - Difficulty levels (easy/medium/hard)
 - Custom themes and color schemes
@@ -762,6 +833,7 @@ try {
 - Mobile app (React Native)
 
 ### Performance Optimizations
+
 - Code splitting with React.lazy()
 - Image optimization with next-gen formats
 - Bundle size reduction
@@ -769,6 +841,7 @@ try {
 - Edge caching with CDN
 
 ### Analytics Enhancements
+
 - Detailed performance metrics
 - User behavior tracking
 - A/B testing framework
@@ -779,12 +852,14 @@ try {
 ## Development Best Practices
 
 ### React Hook Dependencies
+
 - Use specific properties in dependency arrays instead of entire objects
 - Example: Use `[user?.uid]` instead of `[user]` to prevent unnecessary re-renders
 - In `useGameHistory.ts`: Dependencies use `[user?.uid]`
 - In `useStats.ts`: `saveGameResult` uses `[user?.uid, user?.displayName, isGuest]`, `getUserStats` uses `[user?.uid]`
 
 ### Preventing Duplicate Operations
+
 - Use `useRef` flags to track one-time operations in effects
 - Example in `Results.tsx`: `hasSavedRef` prevents duplicate stat saves in React.StrictMode
 - Pattern:
@@ -798,6 +873,7 @@ try {
   ```
 
 ### Stats Tracking Implementation
+
 - `Results.tsx` checks `settings.trackStats` before saving results
 - Only saves to database if `trackStats !== false`
 - Displays "This game was not tracked" message when appropriate
@@ -805,6 +881,7 @@ try {
 - Default behavior: tracking enabled (`trackStats: true`)
 
 ### Layout Stability
+
 - Use minimum heights (`min-h-[600px]`) to prevent layout shifts
 - Implement skeleton loaders that match final content structure
 - Add smooth transitions (`animate-in fade-in duration-300`)
@@ -814,6 +891,7 @@ try {
 ### Multiplayer Features
 
 #### Win Counter System
+
 - **RoomPlayer Interface**: Includes `wins: number` field
 - **Initialization**: Set to `0` when creating/joining rooms
 - **Increment**: `incrementWins()` function updates winner's count after each game
@@ -822,11 +900,13 @@ try {
 - **Scope**: Room-specific (not global), reset when new room is created
 
 **Database Structure:**
+
 ```
 /rooms/{roomId}/players/{playerId}/wins: number
 ```
 
 #### Host Game Settings Management
+
 - **updateGameMode() Function**: Allows host to change game mode in waiting rooms
 - **Host-Only UI**: Collapsible settings panel visible only to host
 - **Real-Time Sync**: All players see updated settings immediately via Firebase listeners
@@ -835,6 +915,7 @@ try {
 - **Security**: Only host can update game mode (validated in `updateGameMode()`), cannot update while game is in progress (status must be 'waiting')
 
 #### Guest User and Room Cleanup
+
 - **Security Rules**: Allow deletion for guest users with `!newData.exists()` check
 - **Cleanup Logic**: Guest users clean up user data, presence data, and room data on disconnect
 - **Separate Handling**: Authenticated users set presence to offline; guest users remove all data
@@ -853,15 +934,19 @@ try {
 ### Timer Implementation Patterns
 
 #### Multiplayer Timer
+
 - **Manual Restart Pattern**: Use `autoStart: false` and manually call `timer.restart()` when game starts
 - **Ref Tracking**: Track `lastStartedAtRef` to prevent duplicate restarts
 - **Expiry Calculation**: Calculate remaining time from `room.startedAt` timestamp for sync across clients
+
 ```typescript
 const lastStartedAtRef = useRef<number | null>(null);
 
 const timer = useTimer({
   expiryTimestamp,
-  onExpire: async () => { await finishGame(roomId); },
+  onExpire: async () => {
+    await finishGame(roomId);
+  },
   autoStart: false,
 });
 
@@ -880,8 +965,10 @@ useEffect(() => {
 ```
 
 #### Timer Object in Effects
+
 - **Problem**: Timer object from `react-timer-hook` changes on every render, causing infinite loops
 - **Solution**: Use `useRef` to store timer object and access via `.current` in effects
+
 ```typescript
 const timerRef = useRef(timer);
 timerRef.current = timer;
@@ -896,10 +983,12 @@ useEffect(() => {
 ### Room Management Patterns
 
 #### Host Transfer Logic
+
 - **onDisconnect Handler**: Remove only the player, not the entire room
 - **subscribeToRoom Listener**: Detects missing host and transfers to first remaining player
 - **Automatic Ready**: New host is automatically marked as ready
 - **Room Deletion**: Only when no players remain
+
 ```typescript
 const listener = onValue(roomRef, async (snapshot) => {
   if (!snapshot.exists()) {
@@ -929,13 +1018,16 @@ const listener = onValue(roomRef, async (snapshot) => {
 ```
 
 #### Player Limit Configuration
+
 - **Room Interface**: Includes `maxPlayers: number` (2-10)
 - **Creation**: Host selects player limit at room creation
 - **Display**: Shown in lobby as "Players (X/Y)" format
 - **Validation**: Checked in `joinRoom()` to prevent overfilling
 
 #### Null Safety
+
 - Always check if `room.players` exists before accessing
+
 ```typescript
 if (!room.players) {
   await remove(roomRef);
@@ -958,6 +1050,7 @@ const players = Object.values(room.players);
 ## Recent Updates (2025-10-22)
 
 ### Mobile Text Formatting
+
 - **Fixed:** Custom game text display on mobile devices
 - **Changes:**
   - Added responsive text sizing: `text-2xl sm:text-3xl md:text-4xl`
@@ -967,6 +1060,7 @@ const players = Object.values(room.players);
 - **Files Modified:** `src/features/quiz/quiz-questions/Quiz-Prompt.component.tsx`
 
 ### Statistics Tracking UI Reorganization
+
 - **Changed:** Statistics tracking option now only appears for official game modes
 - **Implementation:**
   - Moved "Track Statistics" toggle inside the "official" tab in Game-Mode-Select
@@ -975,6 +1069,7 @@ const players = Object.values(room.players);
 - **Files Modified:** `src/features/quiz/quiz-settings/Game-Mode-Select.component.tsx`
 
 ### Unlimited Time Setting for Playground
+
 - **Added:** Unlimited time option (duration = 0) for playground/custom games
 - **Features:**
   - Available in playground settings via DURATION_OPTIONS array
@@ -990,6 +1085,7 @@ const players = Object.values(room.players);
   - `src/pages/RoomLobby.tsx` - Validate against unlimited time in multiplayer
 
 ### Statistics Page Display Improvements
+
 - **Redesigned:** Stats page now clearly separates speed run and timed game modes
 - **Features:**
   - Speed Run Performance card: Shows best/average completion times for modes with `targetQuestions`
@@ -1001,6 +1097,7 @@ const players = Object.values(room.players);
   - `src/hooks/useGameHistory.ts` - Added `getDurationsByGameMode()` function
 
 ### Results Page Cleanup
+
 - **Removed:** Keystroke analysis section from results page
 - **Changes:**
   - Removed "Keystroke Analysis" card showing total keystrokes and backspaces
@@ -1009,6 +1106,7 @@ const players = Object.values(room.players);
 - **Files Modified:** `src/pages/Results.tsx`
 
 ### How to Play Documentation Update
+
 - **Updated:** Usage page to reflect current 48 official game modes
 - **Changes:**
   - Updated from "6 pre-configured challenges" to "48 official game modes"
@@ -1018,6 +1116,7 @@ const players = Object.values(room.players);
 - **Files Modified:** `src/pages/Usage.tsx`
 
 ### Login Page Layout Enhancement
+
 - **Improved:** Login page now fits within viewport without scrolling
 - **Changes:**
   - Reduced spacing throughout (space-y-6 → space-y-4, space-y-4 → space-y-3)

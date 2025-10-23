@@ -1,5 +1,5 @@
-import { X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -10,7 +10,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
+} from "@/components/ui/alert-dialog";
 
 interface ExitButtonProps {
   onExit: () => void;
@@ -19,7 +19,7 @@ interface ExitButtonProps {
 
 export default function ExitButton({
   onExit,
-  message = 'Exit game and return to menu? Your progress will not be saved.'
+  message = "Exit game and return to menu? Your progress will not be saved.",
 }: ExitButtonProps) {
   return (
     <AlertDialog>
@@ -36,9 +36,7 @@ export default function ExitButton({
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Exit Game?</AlertDialogTitle>
-          <AlertDialogDescription>
-            {message}
-          </AlertDialogDescription>
+          <AlertDialogDescription>{message}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
@@ -53,4 +51,3 @@ export default function ExitButton({
     </AlertDialog>
   );
 }
-

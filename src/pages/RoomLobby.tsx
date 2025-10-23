@@ -1,10 +1,16 @@
-import { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
+import { useState, useEffect, useRef } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,23 +20,61 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { useRoom, Room } from '@/hooks/useRoom';
-import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/components/ui/use-toast';
-import { Copy, Check, Link2, Settings, ChevronDown, ChevronUp, X, Eye, Timer, UserCog, Users, Crown, Shield, WifiOff, Trophy, Clock, Layers, Play, Target } from 'lucide-react';
-import { OFFICIAL_GAME_MODES, GameMode, getDifficultyColor } from '@/types/gameMode';
-import KickedModal from '@/components/KickedModal';
-import { PlaygroundSettings } from '@features/quiz';
-import { QuestionSetting } from '@/contexts/GameContexts';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import ChatBox from '@/components/ChatBox';
+} from "@/components/ui/alert-dialog";
+import { useRoom, Room } from "@/hooks/useRoom";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/components/ui/use-toast";
+import {
+  Copy,
+  Check,
+  Link2,
+  Settings,
+  ChevronDown,
+  ChevronUp,
+  X,
+  Eye,
+  Timer,
+  UserCog,
+  Users,
+  Crown,
+  Shield,
+  WifiOff,
+  Trophy,
+  Clock,
+  Layers,
+  Play,
+  Target,
+} from "lucide-react";
+import {
+  OFFICIAL_GAME_MODES,
+  GameMode,
+  getDifficultyColor,
+} from "@/types/gameMode";
+import KickedModal from "@/components/KickedModal";
+import { PlaygroundSettings } from "@features/quiz";
+import { QuestionSetting } from "@/contexts/GameContexts";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import ChatBox from "@/components/ChatBox";
 
 export default function RoomLobby() {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { leaveRoom, setPlayerReady, startGame, subscribeToRoom, updateGameMode, kickPlayer, updateRoomSettings, transferHost } = useRoom();
+  const {
+    joinRoom,
+    leaveRoom,
+    setPlayerReady,
+    startGame,
+    subscribeToRoom,
+    updateGameMode,
+    kickPlayer,
+    updateRoomSettings,
+    transferHost,
+  } = useRoom();
   const [room, setRoom] = useState<Room | null>(null);
   const [isReady, setIsReady] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -42,6 +86,59 @@ export default function RoomLobby() {
   const [showGameDetails, setShowGameDetails] = useState(false);
   const { toast } = useToast();
   const hasNavigatedRef = useRef(false);
+  const hasJoinedRef = useRef(false);
+  const isLeavingRef = useRef(false);
+
+  // Ensure user is properly joined/reconnected to the room on mount
+  useEffect(() => {
+    if (!roomId || !user || hasJoinedRef.current) return;
+
+    const ensureJoined = async () => {
+      try {
+        await joinRoom(roomId);
+        hasJoinedRef.current = true;
+      } catch (error) {
+        console.error("Error joining room on mount:", error);
+        const errorMessage =
+          error instanceof Error ? error.message : "Failed to join room";
+
+        // If room not found or user was kicked, navigate away
+        if (
+          errorMessage.includes("not found") ||
+          errorMessage.includes("removed from this room")
+        ) {
+          navigate("/multiplayer", { replace: true });
+          toast({
+            title: "Unable to join room",
+            description: errorMessage,
+            variant: "destructive",
+          });
+        }
+      }
+    };
+
+    ensureJoined();
+  }, [roomId, user, joinRoom, navigate, toast]);
+
+  // Handle cleanup when component unmounts (user navigates away)
+  useEffect(() => {
+    return () => {
+      // Check if we're navigating away from the room entirely
+      const currentPath = window.location.pathname;
+      const isStillInRoom =
+        roomId &&
+        (currentPath.includes(`/multiplayer/lobby/${roomId}`) ||
+          currentPath.includes(`/multiplayer/game/${roomId}`) ||
+          currentPath.includes(`/multiplayer/results/${roomId}`));
+
+      // Only leave if we're not in the same room and not explicitly leaving
+      if (roomId && user && !isStillInRoom && !isLeavingRef.current) {
+        leaveRoom(roomId).catch((error) => {
+          console.error("Error leaving room on unmount:", error);
+        });
+      }
+    };
+  }, [roomId, user, leaveRoom]);
 
   useEffect(() => {
     if (!roomId) return;
@@ -54,14 +151,14 @@ export default function RoomLobby() {
         hasNavigatedRef.current = true;
 
         // Navigate first, then show toast
-        navigate('/multiplayer', { replace: true });
+        navigate("/multiplayer", { replace: true });
 
         // Show toast after navigation
         setTimeout(() => {
           toast({
-            title: 'Host Disconnected',
-            description: 'The host has left the room.',
-            variant: 'destructive',
+            title: "Host Disconnected",
+            description: "The host has left the room.",
+            variant: "destructive",
           });
         }, 100);
         return;
@@ -80,8 +177,13 @@ export default function RoomLobby() {
 
       setRoom(updatedRoom);
 
+      // Sync local ready state with database state
+      if (user && updatedRoom.players[user.uid]) {
+        setIsReady(updatedRoom.players[user.uid].ready);
+      }
+
       // Navigate to game when it starts
-      if (updatedRoom.status === 'playing') {
+      if (updatedRoom.status === "playing") {
         navigate(`/multiplayer/game/${roomId}`);
       }
     });
@@ -91,15 +193,27 @@ export default function RoomLobby() {
 
   const handleLeave = async () => {
     if (!roomId) return;
+    isLeavingRef.current = true;
     await leaveRoom(roomId);
-    navigate('/multiplayer');
+    navigate("/multiplayer");
   };
 
   const handleToggleReady = async () => {
     if (!roomId) return;
     const newReady = !isReady;
+    // Optimistically update UI
     setIsReady(newReady);
-    await setPlayerReady(roomId, newReady);
+    try {
+      await setPlayerReady(roomId, newReady);
+    } catch (error) {
+      // Revert on error - the database state will sync back via subscription
+      console.error("Error toggling ready state:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update ready status",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleStart = async () => {
@@ -107,7 +221,8 @@ export default function RoomLobby() {
     try {
       await startGame(roomId);
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to start game';
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to start game";
       alert(errorMessage);
     }
   };
@@ -133,7 +248,8 @@ export default function RoomLobby() {
         description: "The player has been removed from the room.",
       });
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to kick player';
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to kick player";
       toast({
         title: "Error",
         description: errorMessage,
@@ -166,7 +282,8 @@ export default function RoomLobby() {
       setShowSettings(false);
       setShowPlaygroundSettings(false);
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to update game mode';
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to update game mode";
       toast({
         title: "Error",
         description: errorMessage,
@@ -175,14 +292,18 @@ export default function RoomLobby() {
     }
   };
 
-  const handleCustomPlayground = async (settings: { questions: QuestionSetting[]; duration: number }) => {
+  const handleCustomPlayground = async (settings: {
+    questions: QuestionSetting[];
+    duration: number;
+  }) => {
     if (!roomId) return;
 
     // Validate: multiplayer games cannot have unlimited time
     if (settings.duration === 0) {
       toast({
         title: "Invalid Duration",
-        description: "Multiplayer games require a time limit. Please select a duration.",
+        description:
+          "Multiplayer games require a time limit. Please select a duration.",
         variant: "destructive",
       });
       return;
@@ -190,13 +311,13 @@ export default function RoomLobby() {
 
     // Create a custom game mode from the playground settings
     const customMode: GameMode = {
-      id: 'custom-playground',
-      name: 'Custom Playground',
-      description: 'Your custom quiz settings',
+      id: "custom-playground",
+      name: "Custom Playground",
+      description: "Your custom quiz settings",
       isOfficial: false,
       questions: settings.questions,
       duration: settings.duration,
-      difficulty: 'Custom',
+      difficulty: "Custom",
     };
 
     try {
@@ -208,7 +329,8 @@ export default function RoomLobby() {
       setShowSettings(false);
       setShowPlaygroundSettings(false);
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to update game mode';
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to update game mode";
       toast({
         title: "Error",
         description: errorMessage,
@@ -228,7 +350,8 @@ export default function RoomLobby() {
       });
       setTransferHostUid(null);
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to transfer host';
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to transfer host";
       toast({
         title: "Error",
         description: errorMessage,
@@ -248,16 +371,19 @@ export default function RoomLobby() {
   const isHost = user?.uid === room.hostUid;
   // Filter out host, disconnected, and kicked players from ready check
   const nonHostPlayers = Object.values(room.players).filter(
-    (p) => p.uid !== room.hostUid && !p.disconnected && !p.kicked
+    (p) => p.uid !== room.hostUid && !p.disconnected && !p.kicked,
   );
-  const allReady = nonHostPlayers.length > 0 && nonHostPlayers.every((p) => p.ready);
+  const allReady =
+    nonHostPlayers.length > 0 && nonHostPlayers.every((p) => p.ready);
   const readyCount = nonHostPlayers.filter((p) => p.ready).length;
   // Count only active (non-kicked) players
-  const playerCount = Object.values(room.players).filter((p) => !p.kicked).length;
+  const playerCount = Object.values(room.players).filter(
+    (p) => !p.kicked,
+  ).length;
 
   const handleKickedModalClose = () => {
     setShowKickedModal(false);
-    navigate('/multiplayer', { replace: true });
+    navigate("/multiplayer", { replace: true });
   };
 
   return (
@@ -284,7 +410,9 @@ export default function RoomLobby() {
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <Trophy className="h-5 w-5 text-primary" />
-                      <CardTitle className="text-xl">{room.gameMode.name}</CardTitle>
+                      <CardTitle className="text-xl">
+                        {room.gameMode.name}
+                      </CardTitle>
                     </div>
                     <CardDescription className="text-sm">
                       {room.gameMode.description}
@@ -304,7 +432,9 @@ export default function RoomLobby() {
                   <CardContent className="pt-4 space-y-3">
                     <div className="flex items-center gap-3">
                       <div className="flex-1">
-                        <p className="text-xs text-muted-foreground mb-1">Room Code</p>
+                        <p className="text-xs text-muted-foreground mb-1">
+                          Room Code
+                        </p>
                         <p className="font-mono font-bold text-xl tracking-wider uppercase text-primary">
                           {roomId}
                         </p>
@@ -359,7 +489,9 @@ export default function RoomLobby() {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <Settings className="h-5 w-5 text-primary" />
-                          <CardTitle className="text-lg">Game Settings</CardTitle>
+                          <CardTitle className="text-lg">
+                            Game Settings
+                          </CardTitle>
                         </div>
                         {showSettings ? (
                           <ChevronUp className="h-5 w-5 text-muted-foreground" />
@@ -373,9 +505,12 @@ export default function RoomLobby() {
                       <CardContent className="space-y-6">
                         {/* Game Mode Selection */}
                         <div className="space-y-3">
-                          <Label className="text-base font-semibold">Change Game Mode</Label>
+                          <Label className="text-base font-semibold">
+                            Change Game Mode
+                          </Label>
                           <p className="text-sm text-muted-foreground">
-                            Select a different mode (win counters will be preserved)
+                            Select a different mode (win counters will be
+                            preserved)
                           </p>
                           <div className="grid gap-3 max-h-80 overflow-y-auto pr-2">
                             {OFFICIAL_GAME_MODES.map((mode) => (
@@ -383,15 +518,20 @@ export default function RoomLobby() {
                                 key={mode.id}
                                 className={`cursor-pointer transition-all duration-200 border-2 ${
                                   room.gameMode.id === mode.id
-                                    ? 'border-primary bg-primary/5'
-                                    : 'hover:border-primary/50'
+                                    ? "border-primary bg-primary/5"
+                                    : "hover:border-primary/50"
                                 }`}
-                                onClick={() => room.gameMode.id !== mode.id && handleChangeGameMode(mode)}
+                                onClick={() =>
+                                  room.gameMode.id !== mode.id &&
+                                  handleChangeGameMode(mode)
+                                }
                               >
                                 <CardHeader className="p-4">
                                   <div className="flex items-start justify-between gap-2">
                                     <div className="space-y-1">
-                                      <CardTitle className="text-base">{mode.name}</CardTitle>
+                                      <CardTitle className="text-base">
+                                        {mode.name}
+                                      </CardTitle>
                                       <div className="flex items-center gap-3 text-xs text-muted-foreground">
                                         <span className="flex items-center gap-1">
                                           <Clock className="h-3 w-3" />
@@ -404,7 +544,9 @@ export default function RoomLobby() {
                                       </div>
                                     </div>
                                     <Badge
-                                      className={getDifficultyColor(mode.difficulty)}
+                                      className={getDifficultyColor(
+                                        mode.difficulty,
+                                      )}
                                       variant="secondary"
                                     >
                                       {mode.difficulty}
@@ -417,22 +559,24 @@ export default function RoomLobby() {
                             {/* Custom Playground Button */}
                             <Card
                               className={`cursor-pointer transition-all duration-200 border-2 ${
-                                room.gameMode.id === 'custom-playground'
-                                  ? 'border-primary bg-primary/5'
-                                  : 'hover:border-primary/50'
+                                room.gameMode.id === "custom-playground"
+                                  ? "border-primary bg-primary/5"
+                                  : "hover:border-primary/50"
                               }`}
                               onClick={() => setShowPlaygroundSettings(true)}
                             >
                               <CardHeader className="p-4">
                                 <div className="flex items-start justify-between gap-2">
                                   <div className="space-y-1">
-                                    <CardTitle className="text-base">Custom Playground</CardTitle>
+                                    <CardTitle className="text-base">
+                                      Custom Playground
+                                    </CardTitle>
                                     <CardDescription className="text-xs">
                                       Create your own custom quiz settings
                                     </CardDescription>
                                   </div>
                                   <Badge
-                                    className={getDifficultyColor('Custom')}
+                                    className={getDifficultyColor("Custom")}
                                     variant="secondary"
                                   >
                                     Custom
@@ -447,7 +591,9 @@ export default function RoomLobby() {
                         <div className="space-y-4 p-4 rounded-lg bg-muted/30 border">
                           <div className="flex items-center gap-2">
                             <Shield className="h-5 w-5 text-primary" />
-                            <Label className="text-base font-semibold">Host Controls</Label>
+                            <Label className="text-base font-semibold">
+                              Host Controls
+                            </Label>
                           </div>
 
                           {/* Allow Visual Aids Toggle */}
@@ -455,7 +601,10 @@ export default function RoomLobby() {
                             <div className="flex items-center gap-3">
                               <Eye className="h-4 w-4 text-muted-foreground" />
                               <div className="space-y-0.5">
-                                <Label htmlFor="allow-visual-aids" className="cursor-pointer font-medium">
+                                <Label
+                                  htmlFor="allow-visual-aids"
+                                  className="cursor-pointer font-medium"
+                                >
                                   Allow Visual Aids
                                 </Label>
                                 <p className="text-xs text-muted-foreground">
@@ -469,12 +618,15 @@ export default function RoomLobby() {
                               onCheckedChange={async (checked) => {
                                 if (roomId) {
                                   try {
-                                    await updateRoomSettings(roomId, { allowVisualAids: checked });
+                                    await updateRoomSettings(roomId, {
+                                      allowVisualAids: checked,
+                                    });
                                   } catch {
                                     toast({
-                                      title: 'Error',
-                                      description: 'Failed to update visual aids setting',
-                                      variant: 'destructive',
+                                      title: "Error",
+                                      description:
+                                        "Failed to update visual aids setting",
+                                      variant: "destructive",
                                     });
                                   }
                                 }
@@ -487,7 +639,10 @@ export default function RoomLobby() {
                             <div className="flex items-center gap-3">
                               <Timer className="h-4 w-4 text-muted-foreground" />
                               <div className="space-y-0.5">
-                                <Label htmlFor="enable-countdown" className="cursor-pointer font-medium">
+                                <Label
+                                  htmlFor="enable-countdown"
+                                  className="cursor-pointer font-medium"
+                                >
                                   Enable Countdown
                                 </Label>
                                 <p className="text-xs text-muted-foreground">
@@ -501,12 +656,15 @@ export default function RoomLobby() {
                               onCheckedChange={async (checked) => {
                                 if (roomId) {
                                   try {
-                                    await updateRoomSettings(roomId, { enableCountdown: checked });
+                                    await updateRoomSettings(roomId, {
+                                      enableCountdown: checked,
+                                    });
                                   } catch {
                                     toast({
-                                      title: 'Error',
-                                      description: 'Failed to update countdown setting',
-                                      variant: 'destructive',
+                                      title: "Error",
+                                      description:
+                                        "Failed to update countdown setting",
+                                      variant: "destructive",
                                     });
                                   }
                                 }
@@ -521,7 +679,9 @@ export default function RoomLobby() {
                     {showSettings && showPlaygroundSettings && (
                       <CardContent className="space-y-4">
                         <div className="flex items-center justify-between">
-                          <Label className="text-base font-semibold">Custom Playground Settings</Label>
+                          <Label className="text-base font-semibold">
+                            Custom Playground Settings
+                          </Label>
                           <Button
                             variant="ghost"
                             size="sm"
@@ -573,14 +733,16 @@ export default function RoomLobby() {
                           key={player.uid}
                           className={`flex items-center justify-between p-3 rounded-lg border-2 ${
                             isDisconnected
-                              ? 'bg-muted/30 border-muted'
-                              : 'bg-muted/50 border-muted'
+                              ? "bg-muted/30 border-muted"
+                              : "bg-muted/50 border-muted"
                           }`}
                         >
                           <div className="flex items-center gap-3">
                             <div className="flex flex-col">
                               <div className="flex items-center gap-2">
-                                <span className={`font-medium ${isDisconnected ? 'text-muted-foreground' : ''}`}>
+                                <span
+                                  className={`font-medium ${isDisconnected ? "text-muted-foreground" : ""}`}
+                                >
                                   {player.displayName}
                                 </span>
                                 {isPlayerHost && (
@@ -590,19 +752,25 @@ export default function RoomLobby() {
                               {wins > 0 && (
                                 <span className="text-xs text-muted-foreground flex items-center gap-1">
                                   <Trophy className="h-3 w-3" />
-                                  {wins} {wins === 1 ? 'win' : 'wins'}
+                                  {wins} {wins === 1 ? "win" : "wins"}
                                 </span>
                               )}
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
                             {isDisconnected ? (
-                              <Badge variant="destructive" className="flex items-center gap-1">
+                              <Badge
+                                variant="destructive"
+                                className="flex items-center gap-1"
+                              >
                                 <WifiOff className="h-3 w-3" />
                                 Disconnected
                               </Badge>
                             ) : isPlayerHost ? (
-                              <Badge variant="secondary" className="flex items-center gap-1">
+                              <Badge
+                                variant="secondary"
+                                className="flex items-center gap-1"
+                              >
                                 <Crown className="h-3 w-3" />
                                 Host
                               </Badge>
@@ -654,16 +822,24 @@ export default function RoomLobby() {
                           <>
                             <Target className="h-4 w-4 text-primary" />
                             <div>
-                              <p className="text-xs text-muted-foreground">Target</p>
-                              <p className="text-base font-bold">{room.gameMode.targetQuestions} questions</p>
+                              <p className="text-xs text-muted-foreground">
+                                Target
+                              </p>
+                              <p className="text-base font-bold">
+                                {room.gameMode.targetQuestions} questions
+                              </p>
                             </div>
                           </>
                         ) : (
                           <>
                             <Clock className="h-4 w-4 text-primary" />
                             <div>
-                              <p className="text-xs text-muted-foreground">Duration</p>
-                              <p className="text-base font-bold">{room.gameMode.duration}s</p>
+                              <p className="text-xs text-muted-foreground">
+                                Duration
+                              </p>
+                              <p className="text-base font-bold">
+                                {room.gameMode.duration}s
+                              </p>
                             </div>
                           </>
                         )}
@@ -671,14 +847,21 @@ export default function RoomLobby() {
                       <div className="flex items-center gap-2">
                         <Layers className="h-4 w-4 text-primary" />
                         <div>
-                          <p className="text-xs text-muted-foreground">Question Types</p>
-                          <p className="text-base font-bold">{room.gameMode.questions.length}</p>
+                          <p className="text-xs text-muted-foreground">
+                            Question Types
+                          </p>
+                          <p className="text-base font-bold">
+                            {room.gameMode.questions.length}
+                          </p>
                         </div>
                       </div>
                     </div>
 
                     {/* Detailed Game Settings Collapsible */}
-                    <Collapsible open={showGameDetails} onOpenChange={setShowGameDetails}>
+                    <Collapsible
+                      open={showGameDetails}
+                      onOpenChange={setShowGameDetails}
+                    >
                       <CollapsibleTrigger asChild>
                         <Button
                           variant="ghost"
@@ -696,7 +879,9 @@ export default function RoomLobby() {
                       <CollapsibleContent className="pt-2">
                         <div className="space-y-2 text-xs">
                           <div className="p-2 rounded-md bg-background/50">
-                            <p className="font-semibold mb-1">Question Types:</p>
+                            <p className="font-semibold mb-1">
+                              Question Types:
+                            </p>
                             <ul className="space-y-0.5 text-muted-foreground">
                               {room.gameMode.questions.map((q, idx) => (
                                 <li key={idx}>
@@ -709,7 +894,8 @@ export default function RoomLobby() {
                             <div className="p-2 rounded-md bg-background/50">
                               <p className="font-semibold">Speed Run Mode</p>
                               <p className="text-muted-foreground">
-                                Complete {room.gameMode.targetQuestions} questions as fast as possible
+                                Complete {room.gameMode.targetQuestions}{" "}
+                                questions as fast as possible
                               </p>
                             </div>
                           )}
@@ -740,7 +926,7 @@ export default function RoomLobby() {
                   ) : (
                     <Button
                       onClick={handleToggleReady}
-                      variant={isReady ? 'outline' : 'default'}
+                      variant={isReady ? "outline" : "default"}
                       className="flex-1 shadow-sm"
                     >
                       {isReady ? (
@@ -762,7 +948,9 @@ export default function RoomLobby() {
                 {isHost && !allReady && nonHostPlayers.length > 0 && (
                   <div className="text-center p-3 rounded-lg bg-muted/50 border">
                     <p className="text-sm text-muted-foreground">
-                      Waiting for {nonHostPlayers.length - readyCount} player{nonHostPlayers.length - readyCount !== 1 ? 's' : ''} to be ready...
+                      Waiting for {nonHostPlayers.length - readyCount} player
+                      {nonHostPlayers.length - readyCount !== 1 ? "s" : ""} to
+                      be ready...
                     </p>
                   </div>
                 )}
@@ -790,26 +978,46 @@ export default function RoomLobby() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
                     <span className="text-xs text-muted-foreground">Mode</span>
-                    <Badge variant="secondary" className="text-xs">{room.gameMode.difficulty}</Badge>
-                  </div>
-                  <div className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
-                    <span className="text-xs text-muted-foreground">Duration</span>
-                    <span className="text-sm font-semibold">{room.gameMode.duration}s</span>
-                  </div>
-                  <div className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
-                    <span className="text-xs text-muted-foreground">Players</span>
-                    <span className="text-sm font-semibold">{playerCount}/{room.maxPlayers || 4}</span>
-                  </div>
-                  <div className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
-                    <span className="text-xs text-muted-foreground">Visual Aids</span>
-                    <Badge variant={room.allowVisualAids ? "default" : "outline"} className="text-xs">
-                      {room.allowVisualAids ? 'Enabled' : 'Disabled'}
+                    <Badge variant="secondary" className="text-xs">
+                      {room.gameMode.difficulty}
                     </Badge>
                   </div>
                   <div className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
-                    <span className="text-xs text-muted-foreground">Countdown</span>
-                    <Badge variant={room.enableCountdown ? "default" : "outline"} className="text-xs">
-                      {room.enableCountdown ? 'Enabled' : 'Disabled'}
+                    <span className="text-xs text-muted-foreground">
+                      Duration
+                    </span>
+                    <span className="text-sm font-semibold">
+                      {room.gameMode.duration}s
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
+                    <span className="text-xs text-muted-foreground">
+                      Players
+                    </span>
+                    <span className="text-sm font-semibold">
+                      {playerCount}/{room.maxPlayers || 4}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
+                    <span className="text-xs text-muted-foreground">
+                      Visual Aids
+                    </span>
+                    <Badge
+                      variant={room.allowVisualAids ? "default" : "outline"}
+                      className="text-xs"
+                    >
+                      {room.allowVisualAids ? "Enabled" : "Disabled"}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
+                    <span className="text-xs text-muted-foreground">
+                      Countdown
+                    </span>
+                    <Badge
+                      variant={room.enableCountdown ? "default" : "outline"}
+                      className="text-xs"
+                    >
+                      {room.enableCountdown ? "Enabled" : "Disabled"}
                     </Badge>
                   </div>
                 </div>
@@ -822,16 +1030,21 @@ export default function RoomLobby() {
         </div>
 
         {/* Transfer Host Confirmation Dialog */}
-        <AlertDialog open={transferHostUid !== null} onOpenChange={(open) => !open && setTransferHostUid(null)}>
+        <AlertDialog
+          open={transferHostUid !== null}
+          onOpenChange={(open) => !open && setTransferHostUid(null)}
+        >
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Transfer Host Privileges?</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to transfer host privileges to{' '}
+                Are you sure you want to transfer host privileges to{" "}
                 <span className="font-semibold">
-                  {transferHostUid && room?.players[transferHostUid]?.displayName}
+                  {transferHostUid &&
+                    room?.players[transferHostUid]?.displayName}
                 </span>
-                ? You will no longer be the host and will need to ready up to start the game.
+                ? You will no longer be the host and will need to ready up to
+                start the game.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -846,4 +1059,3 @@ export default function RoomLobby() {
     </>
   );
 }
-

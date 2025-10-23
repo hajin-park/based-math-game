@@ -4,7 +4,7 @@ Practice converting between different bases and representations. Inspired by [ze
 
 ### Stack
 
--   Vite + React
--   Tailwind CSS
--   shadcn UI
--   Firebase
+- Vite + React
+- Tailwind CSS
+- shadcn UI
+- Firebase

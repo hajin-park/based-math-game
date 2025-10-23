@@ -1,8 +1,15 @@
-import { useCallback } from 'react';
-import { doc, setDoc, getDoc, runTransaction, collection, addDoc } from 'firebase/firestore';
-import { firestore } from '@/firebase/config';
-import { useAuth } from '@/contexts/AuthContext';
-import { getGameModeById, isSpeedrunMode } from '@/types/gameMode';
+import { useCallback } from "react";
+import {
+  doc,
+  setDoc,
+  getDoc,
+  runTransaction,
+  collection,
+  addDoc,
+} from "firebase/firestore";
+import { firestore } from "@/firebase/config";
+import { useAuth } from "@/contexts/AuthContext";
+import { getGameModeById, isSpeedrunMode } from "@/types/gameMode";
 
 export interface GameResult {
   score: number;
@@ -31,15 +38,15 @@ export function useStats() {
   const saveGameResult = useCallback(
     async (result: GameResult) => {
       if (!user) {
-        console.warn('Cannot save stats: user not authenticated');
+        console.warn("Cannot save stats: user not authenticated");
         return;
       }
 
       // Guest users cannot save to Firestore (persistent storage)
       // Check both isGuest flag and UID prefix for reliability
-      const userIsGuest = isGuest || user.uid.startsWith('guest_');
+      const userIsGuest = isGuest || user.uid.startsWith("guest_");
       if (userIsGuest) {
-        console.warn('Guest users cannot save stats to persistent storage');
+        console.warn("Guest users cannot save stats to persistent storage");
         return;
       }
 
@@ -47,11 +54,14 @@ export function useStats() {
 
       try {
         // Save game to history (Firestore subcollection)
-        const gameHistoryRef = collection(firestore, `userStats/${user.uid}/gameHistory`);
+        const gameHistoryRef = collection(
+          firestore,
+          `userStats/${user.uid}/gameHistory`,
+        );
         await addDoc(gameHistoryRef, {
           score: result.score,
           duration: result.duration,
-          gameModeId: result.gameModeId || 'custom',
+          gameModeId: result.gameModeId || "custom",
           timestamp,
           totalKeystrokes: result.totalKeystrokes,
           backspaceCount: result.backspaceCount,
@@ -62,16 +72,18 @@ export function useStats() {
         const statsRef = doc(firestore, `userStats/${user.uid}`);
         await runTransaction(firestore, async (transaction) => {
           const statsDoc = await transaction.get(statsRef);
-          const currentStats = statsDoc.exists() ? statsDoc.data() as UserStats : {
-            gamesPlayed: 0,
-            totalScore: 0,
-            highScore: 0,
-            averageScore: 0,
-            lastPlayed: 0,
-            totalKeystrokes: 0,
-            totalBackspaces: 0,
-            averageAccuracy: 0,
-          };
+          const currentStats = statsDoc.exists()
+            ? (statsDoc.data() as UserStats)
+            : {
+                gamesPlayed: 0,
+                totalScore: 0,
+                highScore: 0,
+                averageScore: 0,
+                lastPlayed: 0,
+                totalKeystrokes: 0,
+                totalBackspaces: 0,
+                averageAccuracy: 0,
+              };
 
           const newGamesPlayed = currentStats.gamesPlayed + 1;
           const newTotalScore = currentStats.totalScore + result.score;
@@ -79,11 +91,16 @@ export function useStats() {
           const newAverageScore = newTotalScore / newGamesPlayed;
 
           // Calculate accuracy stats
-          const newTotalKeystrokes = (currentStats.totalKeystrokes || 0) + (result.totalKeystrokes || 0);
-          const newTotalBackspaces = (currentStats.totalBackspaces || 0) + (result.backspaceCount || 0);
-          const newAverageAccuracy = newTotalKeystrokes > 0
-            ? ((newTotalKeystrokes - newTotalBackspaces) / newTotalKeystrokes) * 100
-            : 0;
+          const newTotalKeystrokes =
+            (currentStats.totalKeystrokes || 0) + (result.totalKeystrokes || 0);
+          const newTotalBackspaces =
+            (currentStats.totalBackspaces || 0) + (result.backspaceCount || 0);
+          const newAverageAccuracy =
+            newTotalKeystrokes > 0
+              ? ((newTotalKeystrokes - newTotalBackspaces) /
+                  newTotalKeystrokes) *
+                100
+              : 0;
 
           const updatedStats: UserStats = {
             gamesPlayed: newGamesPlayed,
@@ -109,12 +126,15 @@ export function useStats() {
           const leaderboardRef = doc(
             firestore,
             `leaderboard-${result.gameModeId}`,
-            user.uid
+            user.uid,
           );
           const currentLeaderboardEntry = await getDoc(leaderboardRef);
           const currentBestScore = currentLeaderboardEntry.exists()
-            ? currentLeaderboardEntry.data()?.score || (isSpeedrun ? Infinity : 0)
-            : (isSpeedrun ? Infinity : 0);
+            ? currentLeaderboardEntry.data()?.score ||
+              (isSpeedrun ? Infinity : 0)
+            : isSpeedrun
+              ? Infinity
+              : 0;
 
           // For speedrun modes: lower score is better (faster time)
           // For timed modes: higher score is better (more points)
@@ -124,15 +144,19 @@ export function useStats() {
 
           // Always update displayName to keep it current, even if score didn't improve
           if (currentLeaderboardEntry.exists()) {
-            await setDoc(leaderboardRef, {
-              displayName: user.displayName || 'User',
-            }, { merge: true });
+            await setDoc(
+              leaderboardRef,
+              {
+                displayName: user.displayName || "User",
+              },
+              { merge: true },
+            );
           }
 
           // Update score if it's better
           if (isBetterScore) {
             await setDoc(leaderboardRef, {
-              displayName: user.displayName || 'User',
+              displayName: user.displayName || "User",
               score: result.score,
               timestamp,
               gameModeId: result.gameModeId, // Store game mode for reference
@@ -142,12 +166,12 @@ export function useStats() {
           }
         }
       } catch (error) {
-        console.error('Error saving game result:', error);
+        console.error("Error saving game result:", error);
         throw error;
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [user?.uid, user?.displayName, isGuest] // Only depend on specific properties to prevent unnecessary re-creation
+    [user?.uid, user?.displayName, isGuest], // Only depend on specific properties to prevent unnecessary re-creation
   );
 
   const getUserStats = useCallback(async (): Promise<UserStats | null> => {
@@ -155,7 +179,7 @@ export function useStats() {
 
     // Guest users don't have persistent stats in Firestore
     // Check both isGuest flag and UID prefix for reliability
-    const userIsGuest = isGuest || user.uid.startsWith('guest_');
+    const userIsGuest = isGuest || user.uid.startsWith("guest_");
     if (userIsGuest) {
       return null;
     }
@@ -169,7 +193,7 @@ export function useStats() {
       }
       return null;
     } catch (error) {
-      console.error('Error getting user stats:', error);
+      console.error("Error getting user stats:", error);
       return null;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -180,4 +204,3 @@ export function useStats() {
     getUserStats,
   };
 }
-

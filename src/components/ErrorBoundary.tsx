@@ -1,7 +1,14 @@
-import React, { Component, ReactNode } from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { ExclamationTriangleIcon } from '@radix-ui/react-icons';
+import React, { Component, ReactNode } from "react";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
 
 interface Props {
   children: ReactNode;
@@ -31,8 +38,8 @@ class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     // Log error details for debugging
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
-    
+    console.error("ErrorBoundary caught an error:", error, errorInfo);
+
     this.setState({
       error,
       errorInfo,
@@ -48,11 +55,11 @@ class ErrorBoundary extends Component<Props, State> {
   };
 
   handleReload = () => {
-    window.location.href = '/';
+    window.location.href = "/";
   };
 
   handleGoHome = () => {
-    window.location.href = '/';
+    window.location.href = "/";
   };
 
   render() {
@@ -72,7 +79,8 @@ class ErrorBoundary extends Component<Props, State> {
                 <CardTitle>Something went wrong</CardTitle>
               </div>
               <CardDescription>
-                An unexpected error occurred. You can try to recover or reload the page.
+                An unexpected error occurred. You can try to recover or reload
+                the page.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -100,7 +108,11 @@ class ErrorBoundary extends Component<Props, State> {
               <Button onClick={this.handleGoHome} className="flex-1">
                 Return to Home
               </Button>
-              <Button onClick={this.handleReset} variant="outline" className="flex-1">
+              <Button
+                onClick={this.handleReset}
+                variant="outline"
+                className="flex-1"
+              >
                 Try Again
               </Button>
             </CardFooter>
@@ -114,4 +126,3 @@ class ErrorBoundary extends Component<Props, State> {
 }
 
 export default ErrorBoundary;
-

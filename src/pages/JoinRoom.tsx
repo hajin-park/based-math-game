@@ -1,23 +1,29 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useRoom } from '@/hooks/useRoom';
-import { LogIn, Hash, AlertCircle, Info } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useRoom } from "@/hooks/useRoom";
+import { LogIn, Hash, AlertCircle, Info } from "lucide-react";
 
 export default function JoinRoom() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { joinRoom, loading } = useRoom();
-  const [roomId, setRoomId] = useState('');
-  const [error, setError] = useState('');
+  const [roomId, setRoomId] = useState("");
+  const [error, setError] = useState("");
 
   // Pre-fill room ID from URL parameter if present
   useEffect(() => {
-    const codeFromUrl = searchParams.get('code');
+    const codeFromUrl = searchParams.get("code");
     if (codeFromUrl) {
       setRoomId(codeFromUrl);
     }
@@ -25,19 +31,22 @@ export default function JoinRoom() {
 
   const handleJoinRoom = async () => {
     if (!roomId.trim()) {
-      setError('Please enter a room code');
+      setError("Please enter a room code");
       return;
     }
 
     try {
-      setError('');
+      setError("");
       // Convert to uppercase for case-insensitive matching
       const normalizedRoomId = roomId.trim().toUpperCase();
       await joinRoom(normalizedRoomId);
       navigate(`/multiplayer/lobby/${normalizedRoomId}`);
     } catch (error: unknown) {
-      console.error('Failed to join room:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to join room. Please check the room code and try again.';
+      console.error("Failed to join room:", error);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Failed to join room. Please check the room code and try again.";
       setError(errorMessage);
     }
   };
@@ -83,7 +92,7 @@ export default function JoinRoom() {
                 placeholder="ABCD1234"
                 value={roomId}
                 onChange={(e) => setRoomId(e.target.value.toUpperCase())}
-                onKeyDown={(e) => e.key === 'Enter' && handleJoinRoom()}
+                onKeyDown={(e) => e.key === "Enter" && handleJoinRoom()}
                 maxLength={8}
                 className="uppercase font-mono tracking-wider text-2xl h-14 text-center transition-all focus:ring-2 focus:ring-primary/20"
                 autoFocus
@@ -91,14 +100,15 @@ export default function JoinRoom() {
               <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/50 text-sm text-muted-foreground">
                 <Info className="h-4 w-4 mt-0.5 shrink-0" />
                 <p>
-                  The room code is case-insensitive and should be 8 characters long
+                  The room code is case-insensitive and should be 8 characters
+                  long
                 </p>
               </div>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3">
               <Button
-                onClick={() => navigate('/multiplayer')}
+                onClick={() => navigate("/multiplayer")}
                 variant="outline"
                 size="lg"
                 className="flex-1"
@@ -129,4 +139,3 @@ export default function JoinRoom() {
     </div>
   );
 }
-

@@ -1,24 +1,24 @@
-import { useState, useEffect, useRef } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { MessageCircle, Send } from 'lucide-react';
-import { useChat, ChatMessage } from '@/hooks/useChat';
-import { useAuth } from '@/contexts/AuthContext';
+import { useState, useEffect, useRef } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { MessageCircle, Send } from "lucide-react";
+import { useChat, ChatMessage } from "@/hooks/useChat";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ChatBoxProps {
   roomId: string;
   className?: string;
 }
 
-export default function ChatBox({ roomId, className = '' }: ChatBoxProps) {
+export default function ChatBox({ roomId, className = "" }: ChatBoxProps) {
   const { user } = useAuth();
   const { sendMessage, subscribeToMessages, loading } = useChat();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [inputMessage, setInputMessage] = useState('');
-  // const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [inputMessage, setInputMessage] = useState("");
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const isUserScrollingRef = useRef(false);
+  const lastMessageCountRef = useRef(0);
 
   // Subscribe to messages
   useEffect(() => {
@@ -31,26 +31,56 @@ export default function ChatBox({ roomId, className = '' }: ChatBoxProps) {
     return () => unsubscribe();
   }, [roomId, subscribeToMessages]);
 
-  // Auto-scroll to bottom when new messages arrive
+  // Auto-scroll to bottom only when user sends a message or when already at bottom
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messages.length === 0) return;
+
+    // Check if this is a new message (not initial load)
+    const isNewMessage = messages.length > lastMessageCountRef.current;
+    lastMessageCountRef.current = messages.length;
+
+    if (!isNewMessage) return;
+
+    // Only auto-scroll if user is not manually scrolling
+    if (!isUserScrollingRef.current && scrollAreaRef.current) {
+      // Scroll the container, not the page
+      scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
+    }
   }, [messages]);
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || loading) return;
 
     try {
+      // Mark that user is sending a message (should auto-scroll)
+      isUserScrollingRef.current = false;
       await sendMessage(roomId, inputMessage);
-      setInputMessage('');
+      setInputMessage("");
     } catch (error) {
-      console.error('Failed to send message:', error);
+      console.error("Failed to send message:", error);
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
+    }
+  };
+
+  // Detect when user manually scrolls
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.currentTarget;
+    const isAtBottom =
+      Math.abs(target.scrollHeight - target.scrollTop - target.clientHeight) <
+      10;
+
+    // If user scrolls away from bottom, mark as manually scrolling
+    if (!isAtBottom) {
+      isUserScrollingRef.current = true;
+    } else {
+      // If user scrolls back to bottom, enable auto-scroll again
+      isUserScrollingRef.current = false;
     }
   };
 
@@ -60,18 +90,18 @@ export default function ChatBox({ roomId, className = '' }: ChatBoxProps) {
     const isToday = date.toDateString() === now.toDateString();
 
     if (isToday) {
-      return date.toLocaleTimeString('en-US', {
-        hour: 'numeric',
-        minute: '2-digit',
+      return date.toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
         hour12: true,
       });
     }
 
-    return date.toLocaleString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
+    return date.toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
       hour12: true,
     });
   };
@@ -86,55 +116,46 @@ export default function ChatBox({ roomId, className = '' }: ChatBoxProps) {
       </CardHeader>
       <CardContent className="space-y-3">
         {/* Messages Area */}
-        <ScrollArea className="h-64 w-full rounded-lg border-2 bg-muted/30 p-3">
+        <div
+          className="h-64 w-full rounded-lg border-2 bg-muted/30 p-3 overflow-y-auto"
+          onScroll={handleScroll}
+          ref={scrollAreaRef}
+        >
           {messages.length === 0 ? (
             <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
               No messages yet. Start the conversation!
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {messages.map((msg) => {
                 const isCurrentUser = msg.senderId === user?.uid;
                 return (
                   <div
                     key={msg.id}
-                    className={`flex flex-col ${isCurrentUser ? 'items-end' : 'items-start'}`}
+                    className="flex flex-wrap items-baseline gap-1.5"
                   >
-                    <div
-                      className={`max-w-[80%] rounded-lg px-3 py-2 ${
-                        isCurrentUser
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted border border-border'
-                      }`}
-                    >
-                      <div className="flex items-baseline gap-2 mb-1">
-                        <span className="text-xs font-semibold">
-                          {isCurrentUser ? 'You' : msg.displayName}
-                        </span>
-                        <span
-                          className={`text-xs ${
-                            isCurrentUser ? 'text-primary-foreground/70' : 'text-muted-foreground'
-                          }`}
-                        >
-                          {formatTimestamp(msg.timestamp)}
-                        </span>
-                      </div>
-                      <p className="text-sm break-words">{msg.message}</p>
-                    </div>
+                    <span className="text-xs font-semibold shrink-0">
+                      {isCurrentUser ? "You" : msg.displayName}:
+                    </span>
+                    <span className="text-sm break-words flex-1 min-w-0">
+                      {msg.message}
+                    </span>
+                    <span className="text-xs text-muted-foreground shrink-0 ml-auto">
+                      {formatTimestamp(msg.timestamp)}
+                    </span>
                   </div>
                 );
               })}
-              <div ref={messagesEndRef} />
             </div>
           )}
-        </ScrollArea>
+        </div>
 
         {/* Input Area */}
         <div className="flex gap-2">
           <Input
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyDown}
             placeholder="Type a message..."
             className="flex-1"
             maxLength={500}
@@ -153,4 +174,3 @@ export default function ChatBox({ roomId, className = '' }: ChatBoxProps) {
     </Card>
   );
 }
-

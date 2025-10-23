@@ -1,32 +1,40 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Separator } from '@/components/ui/separator';
-import { useAuth } from '@/contexts/AuthContext';
-import { LogIn, Mail, Lock, AlertCircle } from 'lucide-react';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Separator } from "@/components/ui/separator";
+import { useAuth } from "@/contexts/AuthContext";
+import { LogIn, Mail, Lock, AlertCircle } from "lucide-react";
 
 export default function Login() {
   const navigate = useNavigate();
   const { signInWithEmail, signInWithGoogle } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     try {
       await signInWithEmail(email, password);
-      navigate('/');
+      navigate("/");
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to sign in';
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to sign in";
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -34,14 +42,17 @@ export default function Login() {
   };
 
   const handleGoogleLogin = async () => {
-    setError('');
+    setError("");
     setLoading(true);
 
     try {
       await signInWithGoogle();
-      navigate('/');
+      navigate("/");
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to sign in with Google';
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Failed to sign in with Google";
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -75,12 +86,17 @@ export default function Login() {
               {error && (
                 <Alert variant="destructive" className="py-2">
                   <AlertCircle className="h-4 w-4" />
-                  <AlertDescription className="text-xs">{error}</AlertDescription>
+                  <AlertDescription className="text-xs">
+                    {error}
+                  </AlertDescription>
                 </Alert>
               )}
 
               <div className="space-y-1.5">
-                <Label htmlFor="email" className="flex items-center gap-1.5 text-sm">
+                <Label
+                  htmlFor="email"
+                  className="flex items-center gap-1.5 text-sm"
+                >
                   <Mail className="h-3.5 w-3.5 text-muted-foreground" />
                   Email
                 </Label>
@@ -96,7 +112,10 @@ export default function Login() {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="password" className="flex items-center gap-1.5 text-sm">
+                <Label
+                  htmlFor="password"
+                  className="flex items-center gap-1.5 text-sm"
+                >
                   <Lock className="h-3.5 w-3.5 text-muted-foreground" />
                   Password
                 </Label>
@@ -168,18 +187,18 @@ export default function Login() {
           </form>
           <CardFooter className="flex flex-col space-y-2 border-t pt-4 pb-4">
             <p className="text-xs text-muted-foreground text-center">
-              Don't have an account?{' '}
+              Don't have an account?{" "}
               <Button
                 variant="link"
                 className="p-0 h-auto text-xs font-semibold text-primary"
-                onClick={() => navigate('/signup')}
+                onClick={() => navigate("/signup")}
               >
                 Sign up
               </Button>
             </p>
             <Button
               variant="ghost"
-              onClick={() => navigate('/')}
+              onClick={() => navigate("/")}
               className="w-full h-8 hover:bg-accent text-sm"
             >
               Continue as Guest
@@ -190,4 +209,3 @@ export default function Login() {
     </div>
   );
 }
-

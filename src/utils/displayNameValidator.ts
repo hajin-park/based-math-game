@@ -7,15 +7,38 @@
 // This is a basic list - not overly strict, just the most common offensive terms
 const BLOCKED_WORDS = [
   // Common slurs and highly offensive terms
-  'nigger', 'nigga', 'faggot', 'fag', 'retard', 'retarded',
-  'cunt', 'whore', 'slut', 'bitch', 'bastard',
+  "nigger",
+  "nigga",
+  "faggot",
+  "fag",
+  "retard",
+  "retarded",
+  "cunt",
+  "whore",
+  "slut",
+  "bitch",
+  "bastard",
   // Common profanity (basic level)
-  'fuck', 'shit', 'ass', 'damn', 'hell',
-  'cock', 'dick', 'pussy', 'penis', 'vagina',
+  "fuck",
+  "shit",
+  "ass",
+  "damn",
+  "hell",
+  "cock",
+  "dick",
+  "pussy",
+  "penis",
+  "vagina",
   // Hate speech indicators
-  'nazi', 'hitler', 'kkk', 'terrorist',
+  "nazi",
+  "hitler",
+  "kkk",
+  "terrorist",
   // Sexual content
-  'porn', 'sex', 'rape', 'molest',
+  "porn",
+  "sex",
+  "rape",
+  "molest",
 ];
 
 export interface ValidationResult {
@@ -33,7 +56,7 @@ export function validateDisplayName(displayName: string): ValidationResult {
   if (!displayName || !displayName.trim()) {
     return {
       isValid: false,
-      error: 'Display name cannot be empty',
+      error: "Display name cannot be empty",
     };
   }
 
@@ -42,14 +65,14 @@ export function validateDisplayName(displayName: string): ValidationResult {
   if (trimmed.length < 2) {
     return {
       isValid: false,
-      error: 'Display name must be at least 2 characters long',
+      error: "Display name must be at least 2 characters long",
     };
   }
 
   if (trimmed.length > 30) {
     return {
       isValid: false,
-      error: 'Display name must be 30 characters or less',
+      error: "Display name must be 30 characters or less",
     };
   }
 
@@ -59,7 +82,8 @@ export function validateDisplayName(displayName: string): ValidationResult {
     if (lowerName.includes(word)) {
       return {
         isValid: false,
-        error: 'Display name contains inappropriate content. Please choose a different name.',
+        error:
+          "Display name contains inappropriate content. Please choose a different name.",
       };
     }
   }
@@ -69,7 +93,7 @@ export function validateDisplayName(displayName: string): ValidationResult {
   if (specialCharCount > 5) {
     return {
       isValid: false,
-      error: 'Display name contains too many special characters',
+      error: "Display name contains too many special characters",
     };
   }
 
@@ -78,4 +102,3 @@ export function validateDisplayName(displayName: string): ValidationResult {
     isValid: true,
   };
 }
-

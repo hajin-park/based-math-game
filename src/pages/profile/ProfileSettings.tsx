@@ -1,10 +1,16 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,14 +21,23 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import { useAuth } from '@/contexts/AuthContext';
-import { Pencil, Check, X, Trash2, Settings as SettingsIcon, Mail, AlertTriangle, Loader2 } from 'lucide-react';
+} from "@/components/ui/alert-dialog";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  Pencil,
+  Check,
+  X,
+  Trash2,
+  Settings as SettingsIcon,
+  Mail,
+  AlertTriangle,
+  Loader2,
+} from "lucide-react";
 
 export default function ProfileSettings() {
   const navigate = useNavigate();
   const { user, updateDisplayName, deleteAccount } = useAuth();
-  const [displayName, setDisplayName] = useState(user?.displayName || '');
+  const [displayName, setDisplayName] = useState(user?.displayName || "");
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -35,8 +50,11 @@ export default function ProfileSettings() {
       await updateDisplayName(displayName.trim());
       setIsEditing(false);
     } catch (error) {
-      console.error('Failed to update display name:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to update display name';
+      console.error("Failed to update display name:", error);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Failed to update display name";
       alert(errorMessage);
     } finally {
       setSaving(false);
@@ -44,7 +62,7 @@ export default function ProfileSettings() {
   };
 
   const handleCancel = () => {
-    setDisplayName(user?.displayName || '');
+    setDisplayName(user?.displayName || "");
     setIsEditing(false);
   };
 
@@ -52,10 +70,10 @@ export default function ProfileSettings() {
     setDeleting(true);
     try {
       await deleteAccount();
-      navigate('/');
+      navigate("/");
     } catch (error) {
-      console.error('Failed to delete account:', error);
-      alert('Failed to delete account. Please try again or contact support.');
+      console.error("Failed to delete account:", error);
+      alert("Failed to delete account. Please try again or contact support.");
     } finally {
       setDeleting(false);
     }
@@ -89,7 +107,9 @@ export default function ProfileSettings() {
           {isEditing ? (
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="displayName" className="text-base">Display Name</Label>
+                <Label htmlFor="displayName" className="text-base">
+                  Display Name
+                </Label>
                 <Input
                   id="displayName"
                   value={displayName}
@@ -117,7 +137,11 @@ export default function ProfileSettings() {
                     </>
                   )}
                 </Button>
-                <Button onClick={handleCancel} variant="outline" className="gap-2">
+                <Button
+                  onClick={handleCancel}
+                  variant="outline"
+                  className="gap-2"
+                >
                   <X className="h-4 w-4" />
                   Cancel
                 </Button>
@@ -126,12 +150,18 @@ export default function ProfileSettings() {
           ) : (
             <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border-2">
               <div className="space-y-1">
-                <p className="text-xs text-muted-foreground">Current Display Name</p>
+                <p className="text-xs text-muted-foreground">
+                  Current Display Name
+                </p>
                 <p className="text-lg font-semibold">
-                  {user?.displayName || 'Not set'}
+                  {user?.displayName || "Not set"}
                 </p>
               </div>
-              <Button onClick={() => setIsEditing(true)} variant="outline" className="gap-2">
+              <Button
+                onClick={() => setIsEditing(true)}
+                variant="outline"
+                className="gap-2"
+              >
                 <Pencil className="h-4 w-4" />
                 Edit
               </Button>
@@ -141,7 +171,7 @@ export default function ProfileSettings() {
       </Card>
 
       {/* Email (Read-only) */}
-      {user && 'email' in user && user.email && (
+      {user && "email" in user && user.email && (
         <Card className="border-2 shadow-lg">
           <CardHeader>
             <CardTitle className="text-xl flex items-center gap-2">
@@ -181,7 +211,8 @@ export default function ProfileSettings() {
                   <p className="font-semibold text-base">Delete Account</p>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Permanently delete your account and all associated data. This action cannot be undone.
+                  Permanently delete your account and all associated data. This
+                  action cannot be undone.
                 </p>
               </div>
               <AlertDialog>
@@ -195,11 +226,15 @@ export default function ProfileSettings() {
                   <AlertDialogHeader>
                     <div className="flex items-center gap-2 mb-2">
                       <AlertTriangle className="h-6 w-6 text-destructive" />
-                      <AlertDialogTitle className="text-xl">Are you absolutely sure?</AlertDialogTitle>
+                      <AlertDialogTitle className="text-xl">
+                        Are you absolutely sure?
+                      </AlertDialogTitle>
                     </div>
                     <AlertDialogDescription className="space-y-4">
                       <p className="text-base">
-                        This action cannot be undone. This will permanently delete your account and remove all your data from our servers.
+                        This action cannot be undone. This will permanently
+                        delete your account and remove all your data from our
+                        servers.
                       </p>
 
                       <Separator />
@@ -210,19 +245,27 @@ export default function ProfileSettings() {
                         </p>
                         <ul className="space-y-2 text-sm">
                           <li className="flex items-start gap-2">
-                            <span className="text-destructive font-bold">•</span>
+                            <span className="text-destructive font-bold">
+                              •
+                            </span>
                             <span>All your game statistics and history</span>
                           </li>
                           <li className="flex items-start gap-2">
-                            <span className="text-destructive font-bold">•</span>
+                            <span className="text-destructive font-bold">
+                              •
+                            </span>
                             <span>Your leaderboard rankings</span>
                           </li>
                           <li className="flex items-start gap-2">
-                            <span className="text-destructive font-bold">•</span>
+                            <span className="text-destructive font-bold">
+                              •
+                            </span>
                             <span>Your profile information</span>
                           </li>
                           <li className="flex items-start gap-2">
-                            <span className="text-destructive font-bold">•</span>
+                            <span className="text-destructive font-bold">
+                              •
+                            </span>
                             <span>Access to this account</span>
                           </li>
                         </ul>
@@ -258,4 +301,3 @@ export default function ProfileSettings() {
     </div>
   );
 }
-

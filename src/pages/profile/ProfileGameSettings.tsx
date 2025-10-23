@@ -1,14 +1,20 @@
-import { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { doc, setDoc } from 'firebase/firestore';
-import { firestore } from '@/firebase/config';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Separator } from '@/components/ui/separator';
-import { Info, Loader2, Gamepad2, Eye, Hash, Timer } from 'lucide-react';
-import { useGameSettings, GameSettings } from '@/hooks/useGameSettings';
+import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { doc, setDoc } from "firebase/firestore";
+import { firestore } from "@/firebase/config";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Separator } from "@/components/ui/separator";
+import { Info, Loader2, Gamepad2, Eye, Hash, Timer } from "lucide-react";
+import { useGameSettings, GameSettings } from "@/hooks/useGameSettings";
 
 export default function ProfileGameSettings() {
   const { user, isGuest } = useAuth();
@@ -26,14 +32,18 @@ export default function ProfileGameSettings() {
 
     try {
       const userRef = doc(firestore, `users/${user.uid}`);
-      await setDoc(userRef, {
-        gameSettings: newSettings
-      }, { merge: true });
+      await setDoc(
+        userRef,
+        {
+          gameSettings: newSettings,
+        },
+        { merge: true },
+      );
 
       // Settings will be reloaded automatically by the hook
     } catch (error) {
-      console.error('Error saving game settings:', error);
-      alert('Failed to save settings. Please try again.');
+      console.error("Error saving game settings:", error);
+      alert("Failed to save settings. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -76,8 +86,16 @@ export default function ProfileGameSettings() {
         <Alert className="border-warning/50 bg-warning/10">
           <Info className="h-4 w-4 text-warning" />
           <AlertDescription className="text-sm">
-            <span className="font-semibold">Guest Account:</span> Your settings will be saved temporarily but may be lost if you clear your browser data.
-            <a href="/signup" className="font-medium underline ml-1 text-warning hover:text-warning/80">Sign up</a> to save your settings permanently.
+            <span className="font-semibold">Guest Account:</span> Your settings
+            will be saved temporarily but may be lost if you clear your browser
+            data.
+            <a
+              href="/signup"
+              className="font-medium underline ml-1 text-warning hover:text-warning/80"
+            >
+              Sign up
+            </a>{" "}
+            to save your settings permanently.
           </AlertDescription>
         </Alert>
       )}
@@ -90,7 +108,8 @@ export default function ProfileGameSettings() {
             Gameplay Preferences
           </CardTitle>
           <CardDescription className="text-base">
-            Customize your gameplay experience with visual aids and game flow options
+            Customize your gameplay experience with visual aids and game flow
+            options
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -101,7 +120,10 @@ export default function ProfileGameSettings() {
                 <div className="flex-1 space-y-3">
                   <div className="flex items-center gap-2">
                     <Hash className="h-5 w-5 text-primary" />
-                    <Label htmlFor="grouped-digits" className="text-lg font-semibold cursor-pointer">
+                    <Label
+                      htmlFor="grouped-digits"
+                      className="text-lg font-semibold cursor-pointer"
+                    >
                       Grouped Digits
                     </Label>
                   </div>
@@ -126,7 +148,9 @@ export default function ProfileGameSettings() {
                 <Switch
                   id="grouped-digits"
                   checked={settings.groupedDigits}
-                  onCheckedChange={(checked) => updateSetting('groupedDigits', checked)}
+                  onCheckedChange={(checked) =>
+                    updateSetting("groupedDigits", checked)
+                  }
                   disabled={saving || isGuest}
                   className="shrink-0"
                 />
@@ -141,19 +165,28 @@ export default function ProfileGameSettings() {
                 <div className="flex-1 space-y-3">
                   <div className="flex items-center gap-2">
                     <Eye className="h-5 w-5 text-primary" />
-                    <Label htmlFor="index-hints" className="text-lg font-semibold cursor-pointer">
+                    <Label
+                      htmlFor="index-hints"
+                      className="text-lg font-semibold cursor-pointer"
+                    >
                       Index Value Hints
                     </Label>
                   </div>
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    Show positional values underneath each digit during gameplay. Helps you understand how each digit contributes to the total value.
-                    <span className="block mt-1 italic">(Not shown when converting from decimal)</span>
+                    Show positional values underneath each digit during
+                    gameplay. Helps you understand how each digit contributes to
+                    the total value.
+                    <span className="block mt-1 italic">
+                      (Not shown when converting from decimal)
+                    </span>
                   </p>
                 </div>
                 <Switch
                   id="index-hints"
                   checked={settings.indexValueHints}
-                  onCheckedChange={(checked) => updateSetting('indexValueHints', checked)}
+                  onCheckedChange={(checked) =>
+                    updateSetting("indexValueHints", checked)
+                  }
                   disabled={saving || isGuest}
                   className="shrink-0"
                 />
@@ -168,18 +201,24 @@ export default function ProfileGameSettings() {
                 <div className="flex-1 space-y-3">
                   <div className="flex items-center gap-2">
                     <Timer className="h-5 w-5 text-primary" />
-                    <Label htmlFor="countdown-start" className="text-lg font-semibold cursor-pointer">
+                    <Label
+                      htmlFor="countdown-start"
+                      className="text-lg font-semibold cursor-pointer"
+                    >
                       Countdown Start
                     </Label>
                   </div>
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    Show a 3-2-1 countdown before the game starts. Gives you time to prepare before the timer begins.
+                    Show a 3-2-1 countdown before the game starts. Gives you
+                    time to prepare before the timer begins.
                   </p>
                 </div>
                 <Switch
                   id="countdown-start"
                   checked={settings.countdownStart}
-                  onCheckedChange={(checked) => updateSetting('countdownStart', checked)}
+                  onCheckedChange={(checked) =>
+                    updateSetting("countdownStart", checked)
+                  }
                   disabled={saving || isGuest}
                   className="shrink-0"
                 />
@@ -198,12 +237,15 @@ export default function ProfileGameSettings() {
             </div>
             <div className="space-y-3 text-sm">
               <p className="text-foreground">
-                <strong className="text-info">Multiplayer Note:</strong> In multiplayer games, the host can control whether visual aids are allowed for all players.
-                If the host disables visual aids, your personal settings will be overridden for that game.
+                <strong className="text-info">Multiplayer Note:</strong> In
+                multiplayer games, the host can control whether visual aids are
+                allowed for all players. If the host disables visual aids, your
+                personal settings will be overridden for that game.
               </p>
               <Separator />
               <p className="text-muted-foreground">
-                Your settings are automatically saved and will apply to all future games.
+                Your settings are automatically saved and will apply to all
+                future games.
               </p>
             </div>
           </div>
@@ -212,4 +254,3 @@ export default function ProfileGameSettings() {
     </div>
   );
 }
-

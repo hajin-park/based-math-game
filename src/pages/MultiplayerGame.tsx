@@ -1,40 +1,50 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useRoom, Room } from '@/hooks/useRoom';
-import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/components/ui/use-toast';
-import { useGameSettings } from '@/hooks/useGameSettings';
-import { isSpeedrunMode } from '@/types/gameMode';
-import Countdown from '@/components/Countdown';
-import QuizPrompt from '@/features/quiz/quiz-questions/Quiz-Prompt.component';
-import QuizStats from '@/features/quiz/quiz-questions/Quiz-Stats.component';
-import ExitButton from '@/components/ExitButton';
-import KickedModal from '@/components/KickedModal';
-import ChatBox from '@/components/ChatBox';
+import { useState, useEffect, useRef, useMemo } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useRoom, Room } from "@/hooks/useRoom";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/components/ui/use-toast";
+import { useGameSettings } from "@/hooks/useGameSettings";
+import { isSpeedrunMode } from "@/types/gameMode";
+import Countdown from "@/components/Countdown";
+import QuizPrompt from "@/features/quiz/quiz-questions/Quiz-Prompt.component";
+import QuizStats from "@/features/quiz/quiz-questions/Quiz-Stats.component";
+import ExitButton from "@/components/ExitButton";
+import KickedModal from "@/components/KickedModal";
+import ChatBox from "@/components/ChatBox";
 
 export default function MultiplayerGame() {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  const { subscribeToRoom, updatePlayerScore, finishGame, leaveRoom } = useRoom();
+  const {
+    joinRoom,
+    subscribeToRoom,
+    updatePlayerScore,
+    finishGame,
+    leaveRoom,
+  } = useRoom();
   const { settings: gameSettings } = useGameSettings();
   const [room, setRoom] = useState<Room | null>(null);
   const [showCountdown, setShowCountdown] = useState(false);
   const [timerShouldStart, setTimerShouldStart] = useState(false);
   const [score, setScore] = useState(0);
-  const [randomSetting, setRandomSetting] = useState<[string, string, number, number] | null>(null);
+  const [randomSetting, setRandomSetting] = useState<
+    [string, string, number, number] | null
+  >(null);
   const [showKickedModal, setShowKickedModal] = useState(false);
   const scoreRef = useRef(0);
   const questionsRef = useRef<[string, string, number, number][]>([]);
   const hasNavigatedRef = useRef(false);
   const countdownShownRef = useRef(false);
+  const hasJoinedRef = useRef(false);
+  const isLeavingRef = useRef(false);
 
   // Determine if this is a speedrun mode
-  const isSpeedrun = useMemo(() =>
-    room ? isSpeedrunMode(room.gameMode) : false,
-    [room]
+  const isSpeedrun = useMemo(
+    () => (room ? isSpeedrunMode(room.gameMode) : false),
+    [room],
   );
 
   // Handle timer expiration
@@ -44,6 +54,58 @@ export default function MultiplayerGame() {
       await finishGame(roomId);
     }
   };
+
+  // Ensure user is properly joined/reconnected to the room on mount
+  useEffect(() => {
+    if (!roomId || !user || hasJoinedRef.current) return;
+
+    const ensureJoined = async () => {
+      try {
+        await joinRoom(roomId);
+        hasJoinedRef.current = true;
+      } catch (error) {
+        console.error("Error joining room on mount:", error);
+        const errorMessage =
+          error instanceof Error ? error.message : "Failed to join room";
+
+        // If room not found or user was kicked, navigate away
+        if (
+          errorMessage.includes("not found") ||
+          errorMessage.includes("removed from this room")
+        ) {
+          navigate("/multiplayer", { replace: true });
+          toast({
+            title: "Unable to join room",
+            description: errorMessage,
+            variant: "destructive",
+          });
+        }
+      }
+    };
+
+    ensureJoined();
+  }, [roomId, user, joinRoom, navigate, toast]);
+
+  // Handle cleanup when component unmounts (user navigates away)
+  useEffect(() => {
+    const isLeavingRefValue = isLeavingRef;
+    return () => {
+      // Check if we're navigating away from the room entirely
+      const currentPath = window.location.pathname;
+      const isStillInRoom =
+        roomId &&
+        (currentPath.includes(`/multiplayer/lobby/${roomId}`) ||
+          currentPath.includes(`/multiplayer/game/${roomId}`) ||
+          currentPath.includes(`/multiplayer/results/${roomId}`));
+
+      // Only leave if we're not in the same room and not explicitly leaving
+      if (roomId && user && !isStillInRoom && !isLeavingRefValue.current) {
+        leaveRoom(roomId).catch((error) => {
+          console.error("Error leaving room on unmount:", error);
+        });
+      }
+    };
+  }, [roomId, user, leaveRoom]);
 
   useEffect(() => {
     if (!roomId) return;
@@ -56,14 +118,14 @@ export default function MultiplayerGame() {
         hasNavigatedRef.current = true;
 
         // Navigate first, then show toast
-        navigate('/multiplayer', { replace: true });
+        navigate("/multiplayer", { replace: true });
 
         // Show toast after navigation
         setTimeout(() => {
           toast({
-            title: 'Host Disconnected',
-            description: 'The host has left the game.',
-            variant: 'destructive',
+            title: "Host Disconnected",
+            description: "The host has left the game.",
+            variant: "destructive",
           });
         }, 100);
         return;
@@ -110,29 +172,37 @@ export default function MultiplayerGame() {
       }
 
       // Show countdown when game starts (only once)
-      if (updatedRoom.status === 'playing' && updatedRoom.enableCountdown && !countdownShownRef.current) {
+      if (
+        updatedRoom.status === "playing" &&
+        updatedRoom.enableCountdown &&
+        !countdownShownRef.current
+      ) {
         setShowCountdown(true);
         countdownShownRef.current = true;
       }
 
       // Start timer immediately if countdown is disabled
-      if (updatedRoom.status === 'playing' && !updatedRoom.enableCountdown && !countdownShownRef.current) {
+      if (
+        updatedRoom.status === "playing" &&
+        !updatedRoom.enableCountdown &&
+        !countdownShownRef.current
+      ) {
         setTimerShouldStart(true);
         countdownShownRef.current = true;
       }
 
       // Navigate to lobby if game was reset (host left mid-game)
-      if (updatedRoom.status === 'waiting') {
+      if (updatedRoom.status === "waiting") {
         navigate(`/multiplayer/lobby/${roomId}`, { replace: true });
         toast({
-          title: 'Host Left',
-          description: 'The host left the game. A new host has been assigned.',
+          title: "Host Left",
+          description: "The host left the game. A new host has been assigned.",
         });
         return;
       }
 
       // Navigate to results when game finishes
-      if (updatedRoom.status === 'finished') {
+      if (updatedRoom.status === "finished") {
         navigate(`/multiplayer/results/${roomId}`);
       }
     });
@@ -161,7 +231,11 @@ export default function MultiplayerGame() {
 
   // Check if target questions reached (for speed run modes)
   useEffect(() => {
-    if (isSpeedrun && room?.gameMode.targetQuestions && score >= room.gameMode.targetQuestions) {
+    if (
+      isSpeedrun &&
+      room?.gameMode.targetQuestions &&
+      score >= room.gameMode.targetQuestions
+    ) {
       // Target reached, calculate elapsed time and update score
       if (roomId && room.startedAt) {
         const elapsedTime = Math.floor((Date.now() - room.startedAt) / 1000);
@@ -171,7 +245,15 @@ export default function MultiplayerGame() {
         });
       }
     }
-  }, [score, room?.gameMode.targetQuestions, room?.startedAt, roomId, finishGame, updatePlayerScore, isSpeedrun]);
+  }, [
+    score,
+    room?.gameMode.targetQuestions,
+    room?.startedAt,
+    roomId,
+    finishGame,
+    updatePlayerScore,
+    isSpeedrun,
+  ]);
 
   // Calculate expiry timestamp based on room startedAt and duration
   // For speedrun modes, set a very long duration (24 hours) since we count up
@@ -184,12 +266,12 @@ export default function MultiplayerGame() {
       const expiry = new Date();
       expiry.setSeconds(expiry.getSeconds() + remaining);
 
-      console.log('Calculating expiry timestamp:', {
+      console.log("Calculating expiry timestamp:", {
         startedAt: room.startedAt,
         elapsed,
         remaining,
         isSpeedrun,
-        expiry: expiry.toISOString()
+        expiry: expiry.toISOString(),
       });
 
       return expiry;
@@ -208,7 +290,7 @@ export default function MultiplayerGame() {
     // Simple hash function for room ID
     let hash = 0;
     for (let i = 0; i < roomId.length; i++) {
-      hash = ((hash << 5) - hash) + roomId.charCodeAt(i);
+      hash = (hash << 5) - hash + roomId.charCodeAt(i);
       hash = hash & hash; // Convert to 32-bit integer
     }
     // Combine with score to get unique seed for each question
@@ -227,12 +309,12 @@ export default function MultiplayerGame() {
     if (roomId) {
       await leaveRoom(roomId);
     }
-    navigate('/multiplayer');
+    navigate("/multiplayer");
   };
 
   const handleKickedModalClose = () => {
     setShowKickedModal(false);
-    navigate('/multiplayer', { replace: true });
+    navigate("/multiplayer", { replace: true });
   };
 
   const handleCountdownComplete = () => {
@@ -248,10 +330,7 @@ export default function MultiplayerGame() {
         message="Exit game and return to multiplayer menu? You will leave the room."
       />
       {showCountdown && (
-        <Countdown
-          onComplete={handleCountdownComplete}
-          duration={3}
-        />
+        <Countdown onComplete={handleCountdownComplete} duration={3} />
       )}
       <div className="container mx-auto px-4 py-8 min-h-screen">
         <div className="grid gap-6 lg:grid-cols-3">
@@ -280,83 +359,93 @@ export default function MultiplayerGame() {
             </Card>
           </div>
 
-        {/* Leaderboard */}
-        <div className="lg:sticky lg:top-8 lg:self-start space-y-4">
-          <Card className="shadow-lg">
-            <CardHeader className="border-b">
-              <CardTitle className="flex items-center gap-2">
-                <span className="text-xl">🏆</span>
-                Live Scores
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-4">
-              <div className="space-y-2">
-                {Object.values(room.players)
-                  .sort((a, b) => {
-                    // For speedrun: sort by finished status first, then by score (time)
-                    if (isSpeedrun) {
-                      if (a.finished && !b.finished) return -1;
-                      if (!a.finished && b.finished) return 1;
-                      if (a.finished && b.finished) return a.score - b.score; // Lower time is better
-                      return b.score - a.score; // More questions answered is better
-                    }
-                    // For timed: sort by score descending
-                    return b.score - a.score;
-                  })
-                  .map((player, index) => {
-                    const isCurrentUser = player.uid === user?.uid;
-                    const isLeader = index === 0 && player.score > 0;
-
-                    // Display logic for speedrun vs timed modes
-                    let displayScore: string;
-                    if (isSpeedrun) {
-                      if (player.finished) {
-                        // Show finish time
-                        displayScore = `${player.score}s`;
-                      } else {
-                        // Show progress: #answered/#target
-                        const targetQuestions = room.gameMode.targetQuestions || 0;
-                        displayScore = `${player.score}/${targetQuestions}`;
+          {/* Leaderboard */}
+          <div className="lg:sticky lg:top-8 lg:self-start space-y-4">
+            <Card className="shadow-lg">
+              <CardHeader className="border-b">
+                <CardTitle className="flex items-center gap-2">
+                  <span className="text-xl">🏆</span>
+                  Live Scores
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-4">
+                <div className="space-y-2">
+                  {Object.values(room.players)
+                    .sort((a, b) => {
+                      // For speedrun: sort by finished status first, then by score (time)
+                      if (isSpeedrun) {
+                        if (a.finished && !b.finished) return -1;
+                        if (!a.finished && b.finished) return 1;
+                        if (a.finished && b.finished) return a.score - b.score; // Lower time is better
+                        return b.score - a.score; // More questions answered is better
                       }
-                    } else {
-                      // Timed mode: just show score
-                      displayScore = `${player.score}`;
-                    }
+                      // For timed: sort by score descending
+                      return b.score - a.score;
+                    })
+                    .map((player, index) => {
+                      const isCurrentUser = player.uid === user?.uid;
+                      const isLeader = index === 0 && player.score > 0;
 
-                    return (
-                      <div
-                        key={player.uid}
-                        className={`flex items-center justify-between p-3 rounded-lg transition-all ${
-                          isCurrentUser
-                            ? 'bg-primary/10 border-2 border-primary ring-2 ring-primary/20'
-                            : 'bg-muted/50 border border-transparent'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className={`font-bold text-lg ${
-                            isLeader ? 'text-yellow-600 dark:text-yellow-400' : 'text-muted-foreground'
-                          }`}>
-                            {index === 0 && player.score > 0 ? '👑' : `#${index + 1}`}
-                          </span>
-                          <span className={`${isCurrentUser ? 'font-bold' : ''} truncate max-w-[120px]`}>
-                            {player.displayName}
-                            {isCurrentUser && ' (You)'}
+                      // Display logic for speedrun vs timed modes
+                      let displayScore: string;
+                      if (isSpeedrun) {
+                        if (player.finished) {
+                          // Show finish time
+                          displayScore = `${player.score}s`;
+                        } else {
+                          // Show progress: #answered/#target
+                          const targetQuestions =
+                            room.gameMode.targetQuestions || 0;
+                          displayScore = `${player.score}/${targetQuestions}`;
+                        }
+                      } else {
+                        // Timed mode: just show score
+                        displayScore = `${player.score}`;
+                      }
+
+                      return (
+                        <div
+                          key={player.uid}
+                          className={`flex items-center justify-between p-3 rounded-lg transition-all ${
+                            isCurrentUser
+                              ? "bg-primary/10 border-2 border-primary ring-2 ring-primary/20"
+                              : "bg-muted/50 border border-transparent"
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <span
+                              className={`font-bold text-lg ${
+                                isLeader
+                                  ? "text-yellow-600 dark:text-yellow-400"
+                                  : "text-muted-foreground"
+                              }`}
+                            >
+                              {index === 0 && player.score > 0
+                                ? "👑"
+                                : `#${index + 1}`}
+                            </span>
+                            <span
+                              className={`${isCurrentUser ? "font-bold" : ""} truncate max-w-[120px]`}
+                            >
+                              {player.displayName}
+                              {isCurrentUser && " (You)"}
+                            </span>
+                          </div>
+                          <span className="font-bold text-xl tabular-nums">
+                            {displayScore}
                           </span>
                         </div>
-                        <span className="font-bold text-xl tabular-nums">{displayScore}</span>
-                      </div>
-                    );
-                  })}
-              </div>
-            </CardContent>
-          </Card>
+                      );
+                    })}
+                </div>
+              </CardContent>
+            </Card>
 
-          {/* Chat Box */}
-          {roomId && <ChatBox roomId={roomId} />}
+            {/* Chat Box */}
+            {roomId && <ChatBox roomId={roomId} />}
+          </div>
         </div>
       </div>
-    </div>
     </>
   );
 }
-

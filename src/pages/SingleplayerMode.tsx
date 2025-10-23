@@ -1,16 +1,18 @@
-import { useNavigate } from 'react-router-dom';
-import { useContext } from 'react';
-import GameModeSelect from '@/features/quiz/quiz-settings/Game-Mode-Select.component';
-import { QuizContext } from '@/contexts/GameContexts';
-import { GameMode } from '@/types/gameMode';
-import { Gamepad2 } from 'lucide-react';
+import { useNavigate } from "react-router-dom";
+import { useContext } from "react";
+import GameModeSelect from "@/features/quiz/quiz-settings/Game-Mode-Select.component";
+import { QuizContext } from "@/contexts/GameContexts";
+import { GameMode } from "@/types/gameMode";
+import { Gamepad2 } from "lucide-react";
 
 export default function SingleplayerMode() {
   const navigate = useNavigate();
   const quizContext = useContext(QuizContext);
 
   if (!quizContext) {
-    throw new Error('SingleplayerMode must be used within QuizContext provider');
+    throw new Error(
+      "SingleplayerMode must be used within QuizContext provider",
+    );
   }
 
   const { setSettings } = quizContext;
@@ -22,7 +24,7 @@ export default function SingleplayerMode() {
       gameModeId: mode.id,
       trackStats,
     });
-    navigate('/quiz');
+    navigate("/quiz");
   };
 
   return (
@@ -42,4 +44,3 @@ export default function SingleplayerMode() {
     </div>
   );
 }
-

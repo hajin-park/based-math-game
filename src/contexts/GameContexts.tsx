@@ -1,4 +1,4 @@
-import { createContext } from 'react';
+import { createContext } from "react";
 
 // Type for individual question setting: [fromBase, toBase, rangeLower, rangeUpper]
 export type QuestionSetting = [string, string, number, number];
@@ -32,4 +32,3 @@ export interface ResultContextType {
 
 export const QuizContext = createContext<QuizContextType | null>(null);
 export const ResultContext = createContext<ResultContextType | null>(null);
-

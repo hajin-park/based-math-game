@@ -1,9 +1,9 @@
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { User, Settings, LogOut, Gamepad2 } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { useEffect } from 'react';
+import { Outlet, NavLink, useNavigate } from "react-router-dom";
+import { User, Settings, LogOut, Gamepad2 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { useEffect } from "react";
 
 export default function ProfileLayout() {
   const { isGuest, signOut } = useAuth();
@@ -12,13 +12,13 @@ export default function ProfileLayout() {
   // Redirect guests to signup
   useEffect(() => {
     if (isGuest) {
-      navigate('/signup');
+      navigate("/signup");
     }
   }, [isGuest, navigate]);
 
   const handleSignOut = async () => {
     await signOut();
-    navigate('/');
+    navigate("/");
   };
 
   if (isGuest) {
@@ -26,9 +26,9 @@ export default function ProfileLayout() {
   }
 
   const navItems = [
-    { name: 'Overview', href: '/profile', icon: User, end: true },
-    { name: 'Settings', href: '/profile/settings', icon: Settings },
-    { name: 'Game Settings', href: '/profile/game-settings', icon: Gamepad2 },
+    { name: "Overview", href: "/profile", icon: User, end: true },
+    { name: "Settings", href: "/profile/settings", icon: Settings },
+    { name: "Game Settings", href: "/profile/game-settings", icon: Gamepad2 },
   ];
 
   return (
@@ -37,7 +37,9 @@ export default function ProfileLayout() {
       <aside className="w-72 border-r border-border flex-shrink-0 flex flex-col bg-card">
         <div className="p-6 space-y-2">
           <h2 className="text-2xl font-bold gradient-text">Profile</h2>
-          <p className="text-sm text-muted-foreground">Manage your account settings</p>
+          <p className="text-sm text-muted-foreground">
+            Manage your account settings
+          </p>
         </div>
 
         <Separator />
@@ -51,8 +53,8 @@ export default function ProfileLayout() {
               className={({ isActive }) =>
                 `flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
                   isActive
-                    ? 'bg-primary text-primary-foreground shadow-md'
-                    : 'text-foreground hover:bg-muted hover:text-primary'
+                    ? "bg-primary text-primary-foreground shadow-md"
+                    : "text-foreground hover:bg-muted hover:text-primary"
                 }`
               }
             >
@@ -86,4 +88,3 @@ export default function ProfileLayout() {
     </div>
   );
 }
-

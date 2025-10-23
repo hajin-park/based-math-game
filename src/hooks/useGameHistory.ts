@@ -1,8 +1,17 @@
-import { useState, useCallback } from 'react';
-import { collection, query, orderBy, limit as firestoreLimit, where, getDocs, Query, DocumentData } from 'firebase/firestore';
-import { firestore } from '@/firebase/config';
-import { useAuth } from '@/contexts/AuthContext';
-import { OFFICIAL_GAME_MODES, isSpeedrunMode } from '@/types/gameMode';
+import { useState, useCallback } from "react";
+import {
+  collection,
+  query,
+  orderBy,
+  limit as firestoreLimit,
+  where,
+  getDocs,
+  Query,
+  DocumentData,
+} from "firebase/firestore";
+import { firestore } from "@/firebase/config";
+import { useAuth } from "@/contexts/AuthContext";
+import { OFFICIAL_GAME_MODES, isSpeedrunMode } from "@/types/gameMode";
 
 export interface GameHistoryEntry {
   id: string;
@@ -15,7 +24,7 @@ export interface GameHistoryEntry {
   accuracy?: number;
 }
 
-export type TimeRange = 'today' | 'week' | 'month' | 'all';
+export type TimeRange = "today" | "week" | "month" | "all";
 
 export function useGameHistory() {
   const { user, isGuest } = useAuth();
@@ -27,20 +36,20 @@ export function useGameHistory() {
     const day = 24 * 60 * 60 * 1000;
 
     switch (range) {
-      case 'today':
+      case "today":
         return now - day;
-      case 'week':
+      case "week":
         return now - 7 * day;
-      case 'month':
+      case "month":
         return now - 30 * day;
-      case 'all':
+      case "all":
       default:
         return 0;
     }
   };
 
   const fetchHistory = useCallback(
-    async (timeRange: TimeRange = 'all', limitCount: number = 50) => {
+    async (timeRange: TimeRange = "all", limitCount: number = 50) => {
       if (!user) {
         setHistory([]);
         return;
@@ -48,7 +57,7 @@ export function useGameHistory() {
 
       // Guest users don't have persistent game history in Firestore
       // Check both isGuest flag and UID prefix for reliability
-      const userIsGuest = isGuest || user.uid.startsWith('guest_');
+      const userIsGuest = isGuest || user.uid.startsWith("guest_");
       if (userIsGuest) {
         setHistory([]);
         return;
@@ -56,22 +65,25 @@ export function useGameHistory() {
 
       setLoading(true);
       try {
-        const historyRef = collection(firestore, `userStats/${user.uid}/gameHistory`);
+        const historyRef = collection(
+          firestore,
+          `userStats/${user.uid}/gameHistory`,
+        );
         const startTime = getTimeRangeStart(timeRange);
 
         let historyQuery: Query<DocumentData>;
-        if (timeRange === 'all') {
+        if (timeRange === "all") {
           historyQuery = query(
             historyRef,
-            orderBy('timestamp', 'desc'),
-            firestoreLimit(limitCount)
+            orderBy("timestamp", "desc"),
+            firestoreLimit(limitCount),
           );
         } else {
           historyQuery = query(
             historyRef,
-            where('timestamp', '>=', startTime),
-            orderBy('timestamp', 'desc'),
-            firestoreLimit(limitCount)
+            where("timestamp", ">=", startTime),
+            orderBy("timestamp", "desc"),
+            firestoreLimit(limitCount),
           );
         }
 
@@ -105,20 +117,22 @@ export function useGameHistory() {
           setHistory([]);
         }
       } catch (error) {
-        console.error('Error fetching game history:', error);
+        console.error("Error fetching game history:", error);
         setHistory([]);
       } finally {
         setLoading(false);
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [user?.uid, isGuest] // Only depend on uid and isGuest to prevent unnecessary re-creation
+    [user?.uid, isGuest], // Only depend on uid and isGuest to prevent unnecessary re-creation
   );
 
   const getStatsForTimeRange = useCallback(
     (timeRange: TimeRange) => {
       const startTime = getTimeRangeStart(timeRange);
-      const filteredHistory = history.filter((entry) => entry.timestamp >= startTime);
+      const filteredHistory = history.filter(
+        (entry) => entry.timestamp >= startTime,
+      );
 
       if (filteredHistory.length === 0) {
         return {
@@ -132,14 +146,25 @@ export function useGameHistory() {
         };
       }
 
-      const totalScore = filteredHistory.reduce((sum, entry) => sum + entry.score, 0);
-      const highScore = Math.max(...filteredHistory.map((entry) => entry.score));
+      const totalScore = filteredHistory.reduce(
+        (sum, entry) => sum + entry.score,
+        0,
+      );
+      const highScore = Math.max(
+        ...filteredHistory.map((entry) => entry.score),
+      );
 
       // Calculate average accuracy from games that have accuracy data
-      const gamesWithAccuracy = filteredHistory.filter((entry) => entry.accuracy !== undefined);
-      const averageAccuracy = gamesWithAccuracy.length > 0
-        ? gamesWithAccuracy.reduce((sum, entry) => sum + (entry.accuracy || 0), 0) / gamesWithAccuracy.length
-        : undefined;
+      const gamesWithAccuracy = filteredHistory.filter(
+        (entry) => entry.accuracy !== undefined,
+      );
+      const averageAccuracy =
+        gamesWithAccuracy.length > 0
+          ? gamesWithAccuracy.reduce(
+              (sum, entry) => sum + (entry.accuracy || 0),
+              0,
+            ) / gamesWithAccuracy.length
+          : undefined;
 
       // Calculate questions answered (for timed modes, score = questions answered)
       // For speedrun modes, we need to count the targetQuestions
@@ -155,19 +180,26 @@ export function useGameHistory() {
       }, 0);
 
       // Calculate total time spent in games (in seconds)
-      const timeSpentInGame = filteredHistory.reduce((sum, entry) => sum + entry.duration, 0);
+      const timeSpentInGame = filteredHistory.reduce(
+        (sum, entry) => sum + entry.duration,
+        0,
+      );
 
       return {
         gamesPlayed: filteredHistory.length,
         totalScore,
-        averageScore: Math.round((totalScore / filteredHistory.length) * 100) / 100,
+        averageScore:
+          Math.round((totalScore / filteredHistory.length) * 100) / 100,
         highScore,
-        averageAccuracy: averageAccuracy !== undefined ? Math.round(averageAccuracy * 100) / 100 : undefined,
+        averageAccuracy:
+          averageAccuracy !== undefined
+            ? Math.round(averageAccuracy * 100) / 100
+            : undefined,
         questionsAnswered,
         timeSpentInGame,
       };
     },
-    [history]
+    [history],
   );
 
   const getScoresByGameMode = useCallback(() => {
@@ -199,7 +231,7 @@ export function useGameHistory() {
   }, [history]);
 
   const getLeaderboardPlacements = useCallback(async (): Promise<number> => {
-    if (!user || isGuest || user.uid.startsWith('guest_')) {
+    if (!user || isGuest || user.uid.startsWith("guest_")) {
       return 0;
     }
 
@@ -214,15 +246,15 @@ export function useGameHistory() {
         // Query for top 10 entries
         const leaderboardQuery = query(
           leaderboardRef,
-          orderBy('score', isSpeedrun ? 'asc' : 'desc'),
-          firestoreLimit(10)
+          orderBy("score", isSpeedrun ? "asc" : "desc"),
+          firestoreLimit(10),
         );
 
         const snapshot = await getDocs(leaderboardQuery);
 
         // Check if user is in top 10 (excluding guests)
         const validEntries = snapshot.docs.filter((doc) => {
-          const isGuestUid = doc.id.startsWith('guest_');
+          const isGuestUid = doc.id.startsWith("guest_");
           const isGuestMarked = doc.data().isGuest === true;
           return !isGuestUid && !isGuestMarked;
         });
@@ -235,7 +267,7 @@ export function useGameHistory() {
 
       return placementsCount;
     } catch (error) {
-      console.error('Error fetching leaderboard placements:', error);
+      console.error("Error fetching leaderboard placements:", error);
       return 0;
     }
   }, [user, isGuest]);
@@ -250,4 +282,3 @@ export function useGameHistory() {
     getLeaderboardPlacements,
   };
 }
-

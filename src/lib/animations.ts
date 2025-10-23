@@ -5,7 +5,7 @@
  * Focus: clarity, performance, and respecting user preferences.
  */
 
-import { Variants, Transition } from 'framer-motion';
+import { Variants, Transition } from "framer-motion";
 
 // ============================================================================
 // TRANSITION PRESETS
@@ -14,14 +14,14 @@ import { Variants, Transition } from 'framer-motion';
 export const transitions = {
   // Snappy transitions for interactive elements
   fast: {
-    type: 'spring',
+    type: "spring",
     stiffness: 400,
     damping: 30,
   } as Transition,
 
   // Default smooth transition
   smooth: {
-    type: 'spring',
+    type: "spring",
     stiffness: 300,
     damping: 25,
   } as Transition,
@@ -48,8 +48,6 @@ export const fadeInUp: Variants = {
   },
 };
 
-
-
 // ============================================================================
 // STAGGER ANIMATIONS - For lists and grids
 // ============================================================================
@@ -73,4 +71,3 @@ export const staggerItem: Variants = {
     transition: transitions.smooth,
   },
 };
-

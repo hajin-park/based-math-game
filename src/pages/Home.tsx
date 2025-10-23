@@ -1,8 +1,14 @@
-import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
+import { useNavigate } from "react-router-dom";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import {
   Users,
   Trophy,
@@ -15,9 +21,9 @@ import {
   Binary,
   Hash,
   BookOpen,
-  Play
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
+  Play,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -25,57 +31,57 @@ export default function Home() {
   const features = [
     {
       icon: Gamepad2,
-      title: 'Singleplayer',
-      description: 'Practice at your own pace with 48 official game modes',
-      action: () => navigate('/singleplayer'),
-      iconBg: 'bg-primary',
+      title: "Singleplayer",
+      description: "Practice at your own pace with 48 official game modes",
+      action: () => navigate("/singleplayer"),
+      iconBg: "bg-primary",
     },
     {
       icon: Users,
-      title: 'Multiplayer',
-      description: 'Compete with friends in real-time challenges',
-      action: () => navigate('/multiplayer'),
-      iconBg: 'bg-chart-1',
+      title: "Multiplayer",
+      description: "Compete with friends in real-time challenges",
+      action: () => navigate("/multiplayer"),
+      iconBg: "bg-chart-1",
     },
     {
       icon: Trophy,
-      title: 'Leaderboard',
-      description: 'See top scores and compete for the #1 spot',
-      action: () => navigate('/leaderboard'),
-      iconBg: 'bg-chart-3',
+      title: "Leaderboard",
+      description: "See top scores and compete for the #1 spot",
+      action: () => navigate("/leaderboard"),
+      iconBg: "bg-chart-3",
     },
     {
       icon: BarChart3,
-      title: 'Your Stats',
-      description: 'Track your progress and performance over time',
-      action: () => navigate('/stats'),
-      iconBg: 'bg-chart-2',
+      title: "Your Stats",
+      description: "Track your progress and performance over time",
+      action: () => navigate("/stats"),
+      iconBg: "bg-chart-2",
     },
   ];
 
   const highlights = [
     {
       icon: Target,
-      title: '48 Official Modes',
-      description: 'Carefully designed challenges from beginner to expert',
+      title: "48 Official Modes",
+      description: "Carefully designed challenges from beginner to expert",
     },
     {
       icon: Zap,
-      title: 'Instant Feedback',
-      description: 'Real-time validation on every answer',
+      title: "Instant Feedback",
+      description: "Real-time validation on every answer",
     },
     {
       icon: TrendingUp,
-      title: 'Track Progress',
-      description: 'Detailed statistics and game history',
+      title: "Track Progress",
+      description: "Detailed statistics and game history",
     },
   ];
 
   const bases = [
-    { name: 'Binary', base: '2', example: '1010', color: 'text-primary' },
-    { name: 'Octal', base: '8', example: '12', color: 'text-chart-2' },
-    { name: 'Decimal', base: '10', example: '10', color: 'text-chart-3' },
-    { name: 'Hexadecimal', base: '16', example: 'A', color: 'text-chart-4' },
+    { name: "Binary", base: "2", example: "1010", color: "text-primary" },
+    { name: "Octal", base: "8", example: "12", color: "text-chart-2" },
+    { name: "Decimal", base: "10", example: "10", color: "text-chart-3" },
+    { name: "Hexadecimal", base: "16", example: "A", color: "text-chart-4" },
   ];
 
   return (
@@ -89,7 +95,10 @@ export default function Home() {
           <div className="max-w-4xl mx-auto text-center space-y-8">
             {/* Badge */}
             <div className="animate-in">
-              <Badge variant="secondary" className="px-4 py-2 text-sm font-medium">
+              <Badge
+                variant="secondary"
+                className="px-4 py-2 text-sm font-medium"
+              >
                 Master Base Conversions
               </Badge>
             </div>
@@ -101,7 +110,9 @@ export default function Home() {
 
             {/* Subtitle */}
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              Master base conversions through interactive challenges. Convert between Binary, Octal, Decimal, and Hexadecimal at lightning speed.
+              Master base conversions through interactive challenges. Convert
+              between Binary, Octal, Decimal, and Hexadecimal at lightning
+              speed.
             </p>
 
             {/* Base Examples */}
@@ -125,7 +136,7 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
               <Button
                 size="lg"
-                onClick={() => navigate('/singleplayer')}
+                onClick={() => navigate("/singleplayer")}
                 className="text-base px-8 h-12"
               >
                 <Play className="mr-2 h-5 w-5" />
@@ -134,7 +145,7 @@ export default function Home() {
               <Button
                 size="lg"
                 variant="outline"
-                onClick={() => navigate('/tutorials')}
+                onClick={() => navigate("/tutorials")}
                 className="text-base px-8 h-12"
               >
                 <BookOpen className="mr-2 h-5 w-5" />
@@ -166,10 +177,12 @@ export default function Home() {
                 onClick={feature.action}
               >
                 <CardHeader className="space-y-4">
-                  <div className={cn(
-                    "w-12 h-12 rounded-lg flex items-center justify-center",
-                    feature.iconBg
-                  )}>
+                  <div
+                    className={cn(
+                      "w-12 h-12 rounded-lg flex items-center justify-center",
+                      feature.iconBg,
+                    )}
+                  >
                     <Icon className="h-6 w-6 text-white" />
                   </div>
                   <div className="space-y-2">
@@ -238,7 +251,7 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
             <Button
               size="lg"
-              onClick={() => navigate('/singleplayer')}
+              onClick={() => navigate("/singleplayer")}
               className="text-base px-8 h-12"
             >
               <Gamepad2 className="mr-2 h-5 w-5" />
@@ -247,7 +260,7 @@ export default function Home() {
             <Button
               size="lg"
               variant="outline"
-              onClick={() => navigate('/how-to-play')}
+              onClick={() => navigate("/how-to-play")}
               className="text-base px-8 h-12"
             >
               <Hash className="mr-2 h-5 w-5" />
@@ -259,4 +272,3 @@ export default function Home() {
     </div>
   );
 }
-

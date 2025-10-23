@@ -19,7 +19,7 @@ class Analytics {
   /**
    * Track a game event
    */
-  trackEvent(event: Omit<GameEvent, 'timestamp'>) {
+  trackEvent(event: Omit<GameEvent, "timestamp">) {
     const fullEvent: GameEvent = {
       ...event,
       timestamp: Date.now(),
@@ -29,7 +29,7 @@ class Analytics {
 
     // Log to console in development
     if (import.meta.env.DEV) {
-      console.log('[Analytics]', fullEvent);
+      console.log("[Analytics]", fullEvent);
     }
 
     // In production, send to analytics service
@@ -43,7 +43,7 @@ class Analytics {
    */
   trackGameStart(gameModeId: string, userId?: string) {
     this.trackEvent({
-      eventName: 'game_start',
+      eventName: "game_start",
       gameModeId,
       userId,
       metadata: { timestamp: new Date().toISOString() },
@@ -53,15 +53,20 @@ class Analytics {
   /**
    * Track game completion
    */
-  trackGameComplete(gameModeId: string, score: number, duration: number, userId?: string) {
+  trackGameComplete(
+    gameModeId: string,
+    score: number,
+    duration: number,
+    userId?: string,
+  ) {
     this.trackEvent({
-      eventName: 'game_complete',
+      eventName: "game_complete",
       gameModeId,
       score,
       duration,
       userId,
       metadata: {
-        questionsPerSecond: duration > 0 ? (score / duration).toFixed(2) : '0',
+        questionsPerSecond: duration > 0 ? (score / duration).toFixed(2) : "0",
       },
     });
   }
@@ -71,7 +76,7 @@ class Analytics {
    */
   trackRoomCreated(gameModeId: string, userId?: string) {
     this.trackEvent({
-      eventName: 'room_created',
+      eventName: "room_created",
       gameModeId,
       userId,
     });
@@ -82,7 +87,7 @@ class Analytics {
    */
   trackRoomJoined(gameModeId: string, userId?: string) {
     this.trackEvent({
-      eventName: 'room_joined',
+      eventName: "room_joined",
       gameModeId,
       userId,
     });
@@ -91,9 +96,13 @@ class Analytics {
   /**
    * Track multiplayer game start
    */
-  trackMultiplayerGameStart(gameModeId: string, playerCount: number, userId?: string) {
+  trackMultiplayerGameStart(
+    gameModeId: string,
+    playerCount: number,
+    userId?: string,
+  ) {
     this.trackEvent({
-      eventName: 'multiplayer_game_start',
+      eventName: "multiplayer_game_start",
       gameModeId,
       userId,
       metadata: { playerCount },
@@ -105,7 +114,7 @@ class Analytics {
    */
   trackError(errorName: string, errorMessage: string, userId?: string) {
     this.trackEvent({
-      eventName: 'error',
+      eventName: "error",
       userId,
       metadata: {
         errorName,
@@ -118,9 +127,9 @@ class Analytics {
   /**
    * Track user authentication
    */
-  trackUserAuth(authType: 'guest' | 'email' | 'google', userId?: string) {
+  trackUserAuth(authType: "guest" | "email" | "google", userId?: string) {
     this.trackEvent({
-      eventName: 'user_auth',
+      eventName: "user_auth",
       userId,
       metadata: { authType },
     });
@@ -132,7 +141,7 @@ class Analytics {
   private sendToAnalytics(event: GameEvent) {
     // TODO: Implement actual analytics service integration
     // Examples: Google Analytics, Mixpanel, Firebase Analytics, etc.
-    console.log('[Analytics - Production]', event);
+    console.log("[Analytics - Production]", event);
   }
 
   /**
@@ -152,4 +161,3 @@ class Analytics {
 
 // Export singleton instance
 export const analytics = new Analytics();
-

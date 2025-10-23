@@ -33,132 +33,135 @@ import MultiplayerResults from "./pages/MultiplayerResults";
 import "./index.css";
 
 const router = createBrowserRouter([
-    {
+  {
+    path: "/",
+    element: <Layout />,
+    errorElement: <Error />,
+    children: [
+      {
         path: "/",
-        element: <Layout />,
-        errorElement: <Error />,
+        element: <Home />,
+      },
+      {
+        path: "/singleplayer",
+        element: <SingleplayerMode />,
+      },
+      {
+        path: "/settings",
+        element: <Settings />,
+      },
+      {
+        path: "/quiz",
+        element: <Quiz />,
+      },
+      {
+        path: "/results",
+        element: <Results />,
+      },
+      {
+        path: "/leaderboard",
+        element: <Leaderboard />,
+      },
+      {
+        path: "/stats",
+        element: <Stats />,
+      },
+      {
+        path: "/profile",
+        element: <ProfileLayout />,
         children: [
-            {
-                path: "/",
-                element: <Home />,
-            },
-            {
-                path: "/singleplayer",
-                element: <SingleplayerMode />,
-            },
-            {
-                path: "/settings",
-                element: <Settings />,
-            },
-            {
-                path: "/quiz",
-                element: <Quiz />,
-            },
-            {
-                path: "/results",
-                element: <Results />,
-            },
-            {
-                path: "/leaderboard",
-                element: <Leaderboard />,
-            },
-            {
-                path: "/stats",
-                element: <Stats />,
-            },
-            {
-                path: "/profile",
-                element: <ProfileLayout />,
-                children: [
-                    {
-                        path: "",
-                        element: <ProfileOverview />,
-                    },
-                    {
-                        path: "settings",
-                        element: <ProfileSettings />,
-                    },
-                    {
-                        path: "game-settings",
-                        element: <ProfileGameSettings />,
-                    },
-                ],
-            },
-            {
-                path: "/login",
-                element: <Login />,
-            },
-            {
-                path: "/signup",
-                element: <Signup />,
-            },
-            {
-                path: "/how-to-play",
-                element: <Usage />,
-            },
-            {
-                path: "/tutorials",
-                element: <Tutorials />,
-            },
-            {
-                path: "/about",
-                element: <About />,
-            },
-            {
-                path: "/privacy",
-                element: <Privacy />,
-            },
-            {
-                path: "/terms",
-                element: <Terms />,
-            },
-            {
-                path: "/multiplayer",
-                element: <MultiplayerHome />,
-            },
-            {
-                path: "/multiplayer/create",
-                element: <CreateRoom />,
-            },
-            {
-                path: "/multiplayer/join",
-                element: <JoinRoom />,
-            },
-            {
-                path: "/multiplayer/lobby/:roomId",
-                element: <RoomLobby />,
-            },
-            {
-                path: "/multiplayer/game/:roomId",
-                element: <MultiplayerGame />,
-            },
-            {
-                path: "/multiplayer/results/:roomId",
-                element: <MultiplayerResults />,
-            },
+          {
+            path: "",
+            element: <ProfileOverview />,
+          },
+          {
+            path: "settings",
+            element: <ProfileSettings />,
+          },
+          {
+            path: "game-settings",
+            element: <ProfileGameSettings />,
+          },
         ],
-    },
+      },
+      {
+        path: "/login",
+        element: <Login />,
+      },
+      {
+        path: "/signup",
+        element: <Signup />,
+      },
+      {
+        path: "/how-to-play",
+        element: <Usage />,
+      },
+      {
+        path: "/tutorials",
+        element: <Tutorials />,
+      },
+      {
+        path: "/about",
+        element: <About />,
+      },
+      {
+        path: "/privacy",
+        element: <Privacy />,
+      },
+      {
+        path: "/terms",
+        element: <Terms />,
+      },
+      {
+        path: "/multiplayer",
+        element: <MultiplayerHome />,
+      },
+      {
+        path: "/multiplayer/create",
+        element: <CreateRoom />,
+      },
+      {
+        path: "/multiplayer/join",
+        element: <JoinRoom />,
+      },
+      {
+        path: "/multiplayer/lobby/:roomId",
+        element: <RoomLobby />,
+      },
+      {
+        path: "/multiplayer/game/:roomId",
+        element: <MultiplayerGame />,
+      },
+      {
+        path: "/multiplayer/results/:roomId",
+        element: <MultiplayerResults />,
+      },
+    ],
+  },
 ]);
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
-    <React.StrictMode>
-        <ErrorBoundary>
-            <ThemeProvider>
-                <AuthProvider>
-                    <RouterProvider router={router} />
-                </AuthProvider>
-            </ThemeProvider>
-        </ErrorBoundary>
-    </React.StrictMode>
+  <React.StrictMode>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <AuthProvider>
+          <RouterProvider router={router} />
+        </AuthProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
+  </React.StrictMode>,
 );
 
 // Register service worker for offline support
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').then((registration) => {
-            console.log('Service Worker registered:', registration);
-        }).catch((error) => {
-            console.log('Service Worker registration failed:', error);
-        });
-    });
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+      .register("/sw.js")
+      .then((registration) => {
+        console.log("Service Worker registered:", registration);
+      })
+      .catch((error) => {
+        console.log("Service Worker registration failed:", error);
+      });
+  });
 }

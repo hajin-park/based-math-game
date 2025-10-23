@@ -1,5 +1,5 @@
-import { useNavigate } from 'react-router-dom';
-import { User, Settings, LogOut } from 'lucide-react';
+import { useNavigate } from "react-router-dom";
+import { User, Settings, LogOut } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -7,10 +7,10 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useAuth } from '@/contexts/AuthContext';
-import { getUserAvatarUrl } from '@/lib/avatarGenerator';
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuth } from "@/contexts/AuthContext";
+import { getUserAvatarUrl } from "@/lib/avatarGenerator";
 
 export default function ProfileDropdown() {
   const navigate = useNavigate();
@@ -18,15 +18,15 @@ export default function ProfileDropdown() {
 
   const handleSignOut = async () => {
     await signOut();
-    navigate('/');
+    navigate("/");
   };
 
   const getInitials = (name: string | null | undefined) => {
-    if (!name) return 'U';
+    if (!name) return "U";
     return name
-      .split(' ')
+      .split(" ")
       .map((n) => n[0])
-      .join('')
+      .join("")
       .toUpperCase()
       .slice(0, 2);
   };
@@ -35,7 +35,7 @@ export default function ProfileDropdown() {
     if (!user) return undefined;
 
     // Get photoURL or generate pixel art avatar
-    const photoURL = user && 'photoURL' in user ? user.photoURL : null;
+    const photoURL = user && "photoURL" in user ? user.photoURL : null;
     return getUserAvatarUrl({ photoURL }, user.uid);
   };
 
@@ -44,7 +44,10 @@ export default function ProfileDropdown() {
       <DropdownMenuTrigger asChild>
         <button className="rounded-full focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
           <Avatar className="h-9 w-9 cursor-pointer">
-            <AvatarImage src={getUserPhotoURL()} alt={user?.displayName || 'User'} />
+            <AvatarImage
+              src={getUserPhotoURL()}
+              alt={user?.displayName || "User"}
+            />
             <AvatarFallback className="bg-primary text-primary-foreground">
               {getInitials(user?.displayName)}
             </AvatarFallback>
@@ -54,23 +57,36 @@ export default function ProfileDropdown() {
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel>
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{user?.displayName || 'User'}</p>
-            {user && 'email' in user && user.email && (
-              <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+            <p className="text-sm font-medium leading-none">
+              {user?.displayName || "User"}
+            </p>
+            {user && "email" in user && user.email && (
+              <p className="text-xs leading-none text-muted-foreground">
+                {user.email}
+              </p>
             )}
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => navigate('/profile')} className="cursor-pointer">
+        <DropdownMenuItem
+          onClick={() => navigate("/profile")}
+          className="cursor-pointer"
+        >
           <User className="mr-2 h-4 w-4" />
           <span>View Profile</span>
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => navigate('/profile/settings')} className="cursor-pointer">
+        <DropdownMenuItem
+          onClick={() => navigate("/profile/settings")}
+          className="cursor-pointer"
+        >
           <Settings className="mr-2 h-4 w-4" />
           <span>Settings</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive focus:text-destructive">
+        <DropdownMenuItem
+          onClick={handleSignOut}
+          className="cursor-pointer text-destructive focus:text-destructive"
+        >
           <LogOut className="mr-2 h-4 w-4" />
           <span>Sign Out</span>
         </DropdownMenuItem>
@@ -78,4 +94,3 @@ export default function ProfileDropdown() {
     </DropdownMenu>
   );
 }
-

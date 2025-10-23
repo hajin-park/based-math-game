@@ -1,23 +1,39 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Button } from '@/components/ui/button';
-import { useAuth } from '@/contexts/AuthContext';
-import { Mail, Calendar, Hash, User, Shield, TrendingUp, Trophy, Target, ArrowRight } from 'lucide-react';
-import { getUserAvatarUrl } from '@/lib/avatarGenerator';
-import { useNavigate } from 'react-router-dom';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  Mail,
+  Calendar,
+  Hash,
+  User,
+  Shield,
+  TrendingUp,
+  Trophy,
+  Target,
+  ArrowRight,
+} from "lucide-react";
+import { getUserAvatarUrl } from "@/lib/avatarGenerator";
+import { useNavigate } from "react-router-dom";
 
 export default function ProfileOverview() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
   const getInitials = (name: string | null | undefined) => {
-    if (!name) return 'U';
+    if (!name) return "U";
     return name
-      .split(' ')
+      .split(" ")
       .map((n) => n[0])
-      .join('')
+      .join("")
       .toUpperCase()
       .slice(0, 2);
   };
@@ -26,24 +42,24 @@ export default function ProfileOverview() {
     if (!user) return undefined;
 
     // Get photoURL or generate pixel art avatar
-    const photoURL = user && 'photoURL' in user ? user.photoURL : null;
+    const photoURL = user && "photoURL" in user ? user.photoURL : null;
     return getUserAvatarUrl({ photoURL }, user.uid);
   };
 
   const formatDate = (timestamp: number | undefined) => {
-    if (!timestamp) return 'Unknown';
-    return new Date(timestamp).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
+    if (!timestamp) return "Unknown";
+    return new Date(timestamp).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   };
 
   const getCreatedAt = () => {
-    if (user && 'metadata' in user && user.metadata?.creationTime) {
+    if (user && "metadata" in user && user.metadata?.creationTime) {
       return new Date(user.metadata.creationTime).getTime();
     }
-    if (user && 'createdAt' in user) {
+    if (user && "createdAt" in user) {
       return user.createdAt;
     }
     return undefined;
@@ -77,14 +93,17 @@ export default function ProfileOverview() {
           {/* Avatar and Name */}
           <div className="flex items-center gap-6 p-6 rounded-lg bg-gradient-to-r from-primary/10 to-accent/10 border-2 border-primary/20">
             <Avatar className="h-24 w-24 border-4 border-primary/30 shadow-lg">
-              <AvatarImage src={getUserPhotoURL()} alt={user?.displayName || 'User'} />
+              <AvatarImage
+                src={getUserPhotoURL()}
+                alt={user?.displayName || "User"}
+              />
               <AvatarFallback className="bg-primary text-primary-foreground text-3xl font-bold">
                 {getInitials(user?.displayName)}
               </AvatarFallback>
             </Avatar>
             <div className="space-y-2">
               <h3 className="text-2xl font-bold gradient-text">
-                {user?.displayName || 'User'}
+                {user?.displayName || "User"}
               </h3>
               <Badge className="bg-success text-success-foreground">
                 <Shield className="h-3 w-3 mr-1" />
@@ -98,7 +117,7 @@ export default function ProfileOverview() {
           {/* Details */}
           <div className="grid gap-6 md:grid-cols-2">
             {/* Email */}
-            {user && 'email' in user && user.email && (
+            {user && "email" in user && user.email && (
               <Card className="border-2">
                 <CardContent className="pt-6">
                   <div className="flex items-start gap-3">
@@ -106,8 +125,12 @@ export default function ProfileOverview() {
                       <Mail className="h-5 w-5 text-primary" />
                     </div>
                     <div className="space-y-1">
-                      <p className="text-xs font-medium text-muted-foreground">Email Address</p>
-                      <p className="text-sm font-medium break-all">{user.email}</p>
+                      <p className="text-xs font-medium text-muted-foreground">
+                        Email Address
+                      </p>
+                      <p className="text-sm font-medium break-all">
+                        {user.email}
+                      </p>
                     </div>
                   </div>
                 </CardContent>
@@ -122,7 +145,9 @@ export default function ProfileOverview() {
                     <Hash className="h-5 w-5 text-primary" />
                   </div>
                   <div className="space-y-1">
-                    <p className="text-xs font-medium text-muted-foreground">User ID</p>
+                    <p className="text-xs font-medium text-muted-foreground">
+                      User ID
+                    </p>
                     <p className="font-mono text-xs break-all">{user?.uid}</p>
                   </div>
                 </div>
@@ -137,8 +162,12 @@ export default function ProfileOverview() {
                     <Calendar className="h-5 w-5 text-primary" />
                   </div>
                   <div className="space-y-1">
-                    <p className="text-xs font-medium text-muted-foreground">Account Created</p>
-                    <p className="text-sm font-medium">{formatDate(getCreatedAt())}</p>
+                    <p className="text-xs font-medium text-muted-foreground">
+                      Account Created
+                    </p>
+                    <p className="text-sm font-medium">
+                      {formatDate(getCreatedAt())}
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -168,7 +197,9 @@ export default function ProfileOverview() {
                   </div>
                 </div>
                 <p className="text-3xl font-bold gradient-text">-</p>
-                <p className="text-sm font-medium text-muted-foreground">Games Played</p>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Games Played
+                </p>
               </CardContent>
             </Card>
             <Card className="border-2">
@@ -179,7 +210,9 @@ export default function ProfileOverview() {
                   </div>
                 </div>
                 <p className="text-3xl font-bold text-success">-</p>
-                <p className="text-sm font-medium text-muted-foreground">High Score</p>
+                <p className="text-sm font-medium text-muted-foreground">
+                  High Score
+                </p>
               </CardContent>
             </Card>
             <Card className="border-2">
@@ -190,7 +223,9 @@ export default function ProfileOverview() {
                   </div>
                 </div>
                 <p className="text-3xl font-bold gradient-text">-</p>
-                <p className="text-sm font-medium text-muted-foreground">Average Score</p>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Average Score
+                </p>
               </CardContent>
             </Card>
           </div>
@@ -204,7 +239,7 @@ export default function ProfileOverview() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => navigate('/stats')}
+              onClick={() => navigate("/stats")}
               className="gap-2"
             >
               View Stats
@@ -216,4 +251,3 @@ export default function ProfileOverview() {
     </div>
   );
 }
-

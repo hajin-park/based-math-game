@@ -1,7 +1,15 @@
-import { useState, useCallback } from 'react';
-import { ref, push, onValue, off, query, orderByChild, limitToLast } from 'firebase/database';
-import { database } from '@/firebase/config';
-import { useAuth } from '@/contexts/AuthContext';
+import { useState, useCallback } from "react";
+import {
+  ref,
+  push,
+  onValue,
+  off,
+  query,
+  orderByChild,
+  limitToLast,
+} from "firebase/database";
+import { database } from "@/firebase/config";
+import { useAuth } from "@/contexts/AuthContext";
 
 export interface ChatMessage {
   id: string;
@@ -23,37 +31,45 @@ export function useChat() {
       try {
         const chatRef = ref(database, `rooms/${roomId}/chat`);
 
-        const chatMessage: Omit<ChatMessage, 'id'> = {
+        const chatMessage: Omit<ChatMessage, "id"> = {
           senderId: user.uid,
-          displayName: user.displayName || 'Guest',
+          displayName: user.displayName || "Guest",
           message: message.trim(),
           timestamp: Date.now(),
         };
 
         await push(chatRef, chatMessage);
       } catch (error) {
-        console.error('Error sending message:', error);
+        console.error("Error sending message:", error);
         throw error;
       } finally {
         setLoading(false);
       }
     },
-    [user]
+    [user],
   );
 
   const subscribeToMessages = useCallback(
-    (roomId: string, callback: (messages: ChatMessage[]) => void, messageLimit: number = 50) => {
+    (
+      roomId: string,
+      callback: (messages: ChatMessage[]) => void,
+      messageLimit: number = 50,
+    ) => {
       const chatRef = ref(database, `rooms/${roomId}/chat`);
-      const chatQuery = query(chatRef, orderByChild('timestamp'), limitToLast(messageLimit));
+      const chatQuery = query(
+        chatRef,
+        orderByChild("timestamp"),
+        limitToLast(messageLimit),
+      );
 
       const listener = onValue(chatQuery, (snapshot) => {
         const messages: ChatMessage[] = [];
-        
+
         snapshot.forEach((childSnapshot) => {
           const messageData = childSnapshot.val();
-          if (messageData && typeof messageData === 'object') {
+          if (messageData && typeof messageData === "object") {
             messages.push({
-              id: childSnapshot.key || '',
+              id: childSnapshot.key || "",
               ...messageData,
             });
           }
@@ -64,9 +80,9 @@ export function useChat() {
         callback(messages);
       });
 
-      return () => off(chatQuery, 'value', listener);
+      return () => off(chatQuery, "value", listener);
     },
-    []
+    [],
   );
 
   return {
@@ -75,4 +91,3 @@ export function useChat() {
     subscribeToMessages,
   };
 }
-

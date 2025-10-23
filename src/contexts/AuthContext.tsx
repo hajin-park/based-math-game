@@ -1,4 +1,10 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from "react";
 import {
   User,
   signInWithEmailAndPassword,
@@ -9,11 +15,18 @@ import {
   signOut as firebaseSignOut,
   updateProfile,
   deleteUser,
-} from 'firebase/auth';
-import { ref, onValue, set, onDisconnect, serverTimestamp, remove } from 'firebase/database';
-import { doc, setDoc, deleteDoc, getDoc } from 'firebase/firestore';
-import { auth, database, firestore } from '@/firebase/config';
-import { validateDisplayName } from '@/utils/displayNameValidator';
+} from "firebase/auth";
+import {
+  ref,
+  onValue,
+  set,
+  onDisconnect,
+  serverTimestamp,
+  remove,
+} from "firebase/database";
+import { doc, setDoc, deleteDoc, getDoc } from "firebase/firestore";
+import { auth, database, firestore } from "@/firebase/config";
+import { validateDisplayName } from "@/utils/displayNameValidator";
 
 // Guest user interface for database-only guests
 interface GuestUser {
@@ -32,7 +45,11 @@ interface AuthContextType {
   isGuest: boolean;
   signInAsGuest: () => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<void>;
-  signUpWithEmail: (email: string, password: string, displayName: string) => Promise<void>;
+  signUpWithEmail: (
+    email: string,
+    password: string,
+    displayName: string,
+  ) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
   updateDisplayName: (displayName: string) => Promise<void>;
@@ -44,7 +61,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
+    throw new Error("useAuth must be used within AuthProvider");
   }
   return context;
 }
@@ -55,7 +72,7 @@ interface AuthProviderProps {
 
 // Helper to check if user is a guest
 function isGuestUser(user: AppUser | null): user is GuestUser {
-  return user !== null && 'isGuest' in user && user.isGuest === true;
+  return user !== null && "isGuest" in user && user.isGuest === true;
 }
 
 // Helper to generate guest ID
@@ -66,14 +83,56 @@ function generateGuestId(): string {
 // Helper to generate random display name
 function generateRandomDisplayName(): string {
   const adjectives = [
-    'Swift', 'Clever', 'Bright', 'Quick', 'Sharp', 'Smart', 'Wise', 'Bold',
-    'Brave', 'Cool', 'Epic', 'Fast', 'Keen', 'Nimble', 'Rapid', 'Sleek',
-    'Stellar', 'Super', 'Turbo', 'Ultra', 'Vivid', 'Witty', 'Zesty', 'Agile'
+    "Swift",
+    "Clever",
+    "Bright",
+    "Quick",
+    "Sharp",
+    "Smart",
+    "Wise",
+    "Bold",
+    "Brave",
+    "Cool",
+    "Epic",
+    "Fast",
+    "Keen",
+    "Nimble",
+    "Rapid",
+    "Sleek",
+    "Stellar",
+    "Super",
+    "Turbo",
+    "Ultra",
+    "Vivid",
+    "Witty",
+    "Zesty",
+    "Agile",
   ];
   const nouns = [
-    'Coder', 'Hacker', 'Ninja', 'Wizard', 'Master', 'Guru', 'Pro', 'Ace',
-    'Champion', 'Expert', 'Genius', 'Hero', 'Legend', 'Maven', 'Sage', 'Star',
-    'Tiger', 'Wolf', 'Eagle', 'Falcon', 'Phoenix', 'Dragon', 'Lion', 'Bear'
+    "Coder",
+    "Hacker",
+    "Ninja",
+    "Wizard",
+    "Master",
+    "Guru",
+    "Pro",
+    "Ace",
+    "Champion",
+    "Expert",
+    "Genius",
+    "Hero",
+    "Legend",
+    "Maven",
+    "Sage",
+    "Star",
+    "Tiger",
+    "Wolf",
+    "Eagle",
+    "Falcon",
+    "Phoenix",
+    "Dragon",
+    "Lion",
+    "Bear",
   ];
 
   const adjective = adjectives[Math.floor(Math.random() * adjectives.length)];
@@ -92,11 +151,11 @@ function setCookie(name: string, value: string, days: number) {
 
 // Helper to get cookie
 function getCookie(name: string): string | null {
-  const nameEQ = name + '=';
-  const ca = document.cookie.split(';');
+  const nameEQ = name + "=";
+  const ca = document.cookie.split(";");
   for (let i = 0; i < ca.length; i++) {
     let c = ca[i];
-    while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+    while (c.charAt(0) === " ") c = c.substring(1, c.length);
     if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
   }
   return null;
@@ -110,18 +169,24 @@ function deleteCookie(name: string) {
 // Helper to get or create guest user from cookies/localStorage
 function getOrCreateGuestUser(): GuestUser {
   // Try cookie first (persists across sessions)
-  const cookieData = getCookie('guestUser');
+  const cookieData = getCookie("guestUser");
   if (cookieData) {
     try {
       const parsed = JSON.parse(decodeURIComponent(cookieData));
       // Validate it's a valid guest user and not expired
       if (parsed.uid && parsed.isGuest && parsed.createdAt) {
-        const daysSinceCreation = (Date.now() - parsed.createdAt) / (1000 * 60 * 60 * 24);
-        if (daysSinceCreation < 30) { // 30 day expiration
+        const daysSinceCreation =
+          (Date.now() - parsed.createdAt) / (1000 * 60 * 60 * 24);
+        if (daysSinceCreation < 30) {
+          // 30 day expiration
           // Update cookie expiration
-          setCookie('guestUser', encodeURIComponent(JSON.stringify(parsed)), 30);
+          setCookie(
+            "guestUser",
+            encodeURIComponent(JSON.stringify(parsed)),
+            30,
+          );
           // Also store in localStorage for quick access
-          localStorage.setItem('guestUser', JSON.stringify(parsed));
+          localStorage.setItem("guestUser", JSON.stringify(parsed));
           return parsed;
         }
       }
@@ -131,16 +196,22 @@ function getOrCreateGuestUser(): GuestUser {
   }
 
   // Try localStorage as fallback
-  const stored = localStorage.getItem('guestUser');
+  const stored = localStorage.getItem("guestUser");
   if (stored) {
     try {
       const parsed = JSON.parse(stored);
       // Validate it's a valid guest user and not expired
       if (parsed.uid && parsed.isGuest && parsed.createdAt) {
-        const daysSinceCreation = (Date.now() - parsed.createdAt) / (1000 * 60 * 60 * 24);
-        if (daysSinceCreation < 30) { // 30 day expiration
+        const daysSinceCreation =
+          (Date.now() - parsed.createdAt) / (1000 * 60 * 60 * 24);
+        if (daysSinceCreation < 30) {
+          // 30 day expiration
           // Store in cookie for persistence
-          setCookie('guestUser', encodeURIComponent(JSON.stringify(parsed)), 30);
+          setCookie(
+            "guestUser",
+            encodeURIComponent(JSON.stringify(parsed)),
+            30,
+          );
           return parsed;
         }
       }
@@ -152,14 +223,14 @@ function getOrCreateGuestUser(): GuestUser {
   // Create new guest user
   const guestUser: GuestUser = {
     uid: generateGuestId(),
-    displayName: 'Guest',
+    displayName: "Guest",
     isGuest: true,
     createdAt: Date.now(),
   };
 
   // Store in both localStorage and cookie
-  localStorage.setItem('guestUser', JSON.stringify(guestUser));
-  setCookie('guestUser', encodeURIComponent(JSON.stringify(guestUser)), 30);
+  localStorage.setItem("guestUser", JSON.stringify(guestUser));
+  setCookie("guestUser", encodeURIComponent(JSON.stringify(guestUser)), 30);
 
   return guestUser;
 }
@@ -175,7 +246,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     const presenceRef = ref(database, `presence/${user.uid}`);
     const userRef = ref(database, `users/${user.uid}`);
-    const connectedRef = ref(database, '.info/connected');
+    const connectedRef = ref(database, ".info/connected");
 
     const unsubscribe = onValue(connectedRef, async (snapshot) => {
       if (snapshot.val() === true) {
@@ -183,13 +254,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
         if (isGuestUser(user)) {
           const userData = {
             uid: user.uid,
-            displayName: user.displayName || 'Guest',
+            displayName: user.displayName || "Guest",
             isGuest: true,
             lastSeen: serverTimestamp(),
           };
 
           set(userRef, userData).catch((error) => {
-            console.error('Error setting guest user data:', error);
+            console.error("Error setting guest user data:", error);
           });
 
           // Set presence
@@ -198,42 +269,53 @@ export function AuthProvider({ children }: AuthProviderProps) {
             online: true,
             lastSeen: serverTimestamp(),
           }).catch((error) => {
-            console.error('Error setting guest presence:', error);
+            console.error("Error setting guest presence:", error);
           });
 
           // Set up disconnect handler to mark data for TTL cleanup
           // When guest disconnects, set expiration timestamp (1 day from disconnect)
-          const expirationTime = Date.now() + (24 * 60 * 60 * 1000); // 1 day in milliseconds
+          const expirationTime = Date.now() + 24 * 60 * 60 * 1000; // 1 day in milliseconds
 
-          onDisconnect(userRef).update({
-            online: false,
-            lastSeen: serverTimestamp(),
-            expiresAt: expirationTime,
-          }).catch((error) => {
-            console.error('Error setting guest disconnect handler:', error);
-          });
+          onDisconnect(userRef)
+            .update({
+              online: false,
+              lastSeen: serverTimestamp(),
+              expiresAt: expirationTime,
+            })
+            .catch((error) => {
+              console.error("Error setting guest disconnect handler:", error);
+            });
 
-          onDisconnect(presenceRef).update({
-            online: false,
-            lastSeen: serverTimestamp(),
-            expiresAt: expirationTime,
-          }).catch((error) => {
-            console.error('Error setting guest presence disconnect handler:', error);
-          });
+          onDisconnect(presenceRef)
+            .update({
+              online: false,
+              lastSeen: serverTimestamp(),
+              expiresAt: expirationTime,
+            })
+            .catch((error) => {
+              console.error(
+                "Error setting guest presence disconnect handler:",
+                error,
+              );
+            });
         } else {
           // For authenticated users: Store profile in Firestore (persistent)
           const userProfileRef = doc(firestore, `users/${user.uid}`);
           try {
-            await setDoc(userProfileRef, {
-              uid: user.uid,
-              displayName: user.displayName || 'User',
-              email: user.email || null,
-              photoURL: user.photoURL || null,
-              createdAt: Date.now(),
-              lastSeen: Date.now(),
-            }, { merge: true });
+            await setDoc(
+              userProfileRef,
+              {
+                uid: user.uid,
+                displayName: user.displayName || "User",
+                email: user.email || null,
+                photoURL: user.photoURL || null,
+                createdAt: Date.now(),
+                lastSeen: Date.now(),
+              },
+              { merge: true },
+            );
           } catch (error) {
-            console.error('Error setting user profile in Firestore:', error);
+            console.error("Error setting user profile in Firestore:", error);
           }
 
           // Set presence in RTDB (ephemeral)
@@ -242,17 +324,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
             online: true,
             lastSeen: serverTimestamp(),
           }).catch((error) => {
-            console.error('Error setting authenticated user presence:', error);
+            console.error("Error setting authenticated user presence:", error);
           });
 
           // Set offline status on disconnect
-          onDisconnect(presenceRef).set({
-            uid: user.uid,
-            online: false,
-            lastSeen: serverTimestamp(),
-          }).catch((error) => {
-            console.error('Error setting onDisconnect for authenticated user presence:', error);
-          });
+          onDisconnect(presenceRef)
+            .set({
+              uid: user.uid,
+              online: false,
+              lastSeen: serverTimestamp(),
+            })
+            .catch((error) => {
+              console.error(
+                "Error setting onDisconnect for authenticated user presence:",
+                error,
+              );
+            });
         }
       }
     });
@@ -268,7 +355,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setUser(firebaseUser);
         setIsGuest(false);
         // Clear any guest user from localStorage
-        localStorage.removeItem('guestUser');
+        localStorage.removeItem("guestUser");
       } else {
         // No authenticated user, use guest
         const guestUser = getOrCreateGuestUser();
@@ -292,7 +379,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setUser(guestUser);
       setIsGuest(true);
     } catch (error) {
-      console.error('Error signing in as guest:', error);
+      console.error("Error signing in as guest:", error);
       throw error;
     }
   };
@@ -302,12 +389,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
       await signInWithEmailAndPassword(auth, email, password);
       // Firebase auth state listener will handle setting the user
     } catch (error) {
-      console.error('Error signing in with email:', error);
+      console.error("Error signing in with email:", error);
       throw error;
     }
   };
 
-  const signUpWithEmail = async (email: string, password: string, displayName: string) => {
+  const signUpWithEmail = async (
+    email: string,
+    password: string,
+    displayName: string,
+  ) => {
     // Validate display name
     const validation = validateDisplayName(displayName);
     if (!validation.isValid) {
@@ -315,11 +406,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
 
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password,
+      );
       await updateProfile(userCredential.user, { displayName });
       // Firebase auth state listener will handle setting the user
     } catch (error) {
-      console.error('Error signing up with email:', error);
+      console.error("Error signing up with email:", error);
       throw error;
     }
   };
@@ -339,7 +434,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const randomDisplayName = generateRandomDisplayName();
         await updateProfile(user, {
           displayName: randomDisplayName,
-          photoURL: null // Clear Google profile picture
+          photoURL: null, // Clear Google profile picture
         });
 
         // Create user profile in Firestore with generated avatar
@@ -355,7 +450,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       // Firebase auth state listener will handle setting the user
     } catch (error) {
-      console.error('Error signing in with Google:', error);
+      console.error("Error signing in with Google:", error);
       throw error;
     }
   };
@@ -366,20 +461,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
         await firebaseSignOut(auth);
       }
       // Clear guest user data and create new one
-      localStorage.removeItem('guestUser');
-      deleteCookie('guestUser');
+      localStorage.removeItem("guestUser");
+      deleteCookie("guestUser");
       const guestUser = getOrCreateGuestUser();
       setUser(guestUser);
       setIsGuest(true);
     } catch (error) {
-      console.error('Error signing out:', error);
+      console.error("Error signing out:", error);
       throw error;
     }
   };
 
   const updateDisplayName = async (displayName: string) => {
     if (!user) {
-      throw new Error('Must be signed in to update display name');
+      throw new Error("Must be signed in to update display name");
     }
 
     // Validate display name
@@ -392,8 +487,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (isGuestUser(user)) {
         // Update guest user in localStorage, cookie, and state
         const updatedGuest: GuestUser = { ...user, displayName };
-        localStorage.setItem('guestUser', JSON.stringify(updatedGuest));
-        setCookie('guestUser', encodeURIComponent(JSON.stringify(updatedGuest)), 30);
+        localStorage.setItem("guestUser", JSON.stringify(updatedGuest));
+        setCookie(
+          "guestUser",
+          encodeURIComponent(JSON.stringify(updatedGuest)),
+          30,
+        );
         setUser(updatedGuest);
 
         // Update in database
@@ -410,14 +509,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
         // Update user profile in Firestore
         const userProfileRef = doc(firestore, `users/${user.uid}`);
-        await setDoc(userProfileRef, {
-          displayName,
-          lastSeen: Date.now(),
-        }, { merge: true });
+        await setDoc(
+          userProfileRef,
+          {
+            displayName,
+            lastSeen: Date.now(),
+          },
+          { merge: true },
+        );
 
         // Update all leaderboard entries for this user
         // Query all leaderboard collections and update displayName
-        const { writeBatch } = await import('firebase/firestore');
+        const { writeBatch } = await import("firebase/firestore");
         const batch = writeBatch(firestore);
 
         // Get all leaderboard collections (they follow pattern: leaderboard-{gameModeId})
@@ -425,19 +528,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
         // Since we can't query across collections, we'll use a different approach:
         // Update the user's stats document which is used as source of truth
         const userStatsRef = doc(firestore, `userStats/${user.uid}`);
-        await setDoc(userStatsRef, {
-          displayName,
-        }, { merge: true });
+        await setDoc(
+          userStatsRef,
+          {
+            displayName,
+          },
+          { merge: true },
+        );
 
         // For leaderboards, we need to update each game mode's leaderboard entry
         // We'll do this by querying for documents with this user's ID
         // Since leaderboard entries use userId as document ID, we can directly update them
         // However, we don't know which game modes the user has entries in
         // So we'll use a batch update approach with known game modes
-        const { OFFICIAL_GAME_MODES } = await import('@/types/gameMode');
+        const { OFFICIAL_GAME_MODES } = await import("@/types/gameMode");
 
         for (const mode of OFFICIAL_GAME_MODES) {
-          const leaderboardEntryRef = doc(firestore, `leaderboard-${mode.id}`, user.uid);
+          const leaderboardEntryRef = doc(
+            firestore,
+            `leaderboard-${mode.id}`,
+            user.uid,
+          );
           // Check if entry exists before updating
           const entrySnapshot = await getDoc(leaderboardEntryRef);
           if (entrySnapshot.exists()) {
@@ -451,20 +562,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setUser({ ...user, displayName });
       }
     } catch (error) {
-      console.error('Error updating display name:', error);
+      console.error("Error updating display name:", error);
       throw error;
     }
   };
 
   const deleteAccount = async () => {
     if (!user) {
-      throw new Error('Must be signed in to delete account');
+      throw new Error("Must be signed in to delete account");
     }
 
     try {
       if (isGuestUser(user)) {
         // Guest users can't delete accounts (they're temporary)
-        throw new Error('Guest accounts cannot be deleted');
+        throw new Error("Guest accounts cannot be deleted");
       }
 
       // Delete user data from Firestore (persistent data)
@@ -472,11 +583,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const userStatsRef = doc(firestore, `userStats/${user.uid}`);
 
       await deleteDoc(userProfileRef).catch((error) => {
-        console.error('Error deleting user profile from Firestore:', error);
+        console.error("Error deleting user profile from Firestore:", error);
       });
 
       await deleteDoc(userStatsRef).catch((error) => {
-        console.error('Error deleting user stats from Firestore:', error);
+        console.error("Error deleting user stats from Firestore:", error);
       });
 
       // Delete presence from RTDB (ephemeral data)
@@ -489,12 +600,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
 
       // Clear state and create new guest user
-      localStorage.removeItem('guestUser');
+      localStorage.removeItem("guestUser");
       const guestUser = getOrCreateGuestUser();
       setUser(guestUser);
       setIsGuest(true);
     } catch (error) {
-      console.error('Error deleting account:', error);
+      console.error("Error deleting account:", error);
       throw error;
     }
   };
@@ -514,4 +625,3 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
-
