@@ -14,6 +14,7 @@ React-based multiplayer quiz game for practicing base conversion (Binary, Octal,
 **Core:** React 19.2.0 + TypeScript 5.9.3 + Vite 7.1.11 + Tailwind CSS 3.4.3
 **Backend:** Firebase JS SDK 12.4.0 (Firestore + Realtime Database + Auth + Hosting)
 **UI:** shadcn/ui (Radix primitives) + lucide-react icons + Framer Motion 12.23.11
+**Charts:** recharts 2.15.0 (Line graphs for performance tracking)
 **Forms:** React Hook Form 7.51.2 + Zod 3.22.4
 **Routing:** React Router DOM 6.22.3
 **Timer:** react-timer-hook 3.0.7
@@ -934,12 +935,13 @@ button, card, form, input, label, select, scroll-area, separator, toast, dialog,
 
 **UI:** Navigation-Bar, ProfileDropdown, Footer, ErrorBoundary, ProtectedRoute, ConnectionStatus
 **Lib:** avatarGenerator (8x8 pixel art avatars)
+**Charts:** recharts (LineChart, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer) - Used for performance graphs in Results page
 
 ### Pages
 
 All pages use Slate theme with consistent patterns, functional-first design, and optimized layouts.
 
-**Game:** Home, Quiz, Results, SingleplayerMode (with game filtering), MultiplayerGame
+**Game:** Home, Quiz, Results (with performance graphs and best score tracking), SingleplayerMode (with game filtering), MultiplayerGame
 **Multiplayer:** MultiplayerHome, CreateRoom (with filtering and collapsible details), JoinRoom, RoomLobby (with chat), MultiplayerResults
 **Stats:** Stats (time-range filtering, accuracy tracking, leaderboard placements), Leaderboard (paginated, 20 per page, jump to rank)
 **Profile:** ProfileLayout, ProfileOverview, ProfileSettings, ProfileGameSettings
@@ -1450,6 +1452,103 @@ const players = Object.values(room.players);
 ---
 
 ## Recent Updates
+
+### Single Player Results UI Updates (2025-10-24)
+
+**Objective:** Enhance the single player results page with performance graphs, updated statistics display, and improved layout
+
+**Changes:**
+
+**Statistics Display Updates:**
+
+- **Timed Mode:**
+  - Removed time display from bottom statistics row
+  - Added accuracy metric to bottom row
+  - Added best score metric to bottom row (positioned to the right of accuracy)
+
+- **Speed Run Mode:**
+  - Added best score metric to bottom row (shows best time)
+  - Accuracy metric already displayed
+
+**New Performance Graphs:**
+
+- **Scores Over Time Graph:**
+  - Animated line graph showing score progression across games
+  - Time period filter tabs: "Today", "This Week", "This Month", "All Time" (default: "All Time")
+  - Uses recharts library for visualization
+  - Shows "Times Over Games" for speedrun modes, "Scores Over Games" for timed modes
+  - Displays game number on X-axis, score/time on Y-axis
+  - Academic color scheme (chart-1 color)
+  - Smooth line without dots for cleaner appearance
+  - 800ms animation duration with ease-in-out easing
+
+- **Accuracy Over Time Graph:**
+  - Animated line graph showing accuracy progression across games
+  - Time period filter tabs: "Today", "This Week", "This Month", "All Time" (default: "All Time")
+  - Y-axis domain fixed to 0-100%
+  - Academic color scheme (chart-2 color)
+  - Filters out games without accuracy data
+  - Smooth line without dots for cleaner appearance
+  - 800ms animation duration with ease-in-out easing
+
+**Layout Changes:**
+
+- **Two-column responsive layout:**
+  - Left side: Performance graphs stacked vertically
+  - Right side: Current game results card (400px width on large screens)
+  - Results card uses `h-full flex flex-col` to match height of both graphs combined
+  - CardContent uses `flex-grow` to fill remaining vertical space
+  - Mobile: Single column with graphs above results
+
+- **Header Positioning:**
+  - "Quiz Complete!" and game mode badge moved to top of results card
+  - Trophy icon and title inline on same row
+  - Game mode badge displayed below title
+  - Separator between header and score section
+  - Aligned widths for consistent visual hierarchy
+
+- **Graph Components:**
+  - PaperCard with folded-sm variant for academic styling
+  - Compact headers with icons (TrendingUp, Target)
+  - Responsive chart containers (150px height for better screen fit)
+  - Empty state messages when no data available
+  - Custom tooltips with no background, displaying only score/accuracy values
+  - Smooth animations on data load
+
+**Bug Fixes:**
+
+- **Play Again Button:** Now navigates to `/singleplayer` instead of home page to queue the same game type again
+
+**Technical Implementation:**
+
+- Added recharts library for data visualization
+- Integrated useGameHistory hook to fetch historical game data
+- Best score calculation from game history (min for speedrun, max for timed)
+- Time-based filtering logic for graph data
+- Memoized data transformations for performance
+- Direct hex colors for chart lines (#2563eb for scores, #10b981 for accuracy)
+- Increased strokeWidth to 3 for better visibility
+- Grid and axis colors using neutral grays (#e5e7eb, #6b7280)
+- Y-axis labels with 10px offset to prevent cutoff at top of chart
+
+**Dependencies Added:**
+
+- `recharts` - React charting library for line graphs
+
+**Files Modified:**
+
+- `src/pages/Results.tsx` - Complete refactor with graphs and updated layout
+- `package.json` - Added recharts dependency
+
+**Design Patterns Used:**
+
+- PaperCard with folded-sm variant for graph containers
+- Tabs component for time period filters
+- ResponsiveContainer for adaptive chart sizing
+- Academic color scheme for data visualization
+- Compact spacing for screen-fitting (h-8 tabs, text-xs labels)
+
+---
 
 ### Authentication Pages Refactor (2025-10-24)
 
