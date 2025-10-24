@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Separator } from "@/components/ui/separator";
+import { RuledSeparator } from "@/components/ui/academic";
 import { Github, Binary } from "lucide-react";
 
 export default function Footer() {
@@ -38,18 +38,18 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container px-4 py-12 md:py-16">
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-5">
+    <footer className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 paper-texture">
+      <div className="container px-4 py-10 md:py-12">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-5">
           {/* Brand Section */}
-          <div className="lg:col-span-2 space-y-4">
+          <div className="lg:col-span-2 space-y-3">
             <div className="flex items-center gap-2">
               <Binary className="h-5 w-5 text-primary" />
-              <h3 className="font-bold text-lg gradient-text">
+              <h3 className="font-serif font-bold text-lg gradient-text">
                 Based Math Game
               </h3>
             </div>
-            <p className="text-sm text-muted-foreground max-w-xs">
+            <p className="text-sm text-muted-foreground max-w-xs leading-relaxed">
               Master base conversion through interactive practice and timed
               quizzes. Challenge yourself and compete with others!
             </p>
@@ -58,10 +58,10 @@ export default function Footer() {
                 href="https://github.com/hajin-park/based-math-game"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+                className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors ink-underline"
                 aria-label="GitHub Repository"
               >
-                <Github className="h-5 w-5" />
+                <Github className="h-4 w-4" />
                 <span>View on GitHub</span>
               </a>
             </div>
@@ -70,8 +70,8 @@ export default function Footer() {
           {/* Footer Links */}
           {footerSections.map((section) => (
             <div key={section.title}>
-              <h3 className="font-semibold text-sm mb-4">{section.title}</h3>
-              <ul className="space-y-3">
+              <h3 className="font-serif font-semibold text-sm mb-3 ink-underline-visible">{section.title}</h3>
+              <ul className="space-y-2">
                 {section.links.map((link) => (
                   <li key={link.name}>
                     {link.external ? (
@@ -79,14 +79,14 @@ export default function Footer() {
                         href={link.href}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                        className="text-sm text-muted-foreground hover:text-primary transition-colors link-underline"
                       >
                         {link.name}
                       </a>
                     ) : (
                       <Link
                         to={link.href}
-                        className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                        className="text-sm text-muted-foreground hover:text-primary transition-colors link-underline"
                       >
                         {link.name}
                       </Link>
@@ -98,11 +98,11 @@ export default function Footer() {
           ))}
         </div>
 
-        <Separator className="my-8" />
+        <RuledSeparator className="my-6" variant="double" />
 
         {/* Bottom Section */}
-        <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-center">
-          <p className="text-xs text-muted-foreground">
+        <div className="flex flex-col gap-3 md:flex-row md:justify-between md:items-center">
+          <p className="text-xs text-muted-foreground margin-note">
             © {currentYear} Based Math Game. Open source under GPL-3.0.
           </p>
           <p className="text-xs text-muted-foreground">
@@ -111,7 +111,7 @@ export default function Footer() {
               href="https://arithmetic.zetamac.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-primary hover:underline font-medium"
+              className="text-primary link-underline font-medium"
             >
               zetamac
             </a>

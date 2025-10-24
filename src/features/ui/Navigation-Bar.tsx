@@ -42,9 +42,11 @@ export default function NavigationBar() {
       setScrolled(currentScrollY > 10);
 
       // Determine scroll direction
-      if (currentScrollY > lastScrollY && currentScrollY > 50) {
+      if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        // Scrolling down and past threshold
         setScrollDirection("down");
-      } else {
+      } else if (currentScrollY < lastScrollY) {
+        // Scrolling up - immediately show nav
         setScrollDirection("up");
       }
 
@@ -56,15 +58,26 @@ export default function NavigationBar() {
   }, [lastScrollY]);
 
   return (
-    <nav
-      className={cn(
-        "sticky top-0 z-50 w-full border-b transition-all duration-300",
-        scrolled && scrollDirection === "down"
-          ? "bg-background/40 backdrop-blur-md border-border/30"
-          : "bg-background/95 backdrop-blur-lg border-border/50",
-        scrolled && "shadow-sm",
-      )}
-    >
+    <div className="sticky top-0 z-50 w-full">
+      <motion.nav
+        initial={false}
+        animate={{
+          y: scrollDirection === "down" && scrolled ? -100 : 0,
+        }}
+        transition={{
+          duration: 0.25,
+          ease: [0.4, 0, 0.2, 1],
+        }}
+        className={cn(
+          "w-full border-b transition-all duration-300",
+          scrolled && scrollDirection === "down"
+            ? "bg-background/40 backdrop-blur-md border-border/30"
+            : "bg-background/95 backdrop-blur-lg border-border/50",
+          scrolled && "shadow-sm",
+          // Academic paper-like styling
+          "paper-texture",
+        )}
+      >
       <div className="container flex h-16 items-center justify-between px-4">
         {/* Logo */}
         <div className="flex items-center gap-2">
@@ -249,6 +262,7 @@ export default function NavigationBar() {
           </Sheet>
         </div>
       </div>
-    </nav>
+    </motion.nav>
+    </div>
   );
 }

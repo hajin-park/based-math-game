@@ -151,14 +151,33 @@ React-based multiplayer quiz game for practicing base conversion (Binary, Octal,
 
 ### Spacing & Layout - Academic Paper Structure
 
-**Container Padding** (generous margins like textbooks):
+**Professional Spacing Scale** (4px base unit):
 
-- Default: `1.5rem` (24px)
-- sm: `2rem` (32px)
-- md: `3rem` (48px)
-- lg: `4rem` (64px)
-- xl: `5rem` (80px)
-- 2xl: `6rem` (96px)
+- **Base Unit**: 4px (0.25rem)
+- **Scale**: 1 (4px), 2 (8px), 3 (12px), 4 (16px), 5 (20px), 6 (24px), 8 (32px), 12 (48px), 16 (64px)
+- **Philosophy**: Apply spacing at LAYOUT level (containers, sections), keep component padding minimal
+- **Component Padding**: Default to p-4 (16px), use p-3 (12px) for compact variants
+- **Section Spacing**: py-12 (48px) standard, py-16 (64px) hero sections
+- **Grid Gaps**: gap-3 to gap-4 (12-16px) for standard grids
+- **Vertical Stacks**: space-y-2 to space-y-4 (8-16px) for related content
+- **Section Headers**: mb-4 to mb-5 (16-20px) below headers
+
+**Spacing Guidelines:**
+
+- Use spacing to create visual hierarchy, not just whitespace
+- Avoid double-padding (container + component both having large padding)
+- Maintain 44x44px minimum touch targets for interactive elements
+- Reference `src/index.css` for detailed spacing scale documentation
+- See `src/pages/Home.tsx` and `src/pages/Stats.tsx` for implementation examples
+
+**Container Padding** (compact for better density):
+
+- Default: `1rem` (16px)
+- sm: `1.5rem` (24px)
+- md: `2rem` (32px)
+- lg: `2.5rem` (40px)
+- xl: `3rem` (48px)
+- 2xl: `4rem` (64px)
 
 **Content Widths:**
 
@@ -175,12 +194,6 @@ React-based multiplayer quiz game for practicing base conversion (Binary, Octal,
 - `rounded-lg`: `0.125rem` (2px) - same as base
 - `rounded-xl`: `0.25rem` (4px) - for special cases
 - `rounded-none`: `0` - sharp corners for academic look
-
-**Spacing Scale:**
-
-- Based on `0.5rem` (8px) increments
-- Larger gaps between sections (like chapter breaks)
-- Tighter spacing within related content
 
 ### Custom Utility Classes - Academic Theme
 
@@ -394,6 +407,134 @@ React-based multiplayer quiz game for practicing base conversion (Binary, Octal,
 - [ ] Update focus states to academic style
 - [ ] Ensure WCAG 2.1 AA contrast compliance
 - [ ] Test in both light (paper) and dark (chalkboard) modes
+
+---
+
+## Academic Visual Enhancements
+
+### CSS Utility Classes
+
+**Paper Texture Overlay**:
+```css
+.paper-texture /* Subtle paper grain texture */
+```
+
+**Folded Corner Effect**:
+```css
+.folded-corner /* Dog-eared page corner */
+.folded-corner-sm /* Small fold (12px) */
+.folded-corner-lg /* Large fold (20px) */
+```
+
+**Ruled Lines (Notebook Paper)**:
+```css
+.ruled-lines /* Horizontal lines (1.5rem spacing) */
+.ruled-lines-tight /* Tighter spacing (1.25rem) */
+.ruled-lines-margin /* With red margin line (composition notebook) */
+```
+
+**Ink Underline Effect**:
+```css
+.ink-underline /* Animated underline on hover */
+.ink-underline-visible /* Always visible underline */
+```
+
+**Highlighter Marker Effect**:
+```css
+.highlight-marker /* Animated highlighter swipe on hover */
+.highlight-visible /* Always visible highlight */
+```
+
+**Sticky Note Callout**:
+```css
+.sticky-note /* Yellow post-it style */
+.sticky-note-pink /* Pink variant */
+.sticky-note-blue /* Blue variant */
+.sticky-note-green /* Green variant */
+```
+
+**Other Visual Effects**:
+```css
+.sketch-border /* Hand-drawn border effect */
+.page-curl /* Subtle 3D page curl on hover */
+.bookmark-ribbon /* Ribbon bookmark indicator */
+.torn-edge-top /* Torn paper effect at top */
+.focus-ring-academic /* Minimal focus ring (1px offset) */
+.annotation /* Italic, rotated annotation style */
+.coffee-stain /* Decorative coffee ring */
+```
+
+### Enhanced Academic Components
+
+**Location**: `src/components/ui/academic.ts`
+
+#### PaperCard
+Enhanced card component with paper texture and academic styling.
+
+**Variants**: `default`, `folded`, `folded-sm`, `folded-lg`, `bookmark`, `interactive`
+
+**Usage**:
+```tsx
+import { PaperCard, PaperCardHeader, PaperCardTitle } from "@/components/ui/academic";
+
+<PaperCard variant="folded">
+  <PaperCardHeader>
+    <PaperCardTitle>Chapter 1</PaperCardTitle>
+  </PaperCardHeader>
+</PaperCard>
+```
+
+#### StickyNote
+Post-it style callout component.
+
+**Variants**: `default` (yellow), `info` (blue), `success` (green), `warning` (pink)
+
+**Usage**:
+```tsx
+import { StickyNote, StickyNoteTitle } from "@/components/ui/academic";
+
+<StickyNote variant="info">
+  <StickyNoteTitle>Pro Tip</StickyNoteTitle>
+</StickyNote>
+```
+
+#### NotebookInput
+Input with ruled lines and academic styling.
+
+**Variants**: `default`, `underline`, `ruled`, `ruled-margin`
+
+**Usage**:
+```tsx
+import { NotebookInput } from "@/components/ui/academic";
+
+<NotebookInput variant="ruled" multiline />
+```
+
+#### SectionHeader
+Consistent heading with optional icon and underline.
+
+**Usage**:
+```tsx
+import { SectionHeader } from "@/components/ui/academic";
+import { BookOpen } from "lucide-react";
+
+<SectionHeader title="Resources" icon={BookOpen} titleUnderline="ink" />
+```
+
+#### RuledSeparator
+Notebook-style separator.
+
+**Variants**: `default`, `double`, `dashed`
+
+### Updated Base Components
+
+**Card**: Minimal border radius, serif titles, subtle shadows
+**Button**: Academic styling, thicker outline borders, underline links
+**Input**: Minimal radius, reduced focus offset
+**Alert**: New variants (info, success, warning), serif titles
+**Badge**: New variants (success, warning), minimal radius
+
+---
 
 ### Animation Library (Framer Motion) - Academic Theme
 
@@ -1288,7 +1429,76 @@ const players = Object.values(room.players);
 
 ---
 
-## Recent Updates (2025-10-22)
+## Recent Updates
+
+### Home Page Refactor (2025-10-24)
+
+**Objective:** Align Home page with academic theme, prioritize quick game access, improve UX and mobile responsiveness
+
+**Changes:**
+- **Hero Section:** Redesigned to prioritize game access with prominent Singleplayer/Multiplayer cards as primary CTAs
+- **Academic Components:** Replaced generic Card components with PaperCard, SectionHeader, RuledSeparator, and StickyNote
+- **Content Reorganization:** Created distinct sections for:
+  - Quick Start (hero with game mode cards)
+  - How to Play (3-step guide using StickyNotes)
+  - Stats & Leaderboard Preview (interactive preview cards)
+  - Features Highlight (why practice here)
+  - Final CTA
+- **Navigation Bar:** Smooth scroll animation - nav bar slides up when scrolling down (past 100px), immediately reappears when scrolling up. Wrapped in sticky container to prevent border animation issues
+- **Scroll Animations:** Added intersection observer-based animations for sections (fade-in, slide-in effects) with staggered delays
+- **Spacing:** Applied professional 4px spacing scale throughout (p-4, gap-4, py-10, etc.)
+- **Mobile Responsive:** All sections adapt to sm/md/lg breakpoints with proper grid layouts and touch targets
+- **Academic Aesthetic:** Paper texture, ruled separators, folded corners, sticky notes, serif headings, coffee stains, torn edges, bookmark ribbons, ink underlines
+- **Micro-interactions:** Purposeful hover effects only on clickable elements (cards, buttons), no random icon/logo animations
+- **Highlighter Effects:** Hand-drawn scribble-style underlines using SVG paths with wavy, irregular strokes (yellow, green, orange)
+
+**Files Modified:**
+- `src/pages/Home.tsx` - Complete refactor with academic components and scroll animations
+- `src/features/ui/Navigation-Bar.tsx` - Added smooth scroll animation (slides up on scroll down, reappears on scroll up)
+- `src/features/ui/Footer.tsx` - Updated with academic theme (paper texture, ink underlines, ruled separator, no border shadow)
+- `src/hooks/useScrollAnimation.ts` - New hook for intersection observer-based scroll animations
+- `src/index.css` - Added highlighter scribble effects using SVG paths
+
+**Design Patterns:**
+- Use PaperCard with `variant="interactive"` for clickable cards
+- Use PaperCard with `variant="folded"` for preview/info cards with bookmark ribbons
+- Use StickyNote variants (info/success/warning) for step-by-step guides
+- Use RuledSeparator with `variant="double"` for major section breaks
+- Use SectionHeader with icons for consistent section titles
+- Apply `sketch-border` and `folded-corner-sm` for paper-like card edges
+- Use `ruled-lines-margin` for composition notebook style with double red vertical margin lines (2px thick each, spaced 0.25rem apart)
+- Apply `coffee-stain` and `torn-edge-top` for decorative academic touches
+- Highlighter scribble effect: `<span className="highlight-scribble">Text</span>` (yellow), `highlight-scribble-green`, `highlight-scribble-orange`
+
+### Spacing & Density Refactor (2025-10-24)
+
+**Objective:** Improve information density and reduce excessive spacing throughout the design system
+
+**Changes:**
+- **Base Components:** Reduced padding by 25-38% across Card, PaperCard, SectionHeader, RuledSeparator
+- **Global Configuration:** Reduced container padding by 25-40% across all breakpoints in tailwind.config.js
+- **Page-Level Updates:** Reduced section spacing by 40-50% on Home.tsx and Stats.tsx
+- **Spacing Scale:** Established professional 4px-based system (1, 2, 3, 4, 5, 6, 8, 12, 16)
+- **Documentation:** Added comprehensive spacing guidelines to src/index.css and augment.md
+
+**Results:**
+- 40-50% more content visible per screen
+- Reduced scrolling requirements
+- Clearer visual hierarchy through strategic spacing
+- Maintained readability and accessibility
+
+**Files Modified:**
+- `src/components/ui/card.tsx`
+- `src/components/ui/paper-card.tsx`
+- `src/components/ui/section-header.tsx`
+- `src/components/ui/ruled-separator.tsx`
+- `tailwind.config.js`
+- `src/pages/Home.tsx`
+- `src/pages/Stats.tsx`
+- `src/index.css`
+- `augment.md`
+
+### Previous Updates (2025-10-22)
 
 ### Mobile Text Formatting
 

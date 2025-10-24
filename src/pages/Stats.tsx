@@ -67,10 +67,10 @@ export default function Stats() {
   ];
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-6">
+    <div className="container mx-auto px-4 py-6 space-y-4">
       {/* Header */}
-      <div className="text-center space-y-2 animate-in">
-        <div className="flex items-center justify-center gap-2 mb-2">
+      <div className="text-center space-y-1 animate-in">
+        <div className="flex items-center justify-center gap-2 mb-1">
           <BarChart3 className="h-8 w-8 text-primary" />
           <h1 className="text-4xl font-bold gradient-text">Your Statistics</h1>
         </div>
@@ -121,9 +121,9 @@ export default function Stats() {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-4">
           {/* Time range selector */}
-          <div className="space-y-3">
+          <div className="space-y-2">
             <div className="flex items-center gap-2">
               <Calendar className="h-5 w-5 text-primary" />
               <label className="text-sm font-semibold">Time Period</label>
@@ -147,11 +147,11 @@ export default function Stats() {
           </div>
 
           {/* Content area with minimum height to prevent layout shifts */}
-          <div className="min-h-[600px]">
+          <div className="min-h-[500px]">
             {loading ? (
-              <div className="space-y-6">
+              <div className="space-y-4">
                 {/* Skeleton for stats cards */}
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-5">
                   {[1, 2, 3, 4].map((i) => (
                     <Card key={i}>
                       <CardHeader className="pb-2">
@@ -197,9 +197,9 @@ export default function Stats() {
                 </Card>
               </div>
             ) : (
-              <div className="space-y-6 animate-in fade-in duration-300">
+              <div className="space-y-4 animate-in fade-in duration-300">
                 {/* Stats cards */}
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+                <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-5">
                   <Card className="border-2">
                     <CardHeader className="pb-3">
                       <div className="flex items-center gap-2">
@@ -323,7 +323,7 @@ export default function Stats() {
                               </CardDescription>
                             </CardHeader>
                             <CardContent>
-                              <div className="space-y-6">
+                              <div className="space-y-4">
                                 {speedRunModes.map(([modeId]) => {
                                   const mode = OFFICIAL_GAME_MODES.find(
                                     (m) => m.id === modeId,
@@ -341,7 +341,7 @@ export default function Stats() {
                                   return (
                                     <div
                                       key={modeId}
-                                      className="space-y-3 p-4 rounded-lg bg-muted/30 border"
+                                      className="space-y-2 p-3 rounded-lg bg-muted/30 border"
                                     >
                                       <div className="flex justify-between items-start">
                                         <div>
@@ -366,7 +366,7 @@ export default function Stats() {
                                           questions
                                         </Badge>
                                       </div>
-                                      <div className="grid grid-cols-2 gap-4">
+                                      <div className="grid grid-cols-2 gap-3">
                                         <div className="space-y-1">
                                           <p className="text-xs text-muted-foreground">
                                             Best Time
@@ -406,7 +406,7 @@ export default function Stats() {
                               </CardDescription>
                             </CardHeader>
                             <CardContent>
-                              <div className="space-y-6">
+                              <div className="space-y-4">
                                 {timedModes.map(([modeId, scores]) => {
                                   const mode = OFFICIAL_GAME_MODES.find(
                                     (m) => m.id === modeId,
@@ -419,7 +419,7 @@ export default function Stats() {
                                   return (
                                     <div
                                       key={modeId}
-                                      className="space-y-3 p-4 rounded-lg bg-muted/30 border"
+                                      className="space-y-2 p-3 rounded-lg bg-muted/30 border"
                                     >
                                       <div className="flex justify-between items-start">
                                         <div>
@@ -443,7 +443,7 @@ export default function Stats() {
                                           {mode?.duration}s time limit
                                         </Badge>
                                       </div>
-                                      <div className="grid grid-cols-2 gap-4">
+                                      <div className="grid grid-cols-2 gap-3">
                                         <div className="space-y-1">
                                           <p className="text-xs text-muted-foreground">
                                             Average Score
@@ -505,7 +505,7 @@ export default function Stats() {
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-3">
+                      <div className="space-y-2">
                         {history.slice(0, 10).map((game) => {
                           const mode = OFFICIAL_GAME_MODES.find(
                             (m) => m.id === game.gameModeId,
@@ -513,9 +513,9 @@ export default function Stats() {
                           const isSpeedrun = isSpeedrunMode(mode);
                           return (
                             <Card key={game.id} className="border-2">
-                              <CardContent className="p-4">
+                              <CardContent className="p-3">
                                 <div className="flex justify-between items-center">
-                                  <div className="space-y-1">
+                                  <div className="space-y-0.5">
                                     <div className="font-semibold text-base">
                                       {mode?.name || "Custom"}
                                     </div>
@@ -532,7 +532,7 @@ export default function Stats() {
                                       </div>
                                     )}
                                   </div>
-                                  <div className="text-right space-y-1">
+                                  <div className="text-right space-y-0.5">
                                     <div className="font-bold text-2xl gradient-text">
                                       {isSpeedrun
                                         ? `${game.score}s`
@@ -558,8 +558,8 @@ export default function Stats() {
 
                 {history.length === 0 && (
                   <Card className="border-2 border-dashed">
-                    <CardContent className="py-12">
-                      <div className="text-center space-y-3">
+                    <CardContent className="py-8">
+                      <div className="text-center space-y-2">
                         <Gamepad2 className="h-12 w-12 mx-auto text-muted-foreground/50" />
                         <p className="text-muted-foreground">
                           No games played yet. Start playing to see your stats!
