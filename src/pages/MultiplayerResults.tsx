@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
   Card,
   CardContent,
@@ -20,6 +20,7 @@ import { Trophy, Crown, Medal, Home, RotateCcw, Loader2 } from "lucide-react";
 export default function MultiplayerResults() {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
   const { joinRoom, leaveRoom, subscribeToRoom, resetRoom, incrementWins } =
@@ -70,9 +71,11 @@ export default function MultiplayerResults() {
   // Handle cleanup when component unmounts (user navigates away)
   useEffect(() => {
     const isLeavingRefValue = isLeavingRef;
+    const currentPath = location.pathname;
+
     return () => {
       // Check if we're navigating away from the room entirely
-      const currentPath = window.location.pathname;
+      // Use the path captured when the effect ran, not window.location during cleanup
       const isStillInRoom =
         roomId &&
         (currentPath.includes(`/multiplayer/lobby/${roomId}`) ||
@@ -80,19 +83,13 @@ export default function MultiplayerResults() {
           currentPath.includes(`/multiplayer/results/${roomId}`));
 
       // Only leave if we're not in the same room and not explicitly leaving
-      if (
-        roomId &&
-        user &&
-        !isStillInRoom &&
-        !isStillInRoom &&
-        !isLeavingRefValue.current
-      ) {
+      if (roomId && user && !isStillInRoom && !isLeavingRefValue.current) {
         leaveRoom(roomId).catch((error) => {
           console.error("Error leaving room on unmount:", error);
         });
       }
     };
-  }, [roomId, user, leaveRoom]);
+  }, [roomId, user, leaveRoom, location.pathname]);
 
   useEffect(() => {
     if (!roomId) return;

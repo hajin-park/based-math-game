@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useRoom, Room } from "@/hooks/useRoom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,6 +16,7 @@ import ChatBox from "@/components/ChatBox";
 export default function MultiplayerGame() {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
   const {
@@ -89,9 +90,11 @@ export default function MultiplayerGame() {
   // Handle cleanup when component unmounts (user navigates away)
   useEffect(() => {
     const isLeavingRefValue = isLeavingRef;
+    const currentPath = location.pathname;
+
     return () => {
       // Check if we're navigating away from the room entirely
-      const currentPath = window.location.pathname;
+      // Use the path captured when the effect ran, not window.location during cleanup
       const isStillInRoom =
         roomId &&
         (currentPath.includes(`/multiplayer/lobby/${roomId}`) ||
@@ -105,7 +108,7 @@ export default function MultiplayerGame() {
         });
       }
     };
-  }, [roomId, user, leaveRoom]);
+  }, [roomId, user, leaveRoom, location.pathname]);
 
   useEffect(() => {
     if (!roomId) return;

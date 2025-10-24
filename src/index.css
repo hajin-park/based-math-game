@@ -440,14 +440,14 @@
       ),
       linear-gradient(
         to right,
-        transparent 2.5rem,
-        oklch(68.69% 0.15391 13.513) 2.5rem,
-        oklch(68.69% 0.15391 13.513) calc(2.5rem + 2px),
-        transparent calc(2.5rem + 2px),
-        transparent 1.25rem,
-        oklch(68.69% 0.15391 13.513) 2.75rem,
-        oklch(68.69% 0.15391 13.513) calc(2.75rem + 2px),
-        transparent calc(2.75rem + 2px)
+        transparent 3rem,
+        oklch(68.69% 0.15391 13.513) 3rem,
+        oklch(68.69% 0.15391 13.513) calc(3rem + 2px),
+        transparent calc(3rem + 2px),
+        transparent 3.25rem,
+        oklch(68.69% 0.15391 13.513) 3.25rem,
+        oklch(68.69% 0.15391 13.513) calc(3.25rem + 2px),
+        transparent calc(3.25rem + 2px)
       );
   }
 
@@ -461,14 +461,14 @@
       ),
       linear-gradient(
         to right,
-        transparent 2.5rem,
-        oklch(85.93% 0.00662 16.474) 2.5rem,
-        oklch(80.139% 0.01705 17.222) calc(2.5rem + 2px),
-        transparent calc(2.5rem + 2px),
-        transparent 2.75rem,
-        oklch(76.665% 0.01726 17.259) 2.75rem,
-        oklch(80.852% 0.01816 17.257) calc(2.75rem + 2px),
-        transparent calc(2.75rem + 2px)
+        transparent 3rem,
+        oklch(85.93% 0.00662 16.474) 3rem,
+        oklch(80.139% 0.01705 17.222) calc(3rem + 2px),
+        transparent calc(3rem + 2px),
+        transparent 3.25rem,
+        oklch(76.665% 0.01726 17.259) 3.25rem,
+        oklch(80.852% 0.01816 17.257) calc(3.25rem + 2px),
+        transparent calc(3.25rem + 2px)
       );
   }
 

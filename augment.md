@@ -1460,6 +1460,7 @@ const players = Object.values(room.players);
 **Changes:**
 
 **Header Layout:**
+
 - Removed "Performance Overview" section and paper texture background
 - Moved "Your Statistics" title to the left side with BarChart3 icon
 - Time period selector now horizontally inline with "Your Statistics" title on large screens
@@ -1468,6 +1469,7 @@ const players = Object.values(room.players);
 - Guest user notice moved below header
 
 **Graph Display:**
+
 - Removed PaperCard wrappers from individual graphs in specific game mode view
 - Graphs now placed directly into content area without independent cards
 - Graph height adjusted to 190px with bottom margin to prevent x-axis label overflow
@@ -1477,6 +1479,7 @@ const players = Object.values(room.players);
 - Prevents graphs from overextending the bottom of the view
 
 **Responsive Layout with Flexbox:**
+
 - Main container uses normal scrolling with `space-y-6` for vertical spacing between sections
 - Two-column layout has fixed height of `h-[600px]` to fit on screen
 - Left column: flexbox with game mode selector (`shrink-0`) and content area (`flex-1`)
@@ -1488,6 +1491,7 @@ const players = Object.values(room.players);
 - Simple, maintainable approach using flexbox for column alignment
 
 **Visual Improvements:**
+
 - Cleaner, more streamlined appearance without excessive card nesting
 - Better use of vertical space in graph view
 - Consistent spacing and alignment across all sections

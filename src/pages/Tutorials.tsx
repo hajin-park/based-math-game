@@ -66,7 +66,7 @@ export default function Tutorials() {
                 <Binary className="h-4 w-4 text-info" />
                 Binary (Base 2)
               </PaperCardTitle>
-              <PaperCardDescription className="text-xs">
+              <PaperCardDescription className="text-sm">
                 Uses digits 0-1 • The language of computers
               </PaperCardDescription>
             </PaperCardHeader>
@@ -166,7 +166,7 @@ export default function Tutorials() {
                 <Grid3x3 className="h-4 w-4 text-warning" />
                 Octal (Base 8)
               </PaperCardTitle>
-              <PaperCardDescription className="text-xs">
+              <PaperCardDescription className="text-sm">
                 Uses digits 0-7 • Common in Unix file permissions
               </PaperCardDescription>
             </PaperCardHeader>
@@ -264,7 +264,7 @@ export default function Tutorials() {
                 <Zap className="h-4 w-4 text-success" />
                 Decimal (Base 10)
               </PaperCardTitle>
-              <PaperCardDescription className="text-xs">
+              <PaperCardDescription className="text-sm">
                 Uses digits 0-9 • The number system we use every day
               </PaperCardDescription>
             </PaperCardHeader>
@@ -360,7 +360,7 @@ export default function Tutorials() {
                 <Hexagon className="h-4 w-4 text-primary" />
                 Hexadecimal (Base 16)
               </PaperCardTitle>
-              <PaperCardDescription className="text-xs">
+              <PaperCardDescription className="text-sm">
                 Uses digits 0-9, A-F • Common in web colors and memory addresses
               </PaperCardDescription>
             </PaperCardHeader>

@@ -39,6 +39,7 @@ export default function Footer() {
 
   return (
     <footer className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 paper-texture">
+      <RuledSeparator spacing="none" variant="default" />
       <div className="container px-4 py-10 md:py-12">
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-5">
           {/* Brand Section */}

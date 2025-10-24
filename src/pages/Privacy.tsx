@@ -43,10 +43,10 @@ export default function Privacy() {
           </PaperCardHeader>
           <PaperCardContent className="space-y-3">
             <div>
-              <h3 className="font-semibold mb-1 text-sm">
+              <h3 className="font-semibold mb-1 text-base">
                 Account Information
               </h3>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 When you create an account, we collect your email address,
                 display name, and authentication credentials. If you sign in
                 with Google, we receive basic profile information from your
@@ -54,15 +54,15 @@ export default function Privacy() {
               </p>
             </div>
             <div>
-              <h3 className="font-semibold mb-1 text-sm">Game Data</h3>
-              <p className="text-xs text-muted-foreground">
+              <h3 className="font-semibold mb-1 text-base">Game Data</h3>
+              <p className="text-sm text-muted-foreground">
                 We store your game scores, statistics, and game history to track
                 your progress and display on leaderboards.
               </p>
             </div>
             <div>
-              <h3 className="font-semibold mb-1 text-sm">Guest Users</h3>
-              <p className="text-xs text-muted-foreground">
+              <h3 className="font-semibold mb-1 text-base">Guest Users</h3>
+              <p className="text-sm text-muted-foreground">
                 Guest users can play without creating an account. Guest data is
                 stored locally in your browser and temporarily in our database
                 during your session. Guest data is automatically deleted when
@@ -70,8 +70,8 @@ export default function Privacy() {
               </p>
             </div>
             <div>
-              <h3 className="font-semibold mb-1 text-sm">Analytics</h3>
-              <p className="text-xs text-muted-foreground">
+              <h3 className="font-semibold mb-1 text-base">Analytics</h3>
+              <p className="text-sm text-muted-foreground">
                 We use Firebase Analytics to understand how users interact with
                 our application. This includes anonymous usage data such as page
                 views, game completions, and feature usage.
@@ -87,7 +87,7 @@ export default function Privacy() {
             </PaperCardTitle>
           </PaperCardHeader>
           <PaperCardContent>
-            <ul className="space-y-2 text-xs">
+            <ul className="space-y-2 text-sm">
               <li className="flex items-start gap-2">
                 <span className="text-primary font-bold">•</span>
                 <span>To provide and maintain our service</span>
@@ -124,7 +124,7 @@ export default function Privacy() {
               platform. We implement appropriate technical and organizational
               measures to protect your personal information.
             </p>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               However, no method of transmission over the internet is 100%
               secure. While we strive to protect your data, we cannot guarantee
               absolute security.
@@ -137,7 +137,7 @@ export default function Privacy() {
             <PaperCardTitle className="text-base">Your Rights</PaperCardTitle>
           </PaperCardHeader>
           <PaperCardContent>
-            <ul className="space-y-2 text-xs">
+            <ul className="space-y-2 text-sm">
               <li className="flex items-start gap-2">
                 <span className="text-primary font-bold">•</span>
                 <span>
@@ -173,7 +173,7 @@ export default function Privacy() {
             <p className="text-sm">
               We use the following third-party services:
             </p>
-            <ul className="space-y-2 text-xs">
+            <ul className="space-y-2 text-sm">
               <li className="flex items-start gap-2">
                 <span className="text-primary font-bold">•</span>
                 <span>
@@ -189,7 +189,7 @@ export default function Privacy() {
                 </span>
               </li>
             </ul>
-            <p className="text-xs text-muted-foreground mt-2">
+            <p className="text-sm text-muted-foreground mt-2">
               These services have their own privacy policies. We encourage you
               to review them.
             </p>

@@ -39,12 +39,12 @@ export default function Usage() {
         <PaperCard variant="folded-sm" padding="sm">
           <PaperCardHeader>
             <PaperCardTitle className="text-base">Game Basics</PaperCardTitle>
-            <PaperCardDescription className="text-xs">
+            <PaperCardDescription className="text-sm">
               Understanding base conversion challenges
             </PaperCardDescription>
           </PaperCardHeader>
           <PaperCardContent className="space-y-2">
-            <p className="text-xs leading-relaxed">
+            <p className="text-sm leading-relaxed">
               Based Math Game tests your ability to convert numbers between
               different bases:
             </p>
@@ -87,7 +87,7 @@ export default function Usage() {
               </PaperCard>
             </div>
             <div className="bg-muted p-2 rounded mt-2">
-              <p className="text-xs font-semibold mb-1">Example Question:</p>
+              <p className="text-sm font-semibold mb-1">Example Question:</p>
               <div className="font-mono text-sm mb-1">
                 Convert{" "}
                 <span className="text-blue-600 dark:text-blue-400 font-bold">
@@ -95,7 +95,7 @@ export default function Usage() {
                 </span>{" "}
                 from Binary to Decimal
               </div>
-              <div className="text-xs text-muted-foreground">
+              <div className="text-sm text-muted-foreground">
                 Answer: <span className="font-mono font-bold">10</span>
               </div>
             </div>
@@ -109,13 +109,13 @@ export default function Usage() {
               <Gamepad2 className="h-4 w-4 text-primary" />
               Singleplayer Mode
             </PaperCardTitle>
-            <PaperCardDescription className="text-xs">
+            <PaperCardDescription className="text-sm">
               Practice at your own pace with flexible game modes
             </PaperCardDescription>
           </PaperCardHeader>
           <PaperCardContent className="space-y-2">
             <div>
-              <h3 className="font-semibold mb-1 text-xs">
+              <h3 className="font-semibold mb-1 text-base">
                 Official Game Modes
               </h3>
               <p className="text-xs text-muted-foreground mb-2">
@@ -160,7 +160,7 @@ export default function Usage() {
             </div>
 
             <div>
-              <h3 className="font-semibold mb-1 text-xs">Playground Mode</h3>
+              <h3 className="font-semibold mb-1 text-base">Playground Mode</h3>
               <p className="text-xs text-muted-foreground mb-2">
                 Create your own custom quiz with complete control:
               </p>
@@ -215,13 +215,13 @@ export default function Usage() {
               <Users className="h-4 w-4 text-primary" />
               Multiplayer Mode
             </PaperCardTitle>
-            <PaperCardDescription className="text-xs">
+            <PaperCardDescription className="text-sm">
               Compete with friends in real-time challenges
             </PaperCardDescription>
           </PaperCardHeader>
           <PaperCardContent className="space-y-2">
             <div>
-              <h3 className="font-semibold mb-1 text-xs">Creating a Room</h3>
+              <h3 className="font-semibold mb-1 text-base">Creating a Room</h3>
               <div className="space-y-1 text-xs">
                 <div className="flex items-start gap-2">
                   <span className="text-primary font-bold text-xs">1.</span>
@@ -257,7 +257,7 @@ export default function Usage() {
             </div>
 
             <div>
-              <h3 className="font-semibold mb-1 text-xs">Joining a Room</h3>
+              <h3 className="font-semibold mb-1 text-base">Joining a Room</h3>
               <div className="space-y-1 text-xs">
                 <div className="flex items-start gap-2">
                   <span className="text-primary font-bold text-xs">1.</span>
@@ -306,14 +306,14 @@ export default function Usage() {
               <Clock className="h-4 w-4 text-primary" />
               During the Quiz
             </PaperCardTitle>
-            <PaperCardDescription className="text-xs">
+            <PaperCardDescription className="text-sm">
               Gameplay mechanics and scoring system
             </PaperCardDescription>
           </PaperCardHeader>
           <PaperCardContent className="space-y-2">
             <div className="grid md:grid-cols-2 gap-2">
               <div>
-                <h3 className="font-semibold mb-1 text-xs">How to Answer</h3>
+                <h3 className="font-semibold mb-1 text-base">How to Answer</h3>
                 <ul className="space-y-1 text-xs">
                   <li className="flex items-start gap-2">
                     <span className="text-primary font-bold text-xs">•</span>
@@ -354,7 +354,7 @@ export default function Usage() {
               </div>
 
               <div>
-                <h3 className="font-semibold mb-1 text-xs">Scoring System</h3>
+                <h3 className="font-semibold mb-1 text-base">Scoring System</h3>
                 <ul className="space-y-1 text-xs">
                   <li className="flex items-start gap-2">
                     <span className="text-green-600 dark:text-green-400 font-bold text-xs">
@@ -396,7 +396,7 @@ export default function Usage() {
             </div>
 
             <div className="bg-muted p-2 rounded">
-              <h3 className="font-semibold mb-1 text-xs">
+              <h3 className="font-semibold mb-1 text-base">
                 On-Screen Information
               </h3>
               <div className="grid grid-cols-2 gap-2 text-xs">
@@ -426,14 +426,14 @@ export default function Usage() {
               <Target className="h-4 w-4 text-primary" />
               Progress Tracking
             </PaperCardTitle>
-            <PaperCardDescription className="text-xs">
+            <PaperCardDescription className="text-sm">
               Monitor your improvement over time
             </PaperCardDescription>
           </PaperCardHeader>
           <PaperCardContent className="space-y-2">
             <div className="grid md:grid-cols-2 gap-2">
               <div>
-                <h3 className="font-semibold mb-1 text-xs">Stats Page</h3>
+                <h3 className="font-semibold mb-1 text-base">Stats Page</h3>
                 <p className="text-xs text-muted-foreground mb-1">
                   View your performance analytics:
                 </p>
@@ -460,7 +460,7 @@ export default function Usage() {
               </div>
 
               <div>
-                <h3 className="font-semibold mb-1 text-xs">Leaderboards</h3>
+                <h3 className="font-semibold mb-1 text-base">Leaderboards</h3>
                 <p className="text-xs text-muted-foreground mb-1">
                   Compete globally:
                 </p>
@@ -513,7 +513,7 @@ export default function Usage() {
               <Lightbulb className="h-4 w-4 text-primary" />
               Quick Tips
             </PaperCardTitle>
-            <PaperCardDescription className="text-xs">
+            <PaperCardDescription className="text-sm">
               Improve your performance and master base conversion
             </PaperCardDescription>
           </PaperCardHeader>
@@ -579,7 +579,7 @@ export default function Usage() {
             <PaperCardTitle className="text-lg gradient-text">
               Ready to Start?
             </PaperCardTitle>
-            <PaperCardDescription className="text-xs">
+            <PaperCardDescription className="text-sm">
               Choose your path and start mastering base conversion today!
             </PaperCardDescription>
           </PaperCardHeader>

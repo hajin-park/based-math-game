@@ -37,7 +37,7 @@ export default function About() {
               Our Mission
             </PaperCardTitle>
           </PaperCardHeader>
-          <PaperCardContent className="space-y-2 text-xs leading-relaxed">
+          <PaperCardContent className="space-y-2 text-sm leading-relaxed">
             <p>
               Based Math Game is designed to help students, programmers, and
               anyone interested in computer science master the fundamental skill
@@ -68,8 +68,8 @@ export default function About() {
                   <Code className="h-3.5 w-3.5 text-primary" />
                 </div>
                 <div className="space-y-1">
-                  <p className="font-semibold text-xs">Interactive Tutorials</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="font-semibold text-sm">Interactive Tutorials</p>
+                  <p className="text-sm text-muted-foreground">
                     Learn each number base with clear explanations and examples
                   </p>
                 </div>
@@ -80,8 +80,8 @@ export default function About() {
                   <Zap className="h-3.5 w-3.5 text-primary" />
                 </div>
                 <div className="space-y-1">
-                  <p className="font-semibold text-xs">Timed Quizzes</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="font-semibold text-sm">Timed Quizzes</p>
+                  <p className="text-sm text-muted-foreground">
                     Practice with official game modes or create custom
                     challenges
                   </p>
@@ -93,8 +93,8 @@ export default function About() {
                   <Users className="h-3.5 w-3.5 text-primary" />
                 </div>
                 <div className="space-y-1">
-                  <p className="font-semibold text-xs">Multiplayer Mode</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="font-semibold text-sm">Multiplayer Mode</p>
+                  <p className="text-sm text-muted-foreground">
                     Compete with friends in real-time conversion challenges
                   </p>
                 </div>
@@ -105,8 +105,8 @@ export default function About() {
                   <TrendingUp className="h-3.5 w-3.5 text-primary" />
                 </div>
                 <div className="space-y-1">
-                  <p className="font-semibold text-xs">Progress Tracking</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="font-semibold text-sm">Progress Tracking</p>
+                  <p className="text-sm text-muted-foreground">
                     Monitor your improvement with detailed statistics and game
                     history
                   </p>
@@ -118,8 +118,8 @@ export default function About() {
                   <Trophy className="h-3.5 w-3.5 text-primary" />
                 </div>
                 <div className="space-y-1">
-                  <p className="font-semibold text-xs">Global Leaderboards</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="font-semibold text-sm">Global Leaderboards</p>
+                  <p className="text-sm text-muted-foreground">
                     See how you rank against players worldwide
                   </p>
                 </div>
@@ -130,8 +130,8 @@ export default function About() {
                   <UserPlus className="h-3.5 w-3.5 text-primary" />
                 </div>
                 <div className="space-y-1">
-                  <p className="font-semibold text-xs">Guest Mode</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="font-semibold text-sm">Guest Mode</p>
+                  <p className="text-sm text-muted-foreground">
                     Try the game without creating an account
                   </p>
                 </div>
@@ -148,7 +148,7 @@ export default function About() {
             </PaperCardTitle>
           </PaperCardHeader>
           <PaperCardContent className="space-y-2">
-            <p className="text-xs leading-relaxed">
+            <p className="text-sm leading-relaxed">
               Built with modern web technologies including React, TypeScript,
               and Firebase, Based Math Game provides a fast, responsive, and
               reliable learning experience across all devices.
@@ -171,7 +171,7 @@ export default function About() {
                 shadcn/ui
               </Badge>
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               This project is open source and available on GitHub under the
               GPL-3.0 license.
             </p>
@@ -186,7 +186,7 @@ export default function About() {
             </PaperCardTitle>
           </PaperCardHeader>
           <PaperCardContent className="space-y-2">
-            <p className="text-xs leading-relaxed">
+            <p className="text-sm leading-relaxed">
               This project was inspired by{" "}
               <a
                 href="https://arithmetic.zetamac.com"

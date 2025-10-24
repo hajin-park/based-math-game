@@ -48,8 +48,8 @@ export default function Terms() {
               automatically terminate if you violate any of these restrictions.
             </p>
             <div>
-              <h3 className="font-semibold mb-1 text-sm">You may not:</h3>
-              <ul className="space-y-2 text-xs">
+              <h3 className="font-semibold mb-1 text-base">You may not:</h3>
+              <ul className="space-y-2 text-sm">
                 <li className="flex items-start gap-2">
                   <span className="text-primary font-bold">•</span>
                   <span>Use the service for any illegal purpose</span>
@@ -167,7 +167,7 @@ export default function Terms() {
               The service is provided "as is" and "as available" without any
               warranties of any kind, either express or implied.
             </p>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               We do not warrant that the service will be uninterrupted, secure,
               or error-free. We do not warrant the accuracy or reliability of
               any information obtained through the service.
@@ -218,7 +218,7 @@ export default function Terms() {
               We will notify users of any material changes by posting the new
               terms on this page and updating the "Last updated" date.
             </p>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               Your continued use of the service after any changes constitutes
               acceptance of the new terms.
             </p>

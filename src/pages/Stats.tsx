@@ -168,9 +168,7 @@ export default function Stats() {
           <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
             <BarChart3 className="h-6 w-6 text-primary" />
           </div>
-          <h1 className="text-3xl font-serif font-semibold">
-            Your Statistics
-          </h1>
+          <h1 className="text-3xl font-serif font-semibold">Your Statistics</h1>
         </div>
         <div className="flex items-center gap-2">
           <Calendar className="h-5 w-5 text-primary shrink-0" />
@@ -231,9 +229,12 @@ export default function Stats() {
       <div className="grid lg:grid-cols-[1fr,350px] gap-4 lg:h-[600px]">
         {/* Left Column - Game Mode Selector and Content */}
         <div className="flex flex-col gap-4 h-[500px] lg:h-full min-h-0">
-
           {/* Game Mode Selector */}
-          <PaperCard variant="folded-sm" padding="sm" className="border-2 shrink-0">
+          <PaperCard
+            variant="folded-sm"
+            padding="sm"
+            className="border-2 shrink-0"
+          >
             <div className="flex items-center gap-2 mb-2">
               <Gamepad2 className="h-4 w-4 text-primary" />
               <label className="text-sm font-semibold">Game Mode</label>
@@ -264,7 +265,11 @@ export default function Stats() {
           </PaperCard>
 
           {/* Content area - grows to fill available space */}
-          <PaperCard variant="folded" padding="none" className="shadow-lg flex-1 min-h-0">
+          <PaperCard
+            variant="folded"
+            padding="none"
+            className="shadow-lg flex-1 min-h-0"
+          >
             <PaperCardContent className="p-0 h-full min-h-0">
               {loading ? (
                 <div className="space-y-4 p-4">
@@ -289,418 +294,450 @@ export default function Stats() {
                     <div className="relative h-full min-h-0">
                       <ScrollArea className="h-full border-2 border-dashed border-muted-foreground/20 rounded-lg">
                         <div className="space-y-4 p-4 pb-8">
-                        {/* Scores by game mode - separated by type */}
-                        {Object.keys(scoresByMode).length > 0 &&
-                  (() => {
-                    // Separate speed run and timed modes
-                    const speedRunModes: [string, number[]][] = [];
-                    const timedModes: [string, number[]][] = [];
+                          {/* Scores by game mode - separated by type */}
+                          {Object.keys(scoresByMode).length > 0 &&
+                            (() => {
+                              // Separate speed run and timed modes
+                              const speedRunModes: [string, number[]][] = [];
+                              const timedModes: [string, number[]][] = [];
 
-                    Object.entries(scoresByMode).forEach(([modeId, scores]) => {
-                      const mode = OFFICIAL_GAME_MODES.find(
-                        (m) => m.id === modeId,
-                      );
-                      if (mode?.targetQuestions) {
-                        speedRunModes.push([modeId, scores]);
-                      } else {
-                        timedModes.push([modeId, scores]);
-                      }
-                    });
-
-                    return (
-                      <>
-                        {/* Speed Run Modes */}
-                        {speedRunModes.length > 0 && (
-                          <PaperCard
-                            variant="folded"
-                            padding="none"
-                            className="border-2"
-                          >
-                            <PaperCardHeader className="p-6">
-                              <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                                  <Target className="h-5 w-5 text-primary" />
-                                </div>
-                                <div>
-                                  <PaperCardTitle className="text-xl">
-                                    Speed Run Performance
-                                  </PaperCardTitle>
-                                  <PaperCardDescription>
-                                    Your fastest completion times for speed run
-                                    challenges
-                                  </PaperCardDescription>
-                                </div>
-                              </div>
-                            </PaperCardHeader>
-                            <PaperCardContent className="p-6 pt-0">
-                              <div className="space-y-4">
-                                {speedRunModes.map(([modeId]) => {
+                              Object.entries(scoresByMode).forEach(
+                                ([modeId, scores]) => {
                                   const mode = OFFICIAL_GAME_MODES.find(
                                     (m) => m.id === modeId,
                                   );
-                                  // For speed runs, use durations instead of scores
-                                  const durations =
-                                    durationsByMode[modeId] || [];
-                                  if (durations.length === 0) return null;
+                                  if (mode?.targetQuestions) {
+                                    speedRunModes.push([modeId, scores]);
+                                  } else {
+                                    timedModes.push([modeId, scores]);
+                                  }
+                                },
+                              );
 
-                                  const bestTime = Math.min(...durations);
-                                  const avgTime =
-                                    durations.reduce((a, b) => a + b, 0) /
-                                    durations.length;
-
-                                  return (
+                              return (
+                                <>
+                                  {/* Speed Run Modes */}
+                                  {speedRunModes.length > 0 && (
                                     <PaperCard
-                                      key={modeId}
-                                      variant="folded-sm"
-                                      padding="sm"
-                                      className="border"
+                                      variant="folded"
+                                      padding="none"
+                                      className="border-2"
                                     >
-                                      <div className="flex justify-between items-start mb-3">
-                                        <div>
-                                          <span className="font-serif font-semibold text-base">
-                                            {mode?.name || modeId}
-                                          </span>
-                                          <Badge
-                                            variant="secondary"
-                                            className="ml-2 text-xs"
-                                          >
-                                            {durations.length}{" "}
-                                            {durations.length === 1
-                                              ? "attempt"
-                                              : "attempts"}
-                                          </Badge>
+                                      <PaperCardHeader className="p-6">
+                                        <div className="flex items-center gap-3">
+                                          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                                            <Target className="h-5 w-5 text-primary" />
+                                          </div>
+                                          <div>
+                                            <PaperCardTitle className="text-xl">
+                                              Speed Run Performance
+                                            </PaperCardTitle>
+                                            <PaperCardDescription>
+                                              Your fastest completion times for
+                                              speed run challenges
+                                            </PaperCardDescription>
+                                          </div>
                                         </div>
-                                        <Badge
-                                          variant="outline"
-                                          className="text-xs"
-                                        >
-                                          Target: {mode?.targetQuestions}{" "}
-                                          questions
-                                        </Badge>
-                                      </div>
-                                      <div className="grid grid-cols-2 gap-3">
-                                        <div className="space-y-1">
-                                          <p className="text-xs text-muted-foreground">
-                                            Best Time
-                                          </p>
-                                          <p className="text-2xl font-bold text-success">
-                                            {bestTime.toFixed(1)}s
-                                          </p>
-                                        </div>
-                                        <div className="space-y-1">
-                                          <p className="text-xs text-muted-foreground">
-                                            Average Time
-                                          </p>
-                                          <p className="text-2xl font-bold text-primary">
-                                            {avgTime.toFixed(1)}s
-                                          </p>
-                                        </div>
-                                      </div>
-                                    </PaperCard>
-                                  );
-                                })}
-                              </div>
-                            </PaperCardContent>
-                          </PaperCard>
-                        )}
+                                      </PaperCardHeader>
+                                      <PaperCardContent className="p-6 pt-0">
+                                        <div className="space-y-4">
+                                          {speedRunModes.map(([modeId]) => {
+                                            const mode =
+                                              OFFICIAL_GAME_MODES.find(
+                                                (m) => m.id === modeId,
+                                              );
+                                            // For speed runs, use durations instead of scores
+                                            const durations =
+                                              durationsByMode[modeId] || [];
+                                            if (durations.length === 0)
+                                              return null;
 
-                        {/* Timed Modes */}
-                        {timedModes.length > 0 && (
-                          <PaperCard
-                            variant="folded"
-                            padding="none"
-                            className="border-2"
-                          >
-                            <PaperCardHeader className="p-6">
-                              <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                                  <Trophy className="h-5 w-5 text-primary" />
-                                </div>
+                                            const bestTime = Math.min(
+                                              ...durations,
+                                            );
+                                            const avgTime =
+                                              durations.reduce(
+                                                (a, b) => a + b,
+                                                0,
+                                              ) / durations.length;
+
+                                            return (
+                                              <PaperCard
+                                                key={modeId}
+                                                variant="folded-sm"
+                                                padding="sm"
+                                                className="border"
+                                              >
+                                                <div className="flex justify-between items-start mb-3">
+                                                  <div>
+                                                    <span className="font-serif font-semibold text-base">
+                                                      {mode?.name || modeId}
+                                                    </span>
+                                                    <Badge
+                                                      variant="secondary"
+                                                      className="ml-2 text-xs"
+                                                    >
+                                                      {durations.length}{" "}
+                                                      {durations.length === 1
+                                                        ? "attempt"
+                                                        : "attempts"}
+                                                    </Badge>
+                                                  </div>
+                                                  <Badge
+                                                    variant="outline"
+                                                    className="text-xs"
+                                                  >
+                                                    Target:{" "}
+                                                    {mode?.targetQuestions}{" "}
+                                                    questions
+                                                  </Badge>
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-3">
+                                                  <div className="space-y-1">
+                                                    <p className="text-xs text-muted-foreground">
+                                                      Best Time
+                                                    </p>
+                                                    <p className="text-2xl font-bold text-success">
+                                                      {bestTime.toFixed(1)}s
+                                                    </p>
+                                                  </div>
+                                                  <div className="space-y-1">
+                                                    <p className="text-xs text-muted-foreground">
+                                                      Average Time
+                                                    </p>
+                                                    <p className="text-2xl font-bold text-primary">
+                                                      {avgTime.toFixed(1)}s
+                                                    </p>
+                                                  </div>
+                                                </div>
+                                              </PaperCard>
+                                            );
+                                          })}
+                                        </div>
+                                      </PaperCardContent>
+                                    </PaperCard>
+                                  )}
+
+                                  {/* Timed Modes */}
+                                  {timedModes.length > 0 && (
+                                    <PaperCard
+                                      variant="folded"
+                                      padding="none"
+                                      className="border-2"
+                                    >
+                                      <PaperCardHeader className="p-6">
+                                        <div className="flex items-center gap-3">
+                                          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                                            <Trophy className="h-5 w-5 text-primary" />
+                                          </div>
+                                          <div>
+                                            <PaperCardTitle className="text-xl">
+                                              Timed Mode Performance
+                                            </PaperCardTitle>
+                                            <PaperCardDescription>
+                                              Your average and best scores for
+                                              timed challenges
+                                            </PaperCardDescription>
+                                          </div>
+                                        </div>
+                                      </PaperCardHeader>
+                                      <PaperCardContent className="p-6 pt-0">
+                                        <div className="space-y-4">
+                                          {timedModes.map(
+                                            ([modeId, scores]) => {
+                                              const mode =
+                                                OFFICIAL_GAME_MODES.find(
+                                                  (m) => m.id === modeId,
+                                                );
+                                              const avgScore =
+                                                scores.reduce(
+                                                  (a, b) => a + b,
+                                                  0,
+                                                ) / scores.length;
+                                              const maxScore = Math.max(
+                                                ...scores,
+                                              );
+
+                                              return (
+                                                <PaperCard
+                                                  key={modeId}
+                                                  variant="folded-sm"
+                                                  padding="sm"
+                                                  className="border"
+                                                >
+                                                  <div className="flex justify-between items-start mb-3">
+                                                    <div>
+                                                      <span className="font-serif font-semibold text-base">
+                                                        {mode?.name || modeId}
+                                                      </span>
+                                                      <Badge
+                                                        variant="secondary"
+                                                        className="ml-2 text-xs"
+                                                      >
+                                                        {scores.length}{" "}
+                                                        {scores.length === 1
+                                                          ? "game"
+                                                          : "games"}
+                                                      </Badge>
+                                                    </div>
+                                                    <Badge
+                                                      variant="outline"
+                                                      className="text-xs"
+                                                    >
+                                                      {mode?.duration}s time
+                                                      limit
+                                                    </Badge>
+                                                  </div>
+                                                  <div className="grid grid-cols-2 gap-3 mb-3">
+                                                    <div className="space-y-1">
+                                                      <p className="text-xs text-muted-foreground">
+                                                        Average Score
+                                                      </p>
+                                                      <p className="text-2xl font-bold text-primary">
+                                                        {avgScore.toFixed(1)}
+                                                      </p>
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                      <p className="text-xs text-muted-foreground">
+                                                        Best Score
+                                                      </p>
+                                                      <p className="text-2xl font-bold text-success">
+                                                        {maxScore}
+                                                      </p>
+                                                    </div>
+                                                  </div>
+                                                  <div className="space-y-2">
+                                                    <div className="flex justify-between text-xs text-muted-foreground">
+                                                      <span>
+                                                        Progress to Best
+                                                      </span>
+                                                      <span>
+                                                        {(
+                                                          (avgScore /
+                                                            maxScore) *
+                                                          100
+                                                        ).toFixed(0)}
+                                                        %
+                                                      </span>
+                                                    </div>
+                                                    <div className="w-full bg-secondary rounded-full h-3 overflow-hidden">
+                                                      <div
+                                                        className="bg-gradient-to-r from-primary to-success h-3 rounded-full transition-all duration-500"
+                                                        style={{
+                                                          width: `${(avgScore / maxScore) * 100}%`,
+                                                        }}
+                                                      />
+                                                    </div>
+                                                  </div>
+                                                </PaperCard>
+                                              );
+                                            },
+                                          )}
+                                        </div>
+                                      </PaperCardContent>
+                                    </PaperCard>
+                                  )}
+                                </>
+                              );
+                            })()}
+
+                          {Object.keys(scoresByMode).length === 0 && (
+                            <StickyNote variant="info" size="default">
+                              <div className="text-center space-y-3">
+                                <Gamepad2 className="h-12 w-12 mx-auto text-muted-foreground/50" />
                                 <div>
-                                  <PaperCardTitle className="text-xl">
-                                    Timed Mode Performance
-                                  </PaperCardTitle>
-                                  <PaperCardDescription>
-                                    Your average and best scores for timed
-                                    challenges
-                                  </PaperCardDescription>
+                                  <StickyNoteTitle>
+                                    No Games Yet
+                                  </StickyNoteTitle>
+                                  <StickyNoteDescription>
+                                    Start playing to see your performance stats!
+                                  </StickyNoteDescription>
                                 </div>
                               </div>
-                            </PaperCardHeader>
-                            <PaperCardContent className="p-6 pt-0">
-                              <div className="space-y-4">
-                                {timedModes.map(([modeId, scores]) => {
-                                  const mode = OFFICIAL_GAME_MODES.find(
-                                    (m) => m.id === modeId,
-                                  );
-                                  const avgScore =
-                                    scores.reduce((a, b) => a + b, 0) /
-                                    scores.length;
-                                  const maxScore = Math.max(...scores);
-
-                                  return (
-                                    <PaperCard
-                                      key={modeId}
-                                      variant="folded-sm"
-                                      padding="sm"
-                                      className="border"
-                                    >
-                                      <div className="flex justify-between items-start mb-3">
-                                        <div>
-                                          <span className="font-serif font-semibold text-base">
-                                            {mode?.name || modeId}
-                                          </span>
-                                          <Badge
-                                            variant="secondary"
-                                            className="ml-2 text-xs"
-                                          >
-                                            {scores.length}{" "}
-                                            {scores.length === 1
-                                              ? "game"
-                                              : "games"}
-                                          </Badge>
+                            </StickyNote>
+                          )}
+                        </div>
+                      </ScrollArea>
+                      {/* Scroll indicator */}
+                      <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-background to-transparent pointer-events-none rounded-b-lg" />
+                    </div>
+                  ) : (
+                    /* Specific Game Mode - Show Graphs */
+                    <div className="h-full min-h-0 overflow-y-auto">
+                      <div className="flex flex-col space-y-6 p-4 pb-6">
+                        {/* Score/Time Over Games Graph */}
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <TrendingUp className="h-4 w-4 text-primary" />
+                            <h3 className="text-sm font-semibold">
+                              {isSpeedrunMode(
+                                OFFICIAL_GAME_MODES.find(
+                                  (m) => m.id === selectedGameMode,
+                                ),
+                              )
+                                ? "Time Over Games"
+                                : "Score Over Games"}
+                            </h3>
+                          </div>
+                          {graphData.scores.length > 0 ? (
+                            <ResponsiveContainer width="100%" height={190}>
+                              <LineChart
+                                data={graphData.scores}
+                                margin={{ bottom: 10 }}
+                              >
+                                <CartesianGrid
+                                  strokeDasharray="3 3"
+                                  stroke="#e5e7eb"
+                                />
+                                <XAxis
+                                  dataKey="game"
+                                  label={{
+                                    value: "Game Number",
+                                    position: "insideBottom",
+                                    offset: -5,
+                                  }}
+                                  tick={{ fontSize: 12 }}
+                                  stroke="#6b7280"
+                                />
+                                <YAxis
+                                  label={{
+                                    value: isSpeedrunMode(
+                                      OFFICIAL_GAME_MODES.find(
+                                        (m) => m.id === selectedGameMode,
+                                      ),
+                                    )
+                                      ? "Time (s)"
+                                      : "Score",
+                                    angle: -90,
+                                    position: "insideLeft",
+                                    offset: 10,
+                                  }}
+                                  tick={{ fontSize: 12 }}
+                                  stroke="#6b7280"
+                                />
+                                <Tooltip
+                                  content={({ active, payload }) => {
+                                    if (active && payload && payload.length) {
+                                      const isSpeedrun = isSpeedrunMode(
+                                        OFFICIAL_GAME_MODES.find(
+                                          (m) => m.id === selectedGameMode,
+                                        ),
+                                      );
+                                      return (
+                                        <div className="text-sm font-medium">
+                                          {isSpeedrun ? "Time" : "Score"}:{" "}
+                                          {payload[0].value}
+                                          {isSpeedrun ? "s" : ""}
                                         </div>
-                                        <Badge
-                                          variant="outline"
-                                          className="text-xs"
-                                        >
-                                          {mode?.duration}s time limit
-                                        </Badge>
-                                      </div>
-                                      <div className="grid grid-cols-2 gap-3 mb-3">
-                                        <div className="space-y-1">
-                                          <p className="text-xs text-muted-foreground">
-                                            Average Score
-                                          </p>
-                                          <p className="text-2xl font-bold text-primary">
-                                            {avgScore.toFixed(1)}
-                                          </p>
-                                        </div>
-                                        <div className="space-y-1">
-                                          <p className="text-xs text-muted-foreground">
-                                            Best Score
-                                          </p>
-                                          <p className="text-2xl font-bold text-success">
-                                            {maxScore}
-                                          </p>
-                                        </div>
-                                      </div>
-                                      <div className="space-y-2">
-                                        <div className="flex justify-between text-xs text-muted-foreground">
-                                          <span>Progress to Best</span>
-                                          <span>
-                                            {(
-                                              (avgScore / maxScore) *
-                                              100
-                                            ).toFixed(0)}
-                                            %
-                                          </span>
-                                        </div>
-                                        <div className="w-full bg-secondary rounded-full h-3 overflow-hidden">
-                                          <div
-                                            className="bg-gradient-to-r from-primary to-success h-3 rounded-full transition-all duration-500"
-                                            style={{
-                                              width: `${(avgScore / maxScore) * 100}%`,
-                                            }}
-                                          />
-                                        </div>
-                                      </div>
-                                    </PaperCard>
-                                  );
-                                })}
-                              </div>
-                            </PaperCardContent>
-                          </PaperCard>
-                        )}
-                      </>
-                    );
-                  })()}
-
-                        {Object.keys(scoresByMode).length === 0 && (
-                          <StickyNote variant="info" size="default">
-                            <div className="text-center space-y-3">
-                              <Gamepad2 className="h-12 w-12 mx-auto text-muted-foreground/50" />
-                              <div>
-                                <StickyNoteTitle>No Games Yet</StickyNoteTitle>
-                                <StickyNoteDescription>
-                                  Start playing to see your performance stats!
-                                </StickyNoteDescription>
-                              </div>
+                                      );
+                                    }
+                                    return null;
+                                  }}
+                                />
+                                <Line
+                                  type="monotone"
+                                  dataKey="score"
+                                  stroke="#2563eb"
+                                  strokeWidth={3}
+                                  dot={false}
+                                  isAnimationActive={true}
+                                  animationDuration={800}
+                                  animationEasing="ease-in-out"
+                                />
+                              </LineChart>
+                            </ResponsiveContainer>
+                          ) : (
+                            <div className="h-[190px] flex items-center justify-center text-sm text-muted-foreground">
+                              No data available for this time period
                             </div>
-                          </StickyNote>
-                        )}
-                      </div>
-                    </ScrollArea>
-                    {/* Scroll indicator */}
-                    <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-background to-transparent pointer-events-none rounded-b-lg" />
-                  </div>
-                ) : (
-                  /* Specific Game Mode - Show Graphs */
-                  <div className="h-full min-h-0 overflow-y-auto">
-                    <div className="flex flex-col space-y-6 p-4 pb-6">
-                    {/* Score/Time Over Games Graph */}
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <TrendingUp className="h-4 w-4 text-primary" />
-                        <h3 className="text-sm font-semibold">
-                          {isSpeedrunMode(
-                            OFFICIAL_GAME_MODES.find(
-                              (m) => m.id === selectedGameMode,
-                            ),
-                          )
-                            ? "Time Over Games"
-                            : "Score Over Games"}
-                        </h3>
-                      </div>
-                      {graphData.scores.length > 0 ? (
-                        <ResponsiveContainer width="100%" height={190}>
-                          <LineChart data={graphData.scores} margin={{ bottom: 10 }}>
-                            <CartesianGrid
-                              strokeDasharray="3 3"
-                              stroke="#e5e7eb"
-                            />
-                            <XAxis
-                              dataKey="game"
-                              label={{
-                                value: "Game Number",
-                                position: "insideBottom",
-                                offset: -5,
-                              }}
-                              tick={{ fontSize: 12 }}
-                              stroke="#6b7280"
-                            />
-                            <YAxis
-                              label={{
-                                value: isSpeedrunMode(
-                                  OFFICIAL_GAME_MODES.find(
-                                    (m) => m.id === selectedGameMode,
-                                  ),
-                                )
-                                  ? "Time (s)"
-                                  : "Score",
-                                angle: -90,
-                                position: "insideLeft",
-                                offset: 10,
-                              }}
-                              tick={{ fontSize: 12 }}
-                              stroke="#6b7280"
-                            />
-                            <Tooltip
-                              content={({ active, payload }) => {
-                                if (active && payload && payload.length) {
-                                  const isSpeedrun = isSpeedrunMode(
-                                    OFFICIAL_GAME_MODES.find(
-                                      (m) => m.id === selectedGameMode,
-                                    ),
-                                  );
-                                  return (
-                                    <div className="text-sm font-medium">
-                                      {isSpeedrun ? "Time" : "Score"}:{" "}
-                                      {payload[0].value}
-                                      {isSpeedrun ? "s" : ""}
-                                    </div>
-                                  );
-                                }
-                                return null;
-                              }}
-                            />
-                            <Line
-                              type="monotone"
-                              dataKey="score"
-                              stroke="#2563eb"
-                              strokeWidth={3}
-                              dot={false}
-                              isAnimationActive={true}
-                              animationDuration={800}
-                              animationEasing="ease-in-out"
-                            />
-                          </LineChart>
-                        </ResponsiveContainer>
-                      ) : (
-                        <div className="h-[190px] flex items-center justify-center text-sm text-muted-foreground">
-                          No data available for this time period
+                          )}
                         </div>
-                      )}
-                    </div>
 
-                    {/* Accuracy Over Games Graph */}
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <Percent className="h-4 w-4 text-primary" />
-                        <h3 className="text-sm font-semibold">
-                          Accuracy Over Games
-                        </h3>
-                      </div>
-                      {graphData.accuracy.length > 0 ? (
-                        <ResponsiveContainer width="100%" height={190}>
-                          <LineChart data={graphData.accuracy} margin={{ bottom: 10 }}>
-                            <CartesianGrid
-                              strokeDasharray="3 3"
-                              stroke="#e5e7eb"
-                            />
-                            <XAxis
-                              dataKey="game"
-                              label={{
-                                value: "Game Number",
-                                position: "insideBottom",
-                                offset: -5,
-                              }}
-                              tick={{ fontSize: 12 }}
-                              stroke="#6b7280"
-                            />
-                            <YAxis
-                              domain={[0, 100]}
-                              label={{
-                                value: "Accuracy (%)",
-                                angle: -90,
-                                position: "insideLeft",
-                                offset: 10,
-                              }}
-                              tick={{ fontSize: 12 }}
-                              stroke="#6b7280"
-                            />
-                            <Tooltip
-                              content={({ active, payload }) => {
-                                if (active && payload && payload.length) {
-                                  return (
-                                    <div className="text-sm font-medium">
-                                      Accuracy: {payload[0].value}%
-                                    </div>
-                                  );
-                                }
-                                return null;
-                              }}
-                            />
-                            <Line
-                              type="monotone"
-                              dataKey="accuracy"
-                              stroke="#2563eb"
-                              strokeWidth={3}
-                              dot={false}
-                              isAnimationActive={true}
-                              animationDuration={800}
-                              animationEasing="ease-in-out"
-                            />
-                          </LineChart>
-                        </ResponsiveContainer>
-                      ) : (
-                        <div className="h-[190px] flex items-center justify-center text-sm text-muted-foreground">
-                          No accuracy data available for this time period
+                        {/* Accuracy Over Games Graph */}
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Percent className="h-4 w-4 text-primary" />
+                            <h3 className="text-sm font-semibold">
+                              Accuracy Over Games
+                            </h3>
+                          </div>
+                          {graphData.accuracy.length > 0 ? (
+                            <ResponsiveContainer width="100%" height={190}>
+                              <LineChart
+                                data={graphData.accuracy}
+                                margin={{ bottom: 10 }}
+                              >
+                                <CartesianGrid
+                                  strokeDasharray="3 3"
+                                  stroke="#e5e7eb"
+                                />
+                                <XAxis
+                                  dataKey="game"
+                                  label={{
+                                    value: "Game Number",
+                                    position: "insideBottom",
+                                    offset: -5,
+                                  }}
+                                  tick={{ fontSize: 12 }}
+                                  stroke="#6b7280"
+                                />
+                                <YAxis
+                                  domain={[0, 100]}
+                                  label={{
+                                    value: "Accuracy (%)",
+                                    angle: -90,
+                                    position: "insideLeft",
+                                    offset: 10,
+                                  }}
+                                  tick={{ fontSize: 12 }}
+                                  stroke="#6b7280"
+                                />
+                                <Tooltip
+                                  content={({ active, payload }) => {
+                                    if (active && payload && payload.length) {
+                                      return (
+                                        <div className="text-sm font-medium">
+                                          Accuracy: {payload[0].value}%
+                                        </div>
+                                      );
+                                    }
+                                    return null;
+                                  }}
+                                />
+                                <Line
+                                  type="monotone"
+                                  dataKey="accuracy"
+                                  stroke="#2563eb"
+                                  strokeWidth={3}
+                                  dot={false}
+                                  isAnimationActive={true}
+                                  animationDuration={800}
+                                  animationEasing="ease-in-out"
+                                />
+                              </LineChart>
+                            </ResponsiveContainer>
+                          ) : (
+                            <div className="h-[190px] flex items-center justify-center text-sm text-muted-foreground">
+                              No accuracy data available for this time period
+                            </div>
+                          )}
                         </div>
-                      )}
+                      </div>
                     </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
+                  )}
+                </div>
+              )}
             </PaperCardContent>
           </PaperCard>
         </div>
 
         {/* Right Column - Profile Stats or Game-Specific Stats */}
         <div className="h-[500px] lg:h-full">
-          <PaperCard variant="folded" padding="none" className="shadow-lg h-full overflow-y-auto">
+          <PaperCard
+            variant="folded"
+            padding="none"
+            className="shadow-lg h-full overflow-y-auto"
+          >
             <PaperCardHeader className="p-4">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -717,7 +754,11 @@ export default function Stats() {
               {selectedGameMode === "overview" ? (
                 /* Profile Stats */
                 <>
-                  <PaperCard variant="folded-sm" padding="sm" className="border">
+                  <PaperCard
+                    variant="folded-sm"
+                    padding="sm"
+                    className="border"
+                  >
                     <div className="flex items-center gap-2 mb-1">
                       <Gamepad2 className="h-3.5 w-3.5 text-primary" />
                       <span className="text-xs font-medium text-muted-foreground">
@@ -729,7 +770,11 @@ export default function Stats() {
                     </div>
                   </PaperCard>
 
-                  <PaperCard variant="folded-sm" padding="sm" className="border">
+                  <PaperCard
+                    variant="folded-sm"
+                    padding="sm"
+                    className="border"
+                  >
                     <div className="flex items-center gap-2 mb-1">
                       <Percent className="h-3.5 w-3.5 text-primary" />
                       <span className="text-xs font-medium text-muted-foreground">
@@ -743,7 +788,11 @@ export default function Stats() {
                     </div>
                   </PaperCard>
 
-                  <PaperCard variant="folded-sm" padding="sm" className="border">
+                  <PaperCard
+                    variant="folded-sm"
+                    padding="sm"
+                    className="border"
+                  >
                     <div className="flex items-center gap-2 mb-1">
                       <Target className="h-3.5 w-3.5 text-primary" />
                       <span className="text-xs font-medium text-muted-foreground">
@@ -755,7 +804,11 @@ export default function Stats() {
                     </div>
                   </PaperCard>
 
-                  <PaperCard variant="folded-sm" padding="sm" className="border">
+                  <PaperCard
+                    variant="folded-sm"
+                    padding="sm"
+                    className="border"
+                  >
                     <div className="flex items-center gap-2 mb-1">
                       <Trophy className="h-3.5 w-3.5 text-success" />
                       <span className="text-xs font-medium text-muted-foreground">
@@ -770,7 +823,11 @@ export default function Stats() {
                     </p>
                   </PaperCard>
 
-                  <PaperCard variant="folded-sm" padding="sm" className="border">
+                  <PaperCard
+                    variant="folded-sm"
+                    padding="sm"
+                    className="border"
+                  >
                     <div className="flex items-center gap-2 mb-1">
                       <Clock className="h-3.5 w-3.5 text-primary" />
                       <span className="text-xs font-medium text-muted-foreground">
@@ -794,7 +851,8 @@ export default function Stats() {
                     );
                     const isSpeedrun = isSpeedrunMode(mode);
                     const modeScores = scoresByMode[selectedGameMode] || [];
-                    const modeDurations = durationsByMode[selectedGameMode] || [];
+                    const modeDurations =
+                      durationsByMode[selectedGameMode] || [];
 
                     const bestScore = isSpeedrun
                       ? modeDurations.length > 0
@@ -819,8 +877,9 @@ export default function Stats() {
                         ? filteredHistory
                             .filter((g) => g.accuracy !== undefined)
                             .reduce((sum, g) => sum + (g.accuracy || 0), 0) /
-                          filteredHistory.filter((g) => g.accuracy !== undefined)
-                            .length
+                          filteredHistory.filter(
+                            (g) => g.accuracy !== undefined,
+                          ).length
                         : 0;
 
                     return (
@@ -930,7 +989,7 @@ export default function Stats() {
       {/* Games Played History - Bottom Section with Pagination */}
       {filteredHistory.length > 0 && (
         <PaperCard variant="folded" padding="none" className="shadow-lg">
-            <PaperCardHeader className="p-4">
+          <PaperCardHeader className="p-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
                 <Clock className="h-5 w-5 text-primary" />
@@ -1036,10 +1095,7 @@ export default function Stats() {
                 Start playing to see your stats!
               </StickyNoteDescription>
             </div>
-            <Button
-              onClick={() => navigate("/singleplayer")}
-              className="mt-2"
-            >
+            <Button onClick={() => navigate("/singleplayer")} className="mt-2">
               <Gamepad2 className="mr-2 h-4 w-4" />
               Play Now
             </Button>
