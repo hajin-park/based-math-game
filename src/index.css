@@ -1,139 +1,155 @@
+/* Import Academic Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+
 @layer base {
   :root {
-    /* Slate Theme - Light Mode (OKLCH) */
-    --radius: 0.625rem;
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.129 0.042 264.695);
+    /* Academic Textbook/Notes/Papers Theme - Light Mode (OKLCH) */
+    /* Inspired by: Paper, ink, highlighters, and scholarly materials */
 
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.129 0.042 264.695);
+    /* Border Radius - Minimal, paper-like corners */
+    --radius: 0.125rem; /* 2px - very subtle, almost sharp */
 
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.129 0.042 264.695);
+    /* Base Colors - Warm paper and deep ink */
+    --background: oklch(0.98 0.005 85); /* Warm off-white, like aged paper */
+    --foreground: oklch(0.15 0.01 265); /* Deep ink black */
 
-    /* Slate Primary - Professional & Modern */
-    --primary: oklch(0.208 0.042 265.755);
-    --primary-foreground: oklch(0.984 0.003 247.858);
+    /* Card Colors - Slightly elevated paper */
+    --card: oklch(0.99 0.003 85); /* Bright paper white */
+    --card-foreground: oklch(0.15 0.01 265); /* Deep ink black */
 
-    /* Subtle Secondary */
-    --secondary: oklch(0.968 0.007 247.896);
-    --secondary-foreground: oklch(0.208 0.042 265.755);
+    /* Popover Colors */
+    --popover: oklch(0.99 0.003 85); /* Bright paper white */
+    --popover-foreground: oklch(0.15 0.01 265); /* Deep ink black */
 
-    /* Muted Backgrounds */
-    --muted: oklch(0.968 0.007 247.896);
-    --muted-foreground: oklch(0.554 0.046 257.417);
+    /* Primary - Academic blue (like blue ink) */
+    --primary: oklch(0.35 0.08 250); /* Deep academic blue */
+    --primary-foreground: oklch(0.99 0.003 85); /* Paper white */
 
-    /* Accent - Slate Accent */
-    --accent: oklch(0.968 0.007 247.896);
-    --accent-foreground: oklch(0.208 0.042 265.755);
+    /* Secondary - Subtle gray (like pencil marks) */
+    --secondary: oklch(0.92 0.005 265); /* Light graphite */
+    --secondary-foreground: oklch(0.20 0.01 265); /* Dark gray */
 
-    /* Destructive - Red */
-    --destructive: oklch(0.577 0.245 27.325);
-    --destructive-foreground: oklch(0.984 0.003 247.858);
+    /* Muted - Light cream (like notebook margins) */
+    --muted: oklch(0.95 0.008 85); /* Cream/beige */
+    --muted-foreground: oklch(0.45 0.02 265); /* Medium gray */
 
-    /* Success - Green */
-    --success: oklch(0.6 0.118 184.704);
-    --success-foreground: oklch(0.984 0.003 247.858);
+    /* Accent - Highlighter yellow */
+    --accent: oklch(0.85 0.12 95); /* Soft yellow highlighter */
+    --accent-foreground: oklch(0.20 0.01 265); /* Dark text on highlight */
 
-    /* Warning - Amber */
-    --warning: oklch(0.828 0.189 84.429);
-    --warning-foreground: oklch(0.129 0.042 264.695);
+    /* Destructive - Red ink */
+    --destructive: oklch(0.50 0.20 25); /* Red correction pen */
+    --destructive-foreground: oklch(0.99 0.003 85); /* Paper white */
 
-    /* Info - Blue */
-    --info: oklch(0.488 0.243 264.376);
-    --info-foreground: oklch(0.984 0.003 247.858);
+    /* Success - Green checkmark */
+    --success: oklch(0.55 0.15 150); /* Academic green */
+    --success-foreground: oklch(0.99 0.003 85); /* Paper white */
 
-    /* Borders & Inputs */
-    --border: oklch(0.929 0.013 255.508);
-    --input: oklch(0.929 0.013 255.508);
-    --ring: oklch(0.704 0.04 256.788);
+    /* Warning - Orange highlighter */
+    --warning: oklch(0.75 0.15 75); /* Warm orange */
+    --warning-foreground: oklch(0.20 0.01 265); /* Dark text */
 
-    /* Sidebar */
-    --sidebar: oklch(0.984 0.003 247.858);
-    --sidebar-foreground: oklch(0.129 0.042 264.695);
-    --sidebar-primary: oklch(0.208 0.042 265.755);
-    --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-    --sidebar-accent: oklch(0.968 0.007 247.896);
-    --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
-    --sidebar-border: oklch(0.929 0.013 255.508);
-    --sidebar-ring: oklch(0.704 0.04 256.788);
+    /* Info - Blue note */
+    --info: oklch(0.55 0.12 240); /* Information blue */
+    --info-foreground: oklch(0.99 0.003 85); /* Paper white */
 
-    /* Chart Colors */
-    --chart-1: oklch(0.646 0.222 41.116);
-    --chart-2: oklch(0.6 0.118 184.704);
-    --chart-3: oklch(0.398 0.07 227.392);
-    --chart-4: oklch(0.828 0.189 84.429);
-    --chart-5: oklch(0.769 0.188 70.08);
+    /* Borders & Inputs - Subtle graphite */
+    --border: oklch(0.85 0.005 265); /* Light graphite line */
+    --input: oklch(0.85 0.005 265); /* Light graphite line */
+    --ring: oklch(0.35 0.08 250); /* Primary blue for focus */
+
+    /* Sidebar - Margin area */
+    --sidebar: oklch(0.96 0.008 85); /* Slightly darker than background */
+    --sidebar-foreground: oklch(0.15 0.01 265); /* Deep ink black */
+    --sidebar-primary: oklch(0.35 0.08 250); /* Academic blue */
+    --sidebar-primary-foreground: oklch(0.99 0.003 85); /* Paper white */
+    --sidebar-accent: oklch(0.92 0.005 265); /* Light graphite */
+    --sidebar-accent-foreground: oklch(0.20 0.01 265); /* Dark gray */
+    --sidebar-border: oklch(0.85 0.005 265); /* Light graphite line */
+    --sidebar-ring: oklch(0.35 0.08 250); /* Primary blue */
+
+    /* Chart Colors - Academic palette */
+    --chart-1: oklch(0.35 0.08 250); /* Academic blue */
+    --chart-2: oklch(0.55 0.15 150); /* Academic green */
+    --chart-3: oklch(0.50 0.20 25); /* Academic red */
+    --chart-4: oklch(0.75 0.15 75); /* Warm orange */
+    --chart-5: oklch(0.45 0.12 280); /* Purple */
   }
 
   .dark {
-    /* Slate Theme - Dark Mode (OKLCH) */
-    --background: oklch(0.129 0.042 264.695);
-    --foreground: oklch(0.984 0.003 247.858);
+    /* Academic Textbook/Notes/Papers Theme - Dark Mode (OKLCH) */
+    /* Inspired by: Chalkboard, night reading, reduced eye strain */
 
-    --card: oklch(0.208 0.042 265.755);
-    --card-foreground: oklch(0.984 0.003 247.858);
+    /* Base Colors - Deep charcoal and soft white */
+    --background: oklch(0.18 0.01 265); /* Deep charcoal */
+    --foreground: oklch(0.95 0.005 85); /* Soft white (reduced eye strain) */
 
-    --popover: oklch(0.208 0.042 265.755);
-    --popover-foreground: oklch(0.984 0.003 247.858);
+    /* Card Colors - Slightly elevated surface */
+    --card: oklch(0.22 0.01 265); /* Lighter charcoal */
+    --card-foreground: oklch(0.95 0.005 85); /* Soft white */
 
-    /* Slate Primary - Brighter for dark mode */
-    --primary: oklch(0.929 0.013 255.508);
-    --primary-foreground: oklch(0.208 0.042 265.755);
+    /* Popover Colors */
+    --popover: oklch(0.22 0.01 265); /* Lighter charcoal */
+    --popover-foreground: oklch(0.95 0.005 85); /* Soft white */
 
-    /* Subtle Secondary */
-    --secondary: oklch(0.279 0.041 260.031);
-    --secondary-foreground: oklch(0.984 0.003 247.858);
+    /* Primary - Chalk blue */
+    --primary: oklch(0.65 0.08 250); /* Bright chalk blue */
+    --primary-foreground: oklch(0.18 0.01 265); /* Deep charcoal */
 
-    /* Muted Backgrounds */
-    --muted: oklch(0.279 0.041 260.031);
-    --muted-foreground: oklch(0.704 0.04 256.788);
+    /* Secondary - Medium gray */
+    --secondary: oklch(0.30 0.01 265); /* Dark gray */
+    --secondary-foreground: oklch(0.90 0.005 85); /* Light gray */
 
-    /* Accent - Slate Accent */
-    --accent: oklch(0.279 0.041 260.031);
-    --accent-foreground: oklch(0.984 0.003 247.858);
+    /* Muted - Darker gray */
+    --muted: oklch(0.28 0.01 265); /* Muted dark gray */
+    --muted-foreground: oklch(0.65 0.02 265); /* Medium light gray */
 
-    /* Destructive - Red */
-    --destructive: oklch(0.704 0.191 22.216);
-    --destructive-foreground: oklch(0.984 0.003 247.858);
+    /* Accent - Soft amber (warm reading light) */
+    --accent: oklch(0.75 0.10 75); /* Warm amber */
+    --accent-foreground: oklch(0.18 0.01 265); /* Deep charcoal */
 
-    /* Success - Green */
-    --success: oklch(0.696 0.17 162.48);
-    --success-foreground: oklch(0.129 0.042 264.695);
+    /* Destructive - Soft red */
+    --destructive: oklch(0.60 0.18 25); /* Muted red */
+    --destructive-foreground: oklch(0.95 0.005 85); /* Soft white */
 
-    /* Warning - Amber */
-    --warning: oklch(0.769 0.188 70.08);
-    --warning-foreground: oklch(0.129 0.042 264.695);
+    /* Success - Soft green */
+    --success: oklch(0.65 0.12 150); /* Muted green */
+    --success-foreground: oklch(0.18 0.01 265); /* Deep charcoal */
 
-    /* Info - Blue */
-    --info: oklch(0.488 0.243 264.376);
-    --info-foreground: oklch(0.984 0.003 247.858);
+    /* Warning - Soft orange */
+    --warning: oklch(0.70 0.12 75); /* Muted orange */
+    --warning-foreground: oklch(0.18 0.01 265); /* Deep charcoal */
 
-    /* Borders & Inputs */
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.551 0.027 264.364);
+    /* Info - Soft blue */
+    --info: oklch(0.60 0.10 240); /* Muted blue */
+    --info-foreground: oklch(0.95 0.005 85); /* Soft white */
 
-    /* Sidebar */
-    --sidebar: oklch(0.208 0.042 265.755);
-    --sidebar-foreground: oklch(0.984 0.003 247.858);
-    --sidebar-primary: oklch(0.488 0.243 264.376);
-    --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-    --sidebar-accent: oklch(0.279 0.041 260.031);
-    --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
-    --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.551 0.027 264.364);
+    /* Borders & Inputs - Subtle gray */
+    --border: oklch(0.30 0.01 265); /* Subtle gray line */
+    --input: oklch(0.30 0.01 265); /* Subtle gray line */
+    --ring: oklch(0.65 0.08 250); /* Chalk blue for focus */
 
-    /* Chart Colors */
-    --chart-1: oklch(0.488 0.243 264.376);
-    --chart-2: oklch(0.696 0.17 162.48);
-    --chart-3: oklch(0.769 0.188 70.08);
-    --chart-4: oklch(0.627 0.265 303.9);
-    --chart-5: oklch(0.645 0.246 16.439);
+    /* Sidebar - Slightly darker area */
+    --sidebar: oklch(0.20 0.01 265); /* Darker charcoal */
+    --sidebar-foreground: oklch(0.95 0.005 85); /* Soft white */
+    --sidebar-primary: oklch(0.65 0.08 250); /* Chalk blue */
+    --sidebar-primary-foreground: oklch(0.18 0.01 265); /* Deep charcoal */
+    --sidebar-accent: oklch(0.30 0.01 265); /* Dark gray */
+    --sidebar-accent-foreground: oklch(0.90 0.005 85); /* Light gray */
+    --sidebar-border: oklch(0.30 0.01 265); /* Subtle gray line */
+    --sidebar-ring: oklch(0.65 0.08 250); /* Chalk blue */
+
+    /* Chart Colors - Muted academic palette */
+    --chart-1: oklch(0.65 0.08 250); /* Chalk blue */
+    --chart-2: oklch(0.65 0.12 150); /* Muted green */
+    --chart-3: oklch(0.60 0.18 25); /* Muted red */
+    --chart-4: oklch(0.70 0.12 75); /* Muted orange */
+    --chart-5: oklch(0.60 0.10 280); /* Muted purple */
   }
 }
 
@@ -144,9 +160,12 @@
 
   body {
     @apply bg-background text-foreground antialiased;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     font-feature-settings:
       "rlig" 1,
       "calt" 1;
+    line-height: 1.7; /* Academic line-height for readability */
+    letter-spacing: 0.01em; /* Subtle letter-spacing */
   }
 
   /* Smooth scrolling */
@@ -154,80 +173,108 @@
     scroll-behavior: smooth;
   }
 
-  /* Focus visible for accessibility */
+  /* Focus visible for accessibility - academic style */
   *:focus-visible {
-    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+    @apply outline-none ring-2 ring-ring ring-offset-1 ring-offset-background;
   }
 
-  /* Improved text rendering */
+  /* Typography - Academic hierarchy */
   h1,
   h2,
   h3,
   h4,
   h5,
   h6 {
-    @apply font-semibold tracking-tight;
+    font-family: "Crimson Pro", "Crimson Text", Georgia, serif;
+    @apply font-semibold;
+    letter-spacing: -0.02em; /* Tighter for headings */
+    line-height: 1.3; /* Tighter line-height for headings */
+  }
+
+  h1 {
+    @apply text-4xl md:text-5xl;
+  }
+
+  h2 {
+    @apply text-3xl md:text-4xl;
+  }
+
+  h3 {
+    @apply text-2xl md:text-3xl;
+  }
+
+  h4 {
+    @apply text-xl md:text-2xl;
+  }
+
+  h5 {
+    @apply text-lg md:text-xl;
+  }
+
+  h6 {
+    @apply text-base md:text-lg;
+  }
+
+  /* Code and numbers - monospace */
+  code,
+  kbd,
+  samp,
+  pre {
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
   }
 
   /* Tabular numbers for consistent width */
   .tabular-nums {
     font-variant-numeric: tabular-nums;
   }
+
+  /* Academic paragraph spacing */
+  p {
+    margin-bottom: 1em;
+  }
+
+  p:last-child {
+    margin-bottom: 0;
+  }
 }
 
 @layer utilities {
-  /* Glassmorphism utilities */
-  .glass {
-    @apply bg-background/80 backdrop-blur-md border border-border/50;
+  /* Academic Paper Utilities - Minimal, purposeful styling */
+
+  /* Paper-like card - flat with subtle border */
+  .paper-card {
+    @apply bg-card border border-border shadow-sm;
   }
 
-  .glass-card {
-    @apply bg-card/80 backdrop-blur-md border border-border/50;
+  /* Ruled line separator - like notebook paper */
+  .ruled-line {
+    @apply border-b border-border;
   }
 
-  .glass-nav {
-    @apply bg-background/60 backdrop-blur-lg border-b border-border/50;
+  /* Margin note style - like textbook margins */
+  .margin-note {
+    @apply text-sm text-muted-foreground italic;
   }
 
-  /* Gradient utilities */
-  .gradient-primary {
-    background: linear-gradient(
-      to right,
-      var(--primary),
-      var(--primary),
-      var(--primary)
-    );
+  /* Underline link - academic hyperlink style */
+  .link-underline {
+    @apply underline decoration-1 underline-offset-2 hover:decoration-2 transition-all duration-150;
   }
 
-  .gradient-text {
-    background: linear-gradient(
-      to right,
-      var(--primary),
-      var(--primary),
-      var(--primary)
-    );
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
+  /* Academic content width - optimal readability */
+  .content-width {
+    max-width: 65ch; /* Academic standard for readability */
   }
 
-  .gradient-subtle {
-    @apply bg-gradient-to-b from-background to-muted;
-  }
-
-  /* Animation utilities */
+  /* Minimal animations - only for functional feedback */
   .animate-in {
-    animation: animate-in 0.3s ease-out;
-  }
-
-  .animate-in-slow {
-    animation: animate-in 0.6s ease-out;
+    animation: animate-in 0.2s ease-out;
   }
 
   @keyframes animate-in {
     from {
       opacity: 0;
-      transform: translateY(10px);
+      transform: translateY(4px);
     }
     to {
       opacity: 1;
@@ -235,32 +282,50 @@
     }
   }
 
-  /* Scroll-based animations */
-  .fade-in-up {
-    animation: fade-in-up 0.6s ease-out;
+  /* Fade in - subtle entrance */
+  .fade-in {
+    animation: fade-in 0.2s ease-out;
   }
 
-  @keyframes fade-in-up {
+  @keyframes fade-in {
     from {
       opacity: 0;
-      transform: translateY(30px);
     }
     to {
       opacity: 1;
-      transform: translateY(0);
     }
   }
 
-  /* Smooth transitions */
+  /* Smooth transitions - minimal duration */
   .transition-smooth {
-    @apply transition-all duration-300 ease-in-out;
+    @apply transition-all duration-150 ease-in-out;
+  }
+
+  /* Hover underline - for interactive text */
+  .hover-underline {
+    @apply hover:underline hover:decoration-1 hover:underline-offset-2 transition-all duration-150;
+  }
+
+  /* Focus ring - academic style */
+  .focus-academic {
+    @apply focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1;
+  }
+
+  /* Text selection - highlighter effect */
+  ::selection {
+    background-color: var(--accent);
+    color: var(--accent-foreground);
+  }
+
+  ::-moz-selection {
+    background-color: var(--accent);
+    color: var(--accent-foreground);
   }
 
   /* Respect reduced motion preferences */
   @media (prefers-reduced-motion: reduce) {
     .animate-in,
-    .animate-in-slow,
-    .fade-in-up {
+    .fade-in {
       animation: none !important;
       transition: none !important;
     }

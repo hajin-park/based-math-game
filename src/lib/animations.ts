@@ -1,34 +1,35 @@
 /**
- * Framer Motion Animation Variants
+ * Framer Motion Animation Variants - Academic Theme
  *
  * Minimal, purposeful animations for the base conversion quiz game.
+ * Academic design philosophy: Subtle, functional, non-intrusive.
  * Focus: clarity, performance, and respecting user preferences.
  */
 
 import { Variants, Transition } from "framer-motion";
 
 // ============================================================================
-// TRANSITION PRESETS
+// TRANSITION PRESETS - Faster, more subtle
 // ============================================================================
 
 export const transitions = {
-  // Snappy transitions for interactive elements
+  // Quick transitions for interactive elements
   fast: {
-    type: "spring",
-    stiffness: 400,
-    damping: 30,
+    type: "tween",
+    duration: 0.15,
+    ease: "easeOut",
   } as Transition,
 
-  // Default smooth transition
+  // Default smooth transition - very subtle
   smooth: {
-    type: "spring",
-    stiffness: 300,
-    damping: 25,
+    type: "tween",
+    duration: 0.2,
+    ease: "easeOut",
   } as Transition,
 };
 
 // ============================================================================
-// FADE ANIMATIONS - Minimal set for page/component entry
+// FADE ANIMATIONS - Minimal, subtle entrance
 // ============================================================================
 
 export const fadeIn: Variants = {
@@ -40,7 +41,7 @@ export const fadeIn: Variants = {
 };
 
 export const fadeInUp: Variants = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 4 }, /* Very subtle movement */
   visible: {
     opacity: 1,
     y: 0,
@@ -49,7 +50,7 @@ export const fadeInUp: Variants = {
 };
 
 // ============================================================================
-// STAGGER ANIMATIONS - For lists and grids
+// STAGGER ANIMATIONS - For lists and grids (minimal)
 // ============================================================================
 
 export const staggerContainer: Variants = {
@@ -57,17 +58,17 @@ export const staggerContainer: Variants = {
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.05,
-      delayChildren: 0.1,
+      staggerChildren: 0.03, /* Faster stagger */
+      delayChildren: 0.05, /* Shorter delay */
     },
   },
 };
 
 export const staggerItem: Variants = {
-  hidden: { opacity: 0, y: 10 },
+  hidden: { opacity: 0, y: 4 }, /* Very subtle movement */
   visible: {
     opacity: 1,
     y: 0,
-    transition: transitions.smooth,
+    transition: transitions.fast,
   },
 };

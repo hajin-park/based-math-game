@@ -12,8 +12,9 @@ module.exports = {
     container: {
       center: true,
       padding: {
-        DEFAULT: "1rem",
+        DEFAULT: "1.5rem", /* Generous margins like textbooks */
         sm: "2rem",
+        md: "3rem",
         lg: "4rem",
         xl: "5rem",
         "2xl": "6rem",
@@ -88,41 +89,56 @@ module.exports = {
         },
       },
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
-        xl: "calc(var(--radius) + 4px)",
-        "2xl": "calc(var(--radius) + 8px)",
+        lg: "var(--radius)", /* 2px - very subtle */
+        md: "0.1875rem", /* 3px - slightly more rounded */
+        sm: "0.125rem", /* 2px - minimal */
+        xl: "0.25rem", /* 4px - for special cases */
+        "2xl": "0.375rem", /* 6px - rarely used */
+        none: "0", /* Sharp corners for academic look */
       },
       fontSize: {
-        xs: ["0.75rem", { lineHeight: "1rem" }],
-        sm: ["0.875rem", { lineHeight: "1.25rem" }],
-        base: ["1rem", { lineHeight: "1.5rem" }],
-        lg: ["1.125rem", { lineHeight: "1.75rem" }],
-        xl: ["1.25rem", { lineHeight: "1.75rem" }],
-        "2xl": ["1.5rem", { lineHeight: "2rem" }],
-        "3xl": ["1.875rem", { lineHeight: "2.25rem" }],
-        "4xl": ["2.25rem", { lineHeight: "2.5rem" }],
-        "5xl": ["3rem", { lineHeight: "1" }],
-        "6xl": ["3.75rem", { lineHeight: "1" }],
-        "7xl": ["4.5rem", { lineHeight: "1" }],
+        xs: ["0.75rem", { lineHeight: "1.5" }], /* Academic line-height */
+        sm: ["0.875rem", { lineHeight: "1.6" }],
+        base: ["1rem", { lineHeight: "1.7" }], /* Optimal for reading */
+        lg: ["1.125rem", { lineHeight: "1.7" }],
+        xl: ["1.25rem", { lineHeight: "1.6" }],
+        "2xl": ["1.5rem", { lineHeight: "1.5" }],
+        "3xl": ["1.875rem", { lineHeight: "1.4" }],
+        "4xl": ["2.25rem", { lineHeight: "1.3" }],
+        "5xl": ["3rem", { lineHeight: "1.2" }],
+        "6xl": ["3.75rem", { lineHeight: "1.1" }],
+        "7xl": ["4.5rem", { lineHeight: "1.1" }],
         "8xl": ["6rem", { lineHeight: "1" }],
         "9xl": ["8rem", { lineHeight: "1" }],
+      },
+      fontFamily: {
+        sans: ["Inter", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "sans-serif"],
+        serif: ["Crimson Pro", "Crimson Text", "Georgia", "serif"],
+        mono: ["JetBrains Mono", "Fira Code", "Consolas", "monospace"],
       },
       spacing: {
         18: "4.5rem",
         88: "22rem",
         128: "32rem",
       },
+      maxWidth: {
+        "content": "65ch", /* Academic optimal reading width */
+        "prose": "75ch", /* Slightly wider for prose */
+      },
+      letterSpacing: {
+        academic: "-0.02em", /* For headings */
+        body: "0.01em", /* For body text */
+      },
       boxShadow: {
-        sm: "0 1px 2px 0 rgb(0 0 0 / 0.05)",
-        DEFAULT:
-          "0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)",
-        md: "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
-        lg: "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
-        xl: "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)",
-        "2xl": "0 25px 50px -12px rgb(0 0 0 / 0.25)",
-        inner: "inset 0 2px 4px 0 rgb(0 0 0 / 0.05)",
+        /* Minimal shadows - paper-like, flat design */
+        sm: "0 1px 2px 0 rgb(0 0 0 / 0.03)", /* Very subtle */
+        DEFAULT: "0 1px 3px 0 rgb(0 0 0 / 0.05)", /* Subtle paper lift */
+        md: "0 2px 4px 0 rgb(0 0 0 / 0.06)", /* Slightly elevated */
+        lg: "0 4px 8px 0 rgb(0 0 0 / 0.08)", /* More elevated */
+        xl: "0 8px 16px 0 rgb(0 0 0 / 0.10)", /* Highest elevation */
+        "2xl": "0 12px 24px 0 rgb(0 0 0 / 0.12)", /* Maximum elevation */
+        inner: "inset 0 1px 2px 0 rgb(0 0 0 / 0.04)", /* Subtle inset */
+        none: "none", /* No shadow for flat design */
       },
       keyframes: {
         "accordion-down": {

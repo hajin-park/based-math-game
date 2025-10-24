@@ -25,116 +25,281 @@ React-based multiplayer quiz game for practicing base conversion (Binary, Octal,
 
 ### Overview
 
-Modern design system built on shadcn/ui components with Tailwind CSS and Slate primary color theme using OKLCH color space.
+**Academic Textbook/Notes/Papers Theme** - A unique design system inspired by scholarly materials, textbooks, and academic papers. Built on shadcn/ui components with Tailwind CSS using OKLCH color space.
 
-**Features:**
+**Design Philosophy:**
 
-- Glassmorphism with backdrop blur effects
-- Clean minimalist layouts with functional-first design
-- Smooth animations (fade-in, slide-in) - only when purposeful
-- Mobile-first responsive design
-- WCAG 2.1 AA accessibility compliance
-- Full light/dark theme support
+- **Minimalistic & Purposeful**: Every design element serves a functional purpose
+- **Academic Aesthetics**: Inspired by paper, ink, highlighters, and scholarly materials
+- **Flat Design**: Minimal shadows, no glassmorphism, paper-like surfaces
+- **Readable Typography**: Generous line-height, optimal character width, clear hierarchy
+- **Subtle Interactions**: Fast, minimal animations (< 200ms) for functional feedback only
+- **Mobile-first responsive design**
+- **WCAG 2.1 AA accessibility compliance**
+- **Full light/dark theme support** (paper/chalkboard modes)
 
-### Color Palette (OKLCH)
+### Color Palette - "Ink & Paper" (OKLCH)
 
-#### Primary Colors - Slate Theme
+#### Light Mode - Paper, Ink, and Highlighters
+
+**Inspiration**: Aged paper, blue ink, highlighter yellow, graphite pencil
 
 ```css
-/* Light Mode */
---primary: oklch(0.208 0.042 265.755); /* Slate 900 */
---primary-foreground: oklch(0.984 0.003 247.858); /* Slate 50 */
---background: oklch(1 0 0); /* Pure white */
---foreground: oklch(0.129 0.042 264.695); /* Slate 950 */
+/* Base Colors */
+--background: oklch(0.98 0.005 85); /* Warm off-white (aged paper) */
+--foreground: oklch(0.15 0.01 265); /* Deep ink black */
+--card: oklch(0.99 0.003 85); /* Bright paper white */
 
-/* Dark Mode */
---primary: oklch(0.929 0.013 255.508); /* Slate 200 */
---primary-foreground: oklch(0.208 0.042 265.755); /* Slate 900 */
---background: oklch(0.129 0.042 264.695); /* Slate 950 */
---foreground: oklch(0.984 0.003 247.858); /* Slate 50 */
+/* Primary - Academic Blue (blue ink) */
+--primary: oklch(0.35 0.08 250); /* Deep academic blue */
+--primary-foreground: oklch(0.99 0.003 85); /* Paper white */
+
+/* Accent - Highlighter Yellow */
+--accent: oklch(0.85 0.12 95); /* Soft yellow highlighter */
+--accent-foreground: oklch(0.20 0.01 265); /* Dark text on highlight */
+
+/* Muted - Cream (notebook margins) */
+--muted: oklch(0.95 0.008 85); /* Cream/beige */
+--muted-foreground: oklch(0.45 0.02 265); /* Medium gray */
+
+/* Borders - Graphite */
+--border: oklch(0.85 0.005 265); /* Light graphite line */
 ```
 
-#### Semantic Colors (OKLCH)
+#### Dark Mode - Chalkboard and Night Reading
+
+**Inspiration**: Chalkboard, warm reading light, reduced eye strain
 
 ```css
---success: oklch(0.6 0.118 184.704); /* Green */
---success-foreground: oklch(0.984 0.003 247.858);
---warning: oklch(0.828 0.189 84.429); /* Amber */
---warning-foreground: oklch(0.129 0.042 264.695);
---info: oklch(0.488 0.243 264.376); /* Blue */
---info-foreground: oklch(0.984 0.003 247.858);
---destructive: oklch(0.577 0.245 27.325); /* Red */
---destructive-foreground: oklch(0.984 0.003 247.858);
+/* Base Colors */
+--background: oklch(0.18 0.01 265); /* Deep charcoal */
+--foreground: oklch(0.95 0.005 85); /* Soft white (reduced eye strain) */
+--card: oklch(0.22 0.01 265); /* Lighter charcoal */
+
+/* Primary - Chalk Blue */
+--primary: oklch(0.65 0.08 250); /* Bright chalk blue */
+--primary-foreground: oklch(0.18 0.01 265); /* Deep charcoal */
+
+/* Accent - Soft Amber (warm reading light) */
+--accent: oklch(0.75 0.10 75); /* Warm amber */
+--accent-foreground: oklch(0.18 0.01 265); /* Deep charcoal */
+
+/* Muted - Dark Gray */
+--muted: oklch(0.28 0.01 265); /* Muted dark gray */
+--muted-foreground: oklch(0.65 0.02 265); /* Medium light gray */
+
+/* Borders - Subtle Gray */
+--border: oklch(0.30 0.01 265); /* Subtle gray line */
 ```
 
-#### Neutral Colors (OKLCH)
+#### Semantic Colors (Both Modes)
 
 ```css
---muted: oklch(0.968 0.007 247.896); /* Slate 100 (light) */
---muted-foreground: oklch(0.554 0.046 257.417); /* Slate 500 (light) */
---border: oklch(0.929 0.013 255.508); /* Slate 200 (light) */
---card: oklch(1 0 0); /* White (light) */
+/* Success - Green checkmark */
+--success: oklch(0.55 0.15 150); /* Academic green (light) */
+--success: oklch(0.65 0.12 150); /* Muted green (dark) */
+
+/* Warning - Orange highlighter */
+--warning: oklch(0.75 0.15 75); /* Warm orange (light) */
+--warning: oklch(0.70 0.12 75); /* Muted orange (dark) */
+
+/* Info - Blue note */
+--info: oklch(0.55 0.12 240); /* Information blue (light) */
+--info: oklch(0.60 0.10 240); /* Muted blue (dark) */
+
+/* Destructive - Red ink/correction */
+--destructive: oklch(0.50 0.20 25); /* Red correction pen (light) */
+--destructive: oklch(0.60 0.18 25); /* Muted red (dark) */
 ```
 
-### Typography
+### Typography - Academic Hierarchy
 
-**Font Family:** System font stack (primary), Monospace (code/numbers)
-**Font Sizes:** text-xs (12px) to text-8xl (96px)
-**Font Weights:** 400 (normal), 500 (medium), 600 (semibold), 700 (bold)
-**Tracking:** tracking-tight for headings
+**Font Families:**
 
-### Spacing & Layout
+- **Headings**: `"Crimson Pro", "Crimson Text", Georgia, serif` - Classic serif for scholarly feel
+- **Body**: `"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif` - Clean, readable sans-serif
+- **Code/Numbers**: `"JetBrains Mono", "Fira Code", "Consolas", monospace` - For base conversion numbers
 
-**Container Widths:** max-w-4xl (896px) to max-w-6xl (1152px)
-**Page Padding:** px-4 py-8 (16px horizontal, 32px vertical) to py-20 (80px vertical)
-**Border Radius:** --radius: 0.625rem (10px)
+**Type Scale** (with academic line-heights):
 
-### Custom Utility Classes
+- `text-xs`: 0.75rem / line-height 1.5
+- `text-sm`: 0.875rem / line-height 1.6
+- `text-base`: 1rem / line-height 1.7 (optimal for reading)
+- `text-lg`: 1.125rem / line-height 1.7
+- `text-xl`: 1.25rem / line-height 1.6
+- `text-2xl`: 1.5rem / line-height 1.5
+- `text-3xl`: 1.875rem / line-height 1.4
+- `text-4xl`: 2.25rem / line-height 1.3
+- `text-5xl+`: Progressively tighter line-heights (1.2 → 1.0)
+
+**Font Weights:**
+
+- 400 (normal) - Body text
+- 500 (medium) - Emphasis
+- 600 (semibold) - Headings
+- 700 (bold) - Strong emphasis
+
+**Letter Spacing:**
+
+- Headings: `-0.02em` (tighter, more elegant)
+- Body: `0.01em` (subtle, improved readability)
+
+**Content Width:**
+
+- Optimal: `65ch` (academic standard for readability)
+- Prose: `75ch` (slightly wider for long-form content)
+
+### Spacing & Layout - Academic Paper Structure
+
+**Container Padding** (generous margins like textbooks):
+
+- Default: `1.5rem` (24px)
+- sm: `2rem` (32px)
+- md: `3rem` (48px)
+- lg: `4rem` (64px)
+- xl: `5rem` (80px)
+- 2xl: `6rem` (96px)
+
+**Content Widths:**
+
+- `max-w-content`: `65ch` (optimal reading width)
+- `max-w-prose`: `75ch` (wider for prose)
+- `max-w-4xl`: 896px (standard)
+- `max-w-6xl`: 1152px (wide layouts)
+
+**Border Radius** (minimal, paper-like):
+
+- `--radius`: `0.125rem` (2px) - very subtle, almost sharp
+- `rounded-sm`: `0.125rem` (2px) - minimal
+- `rounded-md`: `0.1875rem` (3px) - slightly more rounded
+- `rounded-lg`: `0.125rem` (2px) - same as base
+- `rounded-xl`: `0.25rem` (4px) - for special cases
+- `rounded-none`: `0` - sharp corners for academic look
+
+**Spacing Scale:**
+
+- Based on `0.5rem` (8px) increments
+- Larger gaps between sections (like chapter breaks)
+- Tighter spacing within related content
+
+### Custom Utility Classes - Academic Theme
+
+**Paper-like Components:**
 
 ```css
-/* Glassmorphism */
-.glass {
-  @apply bg-background/80 backdrop-blur-md border border-border/50;
-}
-.glass-card {
-  @apply bg-card/80 backdrop-blur-md border border-border/50;
-}
-.glass-nav {
-  @apply bg-background/60 backdrop-blur-lg border-b border-border/50;
+/* Paper card - flat with subtle border */
+.paper-card {
+  @apply bg-card border border-border shadow-sm;
 }
 
-/* Gradients */
-.gradient-text {
-  @apply bg-gradient-to-r from-primary via-primary/90 to-primary/80 bg-clip-text text-transparent;
-}
-.gradient-subtle {
-  @apply bg-gradient-to-b from-background to-muted/30;
+/* Ruled line separator - like notebook paper */
+.ruled-line {
+  @apply border-b border-border;
 }
 
-/* Animations - Only use when purposeful */
+/* Margin note style - like textbook margins */
+.margin-note {
+  @apply text-sm text-muted-foreground italic;
+}
+```
+
+**Interactive Elements:**
+
+```css
+/* Underline link - academic hyperlink style */
+.link-underline {
+  @apply underline decoration-1 underline-offset-2 hover:decoration-2 transition-all duration-150;
+}
+
+/* Hover underline - for interactive text */
+.hover-underline {
+  @apply hover:underline hover:decoration-1 hover:underline-offset-2 transition-all duration-150;
+}
+
+/* Focus ring - academic style */
+.focus-academic {
+  @apply focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1;
+}
+```
+
+**Layout Utilities:**
+
+```css
+/* Academic content width - optimal readability */
+.content-width {
+  max-width: 65ch;
+}
+```
+
+**Minimal Animations** (< 200ms, functional only):
+
+```css
+/* Subtle entrance */
 .animate-in {
-  animation: animate-in 0.3s ease-out;
-}
-.animate-in-slow {
-  animation: animate-in 0.6s ease-out;
-}
-.fade-in-up {
-  animation: fade-in-up 0.6s ease-out;
+  animation: animate-in 0.2s ease-out;
 }
 
-/* Transitions - Only use when functionally necessary */
+/* Fade in */
+.fade-in {
+  animation: fade-in 0.2s ease-out;
+}
+
+/* Smooth transitions - minimal duration */
 .transition-smooth {
-  @apply transition-all duration-300 ease-in-out;
+  @apply transition-all duration-150 ease-in-out;
 }
 ```
 
-### Component Patterns
+**Text Selection** (highlighter effect):
 
-**Page Headers:** Icon + gradient text + description
-**Cards:** Clean borders with subtle shadows, no purposeless hover effects
-**Interactive Cards:** hover:shadow-lg hover:border-primary/50 transition-all duration-200 (functional feedback only)
-**Buttons:** Primary (default), Secondary (outline), Ghost, Destructive variants
-**Separators:** Used between major sections for visual hierarchy
+```css
+::selection {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+}
+```
+
+### Component Patterns - Academic Style
+
+**Cards:**
+
+- Flat design with subtle borders (like paper sheets)
+- Minimal shadows (`shadow-sm` or `shadow`)
+- Sharp or barely rounded corners (`rounded-sm` or `rounded-md`)
+- No glassmorphism or blur effects
+- Hover: Subtle border color change or slight shadow increase
+
+**Buttons:**
+
+- Primary: Solid background with academic blue
+- Secondary: Bordered with transparent background
+- Ghost: Minimal styling, underline on hover
+- Link-style: Underlined text (academic hyperlink)
+- Destructive: Red ink color for dangerous actions
+
+**Inputs:**
+
+- Bottom-border only style (like fill-in-the-blank forms)
+- Or full border with sharp corners (like textbook exercises)
+- Focus: Primary color ring with minimal offset
+
+**Separators:**
+
+- Thin horizontal rules (like section dividers in textbooks)
+- Used between major sections for visual hierarchy
+- Can be styled as `.ruled-line` for notebook paper effect
+
+**Page Headers:**
+
+- Serif headings (Crimson Pro) for scholarly feel
+- Minimal decoration, focus on typography
+- Optional: Subtle underline or border-bottom
+
+**Navigation:**
+
+- Clean, flat design
+- Underline active states (like table of contents)
+- Minimal hover effects (color change, underline)
 
 ### Icons
 
@@ -149,48 +314,122 @@ Modern design system built on shadcn/ui components with Tailwind CSS and Slate p
 
 ### Accessibility
 
-**Focus States:** focus:ring-2 focus:ring-primary focus:ring-offset-2
+**Focus States:** `focus:ring-2 focus:ring-primary focus:ring-offset-1` (minimal offset for academic style)
 **Color Contrast:** WCAG 2.1 AA compliance with OKLCH color space
 **Semantic HTML:** Proper heading hierarchy, ARIA labels, keyboard navigation
-**Motion Preferences:** Respects prefers-reduced-motion
-**Dark Mode:** Full support with automatic theme switching
+**Motion Preferences:** Respects `prefers-reduced-motion` (all animations disabled)
+**Dark Mode:** Full support with automatic theme switching (paper/chalkboard modes)
 **Touch Targets:** Minimum 44x44px for mobile interactions
+**Readable Typography:** Generous line-height (1.7 for body), optimal content width (65ch)
 
-### Animation Library (Framer Motion)
+### Design System Principles
+
+**1. Function Over Form**
+
+- Every design element must serve a functional purpose
+- No decorative elements that don't aid comprehension or usability
+- Prioritize clarity and readability over visual flair
+
+**2. Academic Aesthetics**
+
+- Inspired by scholarly materials: textbooks, papers, notebooks
+- Paper-like surfaces with minimal shadows
+- Ink-inspired colors (blue, black, red for corrections)
+- Highlighter accents for important information
+
+**3. Minimal Motion**
+
+- Animations < 200ms duration
+- Movement < 4px when necessary
+- Prefer fade-only transitions
+- Only animate for functional feedback (loading, state changes, focus)
+
+**4. Typography First**
+
+- Clear hierarchy with serif headings and sans-serif body
+- Generous line-height for readability (1.7 for body text)
+- Optimal content width (65ch) for comfortable reading
+- Monospace for code and numbers (base conversion)
+
+**5. Flat Design**
+
+- No glassmorphism or blur effects
+- Minimal shadows (paper-like elevation)
+- Sharp or barely rounded corners (2-4px max)
+- Clean borders instead of heavy shadows
+
+**6. Purposeful Color**
+
+- Limited color palette inspired by academic materials
+- Semantic colors for functional feedback (success, warning, error)
+- High contrast for accessibility
+- Highlighter yellow for accents and selections
+
+### Future Component Refactoring Guidelines
+
+**When refactoring individual pages/components:**
+
+1. **Remove Glassmorphism**: Replace `.glass`, `.glass-card`, `.glass-nav` with `.paper-card` or simple borders
+2. **Update Border Radius**: Change large rounded corners to `rounded-sm` or `rounded-md`
+3. **Simplify Shadows**: Use `shadow-sm` or `shadow` instead of `shadow-lg` or `shadow-xl`
+4. **Update Typography**: Apply serif fonts to headings, ensure proper line-heights
+5. **Minimize Animations**: Reduce animation durations, remove decorative motion
+6. **Flatten Gradients**: Remove gradient backgrounds, use solid colors
+7. **Academic Links**: Style links with underlines instead of color-only differentiation
+8. **Content Width**: Wrap text-heavy content in `.content-width` or `max-w-content`
+9. **Spacing**: Use generous margins and padding inspired by textbook layouts
+10. **Focus States**: Update to use minimal ring offset (`ring-offset-1`)
+
+**Component Refactoring Checklist:**
+
+- [ ] Remove glassmorphism effects
+- [ ] Update border radius to minimal values
+- [ ] Simplify shadows to paper-like elevation
+- [ ] Apply academic typography (serif headings, proper line-heights)
+- [ ] Reduce animation durations and movement
+- [ ] Remove gradient backgrounds
+- [ ] Style links with underlines
+- [ ] Apply optimal content width for readability
+- [ ] Use generous, asymmetric spacing
+- [ ] Update focus states to academic style
+- [ ] Ensure WCAG 2.1 AA contrast compliance
+- [ ] Test in both light (paper) and dark (chalkboard) modes
+
+### Animation Library (Framer Motion) - Academic Theme
 
 **Location:** `src/lib/animations.ts`
 
-**Philosophy:** Minimal, purposeful motion only - no decorative animations
+**Philosophy:** Minimal, purposeful motion only - academic design principles
 
 **Available Variants:**
 
 - `fadeIn` - Simple opacity fade (0 → 1)
-- `fadeInUp` - Fade with subtle upward motion (y: 20 → 0)
+- `fadeInUp` - Fade with very subtle upward motion (y: 4px → 0) - barely noticeable
 - `staggerContainer` - Container for staggered children animations
-- `staggerItem` - Individual item in staggered list
+- `staggerItem` - Individual item in staggered list (very subtle)
 
-**Transitions:**
+**Transitions** (faster, more subtle):
 
-- `transitions.fast` - Spring (stiffness: 400, damping: 30) - Quick interactions
-- `transitions.smooth` - Spring (stiffness: 300, damping: 25) - Standard transitions
+- `transitions.fast` - Tween (duration: 0.15s, ease: easeOut) - Quick interactions
+- `transitions.smooth` - Tween (duration: 0.2s, ease: easeOut) - Standard transitions
 
 **Usage Example:**
 
 ```tsx
-import { motion } from 'framer-motion';
-import { fadeIn, staggerContainer, staggerItem } from '@/lib/animations';
+import { motion } from "framer-motion";
+import { fadeIn, staggerContainer, staggerItem } from "@/lib/animations";
 
 <motion.div variants={fadeIn} initial="hidden" animate="visible">
   Content
-</motion.div>
+</motion.div>;
 
 <motion.ul variants={staggerContainer} initial="hidden" animate="visible">
-  {items.map(item => (
+  {items.map((item) => (
     <motion.li key={item.id} variants={staggerItem}>
       {item.name}
     </motion.li>
   ))}
-</motion.ul>
+</motion.ul>;
 ```
 
 **Guidelines:**
@@ -198,7 +437,9 @@ import { fadeIn, staggerContainer, staggerItem } from '@/lib/animations';
 - Only use animations when they serve a functional purpose (feedback, hierarchy, transitions)
 - Avoid decorative animations that distract from the educational quiz game mission
 - All animations automatically respect `prefers-reduced-motion`
-- Keep animations subtle and fast (< 0.3s for most interactions)
+- Keep animations very subtle and fast (< 0.2s for most interactions)
+- Movement should be minimal (4px or less)
+- Prefer fade-only animations when possible
 
 ---
 
