@@ -1,16 +1,17 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  PaperCard,
+  PaperCardContent,
+  PaperCardDescription,
+  PaperCardHeader,
+  PaperCardTitle,
+  SectionHeader,
+  RuledSeparator,
+  NotebookInput,
+} from "@/components/ui/academic";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -80,42 +81,44 @@ export default function ProfileSettings() {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-300">
+    <div className="space-y-6 animate-in fade-in duration-300">
       {/* Header */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-2">
-          <SettingsIcon className="h-8 w-8 text-primary" />
-          <h1 className="text-4xl font-bold gradient-text">Account Settings</h1>
-        </div>
-        <p className="text-lg text-muted-foreground">
-          Manage your account preferences and information
-        </p>
-      </div>
+      <SectionHeader
+        title="Account Settings"
+        description="Manage your account preferences and information"
+        icon={SettingsIcon}
+        align="left"
+        titleSize="lg"
+      />
 
       {/* Display Name */}
-      <Card className="border-2 shadow-lg">
-        <CardHeader>
-          <CardTitle className="text-xl flex items-center gap-2">
-            <Pencil className="h-5 w-5 text-primary" />
-            Display Name
-          </CardTitle>
-          <CardDescription className="text-base">
-            This is how your name will appear to other players
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+      <PaperCard variant="folded" padding="none" className="shadow-lg">
+        <PaperCardHeader className="p-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Pencil className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <PaperCardTitle className="text-xl">Display Name</PaperCardTitle>
+              <PaperCardDescription className="text-base">
+                This is how your name will appear to other players
+              </PaperCardDescription>
+            </div>
+          </div>
+        </PaperCardHeader>
+        <PaperCardContent className="p-6 pt-0">
           {isEditing ? (
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="displayName" className="text-base">
                   Display Name
                 </Label>
-                <Input
+                <NotebookInput
                   id="displayName"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
                   placeholder="Enter display name"
-                  className="h-11"
+                  variant="ruled"
                   autoFocus
                 />
               </div>
@@ -148,12 +151,12 @@ export default function ProfileSettings() {
               </div>
             </div>
           ) : (
-            <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border-2">
+            <div className="flex items-center justify-between p-4 rounded-sm bg-muted/30 border-2 paper-texture">
               <div className="space-y-1">
                 <p className="text-xs text-muted-foreground">
                   Current Display Name
                 </p>
-                <p className="text-lg font-semibold">
+                <p className="text-lg font-serif font-semibold tracking-academic">
                   {user?.displayName || "Not set"}
                 </p>
               </div>
@@ -167,43 +170,59 @@ export default function ProfileSettings() {
               </Button>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </PaperCardContent>
+      </PaperCard>
 
       {/* Email (Read-only) */}
       {user && "email" in user && user.email && (
-        <Card className="border-2 shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-xl flex items-center gap-2">
-              <Mail className="h-5 w-5 text-primary" />
-              Email Address
-            </CardTitle>
-            <CardDescription className="text-base">
-              Your email address cannot be changed
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="p-4 rounded-lg bg-muted/30 border-2">
+        <PaperCard variant="folded" padding="none" className="shadow-lg">
+          <PaperCardHeader className="p-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Mail className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <PaperCardTitle className="text-xl">
+                  Email Address
+                </PaperCardTitle>
+                <PaperCardDescription className="text-base">
+                  Your email address cannot be changed
+                </PaperCardDescription>
+              </div>
+            </div>
+          </PaperCardHeader>
+          <PaperCardContent className="p-6 pt-0">
+            <div className="p-4 rounded-sm bg-muted/30 border-2 paper-texture">
               <p className="text-xs text-muted-foreground mb-1">Email</p>
               <p className="text-base font-medium break-all">{user.email}</p>
             </div>
-          </CardContent>
-        </Card>
+          </PaperCardContent>
+        </PaperCard>
       )}
 
       {/* Danger Zone */}
-      <Card className="border-2 border-destructive shadow-lg">
-        <CardHeader>
-          <CardTitle className="text-2xl flex items-center gap-2 text-destructive">
-            <AlertTriangle className="h-6 w-6" />
-            Danger Zone
-          </CardTitle>
-          <CardDescription className="text-base">
-            Irreversible actions for your account
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="p-6 bg-destructive/10 rounded-lg border-2 border-destructive/30 space-y-4">
+      <PaperCard
+        variant="folded"
+        padding="none"
+        className="border-2 border-destructive shadow-lg"
+      >
+        <PaperCardHeader className="p-6">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-lg bg-destructive/10 flex items-center justify-center">
+              <AlertTriangle className="h-6 w-6 text-destructive" />
+            </div>
+            <div>
+              <PaperCardTitle className="text-2xl text-destructive">
+                Danger Zone
+              </PaperCardTitle>
+              <PaperCardDescription className="text-base">
+                Irreversible actions for your account
+              </PaperCardDescription>
+            </div>
+          </div>
+        </PaperCardHeader>
+        <PaperCardContent className="p-6 pt-0">
+          <div className="p-6 bg-destructive/10 rounded-sm border-2 border-destructive/30 space-y-4 paper-texture">
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1 space-y-2">
                 <div className="flex items-center gap-2">
@@ -237,7 +256,7 @@ export default function ProfileSettings() {
                         servers.
                       </p>
 
-                      <Separator />
+                      <RuledSeparator />
 
                       <div className="space-y-2">
                         <p className="font-semibold text-destructive text-base">
@@ -296,8 +315,8 @@ export default function ProfileSettings() {
               </AlertDialog>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </PaperCardContent>
+      </PaperCard>
     </div>
   );
 }

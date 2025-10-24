@@ -1,10 +1,17 @@
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  PaperCard,
+  PaperCardContent,
+  PaperCardDescription,
+  PaperCardHeader,
+  PaperCardTitle,
+  RuledSeparator,
+  SectionHeader,
+} from "@/components/ui/academic";
+import {
+  StickyNote,
+  StickyNoteTitle,
+  StickyNoteDescription,
+} from "@/components/ui/sticky-note";
 import { Link } from "react-router-dom";
 import {
   BookOpen,
@@ -15,119 +22,109 @@ import {
   ArrowRight,
   Gamepad2,
 } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 
 export default function Usage() {
   return (
-    <div className="container mx-auto px-4 py-8 max-w-5xl">
-      <div className="mb-12 text-center space-y-4 animate-in">
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <BookOpen className="h-10 w-10 text-primary" />
-          <h1 className="text-5xl font-bold gradient-text">How to Play</h1>
-        </div>
-        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          Learn how to master base conversion with Based Math Game
-        </p>
-      </div>
+    <div className="container mx-auto px-2 py-4 max-w-5xl">
+      <SectionHeader
+        icon={BookOpen}
+        title="How to Play"
+        description="Learn how to master base conversion with Based Math Game"
+        className="mb-6"
+      />
 
-      <div className="space-y-6">
+      <div className="space-y-3">
         {/* Game Basics */}
-        <Card className="border-2 shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-2xl">Game Basics</CardTitle>
-            <CardDescription>
+        <PaperCard variant="folded-sm" padding="sm">
+          <PaperCardHeader>
+            <PaperCardTitle className="text-base">Game Basics</PaperCardTitle>
+            <PaperCardDescription className="text-xs">
               Understanding base conversion challenges
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-base leading-relaxed">
+            </PaperCardDescription>
+          </PaperCardHeader>
+          <PaperCardContent className="space-y-2">
+            <p className="text-xs leading-relaxed">
               Based Math Game tests your ability to convert numbers between
               different bases:
             </p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
-              <Card className="border-2">
-                <CardContent className="pt-6 text-center">
-                  <Badge className="mb-2 bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
+              <PaperCard variant="default" padding="sm">
+                <PaperCardContent className="pt-2 text-center">
+                  <Badge className="mb-1 bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 text-xs">
                     Base 2
                   </Badge>
-                  <p className="font-bold text-lg">Binary</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Digits: 0-1
-                  </p>
-                </CardContent>
-              </Card>
-              <Card className="border-2">
-                <CardContent className="pt-6 text-center">
-                  <Badge className="mb-2 bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300">
+                  <p className="font-bold text-sm">Binary</p>
+                  <p className="text-xs text-muted-foreground">Digits: 0-1</p>
+                </PaperCardContent>
+              </PaperCard>
+              <PaperCard variant="default" padding="sm">
+                <PaperCardContent className="pt-2 text-center">
+                  <Badge className="mb-1 bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300 text-xs">
                     Base 8
                   </Badge>
-                  <p className="font-bold text-lg">Octal</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Digits: 0-7
-                  </p>
-                </CardContent>
-              </Card>
-              <Card className="border-2">
-                <CardContent className="pt-6 text-center">
-                  <Badge className="mb-2 bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
+                  <p className="font-bold text-sm">Octal</p>
+                  <p className="text-xs text-muted-foreground">Digits: 0-7</p>
+                </PaperCardContent>
+              </PaperCard>
+              <PaperCard variant="default" padding="sm">
+                <PaperCardContent className="pt-2 text-center">
+                  <Badge className="mb-1 bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 text-xs">
                     Base 10
                   </Badge>
-                  <p className="font-bold text-lg">Decimal</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Digits: 0-9
-                  </p>
-                </CardContent>
-              </Card>
-              <Card className="border-2">
-                <CardContent className="pt-6 text-center">
-                  <Badge className="mb-2 bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300">
+                  <p className="font-bold text-sm">Decimal</p>
+                  <p className="text-xs text-muted-foreground">Digits: 0-9</p>
+                </PaperCardContent>
+              </PaperCard>
+              <PaperCard variant="default" padding="sm">
+                <PaperCardContent className="pt-2 text-center">
+                  <Badge className="mb-1 bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300 text-xs">
                     Base 16
                   </Badge>
-                  <p className="font-bold text-lg">Hexadecimal</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Digits: 0-F
-                  </p>
-                </CardContent>
-              </Card>
+                  <p className="font-bold text-sm">Hexadecimal</p>
+                  <p className="text-xs text-muted-foreground">Digits: 0-F</p>
+                </PaperCardContent>
+              </PaperCard>
             </div>
-            <div className="bg-muted p-4 rounded-lg mt-4">
-              <p className="text-sm font-semibold mb-2">Example Question:</p>
-              <div className="font-mono text-lg mb-2">
+            <div className="bg-muted p-2 rounded mt-2">
+              <p className="text-xs font-semibold mb-1">Example Question:</p>
+              <div className="font-mono text-sm mb-1">
                 Convert{" "}
                 <span className="text-blue-600 dark:text-blue-400 font-bold">
                   1010
                 </span>{" "}
                 from Binary to Decimal
               </div>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-xs text-muted-foreground">
                 Answer: <span className="font-mono font-bold">10</span>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </PaperCardContent>
+        </PaperCard>
 
         {/* Singleplayer Mode */}
-        <Card className="border-2 shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-2xl flex items-center gap-2">
-              <Gamepad2 className="h-6 w-6 text-primary" />
+        <PaperCard variant="folded-sm" padding="sm">
+          <PaperCardHeader>
+            <PaperCardTitle className="flex items-center gap-2 text-base">
+              <Gamepad2 className="h-4 w-4 text-primary" />
               Singleplayer Mode
-            </CardTitle>
-            <CardDescription>
+            </PaperCardTitle>
+            <PaperCardDescription className="text-xs">
               Practice at your own pace with flexible game modes
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
+            </PaperCardDescription>
+          </PaperCardHeader>
+          <PaperCardContent className="space-y-2">
             <div>
-              <h3 className="font-semibold mb-2">Official Game Modes</h3>
-              <p className="text-sm text-muted-foreground mb-3">
+              <h3 className="font-semibold mb-1 text-xs">
+                Official Game Modes
+              </h3>
+              <p className="text-xs text-muted-foreground mb-2">
                 Choose from 48 official game modes across different difficulty
                 levels and formats:
               </p>
-              <div className="grid gap-3 text-sm">
-                <div className="space-y-2">
-                  <h4 className="font-semibold text-primary">
+              <div className="grid gap-2 text-xs">
+                <div className="space-y-1">
+                  <h4 className="font-semibold text-primary text-xs">
                     Timed Challenges (24 modes)
                   </h4>
                   <p className="text-xs text-muted-foreground">
@@ -136,8 +133,8 @@ export default function Usage() {
                     Hard, and Expert difficulties across all base conversions.
                   </p>
                 </div>
-                <div className="space-y-2">
-                  <h4 className="font-semibold text-success">
+                <div className="space-y-1">
+                  <h4 className="font-semibold text-success text-xs">
                     Speed Runs (24 modes)
                   </h4>
                   <p className="text-xs text-muted-foreground">
@@ -146,7 +143,7 @@ export default function Usage() {
                     across all base conversions.
                   </p>
                 </div>
-                <div className="bg-muted p-3 rounded-lg space-y-1">
+                <div className="bg-muted p-2 rounded space-y-1">
                   <p className="text-xs font-semibold">
                     Supported Conversions:
                   </p>
@@ -163,35 +160,35 @@ export default function Usage() {
             </div>
 
             <div>
-              <h3 className="font-semibold mb-2">Playground Mode</h3>
-              <p className="text-sm text-muted-foreground mb-3">
+              <h3 className="font-semibold mb-1 text-xs">Playground Mode</h3>
+              <p className="text-xs text-muted-foreground mb-2">
                 Create your own custom quiz with complete control:
               </p>
-              <div className="space-y-2 text-sm">
+              <div className="space-y-1 text-xs">
                 <div className="flex items-start gap-2">
-                  <span className="text-primary font-bold">1.</span>
-                  <span>
+                  <span className="text-primary font-bold text-xs">1.</span>
+                  <span className="text-xs">
                     <strong>Choose conversions:</strong> Select any combination
                     of base conversions (e.g., Binary → Hex, Decimal → Octal)
                   </span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <span className="text-primary font-bold">2.</span>
-                  <span>
+                  <span className="text-primary font-bold text-xs">2.</span>
+                  <span className="text-xs">
                     <strong>Set number ranges:</strong> Define min/max values
                     for each conversion type
                   </span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <span className="text-primary font-bold">3.</span>
-                  <span>
+                  <span className="text-primary font-bold text-xs">3.</span>
+                  <span className="text-xs">
                     <strong>Set duration:</strong> Choose quiz length (30s, 60s,
                     120s, or unlimited)
                   </span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <span className="text-primary font-bold">4.</span>
-                  <span>
+                  <span className="text-primary font-bold text-xs">4.</span>
+                  <span className="text-xs">
                     <strong>Start quiz:</strong> Questions are randomly selected
                     from your settings
                   </span>
@@ -199,143 +196,155 @@ export default function Usage() {
               </div>
             </div>
 
-            <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
-              <p className="text-sm font-semibold mb-2">Pro Tip:</p>
-              <p className="text-sm">
-                Start with official modes to learn, then use Playground to focus
-                on specific conversions you find challenging!
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+            <StickyNote variant="info" size="sm">
+              <StickyNoteTitle>Pro Tip</StickyNoteTitle>
+              <StickyNoteDescription>
+                <p className="text-xs">
+                  Start with official modes to learn, then use Playground to
+                  focus on specific conversions you find challenging!
+                </p>
+              </StickyNoteDescription>
+            </StickyNote>
+          </PaperCardContent>
+        </PaperCard>
 
         {/* Multiplayer Mode */}
-        <Card className="border-2 shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-2xl flex items-center gap-2">
-              <Users className="h-6 w-6 text-primary" />
+        <PaperCard variant="folded-sm" padding="sm">
+          <PaperCardHeader>
+            <PaperCardTitle className="flex items-center gap-2 text-base">
+              <Users className="h-4 w-4 text-primary" />
               Multiplayer Mode
-            </CardTitle>
-            <CardDescription>
+            </PaperCardTitle>
+            <PaperCardDescription className="text-xs">
               Compete with friends in real-time challenges
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
+            </PaperCardDescription>
+          </PaperCardHeader>
+          <PaperCardContent className="space-y-2">
             <div>
-              <h3 className="font-semibold mb-2">Creating a Room</h3>
-              <div className="space-y-2 text-sm">
+              <h3 className="font-semibold mb-1 text-xs">Creating a Room</h3>
+              <div className="space-y-1 text-xs">
                 <div className="flex items-start gap-2">
-                  <span className="text-primary font-bold">1.</span>
-                  <span>Click "Create Room" from the Multiplayer page</span>
+                  <span className="text-primary font-bold text-xs">1.</span>
+                  <span className="text-xs">
+                    Click "Create Room" from the Multiplayer page
+                  </span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <span className="text-primary font-bold">2.</span>
-                  <span>
+                  <span className="text-primary font-bold text-xs">2.</span>
+                  <span className="text-xs">
                     Select a game mode (official or custom Playground)
                   </span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <span className="text-primary font-bold">3.</span>
-                  <span>
+                  <span className="text-primary font-bold text-xs">3.</span>
+                  <span className="text-xs">
                     Share the 8-character room code or invite link with friends
                   </span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <span className="text-primary font-bold">4.</span>
-                  <span>
+                  <span className="text-primary font-bold text-xs">4.</span>
+                  <span className="text-xs">
                     Wait for players to join and mark themselves ready
                   </span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <span className="text-primary font-bold">5.</span>
-                  <span>Start the game when all players are ready</span>
+                  <span className="text-primary font-bold text-xs">5.</span>
+                  <span className="text-xs">
+                    Start the game when all players are ready
+                  </span>
                 </div>
               </div>
             </div>
 
             <div>
-              <h3 className="font-semibold mb-2">Joining a Room</h3>
-              <div className="space-y-2 text-sm">
+              <h3 className="font-semibold mb-1 text-xs">Joining a Room</h3>
+              <div className="space-y-1 text-xs">
                 <div className="flex items-start gap-2">
-                  <span className="text-primary font-bold">1.</span>
-                  <span>Click "Join Room" from the Multiplayer page</span>
+                  <span className="text-primary font-bold text-xs">1.</span>
+                  <span className="text-xs">
+                    Click "Join Room" from the Multiplayer page
+                  </span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <span className="text-primary font-bold">2.</span>
-                  <span>
+                  <span className="text-primary font-bold text-xs">2.</span>
+                  <span className="text-xs">
                     Enter the 8-character room code (case-insensitive)
                   </span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <span className="text-primary font-bold">3.</span>
-                  <span>
+                  <span className="text-primary font-bold text-xs">3.</span>
+                  <span className="text-xs">
                     Mark yourself as ready when you're prepared to play
                   </span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <span className="text-primary font-bold">4.</span>
-                  <span>Wait for the host to start the game</span>
+                  <span className="text-primary font-bold text-xs">4.</span>
+                  <span className="text-xs">
+                    Wait for the host to start the game
+                  </span>
                 </div>
               </div>
             </div>
 
-            <div className="bg-purple-50 dark:bg-purple-950 p-4 rounded-lg border border-purple-200 dark:border-purple-800">
-              <p className="text-sm font-semibold mb-2">
-                Real-Time Competition:
-              </p>
-              <p className="text-sm">
-                All players see the same questions in the same order. Your score
-                updates in real-time on the live leaderboard. The player with
-                the most correct answers when time runs out wins!
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+            <StickyNote variant="warning" size="sm">
+              <StickyNoteTitle>Real-Time Competition</StickyNoteTitle>
+              <StickyNoteDescription>
+                <p className="text-xs">
+                  All players see the same questions in the same order. Your
+                  score updates in real-time on the live leaderboard. The player
+                  with the most correct answers when time runs out wins!
+                </p>
+              </StickyNoteDescription>
+            </StickyNote>
+          </PaperCardContent>
+        </PaperCard>
 
         {/* During the Quiz */}
-        <Card className="border-2 shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-2xl flex items-center gap-2">
-              <Clock className="h-6 w-6 text-primary" />
+        <PaperCard variant="folded-sm" padding="sm">
+          <PaperCardHeader>
+            <PaperCardTitle className="flex items-center gap-2 text-base">
+              <Clock className="h-4 w-4 text-primary" />
               During the Quiz
-            </CardTitle>
-            <CardDescription>
+            </PaperCardTitle>
+            <PaperCardDescription className="text-xs">
               Gameplay mechanics and scoring system
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid md:grid-cols-2 gap-4">
+            </PaperCardDescription>
+          </PaperCardHeader>
+          <PaperCardContent className="space-y-2">
+            <div className="grid md:grid-cols-2 gap-2">
               <div>
-                <h3 className="font-semibold mb-2">How to Answer</h3>
-                <ul className="space-y-2 text-sm">
+                <h3 className="font-semibold mb-1 text-xs">How to Answer</h3>
+                <ul className="space-y-1 text-xs">
                   <li className="flex items-start gap-2">
-                    <span className="text-primary font-bold">•</span>
-                    <span>Type your answer in the input field</span>
+                    <span className="text-primary font-bold text-xs">•</span>
+                    <span className="text-xs">
+                      Type your answer in the input field
+                    </span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-primary font-bold">•</span>
-                    <span>
+                    <span className="text-primary font-bold text-xs">•</span>
+                    <span className="text-xs">
                       Answers are auto-validated as you type (no submit button
                       needed)
                     </span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-primary font-bold">•</span>
-                    <span>
+                    <span className="text-primary font-bold text-xs">•</span>
+                    <span className="text-xs">
                       Correct answers automatically load the next question
                     </span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-primary font-bold">•</span>
-                    <span>
+                    <span className="text-primary font-bold text-xs">•</span>
+                    <span className="text-xs">
                       Wrong answers let you keep trying with no penalty
                     </span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-primary font-bold">•</span>
-                    <span>
+                    <span className="text-primary font-bold text-xs">•</span>
+                    <span className="text-xs">
                       Click the{" "}
-                      <kbd className="px-2 py-1 bg-muted rounded text-xs font-mono">
+                      <kbd className="px-1.5 py-0.5 bg-muted rounded text-xs font-mono">
                         ✕
                       </kbd>{" "}
                       button in the top-left to exit
@@ -345,39 +354,39 @@ export default function Usage() {
               </div>
 
               <div>
-                <h3 className="font-semibold mb-2">Scoring System</h3>
-                <ul className="space-y-2 text-sm">
+                <h3 className="font-semibold mb-1 text-xs">Scoring System</h3>
+                <ul className="space-y-1 text-xs">
                   <li className="flex items-start gap-2">
-                    <span className="text-green-600 dark:text-green-400 font-bold">
+                    <span className="text-green-600 dark:text-green-400 font-bold text-xs">
                       ✓
                     </span>
-                    <span>
+                    <span className="text-xs">
                       <strong>Correct answer:</strong> +1 point (auto-validated
                       on keystroke)
                     </span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-red-600 dark:text-red-400 font-bold">
+                    <span className="text-red-600 dark:text-red-400 font-bold text-xs">
                       ✗
                     </span>
-                    <span>
+                    <span className="text-xs">
                       <strong>Wrong answer:</strong> No penalty, just try again
                     </span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-blue-600 dark:text-blue-400 font-bold">
+                    <span className="text-blue-600 dark:text-blue-400 font-bold text-xs">
                       ⏱
                     </span>
-                    <span>
+                    <span className="text-xs">
                       <strong>Pure speed:</strong> Score as many correct answers
                       as possible before time runs out
                     </span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-purple-600 dark:text-purple-400 font-bold">
+                    <span className="text-purple-600 dark:text-purple-400 font-bold text-xs">
                       🏆
                     </span>
-                    <span>
+                    <span className="text-xs">
                       <strong>No partial credit:</strong> Only complete, correct
                       answers count
                     </span>
@@ -386,95 +395,103 @@ export default function Usage() {
               </div>
             </div>
 
-            <div className="bg-muted p-4 rounded-lg">
-              <h3 className="font-semibold mb-2 text-sm">
+            <div className="bg-muted p-2 rounded">
+              <h3 className="font-semibold mb-1 text-xs">
                 On-Screen Information
               </h3>
-              <div className="grid grid-cols-2 gap-4 text-xs">
+              <div className="grid grid-cols-2 gap-2 text-xs">
                 <div className="text-center">
-                  <div className="font-mono text-2xl font-bold">00:45</div>
-                  <div className="text-muted-foreground">
+                  <div className="font-mono text-lg font-bold">00:45</div>
+                  <div className="text-xs text-muted-foreground">
                     Time Remaining (MM:SS)
                   </div>
                 </div>
                 <div className="text-center">
-                  <div className="font-mono text-2xl font-bold text-green-600 dark:text-green-400">
+                  <div className="font-mono text-lg font-bold text-green-600 dark:text-green-400">
                     12
                   </div>
-                  <div className="text-muted-foreground">Current Score</div>
+                  <div className="text-xs text-muted-foreground">
+                    Current Score
+                  </div>
                 </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </PaperCardContent>
+        </PaperCard>
 
         {/* Progress Tracking */}
-        <Card className="border-2 shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-2xl flex items-center gap-2">
-              <Target className="h-6 w-6 text-primary" />
+        <PaperCard variant="folded-sm" padding="sm">
+          <PaperCardHeader>
+            <PaperCardTitle className="flex items-center gap-2 text-base">
+              <Target className="h-4 w-4 text-primary" />
               Progress Tracking
-            </CardTitle>
-            <CardDescription>
+            </PaperCardTitle>
+            <PaperCardDescription className="text-xs">
               Monitor your improvement over time
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid md:grid-cols-2 gap-4">
+            </PaperCardDescription>
+          </PaperCardHeader>
+          <PaperCardContent className="space-y-2">
+            <div className="grid md:grid-cols-2 gap-2">
               <div>
-                <h3 className="font-semibold mb-2">Stats Page</h3>
-                <p className="text-sm text-muted-foreground mb-2">
+                <h3 className="font-semibold mb-1 text-xs">Stats Page</h3>
+                <p className="text-xs text-muted-foreground mb-1">
                   View your performance analytics:
                 </p>
-                <ul className="space-y-1 text-sm">
+                <ul className="space-y-1 text-xs">
                   <li className="flex items-start gap-2">
-                    <span className="text-primary font-bold">•</span>
-                    <span>Total games played</span>
+                    <span className="text-primary font-bold text-xs">•</span>
+                    <span className="text-xs">Total games played</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-primary font-bold">•</span>
-                    <span>Average score per game mode</span>
+                    <span className="text-primary font-bold text-xs">•</span>
+                    <span className="text-xs">Average score per game mode</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-primary font-bold">•</span>
-                    <span>Performance trends over time</span>
+                    <span className="text-primary font-bold text-xs">•</span>
+                    <span className="text-xs">
+                      Performance trends over time
+                    </span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-primary font-bold">•</span>
-                    <span>Recent game history</span>
+                    <span className="text-primary font-bold text-xs">•</span>
+                    <span className="text-xs">Recent game history</span>
                   </li>
                 </ul>
               </div>
 
               <div>
-                <h3 className="font-semibold mb-2">Leaderboards</h3>
-                <p className="text-sm text-muted-foreground mb-2">
+                <h3 className="font-semibold mb-1 text-xs">Leaderboards</h3>
+                <p className="text-xs text-muted-foreground mb-1">
                   Compete globally:
                 </p>
-                <ul className="space-y-1 text-sm">
+                <ul className="space-y-1 text-xs">
                   <li className="flex items-start gap-2">
-                    <span className="text-primary font-bold">•</span>
-                    <span>Separate leaderboards for each game mode</span>
+                    <span className="text-primary font-bold text-xs">•</span>
+                    <span className="text-xs">
+                      Separate leaderboards for each game mode
+                    </span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-primary font-bold">•</span>
-                    <span>Top scores from all players</span>
+                    <span className="text-primary font-bold text-xs">•</span>
+                    <span className="text-xs">Top scores from all players</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-primary font-bold">•</span>
-                    <span>Your rank and score highlighted</span>
+                    <span className="text-primary font-bold text-xs">•</span>
+                    <span className="text-xs">
+                      Your rank and score highlighted
+                    </span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-primary font-bold">•</span>
-                    <span>Real-time updates</span>
+                    <span className="text-primary font-bold text-xs">•</span>
+                    <span className="text-xs">Real-time updates</span>
                   </li>
                 </ul>
               </div>
             </div>
 
-            <div className="bg-yellow-50 dark:bg-yellow-950 p-4 rounded-lg border border-yellow-200 dark:border-yellow-800">
-              <p className="text-sm font-semibold mb-2">Guest Users:</p>
-              <p className="text-sm">
+            <div className="bg-yellow-50 dark:bg-yellow-950 p-2 rounded border border-yellow-200 dark:border-yellow-800">
+              <p className="text-xs font-semibold mb-1">Guest Users:</p>
+              <p className="text-xs">
                 Playing as a guest? Your stats are tracked during your session,
                 but won't be saved permanently or appear on global leaderboards.{" "}
                 <Link
@@ -486,128 +503,138 @@ export default function Usage() {
                 to save your progress!
               </p>
             </div>
-          </CardContent>
-        </Card>
+          </PaperCardContent>
+        </PaperCard>
 
         {/* Quick Tips */}
-        <Card className="border-2 shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-2xl flex items-center gap-2">
-              <Lightbulb className="h-6 w-6 text-primary" />
+        <PaperCard variant="folded-sm" padding="sm">
+          <PaperCardHeader>
+            <PaperCardTitle className="flex items-center gap-2 text-base">
+              <Lightbulb className="h-4 w-4 text-primary" />
               Quick Tips
-            </CardTitle>
-            <CardDescription>
+            </PaperCardTitle>
+            <PaperCardDescription className="text-xs">
               Improve your performance and master base conversion
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid md:grid-cols-2 gap-4 text-sm">
-              <div className="space-y-2">
+            </PaperCardDescription>
+          </PaperCardHeader>
+          <PaperCardContent>
+            <div className="grid md:grid-cols-2 gap-2 text-xs">
+              <div className="space-y-1">
                 <div className="flex items-start gap-2">
-                  <span className="text-primary font-bold">1.</span>
-                  <span>
+                  <span className="text-primary font-bold text-xs">1.</span>
+                  <span className="text-xs">
                     <strong>Start with tutorials:</strong> Learn each base
                     before jumping into quizzes
                   </span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <span className="text-primary font-bold">2.</span>
-                  <span>
+                  <span className="text-primary font-bold text-xs">2.</span>
+                  <span className="text-xs">
                     <strong>Practice regularly:</strong> Consistent practice
                     improves speed and accuracy
                   </span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <span className="text-primary font-bold">3.</span>
-                  <span>
+                  <span className="text-primary font-bold text-xs">3.</span>
+                  <span className="text-xs">
                     <strong>Use Playground:</strong> Focus on conversions you
                     find difficult
                   </span>
                 </div>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <div className="flex items-start gap-2">
-                  <span className="text-primary font-bold">4.</span>
-                  <span>
+                  <span className="text-primary font-bold text-xs">4.</span>
+                  <span className="text-xs">
                     <strong>Memorize patterns:</strong> Powers of 2, hex letters
                     (A-F = 10-15)
                   </span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <span className="text-primary font-bold">5.</span>
-                  <span>
-                    <strong>Build combos:</strong> Accuracy matters more than
-                    speed for high scores
+                  <span className="text-primary font-bold text-xs">5.</span>
+                  <span className="text-xs">
+                    <strong>Take your time:</strong> Your accuracy is tracked in
+                    every game!
                   </span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <span className="text-primary font-bold">6.</span>
-                  <span>
+                  <span className="text-primary font-bold text-xs">6.</span>
+                  <span className="text-xs">
                     <strong>Challenge friends:</strong> Multiplayer mode makes
                     learning fun!
                   </span>
                 </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </PaperCardContent>
+        </PaperCard>
 
         {/* Get Started */}
-        <Card className="border-2 shadow-lg bg-gradient-to-r from-primary/5 to-accent/5">
-          <CardHeader>
-            <CardTitle className="text-2xl gradient-text">
+        <PaperCard
+          variant="folded-lg"
+          padding="lg"
+          className="bg-gradient-to-r from-primary/5 to-accent/5"
+        >
+          <PaperCardHeader>
+            <PaperCardTitle className="text-lg gradient-text">
               Ready to Start?
-            </CardTitle>
-            <CardDescription className="text-base">
+            </PaperCardTitle>
+            <PaperCardDescription className="text-xs">
               Choose your path and start mastering base conversion today!
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Separator className="mb-6" />
-            <div className="grid md:grid-cols-3 gap-4">
+            </PaperCardDescription>
+          </PaperCardHeader>
+          <PaperCardContent>
+            <RuledSeparator
+              className="container"
+              spacing="lg"
+              variant="double"
+            />
+            <div className="grid md:grid-cols-3 gap-2">
               <Link
                 to="/tutorials"
-                className="group flex items-center justify-between rounded-lg border-2 border-primary/20 bg-primary/10 px-6 py-4 hover:border-primary/50 hover:bg-primary/20 transition-all"
+                className="group flex items-center justify-between rounded border-2 border-primary/20 bg-primary/10 px-3 py-2 hover:border-primary/50 hover:bg-primary/20 transition-all"
               >
                 <div>
-                  <p className="font-semibold text-primary">
+                  <p className="font-semibold text-primary text-xs">
                     Learn with Tutorials
                   </p>
                   <p className="text-xs text-muted-foreground">
                     Master each base system
                   </p>
                 </div>
-                <ArrowRight className="h-5 w-5 text-primary group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="h-3.5 w-3.5 text-primary group-hover:translate-x-1 transition-transform" />
               </Link>
               <Link
                 to="/singleplayer"
-                className="group flex items-center justify-between rounded-lg border-2 border-primary/20 bg-primary/10 px-6 py-4 hover:border-primary/50 hover:bg-primary/20 transition-all"
+                className="group flex items-center justify-between rounded border-2 border-primary/20 bg-primary/10 px-3 py-2 hover:border-primary/50 hover:bg-primary/20 transition-all"
               >
                 <div>
-                  <p className="font-semibold text-primary">
+                  <p className="font-semibold text-primary text-xs">
                     Start Singleplayer
                   </p>
                   <p className="text-xs text-muted-foreground">
                     Practice at your pace
                   </p>
                 </div>
-                <ArrowRight className="h-5 w-5 text-primary group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="h-3.5 w-3.5 text-primary group-hover:translate-x-1 transition-transform" />
               </Link>
               <Link
                 to="/multiplayer"
-                className="group flex items-center justify-between rounded-lg border-2 border-primary/20 bg-primary/10 px-6 py-4 hover:border-primary/50 hover:bg-primary/20 transition-all"
+                className="group flex items-center justify-between rounded border-2 border-primary/20 bg-primary/10 px-3 py-2 hover:border-primary/50 hover:bg-primary/20 transition-all"
               >
                 <div>
-                  <p className="font-semibold text-primary">Play Multiplayer</p>
+                  <p className="font-semibold text-primary text-xs">
+                    Play Multiplayer
+                  </p>
                   <p className="text-xs text-muted-foreground">
                     Compete with friends
                   </p>
                 </div>
-                <ArrowRight className="h-5 w-5 text-primary group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="h-3.5 w-3.5 text-primary group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
-          </CardContent>
-        </Card>
+          </PaperCardContent>
+        </PaperCard>
       </div>
     </div>
   );

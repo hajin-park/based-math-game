@@ -1,13 +1,14 @@
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  PaperCard,
+  PaperCardContent,
+  PaperCardDescription,
+  PaperCardHeader,
+  PaperCardTitle,
+  SectionHeader,
+  RuledSeparator,
+} from "@/components/ui/academic";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -66,32 +67,36 @@ export default function ProfileOverview() {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-300">
+    <div className="space-y-6 animate-in fade-in duration-300">
       {/* Header */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-2">
-          <User className="h-8 w-8 text-primary" />
-          <h1 className="text-4xl font-bold gradient-text">Account Overview</h1>
-        </div>
-        <p className="text-lg text-muted-foreground">
-          Your profile information and quick stats
-        </p>
-      </div>
+      <SectionHeader
+        title="Account Overview"
+        description="Your profile information and quick stats"
+        icon={User}
+        align="left"
+        titleSize="lg"
+      />
 
       {/* Profile Card */}
-      <Card className="border-2 shadow-lg">
-        <CardHeader>
-          <CardTitle className="text-2xl flex items-center gap-2">
-            <Shield className="h-6 w-6 text-primary" />
-            Profile Information
-          </CardTitle>
-          <CardDescription className="text-base">
-            Your basic account details
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
+      <PaperCard variant="folded" padding="none" className="shadow-lg">
+        <PaperCardHeader className="p-6">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Shield className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <PaperCardTitle className="text-2xl">
+                Profile Information
+              </PaperCardTitle>
+              <PaperCardDescription className="text-base">
+                Your basic account details
+              </PaperCardDescription>
+            </div>
+          </div>
+        </PaperCardHeader>
+        <PaperCardContent className="p-6 pt-0 space-y-6">
           {/* Avatar and Name */}
-          <div className="flex items-center gap-6 p-6 rounded-lg bg-gradient-to-r from-primary/10 to-accent/10 border-2 border-primary/20">
+          <div className="flex items-center gap-6 p-6 rounded-sm bg-gradient-to-r from-primary/10 to-accent/10 border-2 border-primary/20 paper-texture">
             <Avatar className="h-24 w-24 border-4 border-primary/30 shadow-lg">
               <AvatarImage
                 src={getUserPhotoURL()}
@@ -102,7 +107,7 @@ export default function ProfileOverview() {
               </AvatarFallback>
             </Avatar>
             <div className="space-y-2">
-              <h3 className="text-2xl font-bold gradient-text">
+              <h3 className="text-2xl font-serif font-bold gradient-text tracking-academic">
                 {user?.displayName || "User"}
               </h3>
               <Badge className="bg-success text-success-foreground">
@@ -112,85 +117,87 @@ export default function ProfileOverview() {
             </div>
           </div>
 
-          <Separator />
+          <RuledSeparator />
 
           {/* Details */}
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2">
             {/* Email */}
             {user && "email" in user && user.email && (
-              <Card className="border-2">
-                <CardContent className="pt-6">
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 rounded-lg bg-primary/10">
-                      <Mail className="h-5 w-5 text-primary" />
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-xs font-medium text-muted-foreground">
-                        Email Address
-                      </p>
-                      <p className="text-sm font-medium break-all">
-                        {user.email}
-                      </p>
-                    </div>
+              <PaperCard variant="folded-sm" padding="sm" className="border-2">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <Mail className="h-5 w-5 text-primary" />
                   </div>
-                </CardContent>
-              </Card>
+                  <div className="space-y-1">
+                    <p className="text-xs font-medium text-muted-foreground">
+                      Email Address
+                    </p>
+                    <p className="text-sm font-medium break-all">
+                      {user.email}
+                    </p>
+                  </div>
+                </div>
+              </PaperCard>
             )}
 
             {/* User ID */}
-            <Card className="border-2">
-              <CardContent className="pt-6">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-lg bg-primary/10">
-                    <Hash className="h-5 w-5 text-primary" />
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-xs font-medium text-muted-foreground">
-                      User ID
-                    </p>
-                    <p className="font-mono text-xs break-all">{user?.uid}</p>
-                  </div>
+            <PaperCard variant="folded-sm" padding="sm" className="border-2">
+              <div className="flex items-start gap-3">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <Hash className="h-5 w-5 text-primary" />
                 </div>
-              </CardContent>
-            </Card>
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-muted-foreground">
+                    User ID
+                  </p>
+                  <p className="font-mono text-xs break-all">{user?.uid}</p>
+                </div>
+              </div>
+            </PaperCard>
 
             {/* Account Created */}
-            <Card className="border-2 md:col-span-2">
-              <CardContent className="pt-6">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-lg bg-primary/10">
-                    <Calendar className="h-5 w-5 text-primary" />
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-xs font-medium text-muted-foreground">
-                      Account Created
-                    </p>
-                    <p className="text-sm font-medium">
-                      {formatDate(getCreatedAt())}
-                    </p>
-                  </div>
+            <PaperCard
+              variant="folded-sm"
+              padding="sm"
+              className="border-2 md:col-span-2"
+            >
+              <div className="flex items-start gap-3">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <Calendar className="h-5 w-5 text-primary" />
                 </div>
-              </CardContent>
-            </Card>
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-muted-foreground">
+                    Account Created
+                  </p>
+                  <p className="text-sm font-medium">
+                    {formatDate(getCreatedAt())}
+                  </p>
+                </div>
+              </div>
+            </PaperCard>
           </div>
-        </CardContent>
-      </Card>
+        </PaperCardContent>
+      </PaperCard>
 
       {/* Quick Stats */}
-      <Card className="border-2 shadow-lg">
-        <CardHeader>
-          <CardTitle className="text-2xl flex items-center gap-2">
-            <TrendingUp className="h-6 w-6 text-primary" />
-            Quick Stats
-          </CardTitle>
-          <CardDescription className="text-base">
-            Your gaming performance at a glance
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
+      <PaperCard variant="folded" padding="none" className="shadow-lg">
+        <PaperCardHeader className="p-6">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+              <TrendingUp className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <PaperCardTitle className="text-2xl">Quick Stats</PaperCardTitle>
+              <PaperCardDescription className="text-base">
+                Your gaming performance at a glance
+              </PaperCardDescription>
+            </div>
+          </div>
+        </PaperCardHeader>
+        <PaperCardContent className="p-6 pt-0 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="border-2">
-              <CardContent className="pt-6 text-center space-y-2">
+            <PaperCard variant="folded-sm" padding="sm" className="border-2">
+              <div className="text-center space-y-2">
                 <div className="flex justify-center">
                   <div className="p-3 rounded-full bg-primary/10">
                     <Target className="h-6 w-6 text-primary" />
@@ -200,10 +207,10 @@ export default function ProfileOverview() {
                 <p className="text-sm font-medium text-muted-foreground">
                   Games Played
                 </p>
-              </CardContent>
-            </Card>
-            <Card className="border-2">
-              <CardContent className="pt-6 text-center space-y-2">
+              </div>
+            </PaperCard>
+            <PaperCard variant="folded-sm" padding="sm" className="border-2">
+              <div className="text-center space-y-2">
                 <div className="flex justify-center">
                   <div className="p-3 rounded-full bg-success/10">
                     <Trophy className="h-6 w-6 text-success" />
@@ -213,10 +220,10 @@ export default function ProfileOverview() {
                 <p className="text-sm font-medium text-muted-foreground">
                   High Score
                 </p>
-              </CardContent>
-            </Card>
-            <Card className="border-2">
-              <CardContent className="pt-6 text-center space-y-2">
+              </div>
+            </PaperCard>
+            <PaperCard variant="folded-sm" padding="sm" className="border-2">
+              <div className="text-center space-y-2">
                 <div className="flex justify-center">
                   <div className="p-3 rounded-full bg-primary/10">
                     <TrendingUp className="h-6 w-6 text-primary" />
@@ -226,11 +233,11 @@ export default function ProfileOverview() {
                 <p className="text-sm font-medium text-muted-foreground">
                   Average Score
                 </p>
-              </CardContent>
-            </Card>
+              </div>
+            </PaperCard>
           </div>
 
-          <Separator />
+          <RuledSeparator />
 
           <div className="flex items-center justify-center gap-2">
             <p className="text-sm text-muted-foreground">
@@ -246,8 +253,8 @@ export default function ProfileOverview() {
               <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
-        </CardContent>
-      </Card>
+        </PaperCardContent>
+      </PaperCard>
     </div>
   );
 }

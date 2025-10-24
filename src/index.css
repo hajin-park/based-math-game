@@ -441,12 +441,12 @@
       linear-gradient(
         to right,
         transparent 2.5rem,
-        oklch(0.5 0.2 25) 2.5rem,
-        oklch(0.5 0.2 25) calc(2.5rem + 2px),
+        oklch(68.69% 0.15391 13.513) 2.5rem,
+        oklch(68.69% 0.15391 13.513) calc(2.5rem + 2px),
         transparent calc(2.5rem + 2px),
         transparent 1.25rem,
-        oklch(0.5 0.2 25) 2.75rem,
-        oklch(0.5 0.2 25) calc(2.75rem + 2px),
+        oklch(68.69% 0.15391 13.513) 2.75rem,
+        oklch(68.69% 0.15391 13.513) calc(2.75rem + 2px),
         transparent calc(2.75rem + 2px)
       );
   }

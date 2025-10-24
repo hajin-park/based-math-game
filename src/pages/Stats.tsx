@@ -1,15 +1,18 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  PaperCard,
+  PaperCardContent,
+  PaperCardDescription,
+  PaperCardHeader,
+  PaperCardTitle,
+  SectionHeader,
+  StickyNote,
+  StickyNoteTitle,
+  StickyNoteDescription,
+} from "@/components/ui/academic";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useGameHistory, TimeRange } from "@/hooks/useGameHistory";
@@ -67,63 +70,73 @@ export default function Stats() {
   ];
 
   return (
-    <div className="container mx-auto px-4 py-6 space-y-4">
-      {/* Header */}
-      <div className="text-center space-y-1 animate-in">
-        <div className="flex items-center justify-center gap-2 mb-1">
-          <BarChart3 className="h-8 w-8 text-primary" />
-          <h1 className="text-4xl font-bold gradient-text">Your Statistics</h1>
-        </div>
-        <p className="text-lg text-muted-foreground">
-          Track your progress and performance over time
-        </p>
-      </div>
+    <div className="container mx-auto px-4 py-6 space-y-6">
+      {/* Header with paper texture background */}
+      <section className="relative overflow-hidden py-6 paper-texture">
+        <div className="absolute inset-0 bg-gradient-to-b from-muted/20 via-background to-background -z-10" />
+
+        <SectionHeader
+          title="Your Statistics"
+          description="Track your progress and performance over time"
+          icon={BarChart3}
+          align="center"
+          titleSize="xl"
+        />
+      </section>
 
       {/* Guest user notice */}
       {isGuest && (
-        <Alert className="border-warning/50 bg-warning/10">
-          <Info className="h-4 w-4 text-warning" />
-          <AlertDescription className="text-sm">
-            <span className="font-semibold">Guest Account:</span> Your stats are
-            being tracked, but they won't be saved permanently or count towards
-            the global leaderboard.
-            <div className="flex flex-col sm:flex-row gap-2 mt-3">
-              <Button
-                onClick={() => navigate("/signup")}
-                size="sm"
-                className="bg-warning hover:bg-warning/90 text-warning-foreground"
-              >
-                Sign Up to Save Stats
-              </Button>
-              <Button
-                onClick={() => navigate("/login")}
-                variant="outline"
-                size="sm"
-              >
-                Log In
-              </Button>
-            </div>
-          </AlertDescription>
-        </Alert>
-      )}
-
-      <Card className="border-2 shadow-lg">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-2xl flex items-center gap-2">
-                <TrendingUp className="h-6 w-6 text-primary" />
-                Performance Overview
-              </CardTitle>
-              <CardDescription className="text-base mt-1">
-                View your stats across different time periods
-              </CardDescription>
+        <StickyNote variant="warning" size="default">
+          <div className="flex items-start gap-3">
+            <Info className="h-5 w-5 text-warning shrink-0 mt-0.5" />
+            <div className="space-y-3">
+              <StickyNoteTitle>Guest Account Notice</StickyNoteTitle>
+              <StickyNoteDescription>
+                <p className="text-sm">
+                  Your stats are being tracked, but they won't be saved
+                  permanently or count towards the global leaderboard.
+                </p>
+              </StickyNoteDescription>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Button
+                  onClick={() => navigate("/signup")}
+                  size="sm"
+                  className="bg-warning hover:bg-warning/90 text-warning-foreground"
+                >
+                  Sign Up to Save Stats
+                </Button>
+                <Button
+                  onClick={() => navigate("/login")}
+                  variant="outline"
+                  size="sm"
+                >
+                  Log In
+                </Button>
+              </div>
             </div>
           </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
+        </StickyNote>
+      )}
+
+      <PaperCard variant="folded" padding="none" className="shadow-lg">
+        <PaperCardHeader className="p-6">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+              <TrendingUp className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <PaperCardTitle className="text-2xl">
+                Performance Overview
+              </PaperCardTitle>
+              <PaperCardDescription className="text-base mt-1">
+                View your stats across different time periods
+              </PaperCardDescription>
+            </div>
+          </div>
+        </PaperCardHeader>
+        <PaperCardContent className="p-6 pt-0 space-y-4">
           {/* Time range selector */}
-          <div className="space-y-2">
+          <div className="space-y-3">
             <div className="flex items-center gap-2">
               <Calendar className="h-5 w-5 text-primary" />
               <label className="text-sm font-semibold">Time Period</label>
@@ -137,7 +150,7 @@ export default function Stats() {
                   <TabsTrigger
                     key={range.value}
                     value={range.value}
-                    className="text-sm py-3"
+                    className="text-sm py-2.5"
                   >
                     {range.label}
                   </TabsTrigger>
@@ -152,141 +165,145 @@ export default function Stats() {
               <div className="space-y-4">
                 {/* Skeleton for stats cards */}
                 <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-5">
-                  {[1, 2, 3, 4].map((i) => (
-                    <Card key={i}>
-                      <CardHeader className="pb-2">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <PaperCard key={i} padding="sm">
+                      <div className="pb-2">
                         <Skeleton className="h-4 w-24" />
-                      </CardHeader>
-                      <CardContent>
-                        <Skeleton className="h-8 w-16" />
-                      </CardContent>
-                    </Card>
+                      </div>
+                      <Skeleton className="h-8 w-16" />
+                    </PaperCard>
                   ))}
                 </div>
 
                 {/* Skeleton for performance by game mode */}
-                <Card>
-                  <CardHeader>
+                <PaperCard padding="default">
+                  <div className="pb-4">
                     <Skeleton className="h-6 w-48" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {[1, 2, 3].map((i) => (
-                        <div key={i} className="space-y-2">
-                          <Skeleton className="h-4 w-32" />
-                          <Skeleton className="h-4 w-24" />
-                          <Skeleton className="h-2 w-full" />
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                  <div className="space-y-4">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="space-y-2">
+                        <Skeleton className="h-4 w-32" />
+                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-2 w-full" />
+                      </div>
+                    ))}
+                  </div>
+                </PaperCard>
 
                 {/* Skeleton for recent games */}
-                <Card>
-                  <CardHeader>
+                <PaperCard padding="default">
+                  <div className="pb-4">
                     <Skeleton className="h-6 w-32" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      {[1, 2, 3, 4, 5].map((i) => (
-                        <Skeleton key={i} className="h-16 w-full" />
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                  <div className="space-y-2">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <Skeleton key={i} className="h-16 w-full" />
+                    ))}
+                  </div>
+                </PaperCard>
               </div>
             ) : (
               <div className="space-y-4 animate-in fade-in duration-300">
                 {/* Stats cards */}
                 <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-5">
-                  <Card className="border-2">
-                    <CardHeader className="pb-3">
+                  <PaperCard
+                    variant="folded-sm"
+                    padding="sm"
+                    className="border-2"
+                  >
+                    <div className="pb-2">
                       <div className="flex items-center gap-2">
                         <Gamepad2 className="h-4 w-4 text-primary" />
-                        <CardDescription className="text-xs font-medium">
+                        <span className="text-xs font-medium text-muted-foreground">
                           Games Played
-                        </CardDescription>
+                        </span>
                       </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-3xl font-bold gradient-text">
-                        {rangeStats.gamesPlayed}
-                      </div>
-                    </CardContent>
-                  </Card>
+                    </div>
+                    <div className="text-3xl font-bold gradient-text">
+                      {rangeStats.gamesPlayed}
+                    </div>
+                  </PaperCard>
 
-                  <Card className="border-2">
-                    <CardHeader className="pb-3">
+                  <PaperCard
+                    variant="folded-sm"
+                    padding="sm"
+                    className="border-2"
+                  >
+                    <div className="pb-2">
                       <div className="flex items-center gap-2">
                         <Percent className="h-4 w-4 text-primary" />
-                        <CardDescription className="text-xs font-medium">
+                        <span className="text-xs font-medium text-muted-foreground">
                           Average Accuracy
-                        </CardDescription>
+                        </span>
                       </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-3xl font-bold gradient-text">
-                        {rangeStats.averageAccuracy !== undefined
-                          ? `${rangeStats.averageAccuracy.toFixed(1)}%`
-                          : "N/A"}
-                      </div>
-                    </CardContent>
-                  </Card>
+                    </div>
+                    <div className="text-3xl font-bold gradient-text">
+                      {rangeStats.averageAccuracy !== undefined
+                        ? `${rangeStats.averageAccuracy.toFixed(1)}%`
+                        : "N/A"}
+                    </div>
+                  </PaperCard>
 
-                  <Card className="border-2">
-                    <CardHeader className="pb-3">
+                  <PaperCard
+                    variant="folded-sm"
+                    padding="sm"
+                    className="border-2"
+                  >
+                    <div className="pb-2">
                       <div className="flex items-center gap-2">
                         <Target className="h-4 w-4 text-primary" />
-                        <CardDescription className="text-xs font-medium">
+                        <span className="text-xs font-medium text-muted-foreground">
                           Questions Answered
-                        </CardDescription>
+                        </span>
                       </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-3xl font-bold gradient-text">
-                        {rangeStats.questionsAnswered}
-                      </div>
-                    </CardContent>
-                  </Card>
+                    </div>
+                    <div className="text-3xl font-bold gradient-text">
+                      {rangeStats.questionsAnswered}
+                    </div>
+                  </PaperCard>
 
-                  <Card className="border-2">
-                    <CardHeader className="pb-3">
+                  <PaperCard
+                    variant="folded-sm"
+                    padding="sm"
+                    className="border-2"
+                  >
+                    <div className="pb-2">
                       <div className="flex items-center gap-2">
                         <Trophy className="h-4 w-4 text-success" />
-                        <CardDescription className="text-xs font-medium">
+                        <span className="text-xs font-medium text-muted-foreground">
                           Leaderboard Placements
-                        </CardDescription>
+                        </span>
                       </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-3xl font-bold text-success">
-                        {leaderboardPlacements}
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Top 10 finishes
-                      </p>
-                    </CardContent>
-                  </Card>
+                    </div>
+                    <div className="text-3xl font-bold text-success">
+                      {leaderboardPlacements}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Top 10 finishes
+                    </p>
+                  </PaperCard>
 
-                  <Card className="border-2">
-                    <CardHeader className="pb-3">
+                  <PaperCard
+                    variant="folded-sm"
+                    padding="sm"
+                    className="border-2"
+                  >
+                    <div className="pb-2">
                       <div className="flex items-center gap-2">
                         <Clock className="h-4 w-4 text-primary" />
-                        <CardDescription className="text-xs font-medium">
+                        <span className="text-xs font-medium text-muted-foreground">
                           Time in Game
-                        </CardDescription>
+                        </span>
                       </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-3xl font-bold gradient-text">
-                        {Math.floor(rangeStats.timeSpentInGame / 60)}m
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {rangeStats.timeSpentInGame % 60}s
-                      </p>
-                    </CardContent>
-                  </Card>
+                    </div>
+                    <div className="text-3xl font-bold gradient-text">
+                      {Math.floor(rangeStats.timeSpentInGame / 60)}m
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {rangeStats.timeSpentInGame % 60}s
+                    </p>
+                  </PaperCard>
                 </div>
 
                 {/* Scores by game mode - separated by type */}
@@ -311,18 +328,28 @@ export default function Stats() {
                       <>
                         {/* Speed Run Modes */}
                         {speedRunModes.length > 0 && (
-                          <Card className="border-2">
-                            <CardHeader>
-                              <CardTitle className="text-xl flex items-center gap-2">
-                                <Target className="h-5 w-5 text-primary" />
-                                Speed Run Performance
-                              </CardTitle>
-                              <CardDescription>
-                                Your fastest completion times for speed run
-                                challenges
-                              </CardDescription>
-                            </CardHeader>
-                            <CardContent>
+                          <PaperCard
+                            variant="folded"
+                            padding="none"
+                            className="border-2"
+                          >
+                            <PaperCardHeader className="p-6">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                                  <Target className="h-5 w-5 text-primary" />
+                                </div>
+                                <div>
+                                  <PaperCardTitle className="text-xl">
+                                    Speed Run Performance
+                                  </PaperCardTitle>
+                                  <PaperCardDescription>
+                                    Your fastest completion times for speed run
+                                    challenges
+                                  </PaperCardDescription>
+                                </div>
+                              </div>
+                            </PaperCardHeader>
+                            <PaperCardContent className="p-6 pt-0">
                               <div className="space-y-4">
                                 {speedRunModes.map(([modeId]) => {
                                   const mode = OFFICIAL_GAME_MODES.find(
@@ -339,13 +366,15 @@ export default function Stats() {
                                     durations.length;
 
                                   return (
-                                    <div
+                                    <PaperCard
                                       key={modeId}
-                                      className="space-y-2 p-3 rounded-lg bg-muted/30 border"
+                                      variant="folded-sm"
+                                      padding="sm"
+                                      className="border"
                                     >
-                                      <div className="flex justify-between items-start">
+                                      <div className="flex justify-between items-start mb-3">
                                         <div>
-                                          <span className="font-semibold text-base">
+                                          <span className="font-serif font-semibold text-base">
                                             {mode?.name || modeId}
                                           </span>
                                           <Badge
@@ -384,28 +413,38 @@ export default function Stats() {
                                           </p>
                                         </div>
                                       </div>
-                                    </div>
+                                    </PaperCard>
                                   );
                                 })}
                               </div>
-                            </CardContent>
-                          </Card>
+                            </PaperCardContent>
+                          </PaperCard>
                         )}
 
                         {/* Timed Modes */}
                         {timedModes.length > 0 && (
-                          <Card className="border-2">
-                            <CardHeader>
-                              <CardTitle className="text-xl flex items-center gap-2">
-                                <Trophy className="h-5 w-5 text-primary" />
-                                Timed Mode Performance
-                              </CardTitle>
-                              <CardDescription>
-                                Your average and best scores for timed
-                                challenges
-                              </CardDescription>
-                            </CardHeader>
-                            <CardContent>
+                          <PaperCard
+                            variant="folded"
+                            padding="none"
+                            className="border-2"
+                          >
+                            <PaperCardHeader className="p-6">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                                  <Trophy className="h-5 w-5 text-primary" />
+                                </div>
+                                <div>
+                                  <PaperCardTitle className="text-xl">
+                                    Timed Mode Performance
+                                  </PaperCardTitle>
+                                  <PaperCardDescription>
+                                    Your average and best scores for timed
+                                    challenges
+                                  </PaperCardDescription>
+                                </div>
+                              </div>
+                            </PaperCardHeader>
+                            <PaperCardContent className="p-6 pt-0">
                               <div className="space-y-4">
                                 {timedModes.map(([modeId, scores]) => {
                                   const mode = OFFICIAL_GAME_MODES.find(
@@ -417,13 +456,15 @@ export default function Stats() {
                                   const maxScore = Math.max(...scores);
 
                                   return (
-                                    <div
+                                    <PaperCard
                                       key={modeId}
-                                      className="space-y-2 p-3 rounded-lg bg-muted/30 border"
+                                      variant="folded-sm"
+                                      padding="sm"
+                                      className="border"
                                     >
-                                      <div className="flex justify-between items-start">
+                                      <div className="flex justify-between items-start mb-3">
                                         <div>
-                                          <span className="font-semibold text-base">
+                                          <span className="font-serif font-semibold text-base">
                                             {mode?.name || modeId}
                                           </span>
                                           <Badge
@@ -443,7 +484,7 @@ export default function Stats() {
                                           {mode?.duration}s time limit
                                         </Badge>
                                       </div>
-                                      <div className="grid grid-cols-2 gap-3">
+                                      <div className="grid grid-cols-2 gap-3 mb-3">
                                         <div className="space-y-1">
                                           <p className="text-xs text-muted-foreground">
                                             Average Score
@@ -481,12 +522,12 @@ export default function Stats() {
                                           />
                                         </div>
                                       </div>
-                                    </div>
+                                    </PaperCard>
                                   );
                                 })}
                               </div>
-                            </CardContent>
-                          </Card>
+                            </PaperCardContent>
+                          </PaperCard>
                         )}
                       </>
                     );
@@ -494,17 +535,27 @@ export default function Stats() {
 
                 {/* Recent games */}
                 {history.length > 0 && (
-                  <Card className="border-2">
-                    <CardHeader>
-                      <CardTitle className="text-xl flex items-center gap-2">
-                        <Clock className="h-5 w-5 text-primary" />
-                        Recent Games
-                      </CardTitle>
-                      <CardDescription>
-                        Your last 10 completed games
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
+                  <PaperCard
+                    variant="folded"
+                    padding="none"
+                    className="border-2"
+                  >
+                    <PaperCardHeader className="p-6">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <Clock className="h-5 w-5 text-primary" />
+                        </div>
+                        <div>
+                          <PaperCardTitle className="text-xl">
+                            Recent Games
+                          </PaperCardTitle>
+                          <PaperCardDescription>
+                            Your last 10 completed games
+                          </PaperCardDescription>
+                        </div>
+                      </div>
+                    </PaperCardHeader>
+                    <PaperCardContent className="p-6 pt-0">
                       <div className="space-y-2">
                         {history.slice(0, 10).map((game) => {
                           const mode = OFFICIAL_GAME_MODES.find(
@@ -512,8 +563,13 @@ export default function Stats() {
                           );
                           const isSpeedrun = isSpeedrunMode(mode);
                           return (
-                            <Card key={game.id} className="border-2">
-                              <CardContent className="p-3">
+                            <PaperCard
+                              key={game.id}
+                              variant="folded-sm"
+                              padding="sm"
+                              className="border hover:border-primary/50 transition-colors"
+                            >
+                              <div className="p-0">
                                 <div className="flex justify-between items-center">
                                   <div className="space-y-0.5">
                                     <div className="font-semibold text-base">
@@ -547,39 +603,40 @@ export default function Stats() {
                                     </div>
                                   </div>
                                 </div>
-                              </CardContent>
-                            </Card>
+                              </div>
+                            </PaperCard>
                           );
                         })}
                       </div>
-                    </CardContent>
-                  </Card>
+                    </PaperCardContent>
+                  </PaperCard>
                 )}
 
                 {history.length === 0 && (
-                  <Card className="border-2 border-dashed">
-                    <CardContent className="py-8">
-                      <div className="text-center space-y-2">
-                        <Gamepad2 className="h-12 w-12 mx-auto text-muted-foreground/50" />
-                        <p className="text-muted-foreground">
-                          No games played yet. Start playing to see your stats!
-                        </p>
-                        <Button
-                          onClick={() => navigate("/singleplayer")}
-                          className="mt-4"
-                        >
-                          <Gamepad2 className="mr-2 h-4 w-4" />
-                          Play Now
-                        </Button>
+                  <StickyNote variant="info" size="default">
+                    <div className="text-center space-y-3">
+                      <Gamepad2 className="h-12 w-12 mx-auto text-muted-foreground/50" />
+                      <div>
+                        <StickyNoteTitle>No Games Yet</StickyNoteTitle>
+                        <StickyNoteDescription>
+                          Start playing to see your stats!
+                        </StickyNoteDescription>
                       </div>
-                    </CardContent>
-                  </Card>
+                      <Button
+                        onClick={() => navigate("/singleplayer")}
+                        className="mt-2"
+                      >
+                        <Gamepad2 className="mr-2 h-4 w-4" />
+                        Play Now
+                      </Button>
+                    </div>
+                  </StickyNote>
                 )}
               </div>
             )}
           </div>
-        </CardContent>
-      </Card>
+        </PaperCardContent>
+      </PaperCard>
     </div>
   );
 }

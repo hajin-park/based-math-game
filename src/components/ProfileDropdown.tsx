@@ -54,10 +54,10 @@ export default function ProfileDropdown() {
           </Avatar>
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel>
+      <DropdownMenuContent align="end" className="w-56 paper-texture border-2">
+        <DropdownMenuLabel className="pb-2">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">
+            <p className="text-sm font-serif font-semibold leading-none tracking-academic">
               {user?.displayName || "User"}
             </p>
             {user && "email" in user && user.email && (
@@ -67,25 +67,25 @@ export default function ProfileDropdown() {
             )}
           </div>
         </DropdownMenuLabel>
-        <DropdownMenuSeparator />
+        <DropdownMenuSeparator className="bg-border/50" />
         <DropdownMenuItem
           onClick={() => navigate("/profile")}
-          className="cursor-pointer"
+          className="cursor-pointer hover:bg-primary/10 focus:bg-primary/10 transition-colors"
         >
           <User className="mr-2 h-4 w-4" />
           <span>View Profile</span>
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => navigate("/profile/settings")}
-          className="cursor-pointer"
+          className="cursor-pointer hover:bg-primary/10 focus:bg-primary/10 transition-colors"
         >
           <Settings className="mr-2 h-4 w-4" />
           <span>Settings</span>
         </DropdownMenuItem>
-        <DropdownMenuSeparator />
+        <DropdownMenuSeparator className="bg-border/50" />
         <DropdownMenuItem
           onClick={handleSignOut}
-          className="cursor-pointer text-destructive focus:text-destructive"
+          className="cursor-pointer text-destructive focus:text-destructive hover:bg-destructive/10 focus:bg-destructive/10 transition-colors"
         >
           <LogOut className="mr-2 h-4 w-4" />
           <span>Sign Out</span>

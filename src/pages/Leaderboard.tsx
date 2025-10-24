@@ -9,12 +9,13 @@ import {
 } from "firebase/firestore";
 import { firestore } from "@/firebase/config";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  PaperCard,
+  PaperCardContent,
+  PaperCardDescription,
+  PaperCardHeader,
+  PaperCardTitle,
+  SectionHeader,
+} from "@/components/ui/academic";
 import {
   Select,
   SelectContent,
@@ -247,90 +248,96 @@ export default function Leaderboard() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-6">
-      {/* Header */}
-      <div className="text-center space-y-2 animate-in">
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <Trophy className="h-8 w-8 text-primary" />
-          <h1 className="text-4xl font-bold gradient-text">Leaderboard</h1>
-        </div>
-        <p className="text-lg text-muted-foreground">
-          Top scores for each game mode
-        </p>
-      </div>
+    <div className="container mx-auto px-4 py-6 space-y-6">
+      {/* Header with paper texture background */}
+      <section className="relative overflow-hidden py-6 paper-texture">
+        <div className="absolute inset-0 bg-gradient-to-b from-muted/20 via-background to-background -z-10" />
 
-      <Card className="border-2 shadow-lg">
-        <CardHeader>
-          <CardTitle className="text-2xl flex items-center gap-2">
-            <Target className="h-6 w-6 text-primary" />
-            Global Rankings
-          </CardTitle>
-          <CardDescription className="text-base">
-            Compete with players worldwide
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
+        <SectionHeader
+          title="Leaderboard"
+          description="Top scores for each game mode"
+          icon={Trophy}
+          align="center"
+          titleSize="xl"
+        />
+      </section>
+
+      <PaperCard variant="folded" padding="none" className="shadow-lg">
+        <PaperCardHeader className="p-6">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Target className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <PaperCardTitle className="text-2xl">
+                Global Rankings
+              </PaperCardTitle>
+              <PaperCardDescription className="text-base">
+                Compete with players worldwide
+              </PaperCardDescription>
+            </div>
+          </div>
+        </PaperCardHeader>
+        <PaperCardContent className="p-6 pt-0 space-y-6">
           {/* Mode selector */}
-          <Card className="border-primary/20 bg-primary/5">
-            <CardContent className="pt-6">
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <Trophy className="h-5 w-5 text-primary" />
-                  <Label className="text-base font-semibold">
-                    Select Game Mode
-                  </Label>
-                </div>
-                <Select value={selectedMode} onValueChange={setSelectedMode}>
-                  <SelectTrigger className="w-full h-11">
-                    <SelectValue placeholder="Select a game mode" />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-[400px]">
-                    {/* Group by mode type */}
-                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
-                      Timed - 15 Seconds
-                    </div>
-                    {OFFICIAL_GAME_MODES.filter((m) =>
-                      m.id.includes("-15s"),
-                    ).map((mode) => (
-                      <SelectItem key={mode.id} value={mode.id}>
-                        {mode.name}
-                      </SelectItem>
-                    ))}
-                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground mt-2">
-                      Timed - 60 Seconds
-                    </div>
-                    {OFFICIAL_GAME_MODES.filter((m) =>
-                      m.id.includes("-60s"),
-                    ).map((mode) => (
-                      <SelectItem key={mode.id} value={mode.id}>
-                        {mode.name}
-                      </SelectItem>
-                    ))}
-                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground mt-2">
-                      Speed Run - 10 Questions
-                    </div>
-                    {OFFICIAL_GAME_MODES.filter((m) =>
-                      m.id.includes("-10q"),
-                    ).map((mode) => (
-                      <SelectItem key={mode.id} value={mode.id}>
-                        {mode.name}
-                      </SelectItem>
-                    ))}
-                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground mt-2">
-                      Speed Run - 30 Questions
-                    </div>
-                    {OFFICIAL_GAME_MODES.filter((m) =>
-                      m.id.includes("-30q"),
-                    ).map((mode) => (
-                      <SelectItem key={mode.id} value={mode.id}>
-                        {mode.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+          <PaperCard variant="folded-sm" padding="sm" className="border-2">
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Trophy className="h-5 w-5 text-primary" />
+                <Label className="text-base font-semibold">
+                  Select Game Mode
+                </Label>
               </div>
-            </CardContent>
-          </Card>
+              <Select value={selectedMode} onValueChange={setSelectedMode}>
+                <SelectTrigger className="w-full h-11">
+                  <SelectValue placeholder="Select a game mode" />
+                </SelectTrigger>
+                <SelectContent className="max-h-[400px]">
+                  {/* Group by mode type */}
+                  <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                    Timed - 15 Seconds
+                  </div>
+                  {OFFICIAL_GAME_MODES.filter((m) => m.id.includes("-15s")).map(
+                    (mode) => (
+                      <SelectItem key={mode.id} value={mode.id}>
+                        {mode.name}
+                      </SelectItem>
+                    ),
+                  )}
+                  <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground mt-2">
+                    Timed - 60 Seconds
+                  </div>
+                  {OFFICIAL_GAME_MODES.filter((m) => m.id.includes("-60s")).map(
+                    (mode) => (
+                      <SelectItem key={mode.id} value={mode.id}>
+                        {mode.name}
+                      </SelectItem>
+                    ),
+                  )}
+                  <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground mt-2">
+                    Speed Run - 10 Questions
+                  </div>
+                  {OFFICIAL_GAME_MODES.filter((m) => m.id.includes("-10q")).map(
+                    (mode) => (
+                      <SelectItem key={mode.id} value={mode.id}>
+                        {mode.name}
+                      </SelectItem>
+                    ),
+                  )}
+                  <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground mt-2">
+                    Speed Run - 30 Questions
+                  </div>
+                  {OFFICIAL_GAME_MODES.filter((m) => m.id.includes("-30q")).map(
+                    (mode) => (
+                      <SelectItem key={mode.id} value={mode.id}>
+                        {mode.name}
+                      </SelectItem>
+                    ),
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+          </PaperCard>
 
           {/* User's Rank Card */}
           {!isGuest &&
@@ -342,114 +349,114 @@ export default function Leaderboard() {
               const isOnUserPage = userPage === currentPage;
 
               return (
-                <Card className="bg-primary/10 border-primary/50 border-2">
-                  <CardContent className="pt-6">
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <Users className="h-4 w-4 text-primary" />
-                          <p className="text-sm font-medium text-muted-foreground">
-                            Your Rank
-                          </p>
-                        </div>
-                        <p className="text-4xl font-bold gradient-text">
-                          #{userRank.rank}
+                <PaperCard
+                  variant="folded-sm"
+                  padding="sm"
+                  className="bg-primary/10 border-primary/50 border-2 highlight-scribble"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Users className="h-4 w-4 text-primary" />
+                        <p className="text-sm font-medium text-muted-foreground">
+                          Your Rank
                         </p>
-                        <p className="text-xs text-muted-foreground">
-                          out of {userRank.totalPlayers} players
-                        </p>
-                        {!isOnUserPage && (
-                          <Button
-                            onClick={handleJumpToUserRank}
-                            variant="outline"
-                            size="sm"
-                            className="mt-2"
-                          >
-                            Jump to My Rank
-                          </Button>
-                        )}
                       </div>
-                      <div className="text-right space-y-2">
-                        <div className="flex items-center gap-2 justify-end">
-                          <Trophy className="h-4 w-4 text-primary" />
-                          <p className="text-sm font-medium text-muted-foreground">
-                            Your Score
-                          </p>
-                        </div>
-                        <p className="text-4xl font-bold gradient-text">
-                          {isSpeedrun ? `${userRank.score}s` : userRank.score}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {isSpeedrun ? "time" : "points"}
-                        </p>
-                        {userRank.accuracy !== undefined && (
-                          <p className="text-sm text-muted-foreground">
-                            {userRank.accuracy.toFixed(1)}% accuracy
-                          </p>
-                        )}
-                      </div>
+                      <p className="text-4xl font-bold gradient-text">
+                        #{userRank.rank}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        out of {userRank.totalPlayers} players
+                      </p>
+                      {!isOnUserPage && (
+                        <Button
+                          onClick={handleJumpToUserRank}
+                          variant="outline"
+                          size="sm"
+                          className="mt-2"
+                        >
+                          Jump to My Rank
+                        </Button>
+                      )}
                     </div>
-                  </CardContent>
-                </Card>
+                    <div className="text-right space-y-2">
+                      <div className="flex items-center gap-2 justify-end">
+                        <Trophy className="h-4 w-4 text-primary" />
+                        <p className="text-sm font-medium text-muted-foreground">
+                          Your Score
+                        </p>
+                      </div>
+                      <p className="text-4xl font-bold gradient-text">
+                        {isSpeedrun ? `${userRank.score}s` : userRank.score}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {isSpeedrun ? "time" : "points"}
+                      </p>
+                      {userRank.accuracy !== undefined && (
+                        <p className="text-sm text-muted-foreground">
+                          {userRank.accuracy.toFixed(1)}% accuracy
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </PaperCard>
               );
             })()}
 
           {/* Pagination Controls */}
           {totalPages > 1 && (
-            <Card className="border-2">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handlePageChange(1)}
-                      disabled={currentPage === 1}
-                    >
-                      <ChevronsLeft className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handlePageChange(currentPage - 1)}
-                      disabled={currentPage === 1}
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                    </Button>
-                  </div>
-
-                  <div className="text-center">
-                    <p className="text-sm font-medium">
-                      Page {currentPage} of {totalPages}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Showing {(currentPage - 1) * ENTRIES_PER_PAGE + 1}-
-                      {Math.min(currentPage * ENTRIES_PER_PAGE, totalEntries)}{" "}
-                      of {totalEntries} players
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handlePageChange(currentPage + 1)}
-                      disabled={currentPage === totalPages}
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handlePageChange(totalPages)}
-                      disabled={currentPage === totalPages}
-                    >
-                      <ChevronsRight className="h-4 w-4" />
-                    </Button>
-                  </div>
+            <PaperCard variant="folded-sm" padding="sm" className="border-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handlePageChange(1)}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronsLeft className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
                 </div>
-              </CardContent>
-            </Card>
+
+                <div className="text-center">
+                  <p className="text-sm font-medium">
+                    Page {currentPage} of {totalPages}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Showing {(currentPage - 1) * ENTRIES_PER_PAGE + 1}-
+                    {Math.min(currentPage * ENTRIES_PER_PAGE, totalEntries)} of{" "}
+                    {totalEntries} players
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handlePageChange(totalPages)}
+                    disabled={currentPage === totalPages}
+                  >
+                    <ChevronsRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </PaperCard>
           )}
 
           {/* Leaderboard table */}
@@ -461,7 +468,7 @@ export default function Leaderboard() {
               </p>
             </div>
           ) : leaderboard.length > 0 ? (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {leaderboard.map((entry, index) => {
                 const isCurrentUser = user && entry.uid === user.uid;
                 const globalRank =
@@ -471,89 +478,91 @@ export default function Leaderboard() {
                 const isSpeedrun = isSpeedrunMode(gameMode);
 
                 return (
-                  <Card
+                  <PaperCard
                     key={entry.uid}
-                    className={`border-2 ${
+                    variant="folded-sm"
+                    padding="sm"
+                    className={`border-2 transition-all duration-200 ${
                       isCurrentUser
-                        ? "border-primary bg-primary/10 shadow-md"
+                        ? "border-primary bg-primary/10 shadow-md highlight-scribble"
                         : globalRank <= 3
-                          ? "border-yellow-600/30 bg-gradient-to-r from-yellow-500/5 to-orange-500/5"
-                          : "border-muted"
+                          ? "border-yellow-600/30 bg-gradient-to-r from-yellow-500/5 to-orange-500/5 bookmark-ribbon"
+                          : "border-muted hover:border-primary/30"
                     }`}
                   >
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <div className="flex items-center justify-center w-12 h-12 rounded-full bg-muted">
-                            {rankIcon || (
-                              <span className="font-bold text-lg text-muted-foreground">
-                                #{globalRank}
-                              </span>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center justify-center w-12 h-12 rounded-full bg-muted">
+                          {rankIcon || (
+                            <span className="font-bold text-lg text-muted-foreground">
+                              #{globalRank}
+                            </span>
+                          )}
+                        </div>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <p className="font-serif font-semibold text-lg">
+                              {entry.displayName}
+                            </p>
+                            {isCurrentUser && (
+                              <Badge variant="default" className="text-xs">
+                                You
+                              </Badge>
                             )}
                           </div>
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2">
-                              <p className="font-semibold text-lg">
-                                {entry.displayName}
-                              </p>
-                              {isCurrentUser && (
-                                <Badge variant="default" className="text-xs">
-                                  You
-                                </Badge>
+                          <div className="flex items-center gap-2">
+                            <p className="text-xs text-muted-foreground">
+                              {new Date(entry.timestamp).toLocaleDateString(
+                                "en-US",
+                                {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                },
                               )}
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <p className="text-xs text-muted-foreground">
-                                {new Date(entry.timestamp).toLocaleDateString(
-                                  "en-US",
-                                  {
-                                    year: "numeric",
-                                    month: "short",
-                                    day: "numeric",
-                                  },
-                                )}
-                              </p>
-                              {entry.accuracy !== undefined && (
-                                <>
-                                  <span className="text-xs text-muted-foreground">
-                                    •
-                                  </span>
-                                  <p className="text-xs text-muted-foreground">
-                                    {entry.accuracy.toFixed(1)}% accuracy
-                                  </p>
-                                </>
-                              )}
-                            </div>
+                            </p>
+                            {entry.accuracy !== undefined && (
+                              <>
+                                <span className="text-xs text-muted-foreground">
+                                  •
+                                </span>
+                                <p className="text-xs text-muted-foreground">
+                                  {entry.accuracy.toFixed(1)}% accuracy
+                                </p>
+                              </>
+                            )}
                           </div>
                         </div>
-                        <div className="text-right">
-                          <p className="font-bold text-3xl gradient-text">
-                            {isSpeedrun ? `${entry.score}s` : entry.score}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {isSpeedrun ? "time" : "points"}
-                          </p>
-                        </div>
                       </div>
-                    </CardContent>
-                  </Card>
+                      <div className="text-right">
+                        <p className="font-bold text-3xl gradient-text">
+                          {isSpeedrun ? `${entry.score}s` : entry.score}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {isSpeedrun ? "time" : "points"}
+                        </p>
+                      </div>
+                    </div>
+                  </PaperCard>
                 );
               })}
             </div>
           ) : (
-            <Card className="border-2 border-dashed">
-              <CardContent className="py-12">
-                <div className="text-center space-y-3">
-                  <Trophy className="h-12 w-12 mx-auto text-muted-foreground/50" />
-                  <p className="text-muted-foreground">
-                    No scores yet for {selectedModeData?.name}. Be the first!
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            <PaperCard
+              variant="folded-sm"
+              padding="default"
+              className="border-2 border-dashed"
+            >
+              <div className="py-8 text-center space-y-3">
+                <Trophy className="h-12 w-12 mx-auto text-muted-foreground/50" />
+                <p className="text-muted-foreground">
+                  No scores yet for {selectedModeData?.name}. Be the first!
+                </p>
+              </div>
+            </PaperCard>
           )}
-        </CardContent>
-      </Card>
+        </PaperCardContent>
+      </PaperCard>
     </div>
   );
 }

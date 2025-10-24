@@ -420,6 +420,20 @@ export default function PlaygroundSettings({
                     >
                       Oct → Dec
                     </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-6 text-xs px-2"
+                      onClick={() => {
+                        settingsForm.setValue("fromBase", "Decimal");
+                        settingsForm.setValue("toBase", "Octal");
+                        setFromBase("Decimal");
+                        setToBase("Octal");
+                      }}
+                    >
+                      Dec → Oct
+                    </Button>
                   </div>
                 </div>
 
@@ -584,7 +598,7 @@ export default function PlaygroundSettings({
                     >
                       <FormControl>
                         <SelectTrigger className="h-8 text-xs">
-                          <SelectValue placeholder="Select target questions" />
+                          <SelectValue placeholder="Select targetC questions" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
