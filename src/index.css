@@ -452,7 +452,7 @@
         transparent 1.5rem,
         var(--border) 1.5rem,
         var(--border) calc(1.5rem + 1px)
-      ),
+      ),  
       linear-gradient(
         to right,
         transparent 2.5rem,

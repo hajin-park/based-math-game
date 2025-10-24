@@ -1431,6 +1431,71 @@ const players = Object.values(room.players);
 
 ## Recent Updates
 
+### Authentication Pages Refactor (2025-10-24)
+
+**Objective:** Align Login and Signup pages with academic theme, improve UX, and ensure consistency with the design system
+
+**Changes:**
+
+**Login Page (`src/pages/Login.tsx`):**
+- **Academic Components:** Replaced generic Card with PaperCard (folded-sm variant), NotebookInput with underline variant
+- **Visual Design:**
+  - Added paper texture background with subtle gradient
+  - Large icon badge (LogIn icon in primary/10 background circle)
+  - Scribble highlight on "Welcome Back" heading
+  - Annotation-style subtitle text
+  - Folded corner on main card for paper aesthetic
+- **Form Inputs:** NotebookInput with underline variant for cleaner, academic look
+- **Navigation:**
+  - Interactive PaperCard for "Sign Up" link with icon, description, and arrow
+  - Ghost button for "Continue as Guest"
+- **Spacing:** Reduced padding throughout (py-8, space-y-4) for better screen fit
+- **Separator:** RuledSeparator with centered text for "Or continue with"
+
+**Signup Page (`src/pages/Signup.tsx`):**
+- **Academic Components:** Replaced generic Card with PaperCard, added StickyNote for guest notice
+- **Visual Design:**
+  - Paper texture background with gradient
+  - Success-colored icon badge (UserPlus in success/10 background)
+  - Green scribble highlight on dynamic heading (changes based on guest status)
+  - Annotation-style subtitle
+- **Guest Notice:** Blue StickyNote with Info icon explaining guest account conversion
+- **Form Inputs:** NotebookInput with underline variant for all three fields (name, email, password)
+- **Dynamic Content:** Heading and subtitle change based on `isGuest` status
+- **Navigation:**
+  - Interactive PaperCard for "Login" link
+  - Conditional "Continue as Guest" button (hidden if already guest)
+- **Spacing:** Consistent with Login page for unified experience
+
+**Design Patterns Used:**
+- `PaperCard` with `variant="folded-sm"` for main form cards
+- `PaperCard` with `variant="interactive"` and `padding="none"` for navigation links
+- `NotebookInput` with `variant="underline"` for form fields
+- `StickyNote` with `variant="info"` for informational callouts
+- `RuledSeparator` with `spacing="sm"` for visual breaks
+- Scribble highlights: `highlight-scribble` (yellow) and `highlight-scribble-green`
+- Icon badges: circular backgrounds with icon in center
+- Annotation class for subtitle text
+
+**Files Modified:**
+- `src/pages/Login.tsx` - Complete refactor with academic theme
+- `src/pages/Signup.tsx` - Complete refactor with academic theme
+
+**UX Improvements:**
+- Quick navigation between Login/Signup via compact inline links with bullet separators
+- Clear visual hierarchy with academic styling
+- Guest account conversion prominently featured for existing guests
+- Consistent spacing and component usage across both pages
+- Mobile-responsive with proper touch targets
+- **All content fits on laptop screens (1280x800) without scrolling** - achieved through:
+  - Compact spacing (py-4, space-y-3, p-4)
+  - Smaller text sizes (text-xs for labels, text-sm for inputs)
+  - Reduced icon/badge sizes (w-12 h-12 instead of w-16 h-16)
+  - Smaller input heights (h-8 instead of default)
+  - Compact button heights (h-9)
+  - Inline footer navigation instead of large cards
+  - Flex centering with `flex items-center` on container
+
 ### Home Page Refactor (2025-10-24)
 
 **Objective:** Align Home page with academic theme, prioritize quick game access, improve UX and mobile responsiveness

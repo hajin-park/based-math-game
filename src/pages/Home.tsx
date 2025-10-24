@@ -69,7 +69,7 @@ export default function Home() {
             {/* Header with Badge */}
             <div className="text-center space-y-3 animate-in">
 
-              <h1 className="text-4xl md:text-6xl lg:text-7xl font-serif font-bold tracking-academic ink-underline-visible">
+              <h1 className="text-4xl md:text-6xl lg:text-7xl font-serif font-bold tracking-academic">
                 <span className="gradient-text">Based Math Game</span>
               </h1>
 
