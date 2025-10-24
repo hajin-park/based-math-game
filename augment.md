@@ -943,7 +943,7 @@ All pages use Slate theme with consistent patterns, functional-first design, and
 
 **Game:** Home, Quiz, Results (with performance graphs and best score tracking), SingleplayerMode (with game filtering), MultiplayerGame
 **Multiplayer:** MultiplayerHome, CreateRoom (with filtering and collapsible details), JoinRoom, RoomLobby (with chat), MultiplayerResults
-**Stats:** Stats (time-range filtering, accuracy tracking, leaderboard placements), Leaderboard (paginated, 20 per page, jump to rank)
+**Stats:** Stats (clean header with "Your Statistics" title and inline time-range selector, two-column layout with game mode selector and content area, overview mode shows scrollable performance cards by game type, specific mode shows graphs directly in content area without card wrappers, paginated game history with 5 games per page, profile stats sidebar height-aligned with content), Leaderboard (paginated, 20 per page, jump to rank)
 **Profile:** ProfileLayout, ProfileOverview, ProfileSettings, ProfileGameSettings
 **Content:** Usage, Tutorials, About, Privacy, Terms
 **Auth:** Login, Signup
@@ -1290,7 +1290,7 @@ try {
 - Implement skeleton loaders that match final content structure
 - Add smooth transitions (`animate-in fade-in duration-300`)
 - Use absolute positioning for loading states to overlay reserved space
-- Example in `Stats.tsx`: Skeleton loaders for stats cards, performance data, and recent games
+- Example in `Stats.tsx`: Skeleton loaders for performance graphs and game history
 
 ### Multiplayer Features
 
@@ -1452,6 +1452,49 @@ const players = Object.values(room.players);
 ---
 
 ## Recent Updates
+
+### Stats Page Layout Fixes (2025-10-24)
+
+**Objective:** Fix layout issues in the Stats page for better visual hierarchy, alignment, and responsive design using proper CSS flexbox/grid
+
+**Changes:**
+
+**Header Layout:**
+- Removed "Performance Overview" section and paper texture background
+- Moved "Your Statistics" title to the left side with BarChart3 icon
+- Time period selector now horizontally inline with "Your Statistics" title on large screens
+- Simplified header: no card wrapper, clean flex layout
+- Responsive: stacks vertically on mobile, horizontal on desktop
+- Guest user notice moved below header
+
+**Graph Display:**
+- Removed PaperCard wrappers from individual graphs in specific game mode view
+- Graphs now placed directly into content area without independent cards
+- Graph height adjusted to 190px with bottom margin to prevent x-axis label overflow
+- Added `margin={{ bottom: 10 }}` to LineChart components for proper spacing
+- Added `pb-6` to graph container for extra bottom padding
+- Changed container from `justify-center` to standard flex column with padding
+- Prevents graphs from overextending the bottom of the view
+
+**Responsive Layout with Flexbox:**
+- Main container uses normal scrolling with `space-y-6` for vertical spacing between sections
+- Two-column layout has fixed height of `h-[600px]` to fit on screen
+- Left column: flexbox with game mode selector (`shrink-0`) and content area (`flex-1`)
+- Right column: full height card with `h-full`
+- Overview mode: ScrollArea component for scrollable performance cards
+- Specific game mode: Wrapped in `overflow-y-auto` div for scrollable graphs
+- Both content areas properly scroll when content exceeds container height
+- Game history section flows naturally below main content with proper spacing
+- Simple, maintainable approach using flexbox for column alignment
+
+**Visual Improvements:**
+- Cleaner, more streamlined appearance without excessive card nesting
+- Better use of vertical space in graph view
+- Consistent spacing and alignment across all sections
+- Maintains academic paper theme with minimal borders and flat design
+- Fixed x-axis label bleeding issue in graphs
+- Main content fits on screen, game history scrolls independently
+- Proper responsive behavior that adapts to different screen sizes
 
 ### Single Player Results UI Updates (2025-10-24)
 
@@ -1900,6 +1943,27 @@ Refactored the Singleplayer Mode selection page and Game Mode Select component t
   - Reduced font sizes for labels and descriptions (default → text-sm/text-xs)
   - Reduced icon sizes (h-6 w-6 → h-5 w-5, h-5 w-5 → h-4 w-4, h-4 w-4 → h-3.5 w-3.5)
 - **Files Modified:** `src/pages/Login.tsx`
+
+### Stats Page Refactor and Enhancement
+
+- **Redesigned:** Stats page with new two-column layout and enhanced features
+- **Layout Changes:**
+  - Header section: Time period selector moved inline with "Performance Overview" title
+  - Two-column layout: Left side for performance data, right side for profile stats (350px fixed width)
+  - Profile stats section: Displays overall statistics (games played, average accuracy, questions answered, leaderboard placements, time in game) visible regardless of game mode selection
+  - Game mode selector: Dropdown with "Overview (All Modes)" option plus all game modes the user has played
+  - Games Played History: Changed from "last 10 games" to "all games ever played" with pagination (5 games per page)
+- **New Features:**
+  - Overview mode: Displays existing performance cards (Speed Run Performance and Timed Mode Performance) in a scrollable container
+  - Specific game mode view: Shows two line graphs (score/time over games, accuracy over games) synced with time period selector
+  - Pagination controls: Previous/Next buttons with page indicator for game history
+  - Responsive graphs: Uses recharts LineChart with academic color scheme and smooth animations
+- **Data Handling:**
+  - Fetches up to 1000 games for pagination support
+  - Filters history by both time range and selected game mode
+  - Resets to page 1 when time range changes
+  - Calculates unique game modes from user's play history
+- **Files Modified:** `src/pages/Stats.tsx`
 
 ---
 
