@@ -11,7 +11,7 @@ interface ScrollAnimationOptions {
  */
 export function useScrollAnimation(
   ref: RefObject<HTMLElement | null>,
-  options: ScrollAnimationOptions = {}
+  options: ScrollAnimationOptions = {},
 ): boolean {
   const [isVisible, setIsVisible] = useState(false);
   const { threshold = 0.1, rootMargin = "0px" } = options;
@@ -26,7 +26,7 @@ export function useScrollAnimation(
           setIsVisible(true);
         }
       },
-      { threshold, rootMargin }
+      { threshold, rootMargin },
     );
 
     observer.observe(element);
@@ -60,7 +60,10 @@ export function useScrollProgress(ref: RefObject<HTMLElement | null>): number {
       // Progress from 0 (element at bottom of viewport) to 1 (element at top)
       const scrollProgress = Math.max(
         0,
-        Math.min(1, (windowHeight - elementTop) / (windowHeight + elementHeight))
+        Math.min(
+          1,
+          (windowHeight - elementTop) / (windowHeight + elementHeight),
+        ),
       );
 
       setProgress(scrollProgress);
@@ -76,4 +79,3 @@ export function useScrollProgress(ref: RefObject<HTMLElement | null>): number {
 
   return progress;
 }
-

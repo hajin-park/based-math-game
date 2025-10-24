@@ -33,13 +33,13 @@ export default function DurationSelect({
       name={name}
       render={({ field }) => (
         <FormItem>
-          <FormLabel>{label}</FormLabel>
+          <FormLabel className="text-xs font-medium">{label}</FormLabel>
           <Select
             onValueChange={field.onChange}
             defaultValue={`${settings.duration}`}
           >
             <FormControl>
-              <SelectTrigger>
+              <SelectTrigger className="h-8 text-xs">
                 <SelectValue placeholder="Select quiz duration" />
               </SelectTrigger>
             </FormControl>
@@ -65,7 +65,7 @@ export default function DurationSelect({
               Unlimited time is not available for multiplayer games
             </FormDescription>
           )}
-          <FormMessage />
+          <FormMessage className="text-xs" />
         </FormItem>
       )}
     />

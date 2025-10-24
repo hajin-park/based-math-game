@@ -1,10 +1,9 @@
 /* Import Academic Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap");
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
 
 @layer base {
   :root {
@@ -32,7 +31,7 @@
 
     /* Secondary - Subtle gray (like pencil marks) */
     --secondary: oklch(0.92 0.005 265); /* Light graphite */
-    --secondary-foreground: oklch(0.20 0.01 265); /* Dark gray */
+    --secondary-foreground: oklch(0.2 0.01 265); /* Dark gray */
 
     /* Muted - Light cream (like notebook margins) */
     --muted: oklch(0.95 0.008 85); /* Cream/beige */
@@ -40,10 +39,10 @@
 
     /* Accent - Highlighter yellow */
     --accent: oklch(0.85 0.12 95); /* Soft yellow highlighter */
-    --accent-foreground: oklch(0.20 0.01 265); /* Dark text on highlight */
+    --accent-foreground: oklch(0.2 0.01 265); /* Dark text on highlight */
 
     /* Destructive - Red ink */
-    --destructive: oklch(0.50 0.20 25); /* Red correction pen */
+    --destructive: oklch(0.5 0.2 25); /* Red correction pen */
     --destructive-foreground: oklch(0.99 0.003 85); /* Paper white */
 
     /* Success - Green checkmark */
@@ -52,7 +51,7 @@
 
     /* Warning - Orange highlighter */
     --warning: oklch(0.75 0.15 75); /* Warm orange */
-    --warning-foreground: oklch(0.20 0.01 265); /* Dark text */
+    --warning-foreground: oklch(0.2 0.01 265); /* Dark text */
 
     /* Info - Blue note */
     --info: oklch(0.55 0.12 240); /* Information blue */
@@ -69,14 +68,14 @@
     --sidebar-primary: oklch(0.35 0.08 250); /* Academic blue */
     --sidebar-primary-foreground: oklch(0.99 0.003 85); /* Paper white */
     --sidebar-accent: oklch(0.92 0.005 265); /* Light graphite */
-    --sidebar-accent-foreground: oklch(0.20 0.01 265); /* Dark gray */
+    --sidebar-accent-foreground: oklch(0.2 0.01 265); /* Dark gray */
     --sidebar-border: oklch(0.85 0.005 265); /* Light graphite line */
     --sidebar-ring: oklch(0.35 0.08 250); /* Primary blue */
 
     /* Chart Colors - Academic palette */
     --chart-1: oklch(0.35 0.08 250); /* Academic blue */
     --chart-2: oklch(0.55 0.15 150); /* Academic green */
-    --chart-3: oklch(0.50 0.20 25); /* Academic red */
+    --chart-3: oklch(0.5 0.2 25); /* Academic red */
     --chart-4: oklch(0.75 0.15 75); /* Warm orange */
     --chart-5: oklch(0.45 0.12 280); /* Purple */
   }
@@ -102,19 +101,19 @@
     --primary-foreground: oklch(0.18 0.01 265); /* Deep charcoal */
 
     /* Secondary - Medium gray */
-    --secondary: oklch(0.30 0.01 265); /* Dark gray */
-    --secondary-foreground: oklch(0.90 0.005 85); /* Light gray */
+    --secondary: oklch(0.3 0.01 265); /* Dark gray */
+    --secondary-foreground: oklch(0.9 0.005 85); /* Light gray */
 
     /* Muted - Darker gray */
     --muted: oklch(0.28 0.01 265); /* Muted dark gray */
     --muted-foreground: oklch(0.65 0.02 265); /* Medium light gray */
 
     /* Accent - Soft amber (warm reading light) */
-    --accent: oklch(0.75 0.10 75); /* Warm amber */
+    --accent: oklch(0.75 0.1 75); /* Warm amber */
     --accent-foreground: oklch(0.18 0.01 265); /* Deep charcoal */
 
     /* Destructive - Soft red */
-    --destructive: oklch(0.60 0.18 25); /* Muted red */
+    --destructive: oklch(0.6 0.18 25); /* Muted red */
     --destructive-foreground: oklch(0.95 0.005 85); /* Soft white */
 
     /* Success - Soft green */
@@ -122,34 +121,34 @@
     --success-foreground: oklch(0.18 0.01 265); /* Deep charcoal */
 
     /* Warning - Soft orange */
-    --warning: oklch(0.70 0.12 75); /* Muted orange */
+    --warning: oklch(0.7 0.12 75); /* Muted orange */
     --warning-foreground: oklch(0.18 0.01 265); /* Deep charcoal */
 
     /* Info - Soft blue */
-    --info: oklch(0.60 0.10 240); /* Muted blue */
+    --info: oklch(0.6 0.1 240); /* Muted blue */
     --info-foreground: oklch(0.95 0.005 85); /* Soft white */
 
     /* Borders & Inputs - Subtle gray */
-    --border: oklch(0.30 0.01 265); /* Subtle gray line */
-    --input: oklch(0.30 0.01 265); /* Subtle gray line */
+    --border: oklch(0.3 0.01 265); /* Subtle gray line */
+    --input: oklch(0.3 0.01 265); /* Subtle gray line */
     --ring: oklch(0.65 0.08 250); /* Chalk blue for focus */
 
     /* Sidebar - Slightly darker area */
-    --sidebar: oklch(0.20 0.01 265); /* Darker charcoal */
+    --sidebar: oklch(0.2 0.01 265); /* Darker charcoal */
     --sidebar-foreground: oklch(0.95 0.005 85); /* Soft white */
     --sidebar-primary: oklch(0.65 0.08 250); /* Chalk blue */
     --sidebar-primary-foreground: oklch(0.18 0.01 265); /* Deep charcoal */
-    --sidebar-accent: oklch(0.30 0.01 265); /* Dark gray */
-    --sidebar-accent-foreground: oklch(0.90 0.005 85); /* Light gray */
-    --sidebar-border: oklch(0.30 0.01 265); /* Subtle gray line */
+    --sidebar-accent: oklch(0.3 0.01 265); /* Dark gray */
+    --sidebar-accent-foreground: oklch(0.9 0.005 85); /* Light gray */
+    --sidebar-border: oklch(0.3 0.01 265); /* Subtle gray line */
     --sidebar-ring: oklch(0.65 0.08 250); /* Chalk blue */
 
     /* Chart Colors - Muted academic palette */
     --chart-1: oklch(0.65 0.08 250); /* Chalk blue */
     --chart-2: oklch(0.65 0.12 150); /* Muted green */
-    --chart-3: oklch(0.60 0.18 25); /* Muted red */
-    --chart-4: oklch(0.70 0.12 75); /* Muted orange */
-    --chart-5: oklch(0.60 0.10 280); /* Muted purple */
+    --chart-3: oklch(0.6 0.18 25); /* Muted red */
+    --chart-4: oklch(0.7 0.12 75); /* Muted orange */
+    --chart-5: oklch(0.6 0.1 280); /* Muted purple */
   }
 }
 
@@ -160,7 +159,12 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-family:
+      "Inter",
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      sans-serif;
     font-feature-settings:
       "rlig" 1,
       "calt" 1;
@@ -395,7 +399,7 @@
   }
 
   .dark .folded-corner::after {
-    border-color: transparent oklch(0.30 0.01 265) transparent transparent;
+    border-color: transparent oklch(0.3 0.01 265) transparent transparent;
   }
 
   .folded-corner-sm::after {
@@ -427,7 +431,8 @@
 
   /* Ruled lines with margin (like composition notebook) */
   .ruled-lines-margin {
-    background-image: repeating-linear-gradient(
+    background-image:
+      repeating-linear-gradient(
         transparent,
         transparent 1.5rem,
         var(--border) 1.5rem,
@@ -436,23 +441,24 @@
       linear-gradient(
         to right,
         transparent 2.5rem,
-        oklch(0.50 0.20 25) 2.5rem,
-        oklch(0.50 0.20 25) calc(2.5rem + 2px),
+        oklch(0.5 0.2 25) 2.5rem,
+        oklch(0.5 0.2 25) calc(2.5rem + 2px),
         transparent calc(2.5rem + 2px),
         transparent 1.25rem,
-        oklch(0.50 0.20 25) 2.75rem,
-        oklch(0.50 0.20 25) calc(2.75rem + 2px),
+        oklch(0.5 0.2 25) 2.75rem,
+        oklch(0.5 0.2 25) calc(2.75rem + 2px),
         transparent calc(2.75rem + 2px)
       );
   }
 
   .dark .ruled-lines-margin {
-    background-image: repeating-linear-gradient(
+    background-image:
+      repeating-linear-gradient(
         transparent,
         transparent 1.5rem,
         var(--border) 1.5rem,
         var(--border) calc(1.5rem + 1px)
-      ),  
+      ),
       linear-gradient(
         to right,
         transparent 2.5rem,
@@ -543,7 +549,7 @@
   }
 
   .sticky-note-pink {
-    background: oklch(0.90 0.08 15); /* Pink */
+    background: oklch(0.9 0.08 15); /* Pink */
   }
 
   .sticky-note-blue {
@@ -551,7 +557,7 @@
   }
 
   .sticky-note-green {
-    background: oklch(0.90 0.08 150); /* Green */
+    background: oklch(0.9 0.08 150); /* Green */
   }
 
   .dark .sticky-note {
@@ -589,7 +595,9 @@
 
   /* Page Curl Effect */
   .page-curl {
-    transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+    transition:
+      transform 0.2s ease-out,
+      box-shadow 0.2s ease-out;
   }
 
   .page-curl:hover {
@@ -681,7 +689,7 @@
     width: 3rem;
     height: 3rem;
     border-radius: 50%;
-    border: 2px solid oklch(0.60 0.08 75);
+    border: 2px solid oklch(0.6 0.08 75);
     opacity: 0.15;
     pointer-events: none;
   }
@@ -697,7 +705,7 @@
   }
 
   .dark .coffee-stain::after {
-    border-color: oklch(0.50 0.08 75);
+    border-color: oklch(0.5 0.08 75);
     opacity: 0.1;
   }
 }

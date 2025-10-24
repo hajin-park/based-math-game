@@ -34,7 +34,7 @@ const StickyNote = React.forwardRef<HTMLDivElement, StickyNoteProps>(
       className={cn(stickyNoteVariants({ variant, size }), className)}
       {...props}
     />
-  )
+  ),
 );
 StickyNote.displayName = "StickyNote";
 
@@ -46,7 +46,7 @@ const StickyNoteTitle = React.forwardRef<
     ref={ref}
     className={cn(
       "mb-2 font-serif font-semibold leading-none tracking-academic",
-      className
+      className,
     )}
     {...props}
   />
@@ -66,4 +66,3 @@ const StickyNoteDescription = React.forwardRef<
 StickyNoteDescription.displayName = "StickyNoteDescription";
 
 export { StickyNote, StickyNoteTitle, StickyNoteDescription };
-

@@ -70,7 +70,9 @@ export default function Footer() {
           {/* Footer Links */}
           {footerSections.map((section) => (
             <div key={section.title}>
-              <h3 className="font-serif font-semibold text-sm mb-3 ink-underline-visible">{section.title}</h3>
+              <h3 className="font-serif font-semibold text-sm mb-3 ink-underline-visible">
+                {section.title}
+              </h3>
               <ul className="space-y-2">
                 {section.links.map((link) => (
                   <li key={link.name}>

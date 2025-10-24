@@ -20,7 +20,7 @@ const notebookInputVariants = cva(
     defaultVariants: {
       variant: "default",
     },
-  }
+  },
 );
 
 export interface NotebookInputProps
@@ -34,7 +34,8 @@ const NotebookInput = React.forwardRef<
   NotebookInputProps
 >(({ className, variant, type, multiline = false, ...props }, ref) => {
   // Use textarea for ruled variants or when multiline is true
-  const isTextarea = multiline || variant === "ruled" || variant === "ruled-margin";
+  const isTextarea =
+    multiline || variant === "ruled" || variant === "ruled-margin";
 
   if (isTextarea) {
     return (
@@ -58,4 +59,3 @@ const NotebookInput = React.forwardRef<
 NotebookInput.displayName = "NotebookInput";
 
 export { NotebookInput, notebookInputVariants };
-

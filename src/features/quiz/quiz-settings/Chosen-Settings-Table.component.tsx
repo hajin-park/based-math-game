@@ -1,7 +1,7 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { X } from "lucide-react";
+import { Info, X } from "lucide-react";
 
 export default function ChosenSettingsTable({
   chosenSettings,
@@ -18,7 +18,15 @@ export default function ChosenSettingsTable({
   if (chosenSettings.length === 0) {
     return (
       <div className="h-32 w-full rounded-md border flex items-center justify-center bg-muted/50">
-        <p className="text-sm text-muted-foreground">No question types added</p>
+        <div className="text-center py-4 space-y-1">
+          <Info className="h-8 w-8 mx-auto text-muted-foreground/50" />
+          <p className="text-xs text-muted-foreground">
+            No question types added yet
+          </p>
+          <p className="text-xs text-muted-foreground/70">
+            Add at least one question type above to continue
+          </p>
+        </div>
       </div>
     );
   }

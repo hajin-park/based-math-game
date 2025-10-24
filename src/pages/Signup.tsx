@@ -16,7 +16,15 @@ import { NotebookInput } from "@/components/ui/notebook-input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/contexts/AuthContext";
-import { UserPlus, Mail, Lock, User, AlertCircle, Info, Sparkles } from "lucide-react";
+import {
+  UserPlus,
+  Mail,
+  Lock,
+  User,
+  AlertCircle,
+  Info,
+  Sparkles,
+} from "lucide-react";
 
 export default function Signup() {
   const navigate = useNavigate();
@@ -88,7 +96,11 @@ export default function Signup() {
 
           {/* Guest Notice - Compact Sticky Note */}
           {isGuest && (
-            <StickyNote variant="info" size="sm" className="border border-primary/30">
+            <StickyNote
+              variant="info"
+              size="sm"
+              className="border border-primary/30"
+            >
               <div className="flex items-start gap-2">
                 <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
                 <div>
@@ -104,11 +116,7 @@ export default function Signup() {
           )}
 
           {/* Main Signup Card - Compact */}
-          <PaperCard
-            variant="folded-sm"
-            padding="sm"
-            className="border-2"
-          >
+          <PaperCard variant="folded-sm" padding="sm" className="border-2">
             <PaperCardHeader className="p-4 pb-0">
               <PaperCardTitle className="text-lg font-serif">
                 Create Account
@@ -254,7 +262,9 @@ export default function Signup() {
 
           {/* Footer Actions - Compact */}
           <div className="flex items-center gap-2 text-xs text-center justify-center">
-            <span className="text-muted-foreground">Already have an account?</span>
+            <span className="text-muted-foreground">
+              Already have an account?
+            </span>
             <Button
               variant="link"
               className="p-0 h-auto text-xs font-semibold text-primary"

@@ -56,7 +56,7 @@ React-based multiplayer quiz game for practicing base conversion (Binary, Octal,
 
 /* Accent - Highlighter Yellow */
 --accent: oklch(0.85 0.12 95); /* Soft yellow highlighter */
---accent-foreground: oklch(0.20 0.01 265); /* Dark text on highlight */
+--accent-foreground: oklch(0.2 0.01 265); /* Dark text on highlight */
 
 /* Muted - Cream (notebook margins) */
 --muted: oklch(0.95 0.008 85); /* Cream/beige */
@@ -81,7 +81,7 @@ React-based multiplayer quiz game for practicing base conversion (Binary, Octal,
 --primary-foreground: oklch(0.18 0.01 265); /* Deep charcoal */
 
 /* Accent - Soft Amber (warm reading light) */
---accent: oklch(0.75 0.10 75); /* Warm amber */
+--accent: oklch(0.75 0.1 75); /* Warm amber */
 --accent-foreground: oklch(0.18 0.01 265); /* Deep charcoal */
 
 /* Muted - Dark Gray */
@@ -89,7 +89,7 @@ React-based multiplayer quiz game for practicing base conversion (Binary, Octal,
 --muted-foreground: oklch(0.65 0.02 265); /* Medium light gray */
 
 /* Borders - Subtle Gray */
---border: oklch(0.30 0.01 265); /* Subtle gray line */
+--border: oklch(0.3 0.01 265); /* Subtle gray line */
 ```
 
 #### Semantic Colors (Both Modes)
@@ -101,15 +101,15 @@ React-based multiplayer quiz game for practicing base conversion (Binary, Octal,
 
 /* Warning - Orange highlighter */
 --warning: oklch(0.75 0.15 75); /* Warm orange (light) */
---warning: oklch(0.70 0.12 75); /* Muted orange (dark) */
+--warning: oklch(0.7 0.12 75); /* Muted orange (dark) */
 
 /* Info - Blue note */
 --info: oklch(0.55 0.12 240); /* Information blue (light) */
---info: oklch(0.60 0.10 240); /* Muted blue (dark) */
+--info: oklch(0.6 0.1 240); /* Muted blue (dark) */
 
 /* Destructive - Red ink/correction */
---destructive: oklch(0.50 0.20 25); /* Red correction pen (light) */
---destructive: oklch(0.60 0.18 25); /* Muted red (dark) */
+--destructive: oklch(0.5 0.2 25); /* Red correction pen (light) */
+--destructive: oklch(0.6 0.18 25); /* Muted red (dark) */
 ```
 
 ### Typography - Academic Hierarchy
@@ -415,11 +415,13 @@ React-based multiplayer quiz game for practicing base conversion (Binary, Octal,
 ### CSS Utility Classes
 
 **Paper Texture Overlay**:
+
 ```css
 .paper-texture /* Subtle paper grain texture */
 ```
 
 **Folded Corner Effect**:
+
 ```css
 .folded-corner /* Dog-eared page corner */
 .folded-corner-sm /* Small fold (12px) */
@@ -427,6 +429,7 @@ React-based multiplayer quiz game for practicing base conversion (Binary, Octal,
 ```
 
 **Ruled Lines (Notebook Paper)**:
+
 ```css
 .ruled-lines /* Horizontal lines (1.5rem spacing) */
 .ruled-lines-tight /* Tighter spacing (1.25rem) */
@@ -434,18 +437,21 @@ React-based multiplayer quiz game for practicing base conversion (Binary, Octal,
 ```
 
 **Ink Underline Effect**:
+
 ```css
 .ink-underline /* Animated underline on hover */
 .ink-underline-visible /* Always visible underline */
 ```
 
 **Highlighter Marker Effect**:
+
 ```css
 .highlight-marker /* Animated highlighter swipe on hover */
 .highlight-visible /* Always visible highlight */
 ```
 
 **Sticky Note Callout**:
+
 ```css
 .sticky-note /* Yellow post-it style */
 .sticky-note-pink /* Pink variant */
@@ -454,6 +460,7 @@ React-based multiplayer quiz game for practicing base conversion (Binary, Octal,
 ```
 
 **Other Visual Effects**:
+
 ```css
 .sketch-border /* Hand-drawn border effect */
 .page-curl /* Subtle 3D page curl on hover */
@@ -469,59 +476,72 @@ React-based multiplayer quiz game for practicing base conversion (Binary, Octal,
 **Location**: `src/components/ui/academic.ts`
 
 #### PaperCard
+
 Enhanced card component with paper texture and academic styling.
 
 **Variants**: `default`, `folded`, `folded-sm`, `folded-lg`, `bookmark`, `interactive`
 
 **Usage**:
+
 ```tsx
-import { PaperCard, PaperCardHeader, PaperCardTitle } from "@/components/ui/academic";
+import {
+  PaperCard,
+  PaperCardHeader,
+  PaperCardTitle,
+} from "@/components/ui/academic";
 
 <PaperCard variant="folded">
   <PaperCardHeader>
     <PaperCardTitle>Chapter 1</PaperCardTitle>
   </PaperCardHeader>
-</PaperCard>
+</PaperCard>;
 ```
 
 #### StickyNote
+
 Post-it style callout component.
 
 **Variants**: `default` (yellow), `info` (blue), `success` (green), `warning` (pink)
 
 **Usage**:
+
 ```tsx
 import { StickyNote, StickyNoteTitle } from "@/components/ui/academic";
 
 <StickyNote variant="info">
   <StickyNoteTitle>Pro Tip</StickyNoteTitle>
-</StickyNote>
+</StickyNote>;
 ```
 
 #### NotebookInput
+
 Input with ruled lines and academic styling.
 
 **Variants**: `default`, `underline`, `ruled`, `ruled-margin`
 
 **Usage**:
+
 ```tsx
 import { NotebookInput } from "@/components/ui/academic";
 
-<NotebookInput variant="ruled" multiline />
+<NotebookInput variant="ruled" multiline />;
 ```
 
 #### SectionHeader
+
 Consistent heading with optional icon and underline.
 
 **Usage**:
+
 ```tsx
 import { SectionHeader } from "@/components/ui/academic";
 import { BookOpen } from "lucide-react";
 
-<SectionHeader title="Resources" icon={BookOpen} titleUnderline="ink" />
+<SectionHeader title="Resources" icon={BookOpen} titleUnderline="ink" />;
 ```
 
 #### RuledSeparator
+
 Notebook-style separator.
 
 **Variants**: `default`, `double`, `dashed`
@@ -1438,6 +1458,7 @@ const players = Object.values(room.players);
 **Changes:**
 
 **Login Page (`src/pages/Login.tsx`):**
+
 - **Academic Components:** Replaced generic Card with PaperCard (folded-sm variant), NotebookInput with underline variant
 - **Visual Design:**
   - Added paper texture background with subtle gradient
@@ -1453,6 +1474,7 @@ const players = Object.values(room.players);
 - **Separator:** RuledSeparator with centered text for "Or continue with"
 
 **Signup Page (`src/pages/Signup.tsx`):**
+
 - **Academic Components:** Replaced generic Card with PaperCard, added StickyNote for guest notice
 - **Visual Design:**
   - Paper texture background with gradient
@@ -1468,6 +1490,7 @@ const players = Object.values(room.players);
 - **Spacing:** Consistent with Login page for unified experience
 
 **Design Patterns Used:**
+
 - `PaperCard` with `variant="folded-sm"` for main form cards
 - `PaperCard` with `variant="interactive"` and `padding="none"` for navigation links
 - `NotebookInput` with `variant="underline"` for form fields
@@ -1478,10 +1501,12 @@ const players = Object.values(room.players);
 - Annotation class for subtitle text
 
 **Files Modified:**
+
 - `src/pages/Login.tsx` - Complete refactor with academic theme
 - `src/pages/Signup.tsx` - Complete refactor with academic theme
 
 **UX Improvements:**
+
 - Quick navigation between Login/Signup via compact inline links with bullet separators
 - Clear visual hierarchy with academic styling
 - Guest account conversion prominently featured for existing guests
@@ -1496,11 +1521,139 @@ const players = Object.values(room.players);
   - Inline footer navigation instead of large cards
   - Flex centering with `flex items-center` on container
 
+**Files Modified:**
+
+- `src/pages/Login.tsx`
+- `src/pages/Signup.tsx`
+
+---
+
+## Singleplayer Mode Page Refactor (2025-01-24)
+
+Refactored the Singleplayer Mode selection page and Game Mode Select component to align with the academic theme and ensure screen-fitting on laptop displays.
+
+**Design Patterns:**
+
+1. **Page Header (SingleplayerMode.tsx)**
+   - Compact icon badge (w-12 h-12) with primary/10 background
+   - Scribble highlight on "Singleplayer" heading
+   - Annotation-style subtitle with mode count
+   - Paper texture background with subtle gradient
+   - Reduced spacing (py-4, space-y-1, mb-4)
+
+2. **Game Mode Select Component**
+   - **Tabs**: Compact tabs with smaller icons (h-3.5 w-3.5) and text (text-sm)
+   - **Sidebar**: PaperCard with folded-sm variant, compact padding (p-3)
+     - NotebookInput for search with underline variant
+     - Compact category buttons (h-8, text-xs)
+     - Smaller filter selects (h-8, text-xs)
+     - Compact track stats toggle with scaled switch
+   - **Game Mode Cards**: PaperCard with interactive variant and folded-corner-sm
+     - Compact headers (p-3 pb-2)
+     - Smaller titles (text-sm font-serif)
+     - Tiny badges (text-[10px] h-5)
+     - Compact metadata (text-[11px])
+     - Smaller collapsible details (h-7, text-[11px])
+     - Compact play buttons (h-8, text-xs)
+   - **Custom Tab**: StickyNote for info notice, PaperCard for playground
+
+**Component Variants Used:**
+
+- `PaperCard` with `variant="folded-sm"` and `padding="sm"`
+- `PaperCard` with `variant="interactive"` for game mode cards
+- `NotebookInput` with `variant="underline"` for search
+- `StickyNote` with `variant="info"` and `size="sm"` for custom tab notice
+
+**Screen-Fitting Optimizations:**
+
+- Page container: py-8 → py-4
+- Header spacing: space-y-2 → space-y-1
+- Icon badge: w-16 h-16 → w-12 h-12
+- Tabs: py-3 → py-2, icons h-4 → h-3.5
+- Sidebar width: 256px → 240px (w-64 → w-60)
+- Sidebar padding: p-6 → p-3
+- Card spacing: gap-4 → gap-3
+- ScrollArea height: calc(100vh-300px) → calc(100vh-240px)
+- All buttons: h-9/h-10 → h-8/h-7
+- All text: reduced by 1-2 sizes
+
+**Files Modified:**
+
+- `src/pages/SingleplayerMode.tsx`
+- `src/features/quiz/quiz-settings/Game-Mode-Select.component.tsx`
+
+**Additional Improvements (Follow-up #1):**
+
+1. **Track Stats Toggle Repositioned**
+   - Moved from bottom of sidebar to top of page (above sidebar and game grid)
+   - Now in its own PaperCard with prominent visibility
+   - Automatically disabled when on Custom tab
+   - Shows contextual message based on state
+
+2. **Column-Based Layout**
+   - Changed from grid (`grid-cols-2/3`) to CSS columns (`columns-1/2/3`)
+   - Game cards now stack vertically in columns
+   - Prevents horizontal shifting when details are expanded
+   - Uses `break-inside-avoid` to keep cards intact
+
+3. **Multiple Details Expansion**
+   - Changed from single `expandedModeId` to `Set<string>` for `expandedModeIds`
+   - Users can now expand details for multiple games simultaneously
+   - Each card maintains its own expanded state independently
+
+4. **Mobile Responsiveness**
+   - Sidebar: `w-60` → `w-full lg:w-60` (full width on mobile)
+   - Layout: `flex gap-4` → `flex flex-col lg:flex-row gap-4` (stacks on mobile)
+   - Sticky positioning: Only applied on large screens (`lg:sticky lg:top-4`)
+   - Main content: Added `min-w-0` to prevent overflow
+   - Columns: `columns-1 md:columns-2 lg:columns-3` (responsive column count)
+   - Prevents horizontal scrolling on small screens
+
+**Files Modified:**
+
+- `src/features/quiz/quiz-settings/Game-Mode-Select.component.tsx`
+
+**Additional Improvements (Follow-up #2):**
+
+1. **Minimal Track Stats Toggle**
+   - Moved to inline position next to Official/Custom tabs
+   - Compact design: just label + switch (no card wrapper)
+   - Responsive: stacks below tabs on mobile, inline on desktop
+   - Automatically disabled when Custom tab is selected
+   - Removed redundant toggle from Custom tab content
+
+2. **Fixed Column Layout Bug**
+   - Reverted from CSS columns back to grid layout
+   - CSS columns caused first row items to become invisible
+   - Grid layout (`grid-cols-1/2/3`) provides reliable rendering
+   - Cards use `h-fit` to maintain proper height
+
+3. **Clearly Defined Scrollable Area**
+   - Added visible border container around game grid
+   - Border: `border-2 border-muted` with `bg-muted/10` background
+   - Padding: `p-3` inside border for visual breathing room
+   - ScrollArea height optimized: `calc(100vh-280px)` for better fit
+   - Clear visual boundary shows where scrolling occurs
+
+4. **Screen-Fitting Improvements**
+   - Reduced spacing: `space-y-4` → `space-y-3`
+   - Reduced gap: `gap-4` → `gap-3`
+   - Optimized TabsContent: `mt-4` → `mt-0`
+   - ScrollArea height: `calc(100vh-300px)` → `calc(100vh-280px)`
+   - All content fits on laptop screens (1280x800) without overflow
+
+**Files Modified:**
+
+- `src/features/quiz/quiz-settings/Game-Mode-Select.component.tsx`
+
+---
+
 ### Home Page Refactor (2025-10-24)
 
 **Objective:** Align Home page with academic theme, prioritize quick game access, improve UX and mobile responsiveness
 
 **Changes:**
+
 - **Hero Section:** Redesigned to prioritize game access with prominent Singleplayer/Multiplayer cards as primary CTAs
 - **Academic Components:** Replaced generic Card components with PaperCard, SectionHeader, RuledSeparator, and StickyNote
 - **Content Reorganization:** Created distinct sections for:
@@ -1518,6 +1671,7 @@ const players = Object.values(room.players);
 - **Highlighter Effects:** Hand-drawn scribble-style underlines using SVG paths with wavy, irregular strokes (yellow, green, orange)
 
 **Files Modified:**
+
 - `src/pages/Home.tsx` - Complete refactor with academic components and scroll animations
 - `src/features/ui/Navigation-Bar.tsx` - Added smooth scroll animation (slides up on scroll down, reappears on scroll up)
 - `src/features/ui/Footer.tsx` - Updated with academic theme (paper texture, ink underlines, ruled separator, no border shadow)
@@ -1525,6 +1679,7 @@ const players = Object.values(room.players);
 - `src/index.css` - Added highlighter scribble effects using SVG paths
 
 **Design Patterns:**
+
 - Use PaperCard with `variant="interactive"` for clickable cards
 - Use PaperCard with `variant="folded"` for preview/info cards with bookmark ribbons
 - Use StickyNote variants (info/success/warning) for step-by-step guides
@@ -1540,6 +1695,7 @@ const players = Object.values(room.players);
 **Objective:** Improve information density and reduce excessive spacing throughout the design system
 
 **Changes:**
+
 - **Base Components:** Reduced padding by 25-38% across Card, PaperCard, SectionHeader, RuledSeparator
 - **Global Configuration:** Reduced container padding by 25-40% across all breakpoints in tailwind.config.js
 - **Page-Level Updates:** Reduced section spacing by 40-50% on Home.tsx and Stats.tsx
@@ -1547,12 +1703,14 @@ const players = Object.values(room.players);
 - **Documentation:** Added comprehensive spacing guidelines to src/index.css and augment.md
 
 **Results:**
+
 - 40-50% more content visible per screen
 - Reduced scrolling requirements
 - Clearer visual hierarchy through strategic spacing
 - Maintained readability and accessibility
 
 **Files Modified:**
+
 - `src/components/ui/card.tsx`
 - `src/components/ui/paper-card.tsx`
 - `src/components/ui/section-header.tsx`

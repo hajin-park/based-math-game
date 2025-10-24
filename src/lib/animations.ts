@@ -41,7 +41,7 @@ export const fadeIn: Variants = {
 };
 
 export const fadeInUp: Variants = {
-  hidden: { opacity: 0, y: 4 }, /* Very subtle movement */
+  hidden: { opacity: 0, y: 4 } /* Very subtle movement */,
   visible: {
     opacity: 1,
     y: 0,
@@ -58,14 +58,14 @@ export const staggerContainer: Variants = {
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.03, /* Faster stagger */
-      delayChildren: 0.05, /* Shorter delay */
+      staggerChildren: 0.03 /* Faster stagger */,
+      delayChildren: 0.05 /* Shorter delay */,
     },
   },
 };
 
 export const staggerItem: Variants = {
-  hidden: { opacity: 0, y: 4 }, /* Very subtle movement */
+  hidden: { opacity: 0, y: 4 } /* Very subtle movement */,
   visible: {
     opacity: 1,
     y: 0,

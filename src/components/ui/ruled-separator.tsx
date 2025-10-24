@@ -43,7 +43,7 @@ const RuledSeparator = React.forwardRef<HTMLDivElement, RuledSeparatorProps>(
       decorative = true,
       ...props
     },
-    ref
+    ref,
   ) => {
     return (
       <div
@@ -52,7 +52,7 @@ const RuledSeparator = React.forwardRef<HTMLDivElement, RuledSeparatorProps>(
         aria-orientation={orientation || undefined}
         className={cn(
           ruledSeparatorVariants({ orientation, variant, spacing }),
-          className
+          className,
         )}
         {...props}
       >
@@ -62,15 +62,14 @@ const RuledSeparator = React.forwardRef<HTMLDivElement, RuledSeparatorProps>(
               "absolute bg-border",
               orientation === "horizontal"
                 ? "h-[1px] w-full top-[3px]"
-                : "w-[1px] h-full left-[3px]"
+                : "w-[1px] h-full left-[3px]",
             )}
           />
         )}
       </div>
     );
-  }
+  },
 );
 RuledSeparator.displayName = "RuledSeparator";
 
 export { RuledSeparator, ruledSeparatorVariants };
-

@@ -1,6 +1,6 @@
 /**
  * Academic Theme Components
- * 
+ *
  * Enhanced UI components with academic textbook/notes/papers styling.
  * These components extend the base shadcn/ui components with unique
  * visual elements inspired by scholarly materials.
@@ -46,4 +46,3 @@ export {
   ruledSeparatorVariants,
   type RuledSeparatorProps,
 } from "./ruled-separator";
-

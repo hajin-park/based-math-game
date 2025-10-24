@@ -12,7 +12,7 @@ module.exports = {
     container: {
       center: true,
       padding: {
-        DEFAULT: "1rem", /* Compact margins for better density */
+        DEFAULT: "1rem" /* Compact margins for better density */,
         sm: "1.5rem",
         md: "2rem",
         lg: "2.5rem",
@@ -89,17 +89,17 @@ module.exports = {
         },
       },
       borderRadius: {
-        lg: "var(--radius)", /* 2px - very subtle */
-        md: "0.1875rem", /* 3px - slightly more rounded */
-        sm: "0.125rem", /* 2px - minimal */
-        xl: "0.25rem", /* 4px - for special cases */
-        "2xl": "0.375rem", /* 6px - rarely used */
-        none: "0", /* Sharp corners for academic look */
+        lg: "var(--radius)" /* 2px - very subtle */,
+        md: "0.1875rem" /* 3px - slightly more rounded */,
+        sm: "0.125rem" /* 2px - minimal */,
+        xl: "0.25rem" /* 4px - for special cases */,
+        "2xl": "0.375rem" /* 6px - rarely used */,
+        none: "0" /* Sharp corners for academic look */,
       },
       fontSize: {
-        xs: ["0.75rem", { lineHeight: "1.5" }], /* Academic line-height */
+        xs: ["0.75rem", { lineHeight: "1.5" }] /* Academic line-height */,
         sm: ["0.875rem", { lineHeight: "1.6" }],
-        base: ["1rem", { lineHeight: "1.7" }], /* Optimal for reading */
+        base: ["1rem", { lineHeight: "1.7" }] /* Optimal for reading */,
         lg: ["1.125rem", { lineHeight: "1.7" }],
         xl: ["1.25rem", { lineHeight: "1.6" }],
         "2xl": ["1.5rem", { lineHeight: "1.5" }],
@@ -112,7 +112,13 @@ module.exports = {
         "9xl": ["8rem", { lineHeight: "1" }],
       },
       fontFamily: {
-        sans: ["Inter", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "sans-serif"],
+        sans: [
+          "Inter",
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "Segoe UI",
+          "sans-serif",
+        ],
         serif: ["Crimson Pro", "Crimson Text", "Georgia", "serif"],
         mono: ["JetBrains Mono", "Fira Code", "Consolas", "monospace"],
       },
@@ -122,23 +128,23 @@ module.exports = {
         128: "32rem",
       },
       maxWidth: {
-        "content": "65ch", /* Academic optimal reading width */
-        "prose": "75ch", /* Slightly wider for prose */
+        content: "65ch" /* Academic optimal reading width */,
+        prose: "75ch" /* Slightly wider for prose */,
       },
       letterSpacing: {
-        academic: "-0.02em", /* For headings */
-        body: "0.01em", /* For body text */
+        academic: "-0.02em" /* For headings */,
+        body: "0.01em" /* For body text */,
       },
       boxShadow: {
         /* Minimal shadows - paper-like, flat design */
-        sm: "0 1px 2px 0 rgb(0 0 0 / 0.03)", /* Very subtle */
-        DEFAULT: "0 1px 3px 0 rgb(0 0 0 / 0.05)", /* Subtle paper lift */
-        md: "0 2px 4px 0 rgb(0 0 0 / 0.06)", /* Slightly elevated */
-        lg: "0 4px 8px 0 rgb(0 0 0 / 0.08)", /* More elevated */
-        xl: "0 8px 16px 0 rgb(0 0 0 / 0.10)", /* Highest elevation */
-        "2xl": "0 12px 24px 0 rgb(0 0 0 / 0.12)", /* Maximum elevation */
-        inner: "inset 0 1px 2px 0 rgb(0 0 0 / 0.04)", /* Subtle inset */
-        none: "none", /* No shadow for flat design */
+        sm: "0 1px 2px 0 rgb(0 0 0 / 0.03)" /* Very subtle */,
+        DEFAULT: "0 1px 3px 0 rgb(0 0 0 / 0.05)" /* Subtle paper lift */,
+        md: "0 2px 4px 0 rgb(0 0 0 / 0.06)" /* Slightly elevated */,
+        lg: "0 4px 8px 0 rgb(0 0 0 / 0.08)" /* More elevated */,
+        xl: "0 8px 16px 0 rgb(0 0 0 / 0.10)" /* Highest elevation */,
+        "2xl": "0 12px 24px 0 rgb(0 0 0 / 0.12)" /* Maximum elevation */,
+        inner: "inset 0 1px 2px 0 rgb(0 0 0 / 0.04)" /* Subtle inset */,
+        none: "none" /* No shadow for flat design */,
       },
       keyframes: {
         "accordion-down": {

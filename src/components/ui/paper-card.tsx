@@ -25,7 +25,7 @@ const paperCardVariants = cva(
       variant: "default",
       padding: "default",
     },
-  }
+  },
 );
 
 export interface PaperCardProps
@@ -39,7 +39,7 @@ const PaperCard = React.forwardRef<HTMLDivElement, PaperCardProps>(
       className={cn(paperCardVariants({ variant, padding, className }))}
       {...props}
     />
-  )
+  ),
 );
 PaperCard.displayName = "PaperCard";
 
@@ -63,7 +63,7 @@ const PaperCardTitle = React.forwardRef<
     ref={ref}
     className={cn(
       "font-serif font-semibold leading-none tracking-academic",
-      className
+      className,
     )}
     {...props}
   />
@@ -110,4 +110,3 @@ export {
   PaperCardDescription,
   PaperCardContent,
 };
-

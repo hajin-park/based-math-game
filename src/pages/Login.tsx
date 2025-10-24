@@ -79,11 +79,7 @@ export default function Login() {
           </div>
 
           {/* Main Login Card - Compact */}
-          <PaperCard
-            variant="folded-sm"
-            padding="sm"
-            className="border-2"
-          >
+          <PaperCard variant="folded-sm" padding="sm" className="border-2">
             <PaperCardHeader className="p-4 pb-0">
               <PaperCardTitle className="text-lg font-serif">
                 Sign In
@@ -207,7 +203,9 @@ export default function Login() {
 
           {/* Footer Actions - Compact */}
           <div className="flex items-center gap-2 text-xs text-center justify-center">
-            <span className="text-muted-foreground">New to Based Math Game?</span>
+            <span className="text-muted-foreground">
+              New to Based Math Game?
+            </span>
             <Button
               variant="link"
               className="p-0 h-auto text-xs font-semibold text-primary"

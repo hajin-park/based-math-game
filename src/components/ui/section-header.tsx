@@ -43,7 +43,7 @@ const titleVariants = cva(
       size: "default",
       underline: "none",
     },
-  }
+  },
 );
 
 export interface SectionHeaderProps
@@ -69,7 +69,7 @@ const SectionHeader = React.forwardRef<HTMLDivElement, SectionHeaderProps>(
       titleUnderline,
       ...props
     },
-    ref
+    ref,
   ) => {
     return (
       <div
@@ -83,7 +83,7 @@ const SectionHeader = React.forwardRef<HTMLDivElement, SectionHeaderProps>(
           )}
           <h2
             className={cn(
-              titleVariants({ size: titleSize, underline: titleUnderline })
+              titleVariants({ size: titleSize, underline: titleUnderline }),
             )}
           >
             {title}
@@ -96,9 +96,8 @@ const SectionHeader = React.forwardRef<HTMLDivElement, SectionHeaderProps>(
         )}
       </div>
     );
-  }
+  },
 );
 SectionHeader.displayName = "SectionHeader";
 
 export { SectionHeader, sectionHeaderVariants, titleVariants };
-

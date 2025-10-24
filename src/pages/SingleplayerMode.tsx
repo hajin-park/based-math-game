@@ -28,19 +28,26 @@ export default function SingleplayerMode() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-6">
-      {/* Header */}
-      <div className="text-center space-y-2 animate-in">
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <Gamepad2 className="h-8 w-8 text-primary" />
-          <h1 className="text-4xl font-bold gradient-text">Singleplayer</h1>
-        </div>
-        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          Choose from official game modes or create your own custom challenge
-        </p>
-      </div>
+    <div className="min-h-[calc(100vh-8rem)] paper-texture">
+      {/* Subtle background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-b from-muted/10 via-background to-background -z-10" />
 
-      <GameModeSelect onSelectMode={handleSelectMode} />
+      <div className="container mx-auto px-4 py-4">
+        {/* Compact Header with Academic Styling */}
+        <div className="text-center space-y-1 mb-4 animate-in">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mb-1">
+            <Gamepad2 className="h-6 w-6 text-primary" />
+          </div>
+          <h1 className="text-2xl md:text-3xl font-serif font-bold">
+            <span className="highlight-scribble">Singleplayer</span>
+          </h1>
+          <p className="text-xs text-muted-foreground annotation">
+            48 official modes • Custom playground
+          </p>
+        </div>
+
+        <GameModeSelect onSelectMode={handleSelectMode} />
+      </div>
     </div>
   );
 }
