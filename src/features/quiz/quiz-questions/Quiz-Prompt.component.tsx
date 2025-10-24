@@ -191,9 +191,13 @@ export default function QuizPrompt({
       {/* Helper Text */}
       <div className="text-center text-sm text-muted-foreground">
         <p>Type your answer and press Enter or continue typing</p>
-        <p className="text-xs mt-1">
-          Press <kbd className="px-2 py-1 bg-muted rounded">Esc</kbd> to exit
-        </p>
+        <span className="text-xs">
+          Click the{" "}
+          <kbd className="px-1.5 py-0.5 bg-muted rounded text-xs font-mono">
+            ✕
+          </kbd>{" "}
+          button in the top-left to exit
+        </span>
       </div>
     </section>
   );

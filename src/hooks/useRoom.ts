@@ -164,11 +164,6 @@ export function useRoom() {
         }
 
         const room = snapshot.val();
-
-        if (room.status !== "waiting") {
-          throw new Error("Room is not accepting players");
-        }
-
         const playerRef = ref(database, `rooms/${roomId}/players/${user.uid}`);
         const existingPlayer = room.players?.[user.uid];
 
@@ -179,12 +174,18 @@ export function useRoom() {
           }
 
           // Reconnecting - update disconnected status
+          // Allow reconnecting regardless of room status (waiting, playing, finished)
           await update(playerRef, {
             disconnected: false,
             disconnectedAt: null,
           });
         } else {
-          // New player joining
+          // New player trying to join
+          // Only allow new players when room is in "waiting" status
+          if (room.status !== "waiting") {
+            throw new Error("Room is not accepting players");
+          }
+
           const maxPlayers = room.maxPlayers || 4;
           const activePlayers = Object.values(room.players || {}).filter(
             (p: unknown) =>
