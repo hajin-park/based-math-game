@@ -405,14 +405,14 @@ export default function Leaderboard() {
                       <div
                         className={`flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full flex-shrink-0 ${
                           globalRank <= 3
-                            ? "bg-yellow-500/20 border-2 border-yellow-600/40"
+                            ? "bg-trophy/20 border-2 border-trophy/40"
                             : "bg-muted"
                         }`}
                       >
                         <span
                           className={`font-bold text-sm sm:text-base ${
                             globalRank <= 3
-                              ? "text-yellow-700 dark:text-yellow-400"
+                              ? "text-trophy"
                               : "text-muted-foreground"
                           }`}
                         >

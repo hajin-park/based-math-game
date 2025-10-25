@@ -1421,7 +1421,7 @@ export default function RoomLobby() {
                                 <span
                                   className={`font-bold ${
                                     isLeader
-                                      ? "text-yellow-600 dark:text-yellow-400"
+                                      ? "text-trophy"
                                       : "text-muted-foreground"
                                   }`}
                                 >

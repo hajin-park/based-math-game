@@ -51,7 +51,7 @@ export default function Usage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
               <PaperCard variant="default" padding="sm">
                 <PaperCardContent className="pt-2 text-center">
-                  <Badge className="mb-1 bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 text-xs">
+                  <Badge className="mb-1 bg-base-binary/10 text-base-binary border border-base-binary/30 text-xs">
                     Base 2
                   </Badge>
                   <p className="font-bold text-sm">Binary</p>
@@ -60,7 +60,7 @@ export default function Usage() {
               </PaperCard>
               <PaperCard variant="default" padding="sm">
                 <PaperCardContent className="pt-2 text-center">
-                  <Badge className="mb-1 bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300 text-xs">
+                  <Badge className="mb-1 bg-base-octal/10 text-base-octal border border-base-octal/30 text-xs">
                     Base 8
                   </Badge>
                   <p className="font-bold text-sm">Octal</p>
@@ -69,7 +69,7 @@ export default function Usage() {
               </PaperCard>
               <PaperCard variant="default" padding="sm">
                 <PaperCardContent className="pt-2 text-center">
-                  <Badge className="mb-1 bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 text-xs">
+                  <Badge className="mb-1 bg-base-decimal/10 text-base-decimal border border-base-decimal/30 text-xs">
                     Base 10
                   </Badge>
                   <p className="font-bold text-sm">Decimal</p>
@@ -78,7 +78,7 @@ export default function Usage() {
               </PaperCard>
               <PaperCard variant="default" padding="sm">
                 <PaperCardContent className="pt-2 text-center">
-                  <Badge className="mb-1 bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300 text-xs">
+                  <Badge className="mb-1 bg-base-hex/10 text-base-hex border border-base-hex/30 text-xs">
                     Base 16
                   </Badge>
                   <p className="font-bold text-sm">Hexadecimal</p>
@@ -89,10 +89,7 @@ export default function Usage() {
             <div className="bg-muted p-2 rounded mt-2">
               <p className="text-sm font-semibold mb-1">Example Question:</p>
               <div className="font-mono text-sm mb-1">
-                Convert{" "}
-                <span className="text-blue-600 dark:text-blue-400 font-bold">
-                  1010
-                </span>{" "}
+                Convert <span className="text-base-binary font-bold">1010</span>{" "}
                 from Binary to Decimal
               </div>
               <div className="text-sm text-muted-foreground">
@@ -357,16 +354,14 @@ export default function Usage() {
                 <h3 className="font-semibold mb-1 text-base">Scoring System</h3>
                 <ul className="space-y-1 text-xs">
                   <li className="flex items-start gap-2">
-                    <span className="text-green-600 dark:text-green-400 font-bold text-xs">
-                      ✓
-                    </span>
+                    <span className="text-success font-bold text-xs">✓</span>
                     <span className="text-xs">
                       <strong>Correct answer:</strong> +1 point (auto-validated
                       on keystroke)
                     </span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-red-600 dark:text-red-400 font-bold text-xs">
+                    <span className="text-destructive font-bold text-xs">
                       ✗
                     </span>
                     <span className="text-xs">
@@ -374,18 +369,14 @@ export default function Usage() {
                     </span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-blue-600 dark:text-blue-400 font-bold text-xs">
-                      ⏱
-                    </span>
+                    <span className="text-info font-bold text-xs">⏱</span>
                     <span className="text-xs">
                       <strong>Pure speed:</strong> Score as many correct answers
                       as possible before time runs out
                     </span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-purple-600 dark:text-purple-400 font-bold text-xs">
-                      🏆
-                    </span>
+                    <span className="text-trophy font-bold text-xs">🏆</span>
                     <span className="text-xs">
                       <strong>No partial credit:</strong> Only complete, correct
                       answers count
@@ -407,7 +398,7 @@ export default function Usage() {
                   </div>
                 </div>
                 <div className="text-center">
-                  <div className="font-mono text-lg font-bold text-green-600 dark:text-green-400">
+                  <div className="font-mono text-lg font-bold text-success">
                     12
                   </div>
                   <div className="text-xs text-muted-foreground">
@@ -489,7 +480,7 @@ export default function Usage() {
               </div>
             </div>
 
-            <div className="bg-yellow-50 dark:bg-yellow-950 p-2 rounded border border-yellow-200 dark:border-yellow-800">
+            <div className="bg-warning/10 p-2 rounded border border-warning/30">
               <p className="text-xs font-semibold mb-1">Guest Users:</p>
               <p className="text-xs">
                 Playing as a guest? Your stats are tracked during your session,

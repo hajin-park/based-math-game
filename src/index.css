@@ -78,6 +78,24 @@
     --chart-3: oklch(0.5 0.2 25); /* Academic red */
     --chart-4: oklch(0.75 0.15 75); /* Warm orange */
     --chart-5: oklch(0.45 0.12 280); /* Purple */
+
+    /* Trophy/Achievement Colors - Gold/amber for awards */
+    --trophy: oklch(0.65 0.15 85); /* Rich gold */
+    --trophy-foreground: oklch(0.99 0.003 85); /* Paper white */
+
+    /* Critical State - For urgent warnings and time-sensitive alerts */
+    --critical: oklch(0.5 0.2 25); /* Red correction pen */
+    --critical-foreground: oklch(0.99 0.003 85); /* Paper white */
+
+    /* Base Number System Colors - For educational context */
+    --base-binary: oklch(0.35 0.08 250); /* Academic blue (matches primary) */
+    --base-binary-foreground: oklch(0.99 0.003 85); /* Paper white */
+    --base-octal: oklch(0.75 0.15 75); /* Warm orange (matches warning) */
+    --base-octal-foreground: oklch(0.2 0.01 265); /* Dark text */
+    --base-decimal: oklch(0.55 0.15 150); /* Academic green (matches success) */
+    --base-decimal-foreground: oklch(0.99 0.003 85); /* Paper white */
+    --base-hex: oklch(0.45 0.12 280); /* Purple */
+    --base-hex-foreground: oklch(0.99 0.003 85); /* Paper white */
   }
 
   .dark {
@@ -149,6 +167,24 @@
     --chart-3: oklch(0.6 0.18 25); /* Muted red */
     --chart-4: oklch(0.7 0.12 75); /* Muted orange */
     --chart-5: oklch(0.6 0.1 280); /* Muted purple */
+
+    /* Trophy/Achievement Colors - Muted gold/amber for awards (chalkboard aesthetic) */
+    --trophy: oklch(0.75 0.12 85); /* Muted gold/amber */
+    --trophy-foreground: oklch(0.18 0.01 265); /* Deep charcoal */
+
+    /* Critical State - For urgent warnings and time-sensitive alerts (softer for night reading) */
+    --critical: oklch(0.65 0.15 25); /* Muted red (softer than light mode) */
+    --critical-foreground: oklch(0.95 0.005 85); /* Soft white */
+
+    /* Base Number System Colors - For educational context (muted chalkboard colors) */
+    --base-binary: oklch(0.65 0.08 250); /* Chalk blue (matches primary) */
+    --base-binary-foreground: oklch(0.18 0.01 265); /* Deep charcoal */
+    --base-octal: oklch(0.7 0.12 75); /* Muted orange (matches warning) */
+    --base-octal-foreground: oklch(0.18 0.01 265); /* Deep charcoal */
+    --base-decimal: oklch(0.65 0.12 150); /* Muted green (matches success) */
+    --base-decimal-foreground: oklch(0.18 0.01 265); /* Deep charcoal */
+    --base-hex: oklch(0.6 0.1 280); /* Muted purple */
+    --base-hex-foreground: oklch(0.18 0.01 265); /* Deep charcoal */
   }
 }
 
@@ -400,6 +436,7 @@
 
   .dark .folded-corner::after {
     border-color: transparent oklch(0.3 0.01 265) transparent transparent;
+    filter: drop-shadow(-1px 1px 2px rgba(0, 0, 0, 0.3));
   }
 
   .folded-corner-sm::after {
@@ -535,6 +572,19 @@
     background-image: url("data:image/svg+xml,%3Csvg width='100%25' height='12' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M 0 8 Q 2 6, 4 7 T 8 8 T 12 7 T 16 8 T 20 7 T 24 8 T 28 7 T 32 8 T 36 7 T 40 8 T 44 7 T 48 8 T 52 7 T 56 8 T 60 7 T 64 8 T 68 7 T 72 8 T 76 7 T 80 8 T 84 7 T 88 8 T 92 7 T 96 8 T 100 7' stroke='%23f97316' stroke-width='3' fill='none' opacity='0.4' stroke-linecap='round'/%3E%3C/svg%3E");
   }
 
+  /* Dark mode highlighter scribbles - muted chalk colors */
+  .dark .highlight-scribble::after {
+    background-image: url("data:image/svg+xml,%3Csvg width='100%25' height='12' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M 0 8 Q 2 6, 4 7 T 8 8 T 12 7 T 16 8 T 20 7 T 24 8 T 28 7 T 32 8 T 36 7 T 40 8 T 44 7 T 48 8 T 52 7 T 56 8 T 60 7 T 64 8 T 68 7 T 72 8 T 76 7 T 80 8 T 84 7 T 88 8 T 92 7 T 96 8 T 100 7' stroke='%23d4a574' stroke-width='3' fill='none' opacity='0.3' stroke-linecap='round'/%3E%3C/svg%3E");
+  }
+
+  .dark .highlight-scribble-green::after {
+    background-image: url("data:image/svg+xml,%3Csvg width='100%25' height='12' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M 0 8 Q 2 6, 4 7 T 8 8 T 12 7 T 16 8 T 20 7 T 24 8 T 28 7 T 32 8 T 36 7 T 40 8 T 44 7 T 48 8 T 52 7 T 56 8 T 60 7 T 64 8 T 68 7 T 72 8 T 76 7 T 80 8 T 84 7 T 88 8 T 92 7 T 96 8 T 100 7' stroke='%2388b888' stroke-width='3' fill='none' opacity='0.25' stroke-linecap='round'/%3E%3C/svg%3E");
+  }
+
+  .dark .highlight-scribble-orange::after {
+    background-image: url("data:image/svg+xml,%3Csvg width='100%25' height='12' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M 0 8 Q 2 6, 4 7 T 8 8 T 12 7 T 16 8 T 20 7 T 24 8 T 28 7 T 32 8 T 36 7 T 40 8 T 44 7 T 48 8 T 52 7 T 56 8 T 60 7 T 64 8 T 68 7 T 72 8 T 76 7 T 80 8 T 84 7 T 88 8 T 92 7 T 96 8 T 100 7' stroke='%23d4a574' stroke-width='3' fill='none' opacity='0.3' stroke-linecap='round'/%3E%3C/svg%3E");
+  }
+
   /* Sticky Note Callout */
   .sticky-note {
     @apply relative p-4 shadow-md;
@@ -546,6 +596,10 @@
   .sticky-note:hover {
     transform: rotate(0deg) translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  .dark .sticky-note:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
   }
 
   .sticky-note-pink {
@@ -561,20 +615,20 @@
   }
 
   .dark .sticky-note {
-    background: oklch(0.35 0.06 95);
+    background: oklch(0.3 0.05 95); /* Muted chalkboard yellow */
     color: oklch(0.95 0.005 85);
   }
 
   .dark .sticky-note-pink {
-    background: oklch(0.35 0.06 15);
+    background: oklch(0.3 0.05 15); /* Muted chalkboard pink */
   }
 
   .dark .sticky-note-blue {
-    background: oklch(0.35 0.06 240);
+    background: oklch(0.3 0.05 240); /* Muted chalkboard blue */
   }
 
   .dark .sticky-note-green {
-    background: oklch(0.35 0.06 150);
+    background: oklch(0.3 0.05 150); /* Muted chalkboard green */
   }
 
   /* Pencil Sketch Border */
@@ -630,6 +684,10 @@
     background: var(--primary);
     clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 85%, 0 100%);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+
+  .dark .bookmark-ribbon::before {
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
   }
 
   /* Bookmark ribbon variants */

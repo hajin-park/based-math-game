@@ -198,10 +198,8 @@ export default function QuizStats({
           <Clock
             className={cn(
               "h-6 w-6 flex-shrink-0",
-              isCriticalTime && "text-red-600 dark:text-red-400 animate-pulse",
-              isLowTime &&
-                !isCriticalTime &&
-                "text-orange-600 dark:text-orange-400",
+              isCriticalTime && "text-critical animate-pulse",
+              isLowTime && !isCriticalTime && "text-warning",
             )}
           />
           <div className="flex flex-col justify-center">
@@ -211,11 +209,8 @@ export default function QuizStats({
             <span
               className={cn(
                 "text-2xl font-bold font-mono tabular-nums leading-tight",
-                isCriticalTime &&
-                  "text-red-600 dark:text-red-400 animate-pulse",
-                isLowTime &&
-                  !isCriticalTime &&
-                  "text-orange-600 dark:text-orange-400",
+                isCriticalTime && "text-critical animate-pulse",
+                isLowTime && !isCriticalTime && "text-warning",
               )}
             >
               {formattedTime}
@@ -238,7 +233,7 @@ export default function QuizStats({
                 : score}
             </Badge>
           </div>
-          <Trophy className="h-6 w-6 flex-shrink-0 text-yellow-600 dark:text-yellow-400" />
+          <Trophy className="h-6 w-6 flex-shrink-0 text-trophy" />
         </div>
       </div>
     </CardHeader>

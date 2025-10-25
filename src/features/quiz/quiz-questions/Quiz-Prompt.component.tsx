@@ -302,8 +302,7 @@ export default function QuizPrompt({
               placeholder={showSuccess ? "" : "Type your answer..."}
               className={cn(
                 "text-lg md:text-xl font-bold font-mono text-center h-14 px-3 transition-all duration-200",
-                showSuccess &&
-                  "ring-2 ring-green-500 bg-green-50 dark:bg-green-950 scale-105",
+                showSuccess && "ring-2 ring-success bg-success/10 scale-105",
               )}
               inputMode="text"
               pattern={VALID_PATTERNS[setting[1].toLowerCase()]?.source}
@@ -317,7 +316,7 @@ export default function QuizPrompt({
             {/* Success animation */}
             {showSuccess && (
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="text-5xl font-bold text-green-600 dark:text-green-400 animate-bounce">
+                <div className="text-5xl font-bold text-success animate-bounce">
                   ✓
                 </div>
               </div>

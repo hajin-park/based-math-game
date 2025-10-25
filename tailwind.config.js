@@ -87,6 +87,30 @@ module.exports = {
           4: "var(--chart-4)",
           5: "var(--chart-5)",
         },
+        trophy: {
+          DEFAULT: "var(--trophy)",
+          foreground: "var(--trophy-foreground)",
+        },
+        critical: {
+          DEFAULT: "var(--critical)",
+          foreground: "var(--critical-foreground)",
+        },
+        "base-binary": {
+          DEFAULT: "var(--base-binary)",
+          foreground: "var(--base-binary-foreground)",
+        },
+        "base-octal": {
+          DEFAULT: "var(--base-octal)",
+          foreground: "var(--base-octal-foreground)",
+        },
+        "base-decimal": {
+          DEFAULT: "var(--base-decimal)",
+          foreground: "var(--base-decimal-foreground)",
+        },
+        "base-hex": {
+          DEFAULT: "var(--base-hex)",
+          foreground: "var(--base-hex-foreground)",
+        },
       },
       borderRadius: {
         lg: "var(--radius)" /* 2px - very subtle */,
