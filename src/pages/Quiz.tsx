@@ -21,7 +21,8 @@ export default function Quiz() {
 
   const { settings } = quizContext;
   const { setResults } = resultContext;
-  const { settings: gameSettings, loading: gameSettingsLoading } = useGameSettings();
+  const { settings: gameSettings, loading: gameSettingsLoading } =
+    useGameSettings();
 
   // Initialize all state and refs before any conditional returns
   // Start with true, will be updated when settings load
@@ -85,7 +86,12 @@ export default function Quiz() {
         startTimeRef.current = Date.now();
       }
     }
-  }, [gameSettings.countdownStart, gameSettingsLoading, isSpeedrun, settings.duration]);
+  }, [
+    gameSettings.countdownStart,
+    gameSettingsLoading,
+    isSpeedrun,
+    settings.duration,
+  ]);
 
   // Validate settings - if invalid, redirect to home
   useEffect(() => {

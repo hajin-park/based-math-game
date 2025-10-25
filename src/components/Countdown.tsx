@@ -47,9 +47,7 @@ export default function Countdown({
           {count}
         </motion.div>
       </AnimatePresence>
-      <p className="text-xl font-medium text-muted-foreground">
-        Get ready...
-      </p>
+      <p className="text-xl font-medium text-muted-foreground">Get ready...</p>
     </div>
   );
 

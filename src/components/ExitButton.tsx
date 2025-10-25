@@ -29,9 +29,9 @@ export default function ExitButton({
           size="icon"
           className="fixed top-4 left-4 z-50 bg-background/80 backdrop-blur-sm border border-border shadow-sm hover:bg-destructive/10 hover:text-destructive transition-colors"
           style={{
-            transform: 'translate3d(0, 0, 0)',
-            backfaceVisibility: 'hidden',
-            WebkitBackfaceVisibility: 'hidden',
+            transform: "translate3d(0, 0, 0)",
+            backfaceVisibility: "hidden",
+            WebkitBackfaceVisibility: "hidden",
           }}
           aria-label="Exit game"
         >

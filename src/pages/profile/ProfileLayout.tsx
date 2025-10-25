@@ -32,9 +32,9 @@ export default function ProfileLayout() {
   ];
 
   return (
-    <div className="flex safe-vh-screen bg-background overflow-hidden">
+    <div className="flex safe-vh-screen bg-background overflow-hidden h-screen max-h-screen">
       {/* Sidebar */}
-      <aside className="w-72 border-r-2 border-border flex-shrink-0 flex flex-col bg-card paper-texture overflow-hidden">
+      <aside className="w-72 border-r-2 border-border flex-shrink-0 flex flex-col bg-card paper-texture overflow-hidden h-full">
         <div className="p-6 space-y-2 flex-shrink-0">
           <h2 className="text-2xl font-serif font-bold gradient-text tracking-academic">
             Profile
@@ -82,8 +82,8 @@ export default function ProfileLayout() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto min-h-0">
-        <div className="container mx-auto p-6 max-w-5xl">
+      <main className="flex-1 overflow-y-auto min-h-0 h-full">
+        <div className="container mx-auto p-6 max-w-5xl h-full">
           <Outlet />
         </div>
       </main>

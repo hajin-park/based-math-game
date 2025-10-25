@@ -20,6 +20,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useRoom, Room } from "@/hooks/useRoom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -225,19 +226,22 @@ export default function RoomLobby() {
       if (updatedRoom.status === "playing" && !countdownShownRef.current) {
         countdownShownRef.current = true;
 
-        // Check if game just started (within last 5 seconds) to avoid replaying countdown on reconnect
-        const gameJustStarted =
-          updatedRoom.startedAt && Date.now() - updatedRoom.startedAt < 5000;
+        const now = Date.now();
+        // When countdown is enabled, startedAt is set to future time (now + 3000ms)
+        // When countdown is disabled, startedAt is set to current time
+        // Check if game already started by seeing if startedAt has passed
+        const gameAlreadyStarted =
+          updatedRoom.startedAt && updatedRoom.startedAt <= now;
 
         console.log("RoomLobby: Game starting", {
           enableCountdown: updatedRoom.enableCountdown,
-          gameJustStarted,
+          gameAlreadyStarted,
           startedAt: updatedRoom.startedAt,
-          now: Date.now(),
+          now,
         });
 
-        // Show countdown if enabled and game just started, otherwise start timer immediately
-        if (updatedRoom.enableCountdown && gameJustStarted) {
+        // Show countdown if enabled and game hasn't started yet (startedAt is in future)
+        if (updatedRoom.enableCountdown && !gameAlreadyStarted) {
           console.log("RoomLobby: Showing countdown");
           setShowCountdown(true);
           setTimerShouldStart(false);
@@ -341,15 +345,16 @@ export default function RoomLobby() {
   ]);
 
   // Calculate expiry timestamp based on room startedAt and duration
+  // This ensures all players have synchronized timers
   const expiryTimestamp = useMemo(() => {
     if (room?.startedAt && room?.gameMode.duration) {
-      const elapsed = Math.floor((Date.now() - room.startedAt) / 1000);
       const duration = isSpeedrun ? 86400 : room.gameMode.duration;
-      const remaining = Math.max(0, duration - elapsed);
-      const expiry = new Date();
-      expiry.setSeconds(expiry.getSeconds() + remaining);
+      // Calculate expiry directly from startedAt to ensure synchronization
+      // startedAt is the actual game start time (after countdown if enabled)
+      const expiry = new Date(room.startedAt + duration * 1000);
       return expiry;
     }
+    // Fallback for when game hasn't started yet
     const time = new Date();
     time.setSeconds(time.getSeconds() + (isSpeedrun ? 86400 : 60));
     return time;
@@ -624,15 +629,33 @@ export default function RoomLobby() {
           <div className="px-fluid py-3 sm:py-4">
             <div className="flex items-center justify-between gap-3 sm:gap-4">
               {/* Exit Button - Left */}
-              <Button
-                onClick={handleLeave}
-                variant="outline"
-                size="default"
-                className="gap-2 shrink-0 text-sm sm:text-base"
-              >
-                <X className="h-4 w-4 sm:h-5 sm:w-5" />
-                <span className="hidden sm:inline">Exit</span>
-              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="default"
+                    className="gap-2 shrink-0 text-sm sm:text-base"
+                  >
+                    <X className="h-4 w-4 sm:h-5 sm:w-5" />
+                    <span className="hidden sm:inline">Exit</span>
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Leave Room?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to leave the room? You'll need to
+                      rejoin to continue playing.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleLeave}>
+                      Leave Room
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
 
               {/* Game Title - Center */}
               <div className="flex-1 text-center min-w-0">

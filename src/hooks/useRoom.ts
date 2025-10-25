@@ -130,6 +130,9 @@ export function useRoom() {
           `rooms/${roomId}/players/${user.uid}`,
         );
 
+        // Cancel any existing disconnect handlers before setting up new ones
+        await onDisconnect(hostPlayerRef).cancel();
+
         if (isGuestUser(user)) {
           // Guest users: Remove completely on disconnect
           onDisconnect(hostPlayerRef).remove();
@@ -214,6 +217,10 @@ export function useRoom() {
         if (isGuestUser(user)) {
           localStorage.setItem(`guestRoom_${user.uid}`, roomId);
         }
+
+        // Cancel any existing disconnect handlers before setting up new ones
+        // This prevents duplicate handlers when reconnecting
+        await onDisconnect(playerRef).cancel();
 
         // Set up disconnect handler
         if (isGuestUser(user)) {
@@ -621,19 +628,23 @@ export function useRoom() {
           // If no connected players available, keep disconnected host or delete room
         }
 
-        // Check if all players are disconnected or kicked - delete room
+        // Check if all players are disconnected or kicked
         const activePlayerCount = players.filter(
           (p: RoomPlayer) => !p.disconnected && !p.kicked,
         ).length;
         if (activePlayerCount === 0) {
-          // No active players left - delete the room
-          try {
-            await remove(roomRef);
-            callback(null);
-            return;
-          } catch (error) {
-            console.error("Error deleting empty room:", error);
+          // Only delete room if it's in "waiting" status
+          // For "playing" or "finished" rooms, keep them for reconnection
+          if (room.status === "waiting") {
+            try {
+              await remove(roomRef);
+              callback(null);
+              return;
+            } catch (error) {
+              console.error("Error deleting empty room:", error);
+            }
           }
+          // For active games, don't delete - allow players to reconnect
         }
 
         callback(room);

@@ -198,7 +198,7 @@ export default function QuizPrompt({
   const [answer, setAnswer] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
   const [previousAnswerLength, setPreviousAnswerLength] = useState(0);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
 
   // Determine if visual aids should be shown
   const showGroupedDigits = allowVisualAids && gameSettings?.groupedDigits;
@@ -211,7 +211,9 @@ export default function QuizPrompt({
     inputRef.current?.focus();
   }, [score, setting, seed]);
 
-  function handleOnChange(event: React.ChangeEvent<HTMLInputElement>) {
+  function handleOnChange(
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) {
     const input = event.currentTarget.value.toLowerCase();
     const targetBase = setting[1].toLowerCase();
 

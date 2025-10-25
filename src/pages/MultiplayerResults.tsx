@@ -16,6 +16,17 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useRoom, Room } from "@/hooks/useRoom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
@@ -291,21 +302,41 @@ export default function MultiplayerResults() {
         <div className="px-fluid py-3 sm:py-4">
           <div className="flex items-center justify-between gap-3 sm:gap-4">
             {/* Exit Button - Left */}
-            <Button
-              onClick={async () => {
-                isLeavingRef.current = true;
-                if (roomId) {
-                  await leaveRoom(roomId);
-                }
-                navigate("/multiplayer");
-              }}
-              variant="outline"
-              size="default"
-              className="gap-2 shrink-0 text-sm sm:text-base"
-            >
-              <X className="h-4 w-4 sm:h-5 sm:w-5" />
-              <span className="hidden sm:inline">Exit</span>
-            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="default"
+                  className="gap-2 shrink-0 text-sm sm:text-base"
+                >
+                  <X className="h-4 w-4 sm:h-5 sm:w-5" />
+                  <span className="hidden sm:inline">Exit</span>
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Leave Room?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to leave the room? You'll return to
+                    the multiplayer menu.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={async () => {
+                      isLeavingRef.current = true;
+                      if (roomId) {
+                        await leaveRoom(roomId);
+                      }
+                      navigate("/multiplayer");
+                    }}
+                  >
+                    Leave Room
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
 
             {/* Game Title - Center */}
             <div className="flex-1 text-center min-w-0">

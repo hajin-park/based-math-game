@@ -274,15 +274,15 @@ export default function ProfileOverview() {
 
           <RuledSeparator />
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-2">
-            <p className="text-sm text-muted-foreground text-center sm:text-left">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-3">
+            <p className="text-sm text-muted-foreground text-center sm:text-left flex items-center">
               Visit the Stats page for detailed analytics
             </p>
             <Button
               variant="outline"
               size="sm"
               onClick={() => navigate("/stats")}
-              className="gap-2"
+              className="gap-2 flex items-center"
             >
               View Stats
               <ArrowRight className="h-4 w-4" />

@@ -208,13 +208,25 @@ export default function MultiplayerGame() {
       }
 
       // Show countdown when game starts (only once)
+      // But skip countdown if reconnecting after game already started
       if (
         updatedRoom.status === "playing" &&
         updatedRoom.enableCountdown &&
         !countdownShownRef.current
       ) {
-        setShowCountdown(true);
-        countdownShownRef.current = true;
+        const now = Date.now();
+        const gameAlreadyStarted =
+          updatedRoom.startedAt && updatedRoom.startedAt <= now;
+
+        if (gameAlreadyStarted) {
+          // Game already started, skip countdown and start timer immediately
+          setTimerShouldStart(true);
+          countdownShownRef.current = true;
+        } else {
+          // Game just started, show countdown
+          setShowCountdown(true);
+          countdownShownRef.current = true;
+        }
       }
 
       // Start timer immediately if countdown is disabled
@@ -291,25 +303,55 @@ export default function MultiplayerGame() {
     isSpeedrun,
   ]);
 
-  // Update expiry timestamp when countdown is disabled and timer should start immediately
+  // Update expiry timestamp when timer should start (both countdown enabled and disabled cases)
   useEffect(() => {
-    // Only set expiry for countdown disabled case (countdown enabled case is handled in handleCountdownComplete)
-    if (timerShouldStart && room?.startedAt && room?.gameMode.duration && !room.enableCountdown) {
-      // For countdown disabled: startedAt is current time, so calculate full duration from now
+    // Only set expiry when we have all required data and timer should start
+    if (timerShouldStart && room?.startedAt && room?.gameMode.duration) {
       const duration = isSpeedrun ? 86400 : room.gameMode.duration;
-      const expiry = new Date();
-      expiry.setSeconds(expiry.getSeconds() + duration);
+      const now = Date.now();
 
-      console.log("Setting expiry timestamp (countdown disabled):", {
-        startedAt: room.startedAt,
-        duration,
-        isSpeedrun,
-        expiry: expiry.toISOString(),
-      });
+      // For countdown disabled: startedAt is current time when game started
+      // For countdown enabled: startedAt is future time (after countdown)
+      // In both cases, calculate expiry from startedAt for synchronization
+      if (!room.enableCountdown) {
+        // Countdown disabled: calculate expiry from startedAt for synchronization
+        const expiry = new Date(room.startedAt + duration * 1000);
 
-      setExpiryTimestamp(expiry);
+        console.log("Setting expiry timestamp (countdown disabled):", {
+          startedAt: room.startedAt,
+          duration,
+          isSpeedrun,
+          expiry: expiry.toISOString(),
+        });
+
+        setExpiryTimestamp(expiry);
+      } else if (room.startedAt <= now) {
+        // Countdown enabled, but game already started (reconnecting after countdown finished)
+        // Calculate expiry from startedAt + duration for synchronization
+        const expiry = new Date(room.startedAt + duration * 1000);
+
+        console.log(
+          "Setting expiry timestamp (reconnecting after countdown):",
+          {
+            startedAt: room.startedAt,
+            now,
+            duration,
+            isSpeedrun,
+            expiry: expiry.toISOString(),
+          },
+        );
+
+        setExpiryTimestamp(expiry);
+      }
+      // For countdown enabled and not yet started, expiry is set in handleCountdownComplete
     }
-  }, [timerShouldStart, room?.startedAt, room?.gameMode.duration, room?.enableCountdown, isSpeedrun]);
+  }, [
+    timerShouldStart,
+    room?.startedAt,
+    room?.gameMode.duration,
+    room?.enableCountdown,
+    isSpeedrun,
+  ]);
 
   // Generate deterministic seed for multiplayer questions
   // Combine room ID hash with score to ensure all players get same questions
@@ -349,13 +391,15 @@ export default function MultiplayerGame() {
     setShowCountdown(false);
     setTimerShouldStart(true);
 
-    // Calculate expiry timestamp when countdown completes (like singleplayer)
-    if (room?.gameMode.duration) {
+    // Calculate expiry timestamp synchronized to room.startedAt
+    // This ensures all players have the same timer regardless of network latency
+    if (room?.gameMode.duration && room?.startedAt) {
       const duration = isSpeedrun ? 86400 : room.gameMode.duration;
-      const expiry = new Date();
-      expiry.setSeconds(expiry.getSeconds() + duration);
+      // Use room.startedAt as the base time for synchronization
+      const expiry = new Date(room.startedAt + duration * 1000);
 
       console.log("Setting expiry timestamp (countdown complete):", {
+        startedAt: room.startedAt,
         duration,
         isSpeedrun,
         expiry: expiry.toISOString(),
@@ -381,6 +425,9 @@ export default function MultiplayerGame() {
   return (
     <>
       <KickedModal open={showKickedModal} onClose={handleKickedModalClose} />
+      {showCountdown && (
+        <Countdown onComplete={handleCountdownComplete} duration={3} />
+      )}
       <div className="flex flex-col h-full overflow-hidden">
         {/* Row 1 - Header */}
         <div className="flex-none border-b-2 border-border bg-card paper-texture shadow-sm">
@@ -402,7 +449,8 @@ export default function MultiplayerGame() {
                   <AlertDialogHeader>
                     <AlertDialogTitle>Exit Game?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Are you sure you want to leave the game? Your progress will be saved but you'll leave the room.
+                      Are you sure you want to leave the game? Your progress
+                      will be saved but you'll leave the room.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
@@ -518,14 +566,7 @@ export default function MultiplayerGame() {
           {/* Desktop Middle Column - Main Game Window */}
           <div className="flex flex-col min-h-0 bg-background">
             <div className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-4 lg:p-6">
-              <Card className="shadow-lg h-full flex flex-col relative">
-                {/* Countdown overlay - constrained to game card */}
-                {showCountdown && (
-                  <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-md rounded-lg">
-                    <Countdown onComplete={handleCountdownComplete} duration={3} inline />
-                  </div>
-                )}
-
+              <Card className="shadow-lg h-full flex flex-col">
                 <QuizStats
                   expiryTimestamp={expiryTimestamp}
                   setRunning={handleTimerExpire}
