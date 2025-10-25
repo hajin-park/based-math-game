@@ -44,7 +44,10 @@ export default function Quiz() {
     () => (settings.gameModeId ? getGameModeById(settings.gameModeId) : null),
     [settings.gameModeId],
   );
-  const isSpeedrun = useMemo(() => isSpeedrunMode(gameMode), [gameMode]);
+  const isSpeedrun = useMemo(
+    () => isSpeedrunMode(gameMode) || !!settings.targetQuestions,
+    [gameMode, settings.targetQuestions],
+  );
 
   // Use ref to capture the latest score value to prevent race conditions
   const scoreRef = useRef(score);
@@ -108,15 +111,15 @@ export default function Quiz() {
 
   // Check if target questions reached (for speed run modes)
   useEffect(() => {
-    if (
-      isSpeedrun &&
-      gameMode?.targetQuestions &&
-      score >= gameMode.targetQuestions
-    ) {
+    // Use targetQuestions from gameMode (official modes) or settings (custom modes)
+    const targetQuestions =
+      gameMode?.targetQuestions || settings.targetQuestions;
+
+    if (isSpeedrun && targetQuestions && score >= targetQuestions) {
       // Target reached, end the game
       setRunning(false);
     }
-  }, [score, isSpeedrun, gameMode]);
+  }, [score, isSpeedrun, gameMode, settings.targetQuestions]);
 
   useEffect(() => {
     if (!running) {
@@ -201,7 +204,9 @@ export default function Quiz() {
             shouldStartTimer={timerShouldStart}
             isUnlimited={settings.duration === 0}
             isSpeedrun={isSpeedrun}
-            targetQuestions={gameMode?.targetQuestions}
+            targetQuestions={
+              gameMode?.targetQuestions || settings.targetQuestions
+            }
           />
           <CardContent className="p-0">
             <QuizPrompt

@@ -121,6 +121,29 @@ This document provides a concise, fact-based overview of the codebase to help AI
   - Changed from invalid `.beginsWith('guest_')` to `.matches(/^guest_/)`
   - Guest user authentication now works correctly
 
+### Guest Account Reconnection Improvements (2025-01-25)
+
+- **Guest Account Persistence** (src/contexts/AuthContext.tsx):
+  - Guest accounts now persist in cookies with indefinite TTL
+  - On disconnect, `lastDisconnected` timestamp is set for 5-minute TTL tracking
+  - On reconnect, `lastConnected` timestamp is updated, resetting the TTL window
+  - Guest users can now reconnect within 5 minutes without losing their session
+- **Room Disconnect Handling** (src/hooks/useRoom.ts):
+  - Guest users are now marked as `disconnected` instead of being removed from rooms
+  - Both guest and authenticated users use the same disconnect behavior
+  - Allows guest users to reconnect to rooms within the 5-minute TTL window
+  - Prevents premature kicking of temporarily disconnected guest users
+- **Automated Cleanup Service** (src/services/cleanupService.ts):
+  - Client-side cleanup service runs every 5 minutes on active clients
+  - Uses distributed lock mechanism to ensure only one client runs cleanup at a time
+  - Deletes guest accounts that have been disconnected for more than 5 minutes
+  - Removes deleted guest players from rooms
+  - Cleans up empty rooms (waiting rooms only, keeps playing/finished rooms for reconnection)
+  - Integrated into AuthContext to start automatically when app loads
+- **Database Security Rules** (database.rules.json):
+  - Added `/cleanup/lock` path for distributed lock mechanism
+  - Added validation for user data structure
+
 ## Multiplayer room design standards (Updated 2025-01-24)
 
 - **Font sizes**: Increased from text-xs (12px) to text-sm/base (14-16px) for better readability

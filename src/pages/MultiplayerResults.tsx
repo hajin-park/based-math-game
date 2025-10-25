@@ -527,16 +527,16 @@ export default function MultiplayerResults() {
         {/* Desktop Right Column - Results + Chat */}
         <div className="hidden lg:flex flex-col border-l-2 border-border bg-card paper-texture min-h-0 overflow-hidden">
           {/* Results - Top */}
-          <div className="flex-none p-1.5 border-b border-border max-h-[50vh] overflow-y-auto">
-            <div className="text-center mb-2">
-              <div className="flex items-center justify-center gap-1 mb-1">
-                <Trophy className="h-4 w-4 text-yellow-600" />
+          <div className="flex-none p-1.5 border-b border-border max-h-[40vh] overflow-y-auto">
+            <div className="text-center mb-1.5">
+              <div className="flex items-center justify-center gap-1 mb-0.5">
+                <Trophy className="h-3.5 w-3.5 text-yellow-600" />
                 <h2 className="text-xs font-serif font-semibold">Winner</h2>
               </div>
               <p className="text-sm font-bold gradient-text">
                 {winner.displayName}
               </p>
-              <p className="text-lg font-bold gradient-text">
+              <p className="text-base font-bold gradient-text">
                 {isSpeedrun ? `${winner.score}s` : winner.score}
               </p>
               <p className="text-xs text-muted-foreground">
@@ -544,11 +544,11 @@ export default function MultiplayerResults() {
               </p>
             </div>
 
-            <Separator className="my-1.5" />
+            <Separator className="my-1" />
 
             {/* Final Standings */}
-            <div className="space-y-1">
-              <h3 className="text-xs font-serif font-semibold flex items-center gap-1 mb-1">
+            <div className="space-y-0.5">
+              <h3 className="text-xs font-serif font-semibold flex items-center gap-1 mb-0.5">
                 <Trophy className="h-3 w-3 text-primary" />
                 Final Standings
               </h3>
@@ -556,7 +556,7 @@ export default function MultiplayerResults() {
                 {sortedPlayers.map((player, index) => (
                   <div
                     key={player.uid}
-                    className={`flex items-center justify-between p-1 rounded-md border text-xs ${
+                    className={`flex items-center justify-between p-0.5 px-1 rounded-md border text-xs ${
                       index === 0
                         ? "border-yellow-600/50 bg-yellow-500/10"
                         : "border-muted bg-muted/30"
@@ -578,22 +578,22 @@ export default function MultiplayerResults() {
               </div>
             </div>
 
-            <Separator className="my-1.5" />
+            <Separator className="my-1" />
 
             {/* Host Controls */}
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               {isHost ? (
                 <Button
                   onClick={handleReturnToLobby}
-                  className="w-full shadow-sm"
+                  className="w-full shadow-sm h-7"
                   size="sm"
                 >
-                  <RotateCcw className="mr-1.5 h-3 w-3" />
+                  <RotateCcw className="mr-1 h-3 w-3" />
                   Return to Lobby
                 </Button>
               ) : (
-                <div className="w-full text-center p-1.5 rounded-lg bg-muted/50 border">
-                  <Loader2 className="h-3 w-3 animate-spin mx-auto mb-1 text-primary" />
+                <div className="w-full text-center p-1 rounded-lg bg-muted/50 border">
+                  <Loader2 className="h-3 w-3 animate-spin mx-auto mb-0.5 text-primary" />
                   <p className="text-xs text-muted-foreground">
                     Waiting for host...
                   </p>

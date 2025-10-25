@@ -1,13 +1,23 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useContext } from "react";
 import GameModeSelect from "@/features/quiz/quiz-settings/Game-Mode-Select.component";
-import { QuizContext } from "@/contexts/GameContexts";
+import { QuizContext, QuestionSetting } from "@/contexts/GameContexts";
 import { GameMode } from "@/types/gameMode";
 import { Gamepad2 } from "lucide-react";
 
 export default function SingleplayerMode() {
   const navigate = useNavigate();
+  const location = useLocation();
   const quizContext = useContext(QuizContext);
+
+  // Get custom settings from navigation state (if coming from Play Again on custom game)
+  const customSettings = location.state?.customSettings as
+    | {
+        questions: QuestionSetting[];
+        duration: number;
+        targetQuestions?: number;
+      }
+    | undefined;
 
   if (!quizContext) {
     throw new Error(
@@ -23,6 +33,7 @@ export default function SingleplayerMode() {
       duration: mode.duration,
       gameModeId: mode.id,
       trackStats,
+      targetQuestions: mode.targetQuestions,
     });
     navigate("/quiz");
   };
@@ -46,7 +57,10 @@ export default function SingleplayerMode() {
           </p>
         </div>
 
-        <GameModeSelect onSelectMode={handleSelectMode} />
+        <GameModeSelect
+          onSelectMode={handleSelectMode}
+          initialCustomSettings={customSettings}
+        />
       </div>
     </div>
   );

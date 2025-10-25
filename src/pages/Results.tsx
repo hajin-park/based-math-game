@@ -60,6 +60,28 @@ export default function Quiz() {
   const { results } = resultContext;
   const { settings } = quizContext;
 
+  // Check if this was a custom game
+  const isCustomGame = settings.gameModeId === "custom-playground";
+
+  // Handler for Play Again button
+  const handlePlayAgain = () => {
+    if (isCustomGame) {
+      // Navigate to singleplayer with custom game settings
+      navigate("/singleplayer", {
+        state: {
+          customSettings: {
+            questions: settings.questions,
+            duration: settings.duration,
+            targetQuestions: settings.targetQuestions,
+          },
+        },
+      });
+    } else {
+      // Navigate to singleplayer normally
+      navigate("/singleplayer");
+    }
+  };
+
   // Save game results to Firebase (only once on mount)
   useEffect(() => {
     const saveResults = async () => {
@@ -309,10 +331,7 @@ export default function Quiz() {
                   <BarChart3 className="mr-2 h-4 w-4" />
                   View Stats
                 </Button>
-                <Button
-                  onClick={() => navigate("/singleplayer")}
-                  className="w-full shadow-sm"
-                >
+                <Button onClick={handlePlayAgain} className="w-full shadow-sm">
                   <Home className="mr-2 h-4 w-4" />
                   Play Again
                 </Button>
@@ -610,10 +629,7 @@ export default function Quiz() {
                   <BarChart3 className="mr-2 h-4 w-4" />
                   View Stats
                 </Button>
-                <Button
-                  onClick={() => navigate("/singleplayer")}
-                  className="w-full shadow-sm"
-                >
+                <Button onClick={handlePlayAgain} className="w-full shadow-sm">
                   <Home className="mr-2 h-4 w-4" />
                   Play Again
                 </Button>

@@ -9,6 +9,7 @@ export interface QuizSettings {
   gameModeId?: string;
   trackStats?: boolean;
   isMultiplayer?: boolean;
+  targetQuestions?: number; // For speedrun modes
 }
 
 export interface QuizResults {

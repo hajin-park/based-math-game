@@ -100,6 +100,14 @@ export default function QuizStats({
     timerStartTime,
   ]); // Restart when shouldStartTimer or expiryTimestamp changes
 
+  // Reset timer state when component unmounts (for reconnection scenarios)
+  useEffect(() => {
+    return () => {
+      hasStartedRef.current = false;
+      prevExpiryRef.current = null;
+    };
+  }, []);
+
   // For speedrun mode, update the display using requestAnimationFrame for smooth, accurate updates
   useEffect(() => {
     if (isSpeedrun && (timerStartTime || gameStartTime)) {
@@ -202,19 +210,27 @@ export default function QuizStats({
   }, []); // Only run on mount/unmount
 
   // Pause timer when tab is not visible
+  // For multiplayer, we need to restart the timer with the correct expiry when tab becomes visible again
+  // to ensure synchronization with other players
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.hidden) {
         timerRef.current.pause();
       } else {
-        timerRef.current.resume();
+        // When tab becomes visible again, restart timer with current expiry timestamp
+        // This ensures the timer is synchronized with the actual game time
+        if (!externalTimer && hasStartedRef.current) {
+          timerRef.current.restart(expiryTimestamp, true);
+        } else {
+          timerRef.current.resume();
+        }
       }
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
     return () =>
       document.removeEventListener("visibilitychange", handleVisibilityChange);
-  }, []); // Only run on mount/unmount
+  }, [externalTimer, expiryTimestamp]); // Re-run when expiryTimestamp changes
 
   return (
     <CardHeader className="border-b">

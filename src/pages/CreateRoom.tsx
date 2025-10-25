@@ -71,6 +71,7 @@ export default function CreateRoom() {
     useState<DifficultyFilter>("all");
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
   const [expandedModeId, setExpandedModeId] = useState<string | null>(null);
+  const [filtersOpen, setFiltersOpen] = useState(true); // Open by default, collapsible on mobile
 
   const handleCreateRoom = async (mode?: GameMode) => {
     const modeToUse = mode || selectedMode;
@@ -276,160 +277,199 @@ export default function CreateRoom() {
                 <PaperCard
                   variant="folded-sm"
                   padding="sm"
-                  className="w-full lg:w-60 flex-shrink-0 border-2 h-fit lg:sticky lg:top-4"
+                  className="w-full lg:w-60 flex-shrink-0 border-2 lg:sticky lg:top-4 flex flex-col lg:max-h-[calc(100vh-6rem)]"
                 >
-                  <PaperCardHeader className="p-2 pb-1">
-                    <div className="flex items-center justify-between">
-                      <PaperCardTitle className="text-sm font-serif">
-                        Browse
-                      </PaperCardTitle>
-                      <Badge variant="secondary" className="text-xs h-5 px-2">
-                        {filteredModes.length}
-                      </Badge>
-                    </div>
-                  </PaperCardHeader>
-                  <PaperCardContent className="space-y-2 p-2">
-                    {/* Search */}
-                    <div className="relative">
-                      <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                      <NotebookInput
-                        placeholder="Search..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-8 h-8 text-sm"
-                        variant="underline"
-                      />
-                    </div>
-
-                    {/* Categories - Minimal */}
-                    <div className="space-y-1">
-                      <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                        Categories
-                      </Label>
-                      <div className="space-y-0.5">
-                        <Button
-                          variant={
-                            categoryFilter === "explore" ? "secondary" : "ghost"
-                          }
-                          className="w-full justify-start h-8 text-xs"
-                          onClick={() => setCategoryFilter("explore")}
-                        >
-                          <Sparkles className="h-3.5 w-3.5 mr-1.5" />
-                          Explore All
-                        </Button>
-                        <Button
-                          variant={
-                            categoryFilter === "binary" ? "secondary" : "ghost"
-                          }
-                          className="w-full justify-start h-8 text-xs"
-                          onClick={() => setCategoryFilter("binary")}
-                        >
-                          <Binary className="h-3.5 w-3.5 mr-1.5" />
-                          Binary
-                        </Button>
-                        <Button
-                          variant={
-                            categoryFilter === "octal" ? "secondary" : "ghost"
-                          }
-                          className="w-full justify-start h-8 text-xs"
-                          onClick={() => setCategoryFilter("octal")}
-                        >
-                          <Hash className="h-3.5 w-3.5 mr-1.5" />
-                          Octal
-                        </Button>
-                        <Button
-                          variant={
-                            categoryFilter === "hexadecimal"
-                              ? "secondary"
-                              : "ghost"
-                          }
-                          className="w-full justify-start h-8 text-xs"
-                          onClick={() => setCategoryFilter("hexadecimal")}
-                        >
-                          <Hexagon className="h-3.5 w-3.5 mr-1.5" />
-                          Hexadecimal
-                        </Button>
-                        <Button
-                          variant={
-                            categoryFilter === "mixed" ? "secondary" : "ghost"
-                          }
-                          className="w-full justify-start h-8 text-xs"
-                          onClick={() => setCategoryFilter("mixed")}
-                        >
-                          <Layers className="h-3.5 w-3.5 mr-1.5" />
-                          Mixed Bases
-                        </Button>
+                  <Collapsible
+                    open={filtersOpen}
+                    onOpenChange={setFiltersOpen}
+                    className="flex flex-col flex-1 min-h-0"
+                  >
+                    <PaperCardHeader className="p-2 pb-1 flex-shrink-0">
+                      <div className="flex items-center justify-between">
+                        <PaperCardTitle className="text-sm font-serif">
+                          Browse
+                        </PaperCardTitle>
+                        <div className="flex items-center gap-1.5">
+                          <Badge
+                            variant="secondary"
+                            className="text-xs h-5 px-2"
+                          >
+                            {filteredModes.length}
+                          </Badge>
+                          {/* Mobile toggle button */}
+                          <CollapsibleTrigger asChild className="lg:hidden">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0"
+                            >
+                              {filtersOpen ? (
+                                <ChevronUp className="h-4 w-4" />
+                              ) : (
+                                <ChevronDown className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </CollapsibleTrigger>
+                        </div>
                       </div>
-                    </div>
+                    </PaperCardHeader>
+                    <CollapsibleContent className="flex-1 min-h-0 overflow-hidden">
+                      <ScrollArea className="h-full">
+                        <PaperCardContent className="space-y-2 p-2">
+                          {/* Search */}
+                          <div className="relative">
+                            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                            <NotebookInput
+                              placeholder="Search..."
+                              value={searchQuery}
+                              onChange={(e) => setSearchQuery(e.target.value)}
+                              className="pl-8 h-8 text-sm"
+                              variant="underline"
+                            />
+                          </div>
 
-                    {/* Additional Filters */}
-                    <div className="space-y-2 pt-1 border-t">
-                      <div className="space-y-1.5">
-                        <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                          Difficulty
-                        </Label>
-                        <Select
-                          value={difficultyFilter}
-                          onValueChange={(value) =>
-                            setDifficultyFilter(value as DifficultyFilter)
-                          }
-                        >
-                          <SelectTrigger className="h-8 text-xs">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">All</SelectItem>
-                            <SelectItem value="Easy">Easy</SelectItem>
-                            <SelectItem value="Medium">Medium</SelectItem>
-                            <SelectItem value="Hard">Hard</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
+                          {/* Categories - Minimal */}
+                          <div className="space-y-1">
+                            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                              Categories
+                            </Label>
+                            <div className="space-y-0.5">
+                              <Button
+                                variant={
+                                  categoryFilter === "explore"
+                                    ? "secondary"
+                                    : "ghost"
+                                }
+                                className="w-full justify-start h-8 text-xs"
+                                onClick={() => setCategoryFilter("explore")}
+                              >
+                                <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+                                Explore All
+                              </Button>
+                              <Button
+                                variant={
+                                  categoryFilter === "binary"
+                                    ? "secondary"
+                                    : "ghost"
+                                }
+                                className="w-full justify-start h-8 text-xs"
+                                onClick={() => setCategoryFilter("binary")}
+                              >
+                                <Binary className="h-3.5 w-3.5 mr-1.5" />
+                                Binary
+                              </Button>
+                              <Button
+                                variant={
+                                  categoryFilter === "octal"
+                                    ? "secondary"
+                                    : "ghost"
+                                }
+                                className="w-full justify-start h-8 text-xs"
+                                onClick={() => setCategoryFilter("octal")}
+                              >
+                                <Hash className="h-3.5 w-3.5 mr-1.5" />
+                                Octal
+                              </Button>
+                              <Button
+                                variant={
+                                  categoryFilter === "hexadecimal"
+                                    ? "secondary"
+                                    : "ghost"
+                                }
+                                className="w-full justify-start h-8 text-xs"
+                                onClick={() => setCategoryFilter("hexadecimal")}
+                              >
+                                <Hexagon className="h-3.5 w-3.5 mr-1.5" />
+                                Hexadecimal
+                              </Button>
+                              <Button
+                                variant={
+                                  categoryFilter === "mixed"
+                                    ? "secondary"
+                                    : "ghost"
+                                }
+                                className="w-full justify-start h-8 text-xs"
+                                onClick={() => setCategoryFilter("mixed")}
+                              >
+                                <Layers className="h-3.5 w-3.5 mr-1.5" />
+                                Mixed Bases
+                              </Button>
+                            </div>
+                          </div>
 
-                      <div className="space-y-1.5">
-                        <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                          Type
-                        </Label>
-                        <Select
-                          value={typeFilter}
-                          onValueChange={(value) =>
-                            setTypeFilter(value as TypeFilter)
-                          }
-                        >
-                          <SelectTrigger className="h-8 text-xs">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">All</SelectItem>
-                            <SelectItem value="timed">Timed</SelectItem>
-                            <SelectItem value="speedrun">Speed Run</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
+                          {/* Additional Filters */}
+                          <div className="space-y-2 pt-1 border-t">
+                            <div className="space-y-1.5">
+                              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                                Difficulty
+                              </Label>
+                              <Select
+                                value={difficultyFilter}
+                                onValueChange={(value) =>
+                                  setDifficultyFilter(value as DifficultyFilter)
+                                }
+                              >
+                                <SelectTrigger className="h-8 text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="all">All</SelectItem>
+                                  <SelectItem value="Easy">Easy</SelectItem>
+                                  <SelectItem value="Medium">Medium</SelectItem>
+                                  <SelectItem value="Hard">Hard</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
 
-                    {/* Reset Filters Button */}
-                    {(categoryFilter !== "explore" ||
-                      difficultyFilter !== "all" ||
-                      typeFilter !== "all" ||
-                      searchQuery) && (
-                      <div className="pt-1 border-t">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full h-7 text-xs"
-                          onClick={() => {
-                            setCategoryFilter("explore");
-                            setDifficultyFilter("all");
-                            setTypeFilter("all");
-                            setSearchQuery("");
-                          }}
-                        >
-                          Clear Filters
-                        </Button>
-                      </div>
-                    )}
-                  </PaperCardContent>
+                            <div className="space-y-1.5">
+                              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                                Type
+                              </Label>
+                              <Select
+                                value={typeFilter}
+                                onValueChange={(value) =>
+                                  setTypeFilter(value as TypeFilter)
+                                }
+                              >
+                                <SelectTrigger className="h-8 text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="all">All</SelectItem>
+                                  <SelectItem value="timed">Timed</SelectItem>
+                                  <SelectItem value="speedrun">
+                                    Speed Run
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+
+                          {/* Reset Filters Button */}
+                          {(categoryFilter !== "explore" ||
+                            difficultyFilter !== "all" ||
+                            typeFilter !== "all" ||
+                            searchQuery) && (
+                            <div className="pt-1 border-t">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="w-full h-7 text-xs"
+                                onClick={() => {
+                                  setCategoryFilter("explore");
+                                  setDifficultyFilter("all");
+                                  setTypeFilter("all");
+                                  setSearchQuery("");
+                                }}
+                              >
+                                Clear Filters
+                              </Button>
+                            </div>
+                          )}
+                        </PaperCardContent>
+                      </ScrollArea>
+                    </CollapsibleContent>
+                  </Collapsible>
                 </PaperCard>
 
                 {/* Main Content - Grid Layout with Defined Scroll Area */}

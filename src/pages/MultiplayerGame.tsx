@@ -62,6 +62,7 @@ export default function MultiplayerGame() {
   const countdownShownRef = useRef(false);
   const hasJoinedRef = useRef(false);
   const isLeavingRef = useRef(false);
+  const hasRestoredScoreRef = useRef(false); // Track if we've restored score on reconnection
 
   // Determine if this is a speedrun mode
   const isSpeedrun = useMemo(
@@ -180,6 +181,24 @@ export default function MultiplayerGame() {
 
       setRoom(updatedRoom);
 
+      // Restore player's score when reconnecting to a live game
+      // This ensures the player continues from where they left off
+      // Only restore once per session to avoid interfering with normal score updates
+      if (
+        user &&
+        updatedRoom.status === "playing" &&
+        updatedRoom.players[user.uid] &&
+        !hasRestoredScoreRef.current
+      ) {
+        const playerScore = updatedRoom.players[user.uid].score;
+        // Only restore if local score is 0 and Firebase has a higher score (reconnection scenario)
+        if (scoreRef.current === 0 && playerScore > 0) {
+          console.log("Restoring player score on reconnection:", playerScore);
+          setScore(playerScore);
+          hasRestoredScoreRef.current = true;
+        }
+      }
+
       // Shuffle questions based on startedAt to get different questions each game
       // Use startedAt as seed so all players get same shuffled order
       if (updatedRoom.startedAt) {
@@ -243,7 +262,7 @@ export default function MultiplayerGame() {
     });
 
     return () => unsubscribe();
-  }, [roomId, subscribeToRoom, navigate, toast, user]);
+  }, [roomId, subscribeToRoom, navigate, toast, user, score]);
 
   // Initialize question based on current score - deterministic for all players
   useEffect(() => {

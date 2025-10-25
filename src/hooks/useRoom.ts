@@ -133,16 +133,12 @@ export function useRoom() {
         // Cancel any existing disconnect handlers before setting up new ones
         await onDisconnect(hostPlayerRef).cancel();
 
-        if (isGuestUser(user)) {
-          // Guest users: Remove completely on disconnect
-          onDisconnect(hostPlayerRef).remove();
-        } else {
-          // Authenticated users: Mark as disconnected
-          onDisconnect(hostPlayerRef).update({
-            disconnected: true,
-            disconnectedAt: Date.now(),
-          });
-        }
+        // Both guest and authenticated users: Mark as disconnected (not removed)
+        // This allows guest users to reconnect within the 5-minute TTL window
+        onDisconnect(hostPlayerRef).update({
+          disconnected: true,
+          disconnectedAt: Date.now(),
+        });
 
         return roomId;
       } catch (error) {
@@ -222,17 +218,12 @@ export function useRoom() {
         // This prevents duplicate handlers when reconnecting
         await onDisconnect(playerRef).cancel();
 
-        // Set up disconnect handler
-        if (isGuestUser(user)) {
-          // Guest users: Remove completely on disconnect
-          onDisconnect(playerRef).remove();
-        } else {
-          // Authenticated users: Mark as disconnected
-          onDisconnect(playerRef).update({
-            disconnected: true,
-            disconnectedAt: Date.now(),
-          });
-        }
+        // Both guest and authenticated users: Mark as disconnected (not removed)
+        // This allows guest users to reconnect within the 5-minute TTL window
+        onDisconnect(playerRef).update({
+          disconnected: true,
+          disconnectedAt: Date.now(),
+        });
       } catch (error) {
         console.error("Error joining room:", error);
         throw error;
@@ -337,9 +328,12 @@ export function useRoom() {
           throw new Error("Only host can start the game");
         }
 
-        // Check if all non-host players are ready (host doesn't need to be ready)
+        // Check if all non-host, active (non-kicked, non-disconnected) players are ready
         const nonHostPlayers = Object.values(room.players).filter(
-          (p) => (p as RoomPlayer).uid !== room.hostUid,
+          (p) =>
+            (p as RoomPlayer).uid !== room.hostUid &&
+            !(p as RoomPlayer).kicked &&
+            !(p as RoomPlayer).disconnected,
         );
         const allReady =
           nonHostPlayers.length > 0 &&
@@ -401,14 +395,17 @@ export function useRoom() {
         );
         await set(finishedRef, true);
 
-        // Check if all players finished
+        // Check if all active (non-kicked, non-disconnected) players finished
         const roomRef = ref(database, `rooms/${roomId}`);
         const snapshot = await get(roomRef);
         const room = snapshot.val();
 
-        const allFinished = Object.values(room.players).every(
-          (p) => (p as RoomPlayer).finished,
+        const activePlayers = Object.values(room.players).filter(
+          (p) => !(p as RoomPlayer).kicked && !(p as RoomPlayer).disconnected,
         );
+        const allFinished =
+          activePlayers.length > 0 &&
+          activePlayers.every((p) => (p as RoomPlayer).finished);
         if (allFinished) {
           await set(ref(database, `rooms/${roomId}/status`), "finished");
         }

@@ -27,6 +27,10 @@ import {
 import { doc, setDoc, deleteDoc, getDoc } from "firebase/firestore";
 import { auth, database, firestore } from "@/firebase/config";
 import { validateDisplayName } from "@/utils/displayNameValidator";
+import {
+  startCleanupService,
+  stopCleanupService,
+} from "@/services/cleanupService";
 
 // Guest user interface for database-only guests
 interface GuestUser {
@@ -240,6 +244,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [loading, setLoading] = useState(true);
   const [isGuest, setIsGuest] = useState(false);
 
+  // Start cleanup service when app loads
+  useEffect(() => {
+    startCleanupService();
+
+    return () => {
+      stopCleanupService();
+    };
+  }, []);
+
   // Set up presence system for all users (guest and authenticated)
   useEffect(() => {
     if (!user) return;
@@ -257,6 +270,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             displayName: user.displayName || "Guest",
             isGuest: true,
             lastSeen: serverTimestamp(),
+            lastConnected: serverTimestamp(), // Track last connection time for TTL
           };
 
           set(userRef, userData).catch((error) => {
@@ -272,15 +286,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
             console.error("Error setting guest presence:", error);
           });
 
-          // Set up disconnect handler to mark data for TTL cleanup
-          // When guest disconnects, set expiration timestamp (1 day from disconnect)
-          const expirationTime = Date.now() + 24 * 60 * 60 * 1000; // 1 day in milliseconds
+          // Cancel any existing disconnect handlers before setting new ones
+          await onDisconnect(userRef)
+            .cancel()
+            .catch(() => {
+              // Ignore errors if no disconnect handler exists
+            });
+          await onDisconnect(presenceRef)
+            .cancel()
+            .catch(() => {
+              // Ignore errors if no disconnect handler exists
+            });
 
+          // Set up disconnect handler to mark as disconnected with TTL
+          // When guest disconnects, set lastDisconnected timestamp for 5-minute TTL
           onDisconnect(userRef)
             .update({
               online: false,
               lastSeen: serverTimestamp(),
-              expiresAt: expirationTime,
+              lastDisconnected: serverTimestamp(), // Track disconnect time for 5-minute TTL
             })
             .catch((error) => {
               console.error("Error setting guest disconnect handler:", error);
@@ -290,7 +314,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
             .update({
               online: false,
               lastSeen: serverTimestamp(),
-              expiresAt: expirationTime,
             })
             .catch((error) => {
               console.error(

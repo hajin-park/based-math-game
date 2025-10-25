@@ -56,7 +56,11 @@ interface PlaygroundSettingsProps {
     duration: number;
     targetQuestions?: number;
   }) => void;
-  initialSettings?: { questions: QuestionSetting[]; duration: number };
+  initialSettings?: {
+    questions: QuestionSetting[];
+    duration: number;
+    targetQuestions?: number;
+  };
   buttonText?: string;
   showHeader?: boolean;
   isMultiplayer?: boolean;
@@ -75,9 +79,14 @@ export default function PlaygroundSettings({
   const [toBase, setToBase] = useState("");
   const [rangeLower, setRangeLower] = useState(0);
   const [rangeUpper, setRangeUpper] = useState(0);
-  const [chosenSettings, setChosenSettings] = useState<QuestionSetting[]>(
-    initialSettings?.questions || [],
-  );
+  const [chosenSettings, setChosenSettings] = useState<QuestionSetting[]>([]);
+
+  // Update chosenSettings when initialSettings changes (e.g., from Play Again)
+  useEffect(() => {
+    if (initialSettings?.questions) {
+      setChosenSettings(initialSettings.questions);
+    }
+  }, [initialSettings]);
   const [SettingsFormSchema, setSettingsFormSchema] = useState(
     z.object({
       rangeLower: z.coerce
@@ -145,11 +154,27 @@ export default function PlaygroundSettings({
   const startForm = useForm<z.infer<typeof StartFormSchema>>({
     resolver: zodResolver(StartFormSchema),
     defaultValues: {
-      gameMode: "timed",
+      gameMode:
+        initialSettings?.targetQuestions !== undefined ? "speedrun" : "timed",
       duration: initialSettings?.duration || 60,
-      targetQuestions: 10,
+      targetQuestions: initialSettings?.targetQuestions || 10,
     },
   });
+
+  // Update startForm when initialSettings changes (e.g., from Play Again)
+  useEffect(() => {
+    if (initialSettings) {
+      if (initialSettings.duration !== undefined) {
+        startForm.setValue("duration", initialSettings.duration);
+      }
+      if (initialSettings.targetQuestions !== undefined) {
+        startForm.setValue("gameMode", "speedrun");
+        startForm.setValue("targetQuestions", initialSettings.targetQuestions);
+      } else {
+        startForm.setValue("gameMode", "timed");
+      }
+    }
+  }, [initialSettings, startForm]);
 
   function onSubmitSettings(data: z.infer<typeof SettingsFormSchema>) {
     // newSettings may contain duplicate settings
@@ -176,7 +201,7 @@ export default function PlaygroundSettings({
   function onSubmitStart(data: z.infer<typeof StartFormSchema>) {
     onStartQuiz({
       questions: chosenSettings,
-      duration: data.gameMode === "timed" ? data.duration || 60 : 0,
+      duration: data.gameMode === "timed" ? data.duration || 60 : 3600, // 1 hour for speedrun
       targetQuestions:
         data.gameMode === "speedrun" ? data.targetQuestions : undefined,
     });

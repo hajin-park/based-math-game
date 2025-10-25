@@ -3,7 +3,14 @@
     "users": {
       "$uid": {
         ".read": "$uid === auth.uid || $uid.matches(/^guest_/)",
-        ".write": "$uid === auth.uid || ($uid.matches(/^guest_/) && newData.child('uid').val() === $uid && newData.child('isGuest').val() === true)"
+        ".write": "$uid === auth.uid || ($uid.matches(/^guest_/) && newData.child('uid').val() === $uid && newData.child('isGuest').val() === true)",
+        ".validate": "newData.hasChildren(['uid', 'displayName', 'isGuest']) || !newData.exists()"
+      }
+    },
+    "cleanup": {
+      "lock": {
+        ".read": true,
+        ".write": true
       }
     },
     "rooms": {

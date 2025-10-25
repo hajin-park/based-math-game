@@ -106,6 +106,12 @@ export default function RoomLobby() {
   const [randomSetting, setRandomSetting] = useState<
     [string, string, number, number] | null
   >(null);
+  // Create expiry timestamp state (like MultiplayerGame) instead of useMemo
+  const [expiryTimestamp, setExpiryTimestamp] = useState<Date>(() => {
+    const time = new Date();
+    time.setSeconds(time.getSeconds() + 60); // Placeholder
+    return time;
+  });
 
   const hasNavigatedRef = useRef(false);
   const hasJoinedRef = useRef(false);
@@ -114,6 +120,7 @@ export default function RoomLobby() {
   const questionsRef = useRef<[string, string, number, number][]>([]);
   const countdownShownRef = useRef(false);
   const hasIncrementedWinsRef = useRef(false);
+  const hasRestoredScoreRef = useRef(false); // Track if we've restored score on reconnection
 
   // Ensure user is properly joined/reconnected to the room on mount
   useEffect(() => {
@@ -221,31 +228,61 @@ export default function RoomLobby() {
         setIsReady(updatedRoom.players[user.uid].ready);
       }
 
+      // Restore player's score when reconnecting to a live game
+      // This ensures the player continues from where they left off
+      // Only restore once per session to avoid interfering with normal score updates
+      if (
+        user &&
+        updatedRoom.status === "playing" &&
+        updatedRoom.players[user.uid] &&
+        !hasRestoredScoreRef.current
+      ) {
+        const playerScore = updatedRoom.players[user.uid].score;
+        // Only restore if local score is 0 and Firebase has a higher score (reconnection scenario)
+        if (scoreRef.current === 0 && playerScore > 0) {
+          console.log(
+            "RoomLobby: Restoring player score on reconnection:",
+            playerScore,
+          );
+          setScore(playerScore);
+          hasRestoredScoreRef.current = true;
+        }
+      }
+
       // Handle game state transitions
       // Countdown is always enabled in multiplayer
-      if (updatedRoom.status === "playing" && !countdownShownRef.current) {
-        countdownShownRef.current = true;
-
+      if (updatedRoom.status === "playing") {
         const now = Date.now();
         // startedAt is set to future time (now + 3000ms) to account for countdown
         // Check if game already started by seeing if startedAt has passed
         const gameAlreadyStarted =
           updatedRoom.startedAt && updatedRoom.startedAt <= now;
 
-        console.log("RoomLobby: Game starting", {
-          gameAlreadyStarted,
-          startedAt: updatedRoom.startedAt,
-          now,
-        });
+        // First time seeing the game start
+        if (!countdownShownRef.current) {
+          countdownShownRef.current = true;
 
-        // Show countdown if game hasn't started yet (startedAt is in future)
-        // Otherwise start timer immediately (reconnecting after game started)
-        if (!gameAlreadyStarted) {
-          console.log("RoomLobby: Showing countdown");
-          setShowCountdown(true);
-          setTimerShouldStart(false);
-        } else {
-          console.log("RoomLobby: Starting timer immediately (reconnecting)");
+          console.log("RoomLobby: Game starting", {
+            gameAlreadyStarted,
+            startedAt: updatedRoom.startedAt,
+            now,
+          });
+
+          // Show countdown if game hasn't started yet (startedAt is in future)
+          // Otherwise start timer immediately (reconnecting after game started)
+          if (!gameAlreadyStarted) {
+            console.log("RoomLobby: Showing countdown");
+            setShowCountdown(true);
+            setTimerShouldStart(false);
+          } else {
+            console.log("RoomLobby: Starting timer immediately (reconnecting)");
+            setShowCountdown(false);
+            setTimerShouldStart(true);
+          }
+        } else if (gameAlreadyStarted && !timerShouldStart) {
+          // Reconnection case: game is playing, countdown was shown before, but timer isn't running
+          // This happens when user disconnects and reconnects during active game
+          console.log("RoomLobby: Reconnection detected, restarting timer");
           setShowCountdown(false);
           setTimerShouldStart(true);
         }
@@ -278,12 +315,22 @@ export default function RoomLobby() {
         setRandomSetting(null);
         countdownShownRef.current = false;
         hasIncrementedWinsRef.current = false;
+        hasRestoredScoreRef.current = false; // Reset for next game
         questionsRef.current = [];
       }
     });
 
     return () => unsubscribe();
-  }, [roomId, subscribeToRoom, navigate, toast, user, incrementWins]);
+  }, [
+    roomId,
+    subscribeToRoom,
+    navigate,
+    toast,
+    user,
+    incrementWins,
+    score,
+    timerShouldStart,
+  ]);
 
   // Determine if this is a speedrun mode
   const isSpeedrun = useMemo(
@@ -298,6 +345,36 @@ export default function RoomLobby() {
       await finishGame(roomId);
     }
   };
+
+  // Update expiry timestamp when timer should start
+  // This handles reconnection cases where countdownShownRef prevents the initial setup
+  useEffect(() => {
+    // Only set expiry when we have all required data and timer should start
+    if (timerShouldStart && room?.startedAt && room?.gameMode.duration) {
+      const duration = isSpeedrun ? 86400 : room.gameMode.duration;
+      const now = Date.now();
+
+      // Check if game already started (reconnecting after countdown finished)
+      if (room.startedAt <= now) {
+        // Calculate expiry from startedAt + duration for synchronization
+        const expiry = new Date(room.startedAt + duration * 1000);
+
+        console.log(
+          "RoomLobby: Setting expiry timestamp (reconnecting after countdown):",
+          {
+            startedAt: room.startedAt,
+            now,
+            duration,
+            isSpeedrun,
+            expiry: expiry.toISOString(),
+          },
+        );
+
+        setExpiryTimestamp(expiry);
+      }
+      // If game hasn't started yet (startedAt is in future), expiry is set in handleCountdownComplete
+    }
+  }, [timerShouldStart, room?.startedAt, room?.gameMode.duration, isSpeedrun]);
 
   // Initialize question based on current score - deterministic for all players
   useEffect(() => {
@@ -342,30 +419,6 @@ export default function RoomLobby() {
     updatePlayerScore,
     isSpeedrun,
   ]);
-
-  // Calculate expiry timestamp based on room startedAt and duration
-  // This ensures all players have synchronized timers
-  const expiryTimestamp = useMemo(() => {
-    if (room?.startedAt && room?.gameMode.duration) {
-      const duration = isSpeedrun ? 86400 : room.gameMode.duration;
-      // Calculate expiry directly from startedAt to ensure synchronization
-      // startedAt is the actual game start time (after countdown if enabled)
-      const expiry = new Date(room.startedAt + duration * 1000);
-      console.log("RoomLobby: Calculating expiry timestamp", {
-        startedAt: room.startedAt,
-        duration,
-        isSpeedrun,
-        expiry: expiry.toISOString(),
-        now: new Date().toISOString(),
-      });
-      return expiry;
-    }
-    // Fallback for when game hasn't started yet
-    console.log("RoomLobby: Using fallback expiry (game not started)");
-    const time = new Date();
-    time.setSeconds(time.getSeconds() + (isSpeedrun ? 86400 : 60));
-    return time;
-  }, [room?.startedAt, room?.gameMode.duration, isSpeedrun]);
 
   // Generate deterministic seed for multiplayer questions
   const questionSeed = useMemo(() => {
@@ -482,6 +535,23 @@ export default function RoomLobby() {
   const handleCountdownComplete = () => {
     setShowCountdown(false);
     setTimerShouldStart(true);
+
+    // Calculate expiry timestamp synchronized to room.startedAt
+    // This ensures all players have the same timer regardless of network latency
+    if (room?.gameMode.duration && room?.startedAt) {
+      const duration = isSpeedrun ? 86400 : room.gameMode.duration;
+      // Use room.startedAt as the base time for synchronization
+      const expiry = new Date(room.startedAt + duration * 1000);
+
+      console.log("RoomLobby: Setting expiry timestamp (countdown complete):", {
+        startedAt: room.startedAt,
+        duration,
+        isSpeedrun,
+        expiry: expiry.toISOString(),
+      });
+
+      setExpiryTimestamp(expiry);
+    }
   };
 
   const handleReturnToLobby = async () => {
