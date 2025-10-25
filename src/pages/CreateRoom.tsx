@@ -29,7 +29,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PlaygroundSettings } from "@features/quiz";
 import { QuestionSetting } from "@/contexts/GameContexts";
 import {
-  Plus,
   Trophy,
   Wrench,
   Users,
@@ -193,9 +192,6 @@ export default function CreateRoom() {
 
         {/* Compact Header with Academic Styling */}
         <div className="text-center space-y-1 mb-4 animate-in">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mb-1">
-            <Plus className="h-6 w-6 text-primary" />
-          </div>
           <h1 className="text-2xl md:text-3xl font-serif font-bold">
             <span className="highlight-scribble">Create Room</span>
           </h1>
