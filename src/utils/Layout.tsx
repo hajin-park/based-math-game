@@ -28,6 +28,12 @@ export const Layout = () => {
     location.pathname,
   );
 
+  // Check if current route is the active quiz page (singleplayer game)
+  const isActiveQuiz = location.pathname === "/quiz";
+
+  // Hide nav/footer for multiplayer rooms and active quiz
+  const hideNavAndFooter = isMultiplayerRoom || isActiveQuiz;
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -41,7 +47,7 @@ export const Layout = () => {
       <ScrollToTop />
       <ConnectionStatus />
       <CookieConsent />
-      {!isMultiplayerRoom && (
+      {!hideNavAndFooter && (
         <div className="flex-none">
           <NavigationBar />
         </div>
@@ -53,7 +59,7 @@ export const Layout = () => {
           </QuizContext.Provider>
         </ResultContext.Provider>
       </div>
-      {!isMultiplayerRoom && (
+      {!hideNavAndFooter && (
         <div className="flex-none">
           <Footer />
         </div>

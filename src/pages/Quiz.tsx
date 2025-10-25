@@ -21,12 +21,11 @@ export default function Quiz() {
 
   const { settings } = quizContext;
   const { setResults } = resultContext;
-  const { settings: gameSettings } = useGameSettings();
+  const { settings: gameSettings, loading: gameSettingsLoading } = useGameSettings();
 
   // Initialize all state and refs before any conditional returns
-  const [showCountdown, setShowCountdown] = useState(
-    gameSettings.countdownStart,
-  );
+  // Start with true, will be updated when settings load
+  const [showCountdown, setShowCountdown] = useState(true);
   const [running, setRunning] = useState(true);
   const [score, setScore] = useState(0);
   const [randomSetting, setRandomSetting] = useState<
@@ -71,7 +70,7 @@ export default function Quiz() {
 
   // Update countdown state when gameSettings loads (only once)
   useEffect(() => {
-    if (!hasInitializedCountdownRef.current) {
+    if (!hasInitializedCountdownRef.current && !gameSettingsLoading) {
       hasInitializedCountdownRef.current = true;
       setShowCountdown(gameSettings.countdownStart);
       setTimerShouldStart(!gameSettings.countdownStart);
@@ -86,7 +85,7 @@ export default function Quiz() {
         startTimeRef.current = Date.now();
       }
     }
-  }, [gameSettings.countdownStart, isSpeedrun, settings.duration]);
+  }, [gameSettings.countdownStart, gameSettingsLoading, isSpeedrun, settings.duration]);
 
   // Validate settings - if invalid, redirect to home
   useEffect(() => {

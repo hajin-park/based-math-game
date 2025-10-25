@@ -878,7 +878,7 @@ export default function RoomLobby() {
                       <PaperCard
                         variant="folded-sm"
                         padding="none"
-                        className="max-h-[50vh] flex flex-col"
+                        className="flex flex-col"
                       >
                         <PaperCardHeader className="p-2.5 sm:p-3 border-b border-border flex-none">
                           <div className="flex items-center gap-1.5">
@@ -888,8 +888,8 @@ export default function RoomLobby() {
                             </PaperCardTitle>
                           </div>
                         </PaperCardHeader>
-                        <PaperCardContent className="p-2.5 sm:p-3 flex-1 min-h-0 overflow-hidden">
-                          <ScrollArea className="h-full">
+                        <PaperCardContent className="p-2.5 sm:p-3 overflow-hidden">
+                          <ScrollArea className="h-[40vh] max-h-[400px]">
                             <div className="grid grid-cols-1 gap-2 pr-2">
                               {OFFICIAL_GAME_MODES.slice(0, 12).map((mode) => (
                                 <PaperCard

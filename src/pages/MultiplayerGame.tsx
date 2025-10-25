@@ -3,6 +3,17 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useRoom, Room } from "@/hooks/useRoom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
@@ -37,6 +48,14 @@ export default function MultiplayerGame() {
   >(null);
   const [showKickedModal, setShowKickedModal] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  // Create expiry timestamp state (like singleplayer) instead of useMemo
+  const [expiryTimestamp, setExpiryTimestamp] = useState<Date>(() => {
+    const time = new Date();
+    time.setSeconds(time.getSeconds() + 60); // Placeholder
+    return time;
+  });
+
   const scoreRef = useRef(0);
   const questionsRef = useRef<[string, string, number, number][]>([]);
   const hasNavigatedRef = useRef(false);
@@ -272,33 +291,25 @@ export default function MultiplayerGame() {
     isSpeedrun,
   ]);
 
-  // Calculate expiry timestamp based on room startedAt and duration
-  // For speedrun modes, set a very long duration (24 hours) since we count up
-  const expiryTimestamp = useMemo(() => {
-    if (room?.startedAt && room?.gameMode.duration) {
-      const elapsed = Math.floor((Date.now() - room.startedAt) / 1000);
-      // For speedrun modes, use 24 hours minus elapsed time to create count-up effect
+  // Update expiry timestamp when countdown is disabled and timer should start immediately
+  useEffect(() => {
+    // Only set expiry for countdown disabled case (countdown enabled case is handled in handleCountdownComplete)
+    if (timerShouldStart && room?.startedAt && room?.gameMode.duration && !room.enableCountdown) {
+      // For countdown disabled: startedAt is current time, so calculate full duration from now
       const duration = isSpeedrun ? 86400 : room.gameMode.duration;
-      const remaining = Math.max(0, duration - elapsed);
       const expiry = new Date();
-      expiry.setSeconds(expiry.getSeconds() + remaining);
+      expiry.setSeconds(expiry.getSeconds() + duration);
 
-      console.log("Calculating expiry timestamp:", {
+      console.log("Setting expiry timestamp (countdown disabled):", {
         startedAt: room.startedAt,
-        elapsed,
-        remaining,
+        duration,
         isSpeedrun,
         expiry: expiry.toISOString(),
       });
 
-      return expiry;
+      setExpiryTimestamp(expiry);
     }
-
-    // Default expiry (60 seconds or 24 hours for speedrun)
-    const time = new Date();
-    time.setSeconds(time.getSeconds() + (isSpeedrun ? 86400 : 60));
-    return time;
-  }, [room?.startedAt, room?.gameMode.duration, isSpeedrun]);
+  }, [timerShouldStart, room?.startedAt, room?.gameMode.duration, room?.enableCountdown, isSpeedrun]);
 
   // Generate deterministic seed for multiplayer questions
   // Combine room ID hash with score to ensure all players get same questions
@@ -337,6 +348,21 @@ export default function MultiplayerGame() {
   const handleCountdownComplete = () => {
     setShowCountdown(false);
     setTimerShouldStart(true);
+
+    // Calculate expiry timestamp when countdown completes (like singleplayer)
+    if (room?.gameMode.duration) {
+      const duration = isSpeedrun ? 86400 : room.gameMode.duration;
+      const expiry = new Date();
+      expiry.setSeconds(expiry.getSeconds() + duration);
+
+      console.log("Setting expiry timestamp (countdown complete):", {
+        duration,
+        isSpeedrun,
+        expiry: expiry.toISOString(),
+      });
+
+      setExpiryTimestamp(expiry);
+    }
   };
 
   const handleCopyRoomId = () => {
@@ -355,24 +381,38 @@ export default function MultiplayerGame() {
   return (
     <>
       <KickedModal open={showKickedModal} onClose={handleKickedModalClose} />
-      {showCountdown && (
-        <Countdown onComplete={handleCountdownComplete} duration={3} />
-      )}
       <div className="flex flex-col h-full overflow-hidden">
         {/* Row 1 - Header */}
         <div className="flex-none border-b-2 border-border bg-card paper-texture shadow-sm">
           <div className="px-fluid py-3 sm:py-4">
             <div className="flex items-center justify-between gap-3 sm:gap-4">
               {/* Exit Button - Left */}
-              <Button
-                onClick={handleExit}
-                variant="outline"
-                size="default"
-                className="gap-2 shrink-0 text-sm sm:text-base"
-              >
-                <X className="h-4 w-4 sm:h-5 sm:w-5" />
-                <span className="hidden sm:inline">Exit</span>
-              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="default"
+                    className="gap-2 shrink-0 text-sm sm:text-base"
+                  >
+                    <X className="h-4 w-4 sm:h-5 sm:w-5" />
+                    <span className="hidden sm:inline">Exit</span>
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Exit Game?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to leave the game? Your progress will be saved but you'll leave the room.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleExit}>
+                      Exit
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
 
               {/* Game Title - Center */}
               <div className="flex-1 text-center min-w-0">
@@ -478,7 +518,14 @@ export default function MultiplayerGame() {
           {/* Desktop Middle Column - Main Game Window */}
           <div className="flex flex-col min-h-0 bg-background">
             <div className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-4 lg:p-6">
-              <Card className="shadow-lg h-full flex flex-col">
+              <Card className="shadow-lg h-full flex flex-col relative">
+                {/* Countdown overlay - constrained to game card */}
+                {showCountdown && (
+                  <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-md rounded-lg">
+                    <Countdown onComplete={handleCountdownComplete} duration={3} inline />
+                  </div>
+                )}
+
                 <QuizStats
                   expiryTimestamp={expiryTimestamp}
                   setRunning={handleTimerExpire}

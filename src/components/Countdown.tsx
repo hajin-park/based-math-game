@@ -5,11 +5,13 @@ import { cn } from "@/lib/utils";
 interface CountdownProps {
   onComplete: () => void;
   duration?: number; // Duration in seconds (default: 3)
+  inline?: boolean; // If true, renders without fixed positioning (for use inside containers)
 }
 
 export default function Countdown({
   onComplete,
   duration = 3,
+  inline = false,
 }: CountdownProps) {
   const [count, setCount] = useState(duration);
 
@@ -26,30 +28,38 @@ export default function Countdown({
     return () => clearTimeout(timer);
   }, [count, onComplete]);
 
+  const content = (
+    <div className="flex flex-col items-center gap-6">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={count}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className={cn(
+            "text-9xl font-bold font-mono tabular-nums",
+            count === 3 && "text-muted-foreground",
+            count === 2 && "text-foreground",
+            count === 1 && "text-primary",
+          )}
+        >
+          {count}
+        </motion.div>
+      </AnimatePresence>
+      <p className="text-xl font-medium text-muted-foreground">
+        Get ready...
+      </p>
+    </div>
+  );
+
+  if (inline) {
+    return content;
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-md">
-      <div className="flex flex-col items-center gap-6">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={count}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className={cn(
-              "text-9xl font-bold font-mono tabular-nums",
-              count === 3 && "text-muted-foreground",
-              count === 2 && "text-foreground",
-              count === 1 && "text-primary",
-            )}
-          >
-            {count}
-          </motion.div>
-        </AnimatePresence>
-        <p className="text-xl font-medium text-muted-foreground">
-          Get ready...
-        </p>
-      </div>
+      {content}
     </div>
   );
 }

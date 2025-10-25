@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { Input } from "@/components/ui/input";
+import { NotebookInput } from "@/components/ui/notebook-input";
+import { PaperCard } from "@/components/ui/academic";
 import { generateQuestion } from "./generator";
 import { validateAnswer } from "./validator";
 import { convertBase } from "./converter";
@@ -14,12 +15,12 @@ const MAX_INPUT_LENGTHS: { [key: string]: number } = {
   hexadecimal: 16, // 64 bits in hex
 };
 
-// Valid character patterns for each base
+// Valid character patterns for each base (including optional prefixes)
 const VALID_PATTERNS: { [key: string]: RegExp } = {
-  binary: /^[01]*$/,
-  octal: /^[0-7]*$/,
+  binary: /^(0b)?[01]*$/,
+  octal: /^(0o)?[0-7]*$/,
   decimal: /^[0-9]*$/,
-  hexadecimal: /^[0-9a-fx]*$/, // Allow 'x' for '0x' prefix
+  hexadecimal: /^(0x)?[0-9a-f]*$/,
 };
 
 /**
@@ -38,6 +39,24 @@ function getBaseValue(base: string): number | null {
       return 16;
     default:
       return null;
+  }
+}
+
+/**
+ * Helper function to get base prefix
+ */
+function getBasePrefix(base: string): string {
+  const baseLower = base.toLowerCase();
+  switch (baseLower) {
+    case "binary":
+      return "0b";
+    case "octal":
+      return "0o";
+    case "hexadecimal":
+      return "0x";
+    case "decimal":
+    default:
+      return "";
   }
 }
 
@@ -80,6 +99,7 @@ function NumberWithHints({
   showHints: boolean;
 }) {
   const baseValue = getBaseValue(base);
+  const prefix = getBasePrefix(base);
   if (!value) return null;
 
   const baseLower = base.toLowerCase();
@@ -125,6 +145,11 @@ function NumberWithHints({
 
   return (
     <div className="inline-flex items-start">
+      {prefix && (
+        <span className="text-2xl sm:text-3xl md:text-4xl font-bold font-mono text-muted-foreground mr-0.5">
+          {prefix}
+        </span>
+      )}
       {digits.map((item, index) => {
         const shouldAddSpace =
           groupSize > 0 && index > 0 && index % groupSize === 0;
@@ -240,24 +265,27 @@ export default function QuizPrompt({
   }
 
   return (
-    <section className="py-8 px-4 space-y-8">
+    <section className="py-6 px-4 space-y-6">
       {/* Header */}
       <div className="text-center">
-        <h1 className="text-2xl font-bold text-muted-foreground mb-2">
+        <h1 className="text-xl sm:text-2xl font-serif font-bold gradient-text tracking-academic">
           Convert
         </h1>
       </div>
 
       {/* Question Display */}
-      <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-8">
+      <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-6">
         {/* From Base */}
-        <div className="flex flex-col items-center gap-3 min-w-[200px]">
-          <div className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+        <div className="flex flex-col items-center gap-2 w-full md:w-auto md:min-w-[200px]">
+          <div className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wide">
             {setting[0]}
           </div>
-          <div className="flex flex-col items-center gap-1">
-            {/* Question number with optional hints */}
-            <div className="relative bg-muted px-4 sm:px-6 py-3 sm:py-4 rounded-lg min-w-[160px] sm:min-w-[180px] flex justify-center">
+          <PaperCard
+            variant="folded-sm"
+            padding="sm"
+            className="w-full max-w-[280px] border-2"
+          >
+            <div className="flex justify-center items-center min-h-[60px] sm:min-h-[70px]">
               <NumberWithHints
                 value={question}
                 base={setting[0]}
@@ -271,51 +299,65 @@ export default function QuizPrompt({
                 }
               />
             </div>
-          </div>
+          </PaperCard>
         </div>
 
         {/* Arrow Indicator */}
-        <div className="text-4xl text-muted-foreground rotate-90 md:rotate-0">
+        <div className="text-3xl sm:text-4xl text-primary rotate-90 md:rotate-0 my-2 md:my-0">
           →
         </div>
 
         {/* To Base */}
-        <div className="flex flex-col items-center gap-3 min-w-[200px]">
-          <div className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+        <div className="flex flex-col items-center gap-2 w-full md:w-auto md:min-w-[200px]">
+          <div className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wide">
             {setting[1]}
           </div>
-          <div className="relative w-full max-w-[280px]">
-            <Input
-              ref={inputRef}
-              onChange={(e) => handleOnChange(e)}
-              type="text"
-              value={answer}
-              autoComplete="off"
-              autoCorrect="off"
-              spellCheck="false"
-              placeholder={showSuccess ? "" : "Type your answer..."}
-              className={cn(
-                "text-lg md:text-xl font-bold font-mono text-center h-14 px-3 transition-all duration-200",
-                showSuccess && "ring-2 ring-success bg-success/10 scale-105",
+          <PaperCard
+            variant="folded-sm"
+            padding="sm"
+            className="w-full max-w-[280px] border-2"
+          >
+            <div className="relative flex items-center justify-center min-h-[60px] sm:min-h-[70px] ruled-lines-tight rounded-sm">
+              {/* Base Prefix */}
+              {getBasePrefix(setting[1]) && (
+                <span className="text-lg sm:text-xl font-bold font-mono text-muted-foreground mr-1">
+                  {getBasePrefix(setting[1])}
+                </span>
               )}
-              inputMode="text"
-              pattern={VALID_PATTERNS[setting[1].toLowerCase()]?.source}
-            />
 
-            {/* Success animation */}
-            {showSuccess && (
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="text-5xl font-bold text-success animate-bounce">
-                  ✓
+              {/* Answer Input */}
+              <NotebookInput
+                ref={inputRef}
+                onChange={(e) => handleOnChange(e)}
+                type="text"
+                value={answer}
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck="false"
+                placeholder={showSuccess ? "" : "Type your answer..."}
+                variant="default"
+                className={cn(
+                  "text-lg sm:text-xl font-bold font-mono text-center h-auto border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent px-1 py-0 flex-1 min-w-0",
+                )}
+                inputMode="text"
+                pattern={VALID_PATTERNS[setting[1].toLowerCase()]?.source}
+              />
+
+              {/* Success animation */}
+              {showSuccess && (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="text-4xl sm:text-5xl font-bold text-success animate-bounce">
+                    ✓
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          </PaperCard>
         </div>
       </div>
 
       {/* Helper Text */}
-      <div className="text-center text-sm text-muted-foreground">
+      <div className="text-center text-xs sm:text-sm text-muted-foreground space-y-1">
         <p>Type your answer and press Enter or continue typing</p>
         <span className="text-xs">
           Click the{" "}

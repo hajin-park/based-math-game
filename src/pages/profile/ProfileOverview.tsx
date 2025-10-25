@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import {
   PaperCard,
   PaperCardContent,
@@ -11,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { useStats, UserStats } from "@/hooks/useStats";
 import {
   Mail,
   Calendar,
@@ -21,6 +23,7 @@ import {
   Trophy,
   Target,
   ArrowRight,
+  Loader2,
 } from "lucide-react";
 import { getUserAvatarUrl } from "@/lib/avatarGenerator";
 import { useNavigate } from "react-router-dom";
@@ -28,6 +31,9 @@ import { useNavigate } from "react-router-dom";
 export default function ProfileOverview() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { getUserStats } = useStats();
+  const [stats, setStats] = useState<UserStats | null>(null);
+  const [loadingStats, setLoadingStats] = useState(true);
 
   const getInitials = (name: string | null | undefined) => {
     if (!name) return "U";
@@ -65,6 +71,23 @@ export default function ProfileOverview() {
     }
     return undefined;
   };
+
+  // Fetch user stats on mount
+  useEffect(() => {
+    const fetchStats = async () => {
+      setLoadingStats(true);
+      try {
+        const userStats = await getUserStats();
+        setStats(userStats);
+      } catch (error) {
+        console.error("Error fetching user stats:", error);
+      } finally {
+        setLoadingStats(false);
+      }
+    };
+
+    fetchStats();
+  }, [getUserStats]);
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
@@ -195,52 +218,64 @@ export default function ProfileOverview() {
           </div>
         </PaperCardHeader>
         <PaperCardContent className="p-6 pt-0 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <PaperCard variant="folded-sm" padding="sm" className="border-2">
-              <div className="text-center space-y-2">
-                <div className="flex justify-center">
-                  <div className="p-3 rounded-full bg-primary/10">
-                    <Target className="h-6 w-6 text-primary" />
+          {loadingStats ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <PaperCard variant="folded-sm" padding="sm" className="border-2">
+                <div className="text-center space-y-2">
+                  <div className="flex justify-center">
+                    <div className="p-3 rounded-full bg-primary/10">
+                      <Target className="h-6 w-6 text-primary" />
+                    </div>
                   </div>
+                  <p className="text-3xl font-bold gradient-text">
+                    {stats?.gamesPlayed ?? 0}
+                  </p>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Games Played
+                  </p>
                 </div>
-                <p className="text-3xl font-bold gradient-text">-</p>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Games Played
-                </p>
-              </div>
-            </PaperCard>
-            <PaperCard variant="folded-sm" padding="sm" className="border-2">
-              <div className="text-center space-y-2">
-                <div className="flex justify-center">
-                  <div className="p-3 rounded-full bg-success/10">
-                    <Trophy className="h-6 w-6 text-success" />
+              </PaperCard>
+              <PaperCard variant="folded-sm" padding="sm" className="border-2">
+                <div className="text-center space-y-2">
+                  <div className="flex justify-center">
+                    <div className="p-3 rounded-full bg-success/10">
+                      <Trophy className="h-6 w-6 text-success" />
+                    </div>
                   </div>
+                  <p className="text-3xl font-bold text-success">
+                    {stats?.highScore ?? 0}
+                  </p>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    High Score
+                  </p>
                 </div>
-                <p className="text-3xl font-bold text-success">-</p>
-                <p className="text-sm font-medium text-muted-foreground">
-                  High Score
-                </p>
-              </div>
-            </PaperCard>
-            <PaperCard variant="folded-sm" padding="sm" className="border-2">
-              <div className="text-center space-y-2">
-                <div className="flex justify-center">
-                  <div className="p-3 rounded-full bg-primary/10">
-                    <TrendingUp className="h-6 w-6 text-primary" />
+              </PaperCard>
+              <PaperCard variant="folded-sm" padding="sm" className="border-2">
+                <div className="text-center space-y-2">
+                  <div className="flex justify-center">
+                    <div className="p-3 rounded-full bg-primary/10">
+                      <TrendingUp className="h-6 w-6 text-primary" />
+                    </div>
                   </div>
+                  <p className="text-3xl font-bold gradient-text">
+                    {stats?.averageScore ? Math.round(stats.averageScore) : 0}
+                  </p>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Average Score
+                  </p>
                 </div>
-                <p className="text-3xl font-bold gradient-text">-</p>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Average Score
-                </p>
-              </div>
-            </PaperCard>
-          </div>
+              </PaperCard>
+            </div>
+          )}
 
           <RuledSeparator />
 
-          <div className="flex items-center justify-center gap-2">
-            <p className="text-sm text-muted-foreground">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-2">
+            <p className="text-sm text-muted-foreground text-center sm:text-left">
               Visit the Stats page for detailed analytics
             </p>
             <Button

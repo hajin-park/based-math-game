@@ -32,10 +32,10 @@ export default function ProfileLayout() {
   ];
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex safe-vh-screen bg-background overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-72 border-r-2 border-border flex-shrink-0 flex flex-col bg-card paper-texture">
-        <div className="p-6 space-y-2">
+      <aside className="w-72 border-r-2 border-border flex-shrink-0 flex flex-col bg-card paper-texture overflow-hidden">
+        <div className="p-6 space-y-2 flex-shrink-0">
           <h2 className="text-2xl font-serif font-bold gradient-text tracking-academic">
             Profile
           </h2>
@@ -44,9 +44,9 @@ export default function ProfileLayout() {
           </p>
         </div>
 
-        <RuledSeparator />
+        <RuledSeparator className="flex-shrink-0" />
 
-        <nav className="px-4 py-4 space-y-1 flex-1">
+        <nav className="px-4 py-4 space-y-1 flex-1 overflow-y-auto min-h-0">
           {navItems.map((item) => (
             <NavLink
               key={item.name}
@@ -66,10 +66,10 @@ export default function ProfileLayout() {
           ))}
         </nav>
 
-        <RuledSeparator />
+        <RuledSeparator className="flex-shrink-0" />
 
         {/* Sign Out Button */}
-        <div className="p-4">
+        <div className="p-4 flex-shrink-0">
           <Button
             onClick={handleSignOut}
             variant="ghost"
@@ -82,7 +82,7 @@ export default function ProfileLayout() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto min-h-0">
         <div className="container mx-auto p-6 max-w-5xl">
           <Outlet />
         </div>
