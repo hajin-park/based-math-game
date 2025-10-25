@@ -20,6 +20,7 @@ export interface RoomPlayer {
   score: number;
   finished: boolean;
   wins: number;
+  scoreHistory?: number[]; // Track score after each question/action for graphs
   disconnected?: boolean; // True if player is disconnected
   disconnectedAt?: number; // Timestamp when player disconnected
   kicked?: boolean; // True if player was kicked by host
@@ -108,6 +109,7 @@ export function useRoom() {
               score: 0,
               finished: false,
               wins: 0,
+              scoreHistory: [0], // Initialize with starting score
               disconnected: false,
             },
           },
@@ -203,6 +205,7 @@ export function useRoom() {
             score: 0,
             finished: false,
             wins: 0,
+            scoreHistory: [0], // Initialize with starting score
             disconnected: false,
           });
         }
@@ -261,7 +264,10 @@ export function useRoom() {
           if (remainingPlayers.length > 0) {
             // Transfer host to the first remaining player
             const newHostUid = remainingPlayers[0];
-            const updates: Record<string, string | boolean | number | null> = {
+            const updates: Record<
+              string,
+              string | boolean | number | number[] | null
+            > = {
               hostUid: newHostUid,
               [`players/${newHostUid}/ready`]: true, // New host is automatically ready
             };
@@ -275,6 +281,7 @@ export function useRoom() {
               remainingPlayers.forEach((uid) => {
                 updates[`players/${uid}/score`] = 0;
                 updates[`players/${uid}/finished`] = false;
+                updates[`players/${uid}/scoreHistory`] = [0]; // Reset score history
               });
             }
 
@@ -356,11 +363,18 @@ export function useRoom() {
       if (!user) return;
 
       try {
-        const scoreRef = ref(
-          database,
-          `rooms/${roomId}/players/${user.uid}/score`,
-        );
-        await set(scoreRef, score);
+        const playerRef = ref(database, `rooms/${roomId}/players/${user.uid}`);
+
+        // Get current scoreHistory
+        const snapshot = await get(playerRef);
+        const playerData = snapshot.val();
+        const currentHistory = playerData?.scoreHistory || [0];
+
+        // Update score and append to history
+        await update(playerRef, {
+          score,
+          scoreHistory: [...currentHistory, score],
+        });
       } catch (error) {
         console.error("Error updating score:", error);
         throw error;
@@ -413,10 +427,14 @@ export function useRoom() {
         }
 
         // Reset all players' scores and finished status
-        const updates: Record<string, number | boolean | string | null> = {};
+        const updates: Record<
+          string,
+          number | boolean | string | null | number[]
+        > = {};
         Object.keys(room.players).forEach((uid) => {
           updates[`players/${uid}/score`] = 0;
           updates[`players/${uid}/finished`] = false;
+          updates[`players/${uid}/scoreHistory`] = [0]; // Reset score history
           // Keep host ready, set others to not ready
           updates[`players/${uid}/ready`] = uid === room.hostUid;
         });

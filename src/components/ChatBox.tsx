@@ -9,9 +9,14 @@ import { useAuth } from "@/contexts/AuthContext";
 interface ChatBoxProps {
   roomId: string;
   className?: string;
+  compact?: boolean;
 }
 
-export default function ChatBox({ roomId, className = "" }: ChatBoxProps) {
+export default function ChatBox({
+  roomId,
+  className = "",
+  compact = false,
+}: ChatBoxProps) {
   const { user } = useAuth();
   const { sendMessage, subscribeToMessages, loading } = useChat();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -107,42 +112,81 @@ export default function ChatBox({ roomId, className = "" }: ChatBoxProps) {
   };
 
   return (
-    <Card className={`border-2 shadow-lg ${className}`}>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2">
-          <MessageCircle className="h-4 w-4 text-primary" />
-          Room Chat
+    <Card
+      className={`${compact ? "border shadow-sm" : "border-2 shadow-lg"} h-full flex flex-col ${className}`}
+    >
+      <CardHeader
+        className={compact ? "p-1.5 pb-1 flex-none" : "pb-3 flex-none"}
+      >
+        <CardTitle
+          className={`${compact ? "text-xs" : "text-base"} flex items-center gap-${compact ? "1" : "2"}`}
+        >
+          <MessageCircle
+            className={`${compact ? "h-3 w-3" : "h-4 w-4"} text-primary`}
+          />
+          {compact ? "Chat" : "Room Chat"}
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent
+        className={`${compact ? "space-y-1 p-1.5 pt-0" : "space-y-3"} flex-1 flex flex-col min-h-0`}
+      >
         {/* Messages Area */}
         <div
-          className="h-64 w-full rounded-lg border-2 bg-muted/30 p-3 overflow-y-auto"
+          className={`${compact ? "flex-1" : "h-64"} w-full rounded-lg ${compact ? "border" : "border-2"} bg-muted/30 ${compact ? "p-1.5" : "p-3"} overflow-y-auto`}
           onScroll={handleScroll}
           ref={scrollAreaRef}
         >
           {messages.length === 0 ? (
-            <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
-              No messages yet. Start the conversation!
+            <div
+              className={`flex items-center justify-center h-full text-muted-foreground ${compact ? "text-xs" : "text-sm"}`}
+            >
+              {compact
+                ? "No messages"
+                : "No messages yet. Start the conversation!"}
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className={compact ? "space-y-1" : "space-y-2"}>
               {messages.map((msg) => {
                 const isCurrentUser = msg.senderId === user?.uid;
+                const isSystem = msg.isSystem === true;
+
+                // System messages - centered and styled differently
+                if (isSystem) {
+                  return (
+                    <div
+                      key={msg.id}
+                      className={`flex justify-center ${compact ? "py-0.5" : "py-1"}`}
+                    >
+                      <div
+                        className={`max-w-[90%] rounded-lg ${compact ? "px-1.5 py-0.5" : "px-3 py-1.5"} bg-muted/50 border border-border`}
+                      >
+                        <p className="text-xs text-center text-muted-foreground italic">
+                          {msg.message}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                }
+
+                // Regular user messages
                 return (
                   <div
                     key={msg.id}
-                    className="flex flex-wrap items-baseline gap-1.5"
+                    className={`flex flex-wrap items-baseline ${compact ? "gap-1" : "gap-1.5"}`}
                   >
                     <span className="text-xs font-semibold shrink-0">
                       {isCurrentUser ? "You" : msg.displayName}:
                     </span>
-                    <span className="text-sm break-words flex-1 min-w-0">
+                    <span
+                      className={`${compact ? "text-xs" : "text-sm"} break-words flex-1 min-w-0`}
+                    >
                       {msg.message}
                     </span>
-                    <span className="text-xs text-muted-foreground shrink-0 ml-auto">
-                      {formatTimestamp(msg.timestamp)}
-                    </span>
+                    {!compact && (
+                      <span className="text-xs text-muted-foreground shrink-0 ml-auto">
+                        {formatTimestamp(msg.timestamp)}
+                      </span>
+                    )}
                   </div>
                 );
               })}
@@ -151,23 +195,23 @@ export default function ChatBox({ roomId, className = "" }: ChatBoxProps) {
         </div>
 
         {/* Input Area */}
-        <div className="flex gap-2">
+        <div className={`flex ${compact ? "gap-1" : "gap-2"} flex-none`}>
           <Input
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Type a message..."
-            className="flex-1"
+            placeholder={compact ? "Message..." : "Type a message..."}
+            className={`flex-1 ${compact ? "h-7 text-xs" : ""}`}
             maxLength={500}
             disabled={loading}
           />
           <Button
             onClick={handleSendMessage}
             disabled={!inputMessage.trim() || loading}
-            size="icon"
-            className="shrink-0"
+            size={compact ? "sm" : "icon"}
+            className={`shrink-0 ${compact ? "h-7 w-7 p-0" : ""}`}
           >
-            <Send className="h-4 w-4" />
+            <Send className={compact ? "h-3 w-3" : "h-4 w-4"} />
           </Button>
         </div>
       </CardContent>

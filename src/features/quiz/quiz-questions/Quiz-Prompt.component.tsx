@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { generateQuestion } from "./generator";
 import { validateAnswer } from "./validator";
 import { convertBase } from "./converter";
-import { formatWithGrouping, getIndexHints } from "./formatters";
+import { getBaseSubscript } from "./formatters";
 import { cn } from "@/lib/utils";
 import { GameSettings } from "@/hooks/useGameSettings";
 
@@ -22,6 +22,132 @@ const VALID_PATTERNS: { [key: string]: RegExp } = {
   decimal: /^[0-9]*$/,
   hexadecimal: /^[0-9a-fx]*$/, // Allow 'x' for '0x' prefix
 };
+
+/**
+ * Helper function to get base value
+ */
+function getBaseValue(base: string): number | null {
+  const baseLower = base.toLowerCase();
+  switch (baseLower) {
+    case "binary":
+      return 2;
+    case "octal":
+      return 8;
+    case "decimal":
+      return 10;
+    case "hexadecimal":
+      return 16;
+    default:
+      return null;
+  }
+}
+
+/**
+ * Component to render a single digit with its hint below
+ */
+function DigitWithHint({
+  digit,
+  hint,
+  className = "",
+}: {
+  digit: string;
+  hint: string;
+  className?: string;
+}) {
+  return (
+    <span className={cn("inline-flex flex-col items-center", className)}>
+      <span className="text-2xl sm:text-3xl md:text-4xl font-bold font-mono">
+        {digit}
+      </span>
+      <span className="text-xs font-mono text-muted-foreground font-normal whitespace-nowrap">
+        {hint}
+      </span>
+    </span>
+  );
+}
+
+/**
+ * Component to display number with index value hints, rendering each digit individually
+ */
+function NumberWithHints({
+  value,
+  base,
+  grouped,
+  showHints,
+}: {
+  value: string;
+  base: string;
+  grouped: boolean;
+  showHints: boolean;
+}) {
+  const baseValue = getBaseValue(base);
+  if (!value) return null;
+
+  const baseLower = base.toLowerCase();
+  const length = value.length;
+
+  // Calculate hints for each digit
+  const digits: { char: string; hint: string; isPadding: boolean }[] = [];
+  for (let i = 0; i < length; i++) {
+    const power = length - 1 - i;
+    const hintValue = baseValue ? Math.pow(baseValue, power).toString() : "";
+    digits.push({
+      char: value[i],
+      hint: hintValue,
+      isPadding: false,
+    });
+  }
+
+  // If grouped, add padding
+  if (grouped) {
+    const groupSize =
+      baseLower === "binary" || baseLower === "hexadecimal"
+        ? 4
+        : baseLower === "octal"
+          ? 3
+          : 0;
+
+    if (groupSize > 0) {
+      const paddingNeeded =
+        (groupSize - (value.length % groupSize)) % groupSize;
+      for (let i = 0; i < paddingNeeded; i++) {
+        digits.unshift({ char: "0", hint: "0", isPadding: true });
+      }
+    }
+  }
+
+  // Group digits if needed
+  const groupSize =
+    grouped && (baseLower === "binary" || baseLower === "hexadecimal")
+      ? 4
+      : grouped && baseLower === "octal"
+        ? 3
+        : 0;
+
+  return (
+    <div className="inline-flex items-start">
+      {digits.map((item, index) => {
+        const shouldAddSpace =
+          groupSize > 0 && index > 0 && index % groupSize === 0;
+
+        return (
+          <span key={index} className="inline-flex">
+            {shouldAddSpace && (
+              <span className="inline-block w-2 sm:w-3" aria-hidden="true" />
+            )}
+            {showHints ? (
+              <DigitWithHint digit={item.char} hint={item.hint} />
+            ) : (
+              <span className="text-2xl sm:text-3xl md:text-4xl font-bold font-mono">
+                {item.char}
+              </span>
+            )}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
 
 interface QuizPromptProps {
   score: number;
@@ -131,19 +257,26 @@ export default function QuizPrompt({
             {setting[0]}
           </div>
           <div className="flex flex-col items-center gap-1">
-            <div className="text-2xl sm:text-3xl md:text-4xl font-bold font-mono bg-muted px-4 sm:px-6 py-3 sm:py-4 rounded-lg min-w-[160px] sm:min-w-[180px] text-center break-all">
-              {showGroupedDigits
-                ? formatWithGrouping(question, setting[0])
-                : question}
+            {/* Question number with subscript and optional hints */}
+            <div className="relative bg-muted px-4 sm:px-6 py-3 sm:py-4 rounded-lg min-w-[160px] sm:min-w-[180px] flex justify-center">
+              <div className="relative inline-block pr-6">
+                <NumberWithHints
+                  value={question}
+                  base={setting[0]}
+                  grouped={showGroupedDigits ?? false}
+                  showHints={
+                    !!(
+                      showIndexHints &&
+                      setting[0].toLowerCase() !== "decimal" &&
+                      question
+                    )
+                  }
+                />
+                <span className="absolute bottom-1 right-0 text-lg sm:text-xl md:text-2xl font-extrabold font-mono text-foreground/70">
+                  {getBaseSubscript(setting[0])}
+                </span>
+              </div>
             </div>
-            {/* Index hints - only show if not converting from decimal */}
-            {showIndexHints &&
-              setting[0].toLowerCase() !== "decimal" &&
-              question && (
-                <div className="text-xs font-mono text-muted-foreground px-4 sm:px-6 text-center whitespace-pre font-normal tracking-wider overflow-x-auto max-w-full">
-                  {getIndexHints(question, setting[0], showGroupedDigits)}
-                </div>
-              )}
           </div>
         </div>
 
@@ -175,6 +308,11 @@ export default function QuizPrompt({
               inputMode="text"
               pattern={VALID_PATTERNS[setting[1].toLowerCase()]?.source}
             />
+
+            {/* Subscript positioned outside at bottom right corner of input box */}
+            <span className="absolute -bottom-2 right-0 translate-x-full ml-1 text-lg sm:text-xl md:text-2xl font-extrabold font-mono text-foreground/70 pointer-events-none">
+              {getBaseSubscript(setting[1])}
+            </span>
 
             {/* Success animation */}
             {showSuccess && (

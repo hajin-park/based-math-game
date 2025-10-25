@@ -17,6 +17,7 @@ export interface ChatMessage {
   displayName: string;
   message: string;
   timestamp: number;
+  isSystem?: boolean; // True for system messages (joins, leaves, winners)
 }
 
 export function useChat() {
@@ -36,6 +37,7 @@ export function useChat() {
           displayName: user.displayName || "Guest",
           message: message.trim(),
           timestamp: Date.now(),
+          isSystem: false,
         };
 
         await push(chatRef, chatMessage);
@@ -47,6 +49,30 @@ export function useChat() {
       }
     },
     [user],
+  );
+
+  const sendSystemMessage = useCallback(
+    async (roomId: string, message: string) => {
+      if (!message.trim()) return;
+
+      try {
+        const chatRef = ref(database, `rooms/${roomId}/chat`);
+
+        const chatMessage: Omit<ChatMessage, "id"> = {
+          senderId: "system",
+          displayName: "System",
+          message: message.trim(),
+          timestamp: Date.now(),
+          isSystem: true,
+        };
+
+        await push(chatRef, chatMessage);
+      } catch (error) {
+        console.error("Error sending system message:", error);
+        throw error;
+      }
+    },
+    [],
   );
 
   const subscribeToMessages = useCallback(
@@ -88,6 +114,7 @@ export function useChat() {
   return {
     loading,
     sendMessage,
+    sendSystemMessage,
     subscribeToMessages,
   };
 }

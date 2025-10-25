@@ -3,11 +3,16 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
   Card,
   CardContent,
-  CardFooter,
   CardHeader,
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
+import {
+  PaperCard,
+  PaperCardHeader,
+  PaperCardTitle,
+  PaperCardContent,
+} from "@/components/ui/academic";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -15,7 +20,29 @@ import { useRoom, Room } from "@/hooks/useRoom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
 import { isSpeedrunMode } from "@/types/gameMode";
-import { Trophy, Crown, Medal, Home, RotateCcw, Loader2 } from "lucide-react";
+import ChatBox from "@/components/ChatBox";
+import {
+  Trophy,
+  Crown,
+  RotateCcw,
+  Loader2,
+  TrendingUp,
+  X,
+  Copy,
+  Check,
+  Users,
+  WifiOff,
+} from "lucide-react";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
 
 export default function MultiplayerResults() {
   const { roomId } = useParams<{ roomId: string }>();
@@ -26,6 +53,7 @@ export default function MultiplayerResults() {
   const { joinRoom, leaveRoom, subscribeToRoom, resetRoom, incrementWins } =
     useRoom();
   const [room, setRoom] = useState<Room | null>(null);
+  const [copied, setCopied] = useState(false);
   const hasNavigatedRef = useRef(false);
   const hasIncrementedWinsRef = useRef(false);
   const hasJoinedRef = useRef(false);
@@ -84,9 +112,9 @@ export default function MultiplayerResults() {
 
       // Only leave if we're not in the same room and not explicitly leaving
       if (roomId && user && !isStillInRoom && !isLeavingRefValue.current) {
-        leaveRoom(roomId).catch((error) => {
-          console.error("Error leaving room on unmount:", error);
-        });
+        leaveRoom(roomId).catch((error) =>
+          console.error("Error leaving room on unmount:", error),
+        );
       }
     };
   }, [roomId, user, leaveRoom, location.pathname]);
@@ -164,6 +192,78 @@ export default function MultiplayerResults() {
     }
   };
 
+  const handleCopyRoomId = () => {
+    if (roomId) {
+      navigator.clipboard.writeText(roomId);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  // For speedrun modes, lowest score wins (fastest time)
+  // For timed modes, highest score wins (most correct answers)
+  const sortedPlayers = useMemo(() => {
+    if (!room) return [];
+    return Object.values(room.players).sort((a, b) =>
+      isSpeedrun ? a.score - b.score : b.score - a.score,
+    );
+  }, [room, isSpeedrun]);
+
+  const winner = sortedPlayers[0];
+  const isHost = user?.uid === room?.hostUid;
+  const playerCount = room
+    ? Object.values(room.players).filter((p) => !p.kicked).length
+    : 0;
+
+  // Prepare data for score progression graph
+  const graphData = useMemo(() => {
+    if (!sortedPlayers || sortedPlayers.length === 0) return [];
+
+    // Find the maximum history length among all players
+    const maxLength = Math.max(
+      ...sortedPlayers.map((p) => p.scoreHistory?.length || 0),
+    );
+
+    console.log("Score history debug:", {
+      maxLength,
+      players: sortedPlayers.map((p) => ({
+        name: p.displayName,
+        historyLength: p.scoreHistory?.length || 0,
+        history: p.scoreHistory,
+      })),
+    });
+
+    if (maxLength === 0 || maxLength === 1) return []; // Need at least 2 points for a line
+
+    // Create data points for each question/action
+    const data: Array<Record<string, number>> = [];
+    for (let i = 0; i < maxLength; i++) {
+      const point: Record<string, number> = { question: i };
+      sortedPlayers.forEach((player) => {
+        const score = player.scoreHistory?.[i];
+        if (score !== undefined) {
+          point[player.displayName] = score;
+        }
+      });
+      data.push(point);
+    }
+    return data;
+  }, [sortedPlayers]);
+
+  // Generate colors for each player line
+  const playerColors = [
+    "#2563eb", // blue
+    "#dc2626", // red
+    "#16a34a", // green
+    "#ea580c", // orange
+    "#9333ea", // purple
+    "#0891b2", // cyan
+    "#ca8a04", // yellow
+    "#db2777", // pink
+    "#65a30d", // lime
+    "#0d9488", // teal
+  ];
+
   if (!room) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -172,156 +272,450 @@ export default function MultiplayerResults() {
     );
   }
 
-  // For speedrun modes, lowest score wins (fastest time)
-  // For timed modes, highest score wins (most correct answers)
-  const sortedPlayers = Object.values(room.players).sort((a, b) =>
-    isSpeedrun ? a.score - b.score : b.score - a.score,
-  );
-  const winner = sortedPlayers[0];
-  const isHost = user?.uid === room.hostUid;
-
-  const getRankIcon = (index: number) => {
-    if (index === 0) return <Crown className="h-6 w-6 text-yellow-600" />;
-    if (index === 1) return <Medal className="h-6 w-6 text-gray-400" />;
-    if (index === 2) return <Medal className="h-6 w-6 text-amber-700" />;
-    return null;
-  };
-
   return (
-    <div className="container mx-auto px-4 py-8 flex items-center justify-center min-h-[calc(100vh-8rem)]">
-      <div className="w-full max-w-3xl space-y-6 animate-in">
-        {/* Header */}
-        <div className="text-center space-y-2">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <Trophy className="h-8 w-8 text-success" />
-            <h1 className="text-4xl font-bold gradient-text">Game Complete!</h1>
-          </div>
-          <p className="text-lg text-muted-foreground">{room.gameMode.name}</p>
-        </div>
+    <div className="flex flex-col h-screen overflow-hidden">
+      {/* Row 1 - Header */}
+      <div className="flex-none border-b-2 border-border bg-card paper-texture">
+        <div className="px-2 py-1.5">
+          <div className="flex items-center justify-between gap-2">
+            {/* Exit Button - Left */}
+            <Button
+              onClick={async () => {
+                isLeavingRef.current = true;
+                if (roomId) {
+                  await leaveRoom(roomId);
+                }
+                navigate("/multiplayer");
+              }}
+              variant="outline"
+              size="sm"
+              className="gap-1 shrink-0"
+            >
+              <X className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Exit</span>
+            </Button>
 
-        <Card className="border-2 shadow-lg">
-          <CardHeader className="text-center pb-6">
-            <div className="flex items-center justify-center gap-2 mb-4">
-              <Trophy className="h-12 w-12 text-yellow-600 animate-pulse" />
+            {/* Game Title - Center */}
+            <div className="flex-1 text-center min-w-0">
+              <h1 className="text-sm md:text-base font-serif font-bold truncate">
+                {room.gameMode.name} - Results
+              </h1>
             </div>
-            <CardTitle className="text-3xl gradient-text">
-              {winner.displayName}
-            </CardTitle>
-            <CardDescription className="text-lg">Winner</CardDescription>
-            <div className="mt-4">
-              <p className="text-6xl font-bold gradient-text">
-                {isSpeedrun ? `${winner.score}s` : winner.score}
-              </p>
-              <p className="text-sm text-muted-foreground mt-2">
-                {isSpeedrun ? "completion time" : "points"}
-              </p>
-            </div>
-          </CardHeader>
 
-          <Separator />
-
-          <CardContent className="pt-6 space-y-6">
-            {/* All players */}
-            <div className="space-y-3">
-              <h3 className="font-semibold text-lg flex items-center gap-2">
-                <Trophy className="h-5 w-5 text-primary" />
-                Final Standings
-              </h3>
-              <div className="space-y-3">
-                {sortedPlayers.map((player, index) => (
-                  <Card
-                    key={player.uid}
-                    className={`border-2 ${
-                      index === 0
-                        ? "border-yellow-600/50 bg-gradient-to-r from-yellow-500/10 to-orange-500/10"
-                        : "border-muted"
-                    }`}
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <div className="flex items-center justify-center w-12 h-12 rounded-full bg-muted">
-                            {getRankIcon(index) || (
-                              <span className="font-bold text-xl text-muted-foreground">
-                                #{index + 1}
-                              </span>
-                            )}
-                          </div>
-                          <div>
-                            <p className="font-semibold text-lg">
-                              {player.displayName}
-                            </p>
-                            {index === 0 && (
-                              <Badge className="bg-yellow-600">
-                                <Crown className="h-3 w-3 mr-1" />
-                                Champion
-                              </Badge>
-                            )}
-                            {index === 1 && (
-                              <Badge variant="secondary">2nd Place</Badge>
-                            )}
-                            {index === 2 && (
-                              <Badge variant="outline">3rd Place</Badge>
-                            )}
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-bold text-3xl">
-                            {isSpeedrun ? `${player.score}s` : player.score}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {isSpeedrun ? "time" : "points"}
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          </CardContent>
-
-          <Separator />
-
-          <CardFooter className="flex flex-col gap-4 pt-6">
-            {isHost ? (
-              <Button
-                onClick={handleReturnToLobby}
-                className="w-full shadow-sm"
-                size="lg"
-              >
-                <RotateCcw className="mr-2 h-5 w-5" />
-                Return to Lobby (Play Again)
-              </Button>
-            ) : (
-              <div className="w-full text-center p-4 rounded-lg bg-muted/50 border">
-                <Loader2 className="h-5 w-5 animate-spin mx-auto mb-2 text-primary" />
-                <p className="text-sm text-muted-foreground">
-                  Waiting for host to return to lobby...
+            {/* Room Code Display - Right */}
+            <div className="flex items-center gap-1 shrink-0">
+              <div className="text-right hidden sm:block">
+                <p className="text-xs text-muted-foreground leading-tight">
+                  Room Code
+                </p>
+                <p className="font-mono font-bold text-xs tracking-wider uppercase text-primary">
+                  {roomId}
                 </p>
               </div>
-            )}
-            <div className="flex flex-col sm:flex-row gap-3 w-full">
               <Button
-                onClick={() => navigate("/multiplayer")}
+                onClick={handleCopyRoomId}
                 variant="outline"
-                size="lg"
-                className="flex-1"
+                size="sm"
+                className="h-7 w-7 p-0"
+                title="Copy room code"
               >
-                Leave Room
-              </Button>
-              <Button
-                onClick={() => navigate("/")}
-                variant="outline"
-                size="lg"
-                className="flex-1"
-              >
-                <Home className="mr-2 h-5 w-5" />
-                Back to Home
+                {copied ? (
+                  <Check className="h-3 w-3" />
+                ) : (
+                  <Copy className="h-3 w-3" />
+                )}
               </Button>
             </div>
-          </CardFooter>
-        </Card>
+          </div>
+        </div>
+      </div>
+
+      {/* Row 2 - Main Content (Desktop: 3 columns, Mobile: 3 rows) */}
+      <div className="flex-1 overflow-hidden min-h-0">
+        <div className="h-full flex flex-col lg:grid lg:grid-cols-[minmax(200px,280px)_1fr_minmax(200px,280px)] gap-0">
+          {/* Desktop Left Column - User List */}
+          <div className="hidden lg:flex flex-col border-r-2 border-border bg-card paper-texture overflow-hidden">
+            <div className="flex-none p-1.5 border-b border-border">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <Users className="h-3.5 w-3.5 text-primary" />
+                  <h2 className="text-xs font-serif font-semibold">
+                    Players ({playerCount}/{room.maxPlayers || 4})
+                  </h2>
+                </div>
+              </div>
+            </div>
+            <div className="flex-1 overflow-y-auto p-1.5 space-y-1">
+              {sortedPlayers.map((player, index) => {
+                const isPlayerHost = player.uid === room.hostUid;
+                const wins = player.wins || 0;
+                const isDisconnected = player.disconnected === true;
+                const isKicked = player.kicked === true;
+
+                if (isKicked) return null;
+
+                return (
+                  <div
+                    key={player.uid}
+                    className={`flex items-center justify-between p-1.5 rounded-md border text-xs ${
+                      isDisconnected
+                        ? "bg-muted/30 border-muted"
+                        : index === 0
+                          ? "bg-yellow-500/10 border-yellow-600/50"
+                          : "bg-muted/50 border-muted"
+                    }`}
+                  >
+                    <div className="flex flex-col min-w-0 flex-1">
+                      <div className="flex items-center gap-1">
+                        <span
+                          className={`font-medium truncate ${isDisconnected ? "text-muted-foreground" : ""}`}
+                        >
+                          {player.displayName}
+                        </span>
+                        {isPlayerHost && (
+                          <Crown className="h-3 w-3 text-yellow-600 shrink-0" />
+                        )}
+                      </div>
+                      {wins > 0 && (
+                        <span className="text-xs text-muted-foreground flex items-center gap-0.5">
+                          <Trophy className="h-2.5 w-2.5" />
+                          {wins}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-0.5 shrink-0">
+                      {index === 0 && (
+                        <Badge
+                          variant="default"
+                          className="h-5 px-1.5 text-xs bg-yellow-600"
+                        >
+                          Winner
+                        </Badge>
+                      )}
+                      {isDisconnected && (
+                        <Badge
+                          variant="destructive"
+                          className="h-5 px-1.5 text-xs"
+                        >
+                          <WifiOff className="h-2.5 w-2.5" />
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Desktop Middle Column - Score Progression Graph */}
+          <div className="flex flex-col h-full bg-background overflow-hidden">
+            <div className="flex-1 overflow-y-auto p-1.5 min-h-0">
+              <PaperCard
+                variant="folded-sm"
+                padding="sm"
+                className="h-full flex flex-col"
+              >
+                <PaperCardHeader className="pb-2 flex-none">
+                  <div className="flex items-center gap-1.5">
+                    <TrendingUp className="h-4 w-4 text-primary" />
+                    <PaperCardTitle className="text-sm">
+                      Score Progression
+                    </PaperCardTitle>
+                  </div>
+                </PaperCardHeader>
+                <PaperCardContent className="pt-0 flex-1 flex flex-col min-h-0">
+                  {graphData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart
+                        data={graphData}
+                        margin={{ top: 10, right: 10, bottom: 20, left: 0 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <XAxis
+                          dataKey="question"
+                          label={{
+                            value: "Question Number",
+                            position: "insideBottom",
+                            offset: -10,
+                          }}
+                          tick={{ fontSize: 10 }}
+                        />
+                        <YAxis
+                          label={{
+                            value: isSpeedrun ? "Time (s)" : "Score",
+                            angle: -90,
+                            position: "insideLeft",
+                          }}
+                          tick={{ fontSize: 10 }}
+                        />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: "hsl(var(--background))",
+                            border: "1px solid hsl(var(--border))",
+                            borderRadius: "0.375rem",
+                            fontSize: "0.75rem",
+                          }}
+                        />
+                        <Legend wrapperStyle={{ fontSize: "0.75rem" }} />
+                        {sortedPlayers.map((player, index) => (
+                          <Line
+                            key={player.uid}
+                            type="monotone"
+                            dataKey={player.displayName}
+                            stroke={playerColors[index % playerColors.length]}
+                            strokeWidth={2}
+                            dot={false}
+                            isAnimationActive={true}
+                            animationDuration={800}
+                            animationEasing="ease-in-out"
+                          />
+                        ))}
+                      </LineChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="flex-1 flex items-center justify-center text-xs text-muted-foreground">
+                      No score history available
+                    </div>
+                  )}
+                </PaperCardContent>
+              </PaperCard>
+            </div>
+          </div>
+
+          {/* Desktop Right Column - Results + Chat */}
+          <div className="hidden lg:flex flex-col border-l-2 border-border bg-card paper-texture overflow-hidden">
+            {/* Results - Top */}
+            <div className="flex-none p-1.5 border-b border-border max-h-[50vh] overflow-y-auto">
+              <div className="text-center mb-2">
+                <div className="flex items-center justify-center gap-1 mb-1">
+                  <Trophy className="h-4 w-4 text-yellow-600" />
+                  <h2 className="text-xs font-serif font-semibold">Winner</h2>
+                </div>
+                <p className="text-sm font-bold gradient-text">
+                  {winner.displayName}
+                </p>
+                <p className="text-lg font-bold gradient-text">
+                  {isSpeedrun ? `${winner.score}s` : winner.score}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {isSpeedrun ? "completion time" : "points"}
+                </p>
+              </div>
+
+              <Separator className="my-1.5" />
+
+              {/* Final Standings */}
+              <div className="space-y-1">
+                <h3 className="text-xs font-serif font-semibold flex items-center gap-1 mb-1">
+                  <Trophy className="h-3 w-3 text-primary" />
+                  Final Standings
+                </h3>
+                <div className="space-y-0.5">
+                  {sortedPlayers.map((player, index) => (
+                    <div
+                      key={player.uid}
+                      className={`flex items-center justify-between p-1 rounded-md border text-xs ${
+                        index === 0
+                          ? "border-yellow-600/50 bg-yellow-500/10"
+                          : "border-muted bg-muted/30"
+                      }`}
+                    >
+                      <div className="flex items-center gap-1 min-w-0 flex-1">
+                        <span className="text-xs">
+                          {index === 0 ? "👑" : `#${index + 1}`}
+                        </span>
+                        <span className="font-medium truncate">
+                          {player.displayName}
+                        </span>
+                      </div>
+                      <span className="font-bold tabular-nums shrink-0">
+                        {isSpeedrun ? `${player.score}s` : player.score}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <Separator className="my-1.5" />
+
+              {/* Host Controls */}
+              <div className="space-y-1">
+                {isHost ? (
+                  <Button
+                    onClick={handleReturnToLobby}
+                    className="w-full shadow-sm"
+                    size="sm"
+                  >
+                    <RotateCcw className="mr-1.5 h-3 w-3" />
+                    Return to Lobby
+                  </Button>
+                ) : (
+                  <div className="w-full text-center p-1.5 rounded-lg bg-muted/50 border">
+                    <Loader2 className="h-3 w-3 animate-spin mx-auto mb-1 text-primary" />
+                    <p className="text-xs text-muted-foreground">
+                      Waiting for host...
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Chat - Bottom */}
+            <div className="flex-1 overflow-hidden flex flex-col min-h-0">
+              {roomId && (
+                <div className="flex-1 overflow-hidden">
+                  <ChatBox roomId={roomId} compact />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Mobile Layout - Full width content */}
+          <div className="lg:hidden flex flex-col h-full overflow-y-auto p-1.5 space-y-1.5">
+            {/* Winner Banner */}
+            <Card className="shadow-sm">
+              <CardHeader className="p-1.5 text-center">
+                <div className="flex items-center justify-center gap-1 mb-1">
+                  <Trophy className="h-4 w-4 text-yellow-600" />
+                  <CardTitle className="text-sm">Winner</CardTitle>
+                </div>
+                <p className="text-base font-bold gradient-text">
+                  {winner.displayName}
+                </p>
+                <p className="text-xl font-bold gradient-text">
+                  {isSpeedrun ? `${winner.score}s` : winner.score}
+                </p>
+                <CardDescription className="text-xs">
+                  {isSpeedrun ? "completion time" : "points"}
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            {/* Score Progression Graph */}
+            <PaperCard variant="folded-sm" padding="sm">
+              <PaperCardHeader className="pb-1">
+                <div className="flex items-center gap-1">
+                  <TrendingUp className="h-3 w-3 text-primary" />
+                  <PaperCardTitle className="text-xs">
+                    Score Progression
+                  </PaperCardTitle>
+                </div>
+              </PaperCardHeader>
+              <PaperCardContent className="pt-0">
+                {graphData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={200}>
+                    <LineChart
+                      data={graphData}
+                      margin={{ top: 5, right: 5, bottom: 15, left: -20 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <XAxis
+                        dataKey="question"
+                        label={{
+                          value: "Question",
+                          position: "insideBottom",
+                          offset: -10,
+                        }}
+                        tick={{ fontSize: 9 }}
+                      />
+                      <YAxis
+                        label={{
+                          value: isSpeedrun ? "Time (s)" : "Score",
+                          angle: -90,
+                          position: "insideLeft",
+                        }}
+                        tick={{ fontSize: 9 }}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "hsl(var(--background))",
+                          border: "1px solid hsl(var(--border))",
+                          borderRadius: "0.375rem",
+                          fontSize: "0.625rem",
+                        }}
+                      />
+                      <Legend wrapperStyle={{ fontSize: "0.625rem" }} />
+                      {sortedPlayers.map((player, index) => (
+                        <Line
+                          key={player.uid}
+                          type="monotone"
+                          dataKey={player.displayName}
+                          stroke={playerColors[index % playerColors.length]}
+                          strokeWidth={1.5}
+                          dot={false}
+                          isAnimationActive={true}
+                          animationDuration={800}
+                          animationEasing="ease-in-out"
+                        />
+                      ))}
+                    </LineChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-[200px] flex items-center justify-center text-xs text-muted-foreground">
+                    No score history available
+                  </div>
+                )}
+              </PaperCardContent>
+            </PaperCard>
+
+            {/* Final Standings */}
+            <Card className="shadow-sm">
+              <CardHeader className="p-1.5 border-b">
+                <CardTitle className="text-xs flex items-center gap-1">
+                  <Trophy className="h-3 w-3" />
+                  Final Standings
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-1.5 space-y-0.5">
+                {sortedPlayers.map((player, index) => (
+                  <div
+                    key={player.uid}
+                    className={`flex items-center justify-between p-1 rounded-md border text-xs ${
+                      index === 0
+                        ? "border-yellow-600/50 bg-yellow-500/10"
+                        : "border-muted bg-muted/30"
+                    }`}
+                  >
+                    <div className="flex items-center gap-1 min-w-0 flex-1">
+                      <span className="text-xs">
+                        {index === 0 ? "👑" : `#${index + 1}`}
+                      </span>
+                      <span className="font-medium truncate">
+                        {player.displayName}
+                      </span>
+                    </div>
+                    <span className="font-bold tabular-nums shrink-0">
+                      {isSpeedrun ? `${player.score}s` : player.score}
+                    </span>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+
+            {/* Host Controls */}
+            <Card className="shadow-sm">
+              <CardContent className="p-1.5 space-y-1">
+                {isHost ? (
+                  <Button
+                    onClick={handleReturnToLobby}
+                    className="w-full shadow-sm"
+                    size="sm"
+                  >
+                    <RotateCcw className="mr-1.5 h-3 w-3" />
+                    Return to Lobby
+                  </Button>
+                ) : (
+                  <div className="w-full text-center p-1.5 rounded-lg bg-muted/50 border">
+                    <Loader2 className="h-3 w-3 animate-spin mx-auto mb-1 text-primary" />
+                    <p className="text-xs text-muted-foreground">
+                      Waiting for host...
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
     </div>
   );

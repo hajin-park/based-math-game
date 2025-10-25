@@ -575,37 +575,36 @@ export default function RoomLobby() {
       {showCountdown && room?.enableCountdown && (
         <Countdown onComplete={handleCountdownComplete} duration={3} />
       )}
-      <div className="flex flex-col h-screen">
-        {/* Top Header - Full Width */}
+      <div className="flex flex-col h-screen overflow-hidden">
+        {/* Row 1 - Header */}
         <div className="flex-none border-b-2 border-border bg-card paper-texture">
-          <div className="container mx-auto px-3 py-2">
-            <div className="flex items-center justify-between gap-4">
-              {/* Exit Button */}
+          <div className="px-2 py-1.5">
+            <div className="flex items-center justify-between gap-2">
+              {/* Exit Button - Left */}
               <Button
                 onClick={handleLeave}
                 variant="outline"
                 size="sm"
-                className="gap-1.5"
+                className="gap-1 shrink-0"
               >
                 <X className="h-3.5 w-3.5" />
-                Exit
+                <span className="hidden sm:inline">Exit</span>
               </Button>
 
               {/* Game Title - Center */}
-              <div className="flex-1 text-center">
-                <h1 className="text-lg md:text-xl font-serif font-bold">
+              <div className="flex-1 text-center min-w-0">
+                <h1 className="text-sm md:text-base font-serif font-bold truncate">
                   {room.gameMode.name}
                 </h1>
-                <p className="text-xs text-muted-foreground hidden sm:block">
-                  {room.gameMode.description}
-                </p>
               </div>
 
               {/* Room Code Display - Right */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 shrink-0">
                 <div className="text-right hidden sm:block">
-                  <p className="text-xs text-muted-foreground">Room Code</p>
-                  <p className="font-mono font-bold text-sm tracking-wider uppercase text-primary">
+                  <p className="text-xs text-muted-foreground leading-tight">
+                    Room Code
+                  </p>
+                  <p className="font-mono font-bold text-xs tracking-wider uppercase text-primary">
                     {roomId}
                   </p>
                 </div>
@@ -613,12 +612,13 @@ export default function RoomLobby() {
                   onClick={handleCopyRoomId}
                   variant="outline"
                   size="sm"
-                  className="h-8"
+                  className="h-7 w-7 p-0"
+                  title="Copy room code"
                 >
                   {copied ? (
-                    <Check className="h-3.5 w-3.5" />
+                    <Check className="h-3 w-3" />
                   ) : (
-                    <Copy className="h-3.5 w-3.5" />
+                    <Copy className="h-3 w-3" />
                   )}
                 </Button>
               </div>
@@ -626,28 +626,28 @@ export default function RoomLobby() {
           </div>
         </div>
 
-        {/* Three-Column Layout */}
+        {/* Row 2 - Main Content (Desktop: 3 columns, Mobile: 3 rows) */}
         <div className="flex-1 overflow-hidden min-h-0">
-          <div className="h-full grid grid-cols-1 lg:grid-cols-[280px_1fr_280px] gap-0">
-            {/* Left Sidebar - Player List (Desktop Only) */}
-            <div className="hidden lg:flex flex-col border-r-2 border-border bg-card paper-texture overflow-y-auto min-h-0">
-              <div className="flex-none p-3 border-b border-border">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <Users className="h-4 w-4 text-primary" />
-                    <h2 className="text-sm font-serif font-semibold">
+          <div className="h-full flex flex-col lg:grid lg:grid-cols-[minmax(200px,280px)_1fr_minmax(200px,280px)] gap-0">
+            {/* Desktop Left Column - User List */}
+            <div className="hidden lg:flex flex-col border-r-2 border-border bg-card paper-texture overflow-hidden">
+              <div className="flex-none p-2 border-b border-border">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <Users className="h-3.5 w-3.5 text-primary" />
+                    <h2 className="text-xs font-serif font-semibold">
                       Players ({playerCount}/{room.maxPlayers || 4})
                     </h2>
                   </div>
                   {nonHostPlayers.length > 0 && (
-                    <Badge variant="secondary" className="text-xs">
-                      {readyCount}/{nonHostPlayers.length} ready
+                    <Badge variant="secondary" className="text-xs h-4 px-1.5">
+                      {readyCount}/{nonHostPlayers.length}
                     </Badge>
                   )}
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-3 space-y-2">
+              <div className="flex-1 overflow-y-auto p-1.5 space-y-1">
                 {Object.values(room.players).map((player) => {
                   const isPlayerHost = player.uid === room.hostUid;
                   const wins = player.wins || 0;
@@ -660,51 +660,54 @@ export default function RoomLobby() {
                   return (
                     <div
                       key={player.uid}
-                      className={`flex items-center justify-between p-2 rounded-md border ${
+                      className={`flex items-center justify-between p-1.5 rounded-md border text-xs ${
                         isDisconnected
                           ? "bg-muted/30 border-muted"
                           : "bg-muted/50 border-muted"
                       }`}
                     >
                       <div className="flex flex-col min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1">
                           <span
-                            className={`font-medium text-sm truncate ${isDisconnected ? "text-muted-foreground" : ""}`}
+                            className={`font-medium truncate ${isDisconnected ? "text-muted-foreground" : ""}`}
                           >
                             {player.displayName}
                           </span>
                           {isPlayerHost && (
-                            <Crown className="h-3.5 w-3.5 text-yellow-600 shrink-0" />
+                            <Crown className="h-3 w-3 text-yellow-600 shrink-0" />
                           )}
                         </div>
                         {wins > 0 && (
-                          <span className="text-xs text-muted-foreground flex items-center gap-1">
-                            <Trophy className="h-3 w-3" />
-                            {wins} {wins === 1 ? "win" : "wins"}
+                          <span className="text-xs text-muted-foreground flex items-center gap-0.5">
+                            <Trophy className="h-2.5 w-2.5" />
+                            {wins}
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center gap-1 shrink-0">
+                      <div className="flex items-center gap-0.5 shrink-0">
                         {isDisconnected ? (
                           <Badge
                             variant="destructive"
-                            className="flex items-center gap-1 text-xs"
+                            className="h-5 px-1.5 text-xs"
                           >
-                            <WifiOff className="h-3 w-3" />
+                            <WifiOff className="h-2.5 w-2.5" />
                           </Badge>
                         ) : isPlayerHost ? (
                           <Badge
                             variant="secondary"
-                            className="flex items-center gap-1 text-xs"
+                            className="h-5 px-1.5 text-xs"
                           >
-                            <Crown className="h-3 w-3" />
+                            Host
                           </Badge>
                         ) : player.ready ? (
-                          <Badge className="bg-success flex items-center gap-1 text-xs">
-                            <Check className="h-3 w-3" />
+                          <Badge className="bg-success h-5 px-1.5 text-xs">
+                            <Check className="h-2.5 w-2.5" />
                           </Badge>
                         ) : (
-                          <Badge variant="outline" className="text-xs">
+                          <Badge
+                            variant="outline"
+                            className="h-5 px-1.5 text-xs"
+                          >
                             Not Ready
                           </Badge>
                         )}
@@ -714,10 +717,10 @@ export default function RoomLobby() {
                             onClick={() => setTransferHostUid(player.uid)}
                             variant="ghost"
                             size="sm"
-                            className="h-7 w-7 p-0 hover:bg-primary hover:text-primary-foreground"
+                            className="h-6 w-6 p-0 hover:bg-primary hover:text-primary-foreground"
                             title="Transfer host"
                           >
-                            <UserCog className="h-3.5 w-3.5" />
+                            <UserCog className="h-3 w-3" />
                           </Button>
                         )}
                         {/* Kick button */}
@@ -726,10 +729,10 @@ export default function RoomLobby() {
                             onClick={() => handleKickPlayer(player.uid)}
                             variant="ghost"
                             size="sm"
-                            className="h-7 w-7 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                            className="h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground"
                             title="Kick player"
                           >
-                            <X className="h-3.5 w-3.5" />
+                            <X className="h-3 w-3" />
                           </Button>
                         )}
                       </div>
@@ -739,34 +742,42 @@ export default function RoomLobby() {
               </div>
             </div>
 
-            {/* Center Main Area */}
-            <div className="flex flex-col h-full bg-background min-h-0">
-              <div className="flex-1 overflow-y-auto p-2 space-y-2 min-h-0">
+            {/* Desktop Middle Column - Main Game Window + User Controls */}
+            <div className="flex flex-col h-full bg-background overflow-hidden">
+              {/* Main Game Window - Row 1 */}
+              <div className="flex-1 overflow-y-auto p-1.5 min-h-0">
                 {/* WAITING STATUS - Lobby View */}
                 {room.status === "waiting" && (
-                  <>
-                    {/* Mobile Player List */}
-                    <div className="lg:hidden">
-                      <PaperCard variant="folded-sm" padding="none">
-                        <PaperCardHeader className="p-3 border-b border-border">
+                  <div className="space-y-1.5">
+                    {/* Mobile Row 3 - User List and Chat Side by Side */}
+                    <div className="lg:hidden grid grid-cols-2 gap-1.5">
+                      {/* Mobile User List */}
+                      <PaperCard
+                        variant="folded-sm"
+                        padding="none"
+                        className="h-fit"
+                      >
+                        <PaperCardHeader className="p-1.5 border-b border-border">
                           <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <Users className="h-4 w-4 text-primary" />
-                              <PaperCardTitle className="text-sm">
+                            <div className="flex items-center gap-1">
+                              <Users className="h-3 w-3 text-primary" />
+                              <PaperCardTitle className="text-xs">
                                 Players ({playerCount}/{room.maxPlayers || 4})
                               </PaperCardTitle>
                             </div>
                             {nonHostPlayers.length > 0 && (
-                              <Badge variant="secondary" className="text-xs">
-                                {readyCount}/{nonHostPlayers.length} ready
+                              <Badge
+                                variant="secondary"
+                                className="text-xs h-4 px-1"
+                              >
+                                {readyCount}/{nonHostPlayers.length}
                               </Badge>
                             )}
                           </div>
                         </PaperCardHeader>
-                        <PaperCardContent className="p-3 space-y-2 max-h-48 overflow-y-auto">
+                        <PaperCardContent className="p-1.5 space-y-1 max-h-28 overflow-y-auto">
                           {Object.values(room.players).map((player) => {
                             const isPlayerHost = player.uid === room.hostUid;
-                            const wins = player.wins || 0;
                             const isDisconnected = player.disconnected === true;
                             const isKicked = player.kicked === true;
 
@@ -775,84 +786,31 @@ export default function RoomLobby() {
                             return (
                               <div
                                 key={player.uid}
-                                className={`flex items-center justify-between p-2 rounded-md border ${
+                                className={`flex items-center justify-between p-1 rounded-md border text-xs ${
                                   isDisconnected
                                     ? "bg-muted/30 border-muted"
                                     : "bg-muted/50 border-muted"
                                 }`}
                               >
-                                <div className="flex flex-col min-w-0 flex-1">
-                                  <div className="flex items-center gap-1.5">
-                                    <span
-                                      className={`font-medium text-sm truncate ${isDisconnected ? "text-muted-foreground" : ""}`}
-                                    >
-                                      {player.displayName}
-                                    </span>
-                                    {isPlayerHost && (
-                                      <Crown className="h-3.5 w-3.5 text-yellow-600 shrink-0" />
-                                    )}
-                                  </div>
-                                  {wins > 0 && (
-                                    <span className="text-xs text-muted-foreground flex items-center gap-1">
-                                      <Trophy className="h-3 w-3" />
-                                      {wins} {wins === 1 ? "win" : "wins"}
-                                    </span>
+                                <div className="flex items-center gap-1 min-w-0 flex-1">
+                                  <span
+                                    className={`font-medium truncate ${isDisconnected ? "text-muted-foreground" : ""}`}
+                                  >
+                                    {player.displayName}
+                                  </span>
+                                  {isPlayerHost && (
+                                    <Crown className="h-2.5 w-2.5 text-yellow-600 shrink-0" />
                                   )}
                                 </div>
-                                <div className="flex items-center gap-1 shrink-0">
+                                <div className="flex items-center gap-0.5 shrink-0">
                                   {isDisconnected ? (
-                                    <Badge
-                                      variant="destructive"
-                                      className="flex items-center gap-1 text-xs"
-                                    >
-                                      <WifiOff className="h-3 w-3" />
-                                    </Badge>
-                                  ) : isPlayerHost ? (
-                                    <Badge
-                                      variant="secondary"
-                                      className="flex items-center gap-1 text-xs"
-                                    >
-                                      <Crown className="h-3 w-3" />
-                                    </Badge>
+                                    <WifiOff className="h-2.5 w-2.5 text-destructive" />
                                   ) : player.ready ? (
-                                    <Badge className="bg-success flex items-center gap-1 text-xs">
-                                      <Check className="h-3 w-3" />
-                                    </Badge>
+                                    <Check className="h-2.5 w-2.5 text-success" />
                                   ) : (
-                                    <Badge
-                                      variant="outline"
-                                      className="text-xs"
-                                    >
-                                      Not Ready
-                                    </Badge>
-                                  )}
-                                  {isHost &&
-                                    !isPlayerHost &&
-                                    !isDisconnected && (
-                                      <Button
-                                        onClick={() =>
-                                          setTransferHostUid(player.uid)
-                                        }
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-7 w-7 p-0 hover:bg-primary hover:text-primary-foreground"
-                                        title="Transfer host"
-                                      >
-                                        <UserCog className="h-3.5 w-3.5" />
-                                      </Button>
-                                    )}
-                                  {isHost && !isPlayerHost && (
-                                    <Button
-                                      onClick={() =>
-                                        handleKickPlayer(player.uid)
-                                      }
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-7 w-7 p-0 hover:bg-destructive hover:text-destructive-foreground"
-                                      title="Kick player"
-                                    >
-                                      <X className="h-3.5 w-3.5" />
-                                    </Button>
+                                    <span className="text-xs text-muted-foreground">
+                                      -
+                                    </span>
                                   )}
                                 </div>
                               </div>
@@ -860,62 +818,69 @@ export default function RoomLobby() {
                           })}
                         </PaperCardContent>
                       </PaperCard>
+
+                      {/* Mobile Chat */}
+                      {roomId && (
+                        <div className="h-28">
+                          <ChatBox roomId={roomId} compact />
+                        </div>
+                      )}
                     </div>
 
                     {/* Host View: Game Selection */}
                     {isHost && !showPlaygroundSettings && (
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2 px-1">
-                          <Settings className="h-4 w-4 text-primary" />
-                          <h3 className="text-sm font-serif font-semibold">
+                      <div className="hidden lg:block">
+                        <div className="flex items-center gap-1.5 px-1 mb-1">
+                          <Settings className="h-3.5 w-3.5 text-primary" />
+                          <h3 className="text-xs font-serif font-semibold">
                             Select Game Mode
                           </h3>
                         </div>
-                        <div className="space-y-1.5 max-h-[400px] overflow-y-auto pr-1">
+                        <div className="space-y-0.5 max-h-[calc(100vh-400px)] overflow-y-auto pr-1">
                           {OFFICIAL_GAME_MODES.map((mode) => (
                             <div
                               key={mode.id}
-                              className={`p-2 rounded-md border-2 cursor-pointer transition-all duration-200 ${
+                              className={`p-1.5 rounded-md border cursor-pointer transition-all duration-150 ${
                                 room.gameMode.id === mode.id
-                                  ? "border-primary bg-primary/10 shadow-sm"
-                                  : "border-border bg-card hover:border-primary/50 hover:bg-muted/50"
+                                  ? "border-primary bg-primary/10"
+                                  : "border-border bg-card hover:border-primary/50"
                               }`}
                               onClick={() =>
                                 room.gameMode.id !== mode.id &&
                                 handleChangeGameMode(mode)
                               }
                             >
-                              <div className="flex items-center justify-between gap-2">
+                              <div className="flex items-center justify-between gap-1.5">
                                 <span className="text-xs font-medium truncate">
                                   {mode.name}
                                 </span>
                                 <Badge
-                                  className={`${getDifficultyColor(mode.difficulty)} text-xs shrink-0`}
+                                  className={`${getDifficultyColor(mode.difficulty)} text-xs h-4 px-1 shrink-0`}
                                   variant="secondary"
                                 >
-                                  {mode.difficulty}
+                                  {mode.difficulty.charAt(0)}
                                 </Badge>
                               </div>
                             </div>
                           ))}
                           {/* Custom Playground Option */}
                           <div
-                            className={`p-2 rounded-md border-2 cursor-pointer transition-all duration-200 ${
+                            className={`p-1.5 rounded-md border cursor-pointer transition-all duration-150 ${
                               room.gameMode.id === "custom-playground"
-                                ? "border-primary bg-primary/10 shadow-sm"
-                                : "border-border bg-card hover:border-primary/50 hover:bg-muted/50"
+                                ? "border-primary bg-primary/10"
+                                : "border-border bg-card hover:border-primary/50"
                             }`}
                             onClick={() => setShowPlaygroundSettings(true)}
                           >
-                            <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center justify-between gap-1.5">
                               <span className="text-xs font-medium">
-                                Custom Playground
+                                Custom
                               </span>
                               <Badge
-                                className="bg-purple-500 text-white text-xs shrink-0"
+                                className="bg-purple-500 text-white text-xs h-4 px-1 shrink-0"
                                 variant="secondary"
                               >
-                                Custom
+                                C
                               </Badge>
                             </div>
                           </div>
@@ -925,11 +890,11 @@ export default function RoomLobby() {
 
                     {/* Custom Playground Settings */}
                     {isHost && showPlaygroundSettings && (
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between px-1">
-                          <div className="flex items-center gap-2">
-                            <Settings className="h-4 w-4 text-primary" />
-                            <h3 className="text-sm font-serif font-semibold">
+                      <div className="hidden lg:block">
+                        <div className="flex items-center justify-between px-1 mb-1">
+                          <div className="flex items-center gap-1.5">
+                            <Settings className="h-3.5 w-3.5 text-primary" />
+                            <h3 className="text-xs font-serif font-semibold">
                               Custom Playground
                             </h3>
                           </div>
@@ -937,12 +902,12 @@ export default function RoomLobby() {
                             variant="ghost"
                             size="sm"
                             onClick={() => setShowPlaygroundSettings(false)}
-                            className="h-7 text-xs"
+                            className="h-6 text-xs px-2"
                           >
                             Back
                           </Button>
                         </div>
-                        <div className="max-h-[400px] overflow-y-auto pr-1">
+                        <div className="max-h-[calc(100vh-400px)] overflow-y-auto pr-1">
                           <PlaygroundSettings
                             onStartQuiz={handleCustomPlayground}
                             buttonText="Update Settings"
@@ -955,13 +920,17 @@ export default function RoomLobby() {
 
                     {/* Non-Host View: Waiting Status */}
                     {!isHost && (
-                      <PaperCard variant="folded-sm" padding="default">
-                        <div className="text-center space-y-2">
-                          <Users className="h-8 w-8 mx-auto text-muted-foreground" />
-                          <p className="text-sm text-muted-foreground">
+                      <PaperCard
+                        variant="folded-sm"
+                        padding="default"
+                        className="hidden lg:block"
+                      >
+                        <div className="text-center space-y-1.5">
+                          <Users className="h-6 w-6 mx-auto text-muted-foreground" />
+                          <p className="text-xs text-muted-foreground">
                             {allReady
-                              ? "Waiting for host to start the game..."
-                              : "Waiting for players to get ready..."}
+                              ? "Waiting for host to start..."
+                              : "Waiting for players..."}
                           </p>
                         </div>
                       </PaperCard>
@@ -970,74 +939,51 @@ export default function RoomLobby() {
                     {/* Mobile Room Summary */}
                     <div className="lg:hidden">
                       <PaperCard variant="folded-sm" padding="none">
-                        <PaperCardHeader className="p-3 border-b border-border">
-                          <div className="flex items-center gap-2">
-                            <Trophy className="h-4 w-4 text-primary" />
-                            <PaperCardTitle className="text-sm">
-                              Room Summary
+                        <PaperCardHeader className="p-1.5 border-b border-border">
+                          <div className="flex items-center gap-1">
+                            <Trophy className="h-3 w-3 text-primary" />
+                            <PaperCardTitle className="text-xs">
+                              Room Info
                             </PaperCardTitle>
                           </div>
                         </PaperCardHeader>
-                        <PaperCardContent className="p-3 space-y-1.5">
-                          <div className="flex items-center justify-between p-1.5 rounded-md bg-muted/50">
-                            <span className="text-xs text-muted-foreground">
-                              Mode
-                            </span>
-                            <Badge variant="secondary" className="text-xs">
-                              {room.gameMode.difficulty}
+                        <PaperCardContent className="p-1.5 space-y-0.5">
+                          <div className="flex items-center justify-between p-1 rounded-md bg-muted/50 text-xs">
+                            <span className="text-muted-foreground">Mode</span>
+                            <Badge
+                              variant="secondary"
+                              className="text-xs h-4 px-1"
+                            >
+                              {room.gameMode.difficulty.charAt(0)}
                             </Badge>
                           </div>
-                          <div className="flex items-center justify-between p-1.5 rounded-md bg-muted/50">
-                            <span className="text-xs text-muted-foreground">
+                          <div className="flex items-center justify-between p-1 rounded-md bg-muted/50 text-xs">
+                            <span className="text-muted-foreground">
                               {room.gameMode.targetQuestions
                                 ? "Target"
-                                : "Duration"}
+                                : "Time"}
                             </span>
-                            <span className="text-xs font-semibold">
+                            <span className="font-semibold">
                               {room.gameMode.targetQuestions
                                 ? `${room.gameMode.targetQuestions}q`
                                 : `${room.gameMode.duration}s`}
                             </span>
                           </div>
-                          <div className="flex items-center justify-between p-1.5 rounded-md bg-muted/50">
-                            <span className="text-xs text-muted-foreground">
-                              Visual Aids
-                            </span>
+                          <div className="flex items-center justify-between p-1 rounded-md bg-muted/50 text-xs">
+                            <span className="text-muted-foreground">Aids</span>
                             <Badge
                               variant={
                                 room.allowVisualAids ? "default" : "outline"
                               }
-                              className="text-xs"
+                              className="text-xs h-4 px-1"
                             >
                               {room.allowVisualAids ? "On" : "Off"}
-                            </Badge>
-                          </div>
-                          <div className="flex items-center justify-between p-1.5 rounded-md bg-muted/50">
-                            <span className="text-xs text-muted-foreground">
-                              Countdown
-                            </span>
-                            <Badge
-                              variant={
-                                room.enableCountdown ? "default" : "outline"
-                              }
-                              className="text-xs"
-                            >
-                              {room.enableCountdown ? "On" : "Off"}
                             </Badge>
                           </div>
                         </PaperCardContent>
                       </PaperCard>
                     </div>
-
-                    {/* Mobile Chat */}
-                    <div className="lg:hidden">
-                      {roomId && (
-                        <div className="h-80">
-                          <ChatBox roomId={roomId} className="h-full" />
-                        </div>
-                      )}
-                    </div>
-                  </>
+                  </div>
                 )}
 
                 {/* PLAYING STATUS - Game View */}
@@ -1195,7 +1141,7 @@ export default function RoomLobby() {
               <div className="flex-none border-t-2 border-border bg-card">
                 {/* Host Controls - Only for Host and only in waiting status */}
                 {isHost && room.status === "waiting" && (
-                  <div className="p-2 border-b border-border space-y-1.5">
+                  <div className="p-1.5 border-b border-border space-y-1">
                     <div className="flex items-center gap-2">
                       <Shield className="h-3 w-3 text-primary" />
                       <span className="text-xs font-semibold">
@@ -1204,7 +1150,7 @@ export default function RoomLobby() {
                     </div>
                     <div className="grid grid-cols-2 gap-1.5">
                       {/* Visual Aids Toggle */}
-                      <div className="flex items-center justify-between gap-2 p-2 rounded-md bg-muted/30 border">
+                      <div className="flex items-center justify-between gap-2 p-1.5 rounded-md bg-muted/30 border">
                         <div className="flex items-center gap-1.5">
                           <Eye className="h-3 w-3 text-muted-foreground" />
                           <span className="text-xs">Visual Aids</span>
@@ -1230,7 +1176,7 @@ export default function RoomLobby() {
                         />
                       </div>
                       {/* Countdown Toggle */}
-                      <div className="flex items-center justify-between gap-2 p-2 rounded-md bg-muted/30 border">
+                      <div className="flex items-center justify-between gap-2 p-1.5 rounded-md bg-muted/30 border">
                         <div className="flex items-center gap-1.5">
                           <Timer className="h-3 w-3 text-muted-foreground" />
                           <span className="text-xs">Countdown</span>
@@ -1260,7 +1206,7 @@ export default function RoomLobby() {
                 )}
 
                 {/* Action Buttons */}
-                <div className="p-2 space-y-1.5">
+                <div className="p-1.5 space-y-1">
                   {/* WAITING STATUS - Normal lobby buttons */}
                   {room.status === "waiting" && (
                     <>
@@ -1375,68 +1321,49 @@ export default function RoomLobby() {
               </div>
             </div>
 
-            {/* Right Sidebar - Room Summary/Live Scores + Chat */}
-            <div className="hidden lg:flex flex-col border-l-2 border-border bg-card paper-texture overflow-hidden min-h-0">
+            {/* Desktop Right Column - Room Stats + Chat */}
+            <div className="hidden lg:flex flex-col border-l-2 border-border bg-card paper-texture overflow-hidden">
               {/* Top Section - Room Summary or Live Scores */}
-              <div className="flex-none p-3 border-b border-border">
+              <div className="flex-none p-1.5 border-b border-border max-h-[40vh] overflow-y-auto">
                 {/* WAITING/FINISHED STATUS - Room Summary */}
                 {(room.status === "waiting" || room.status === "finished") && (
                   <>
-                    <div className="flex items-center gap-2 mb-3">
-                      <Trophy className="h-4 w-4 text-primary" />
-                      <h2 className="text-sm font-serif font-semibold">
-                        Room Summary
+                    <div className="flex items-center gap-1 mb-1">
+                      <Trophy className="h-3 w-3 text-primary" />
+                      <h2 className="text-xs font-serif font-semibold">
+                        Room Info
                       </h2>
                     </div>
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between p-1.5 rounded-md bg-muted/50">
-                        <span className="text-xs text-muted-foreground">
-                          Mode
-                        </span>
-                        <Badge variant="secondary" className="text-xs">
-                          {room.gameMode.difficulty}
+                    <div className="space-y-0.5">
+                      <div className="flex items-center justify-between p-1 rounded-md bg-muted/50 text-xs">
+                        <span className="text-muted-foreground">Mode</span>
+                        <Badge variant="secondary" className="text-xs h-4 px-1">
+                          {room.gameMode.difficulty.charAt(0)}
                         </Badge>
                       </div>
-                      <div className="flex items-center justify-between p-1.5 rounded-md bg-muted/50">
-                        <span className="text-xs text-muted-foreground">
-                          {room.gameMode.targetQuestions
-                            ? "Target"
-                            : "Duration"}
+                      <div className="flex items-center justify-between p-1 rounded-md bg-muted/50 text-xs">
+                        <span className="text-muted-foreground">
+                          {room.gameMode.targetQuestions ? "Target" : "Time"}
                         </span>
-                        <span className="text-xs font-semibold">
+                        <span className="font-semibold">
                           {room.gameMode.targetQuestions
                             ? `${room.gameMode.targetQuestions}q`
                             : `${room.gameMode.duration}s`}
                         </span>
                       </div>
-                      <div className="flex items-center justify-between p-1.5 rounded-md bg-muted/50">
-                        <span className="text-xs text-muted-foreground">
-                          Players
-                        </span>
-                        <span className="text-xs font-semibold">
+                      <div className="flex items-center justify-between p-1 rounded-md bg-muted/50 text-xs">
+                        <span className="text-muted-foreground">Players</span>
+                        <span className="font-semibold">
                           {playerCount}/{room.maxPlayers || 4}
                         </span>
                       </div>
-                      <div className="flex items-center justify-between p-1.5 rounded-md bg-muted/50">
-                        <span className="text-xs text-muted-foreground">
-                          Visual Aids
-                        </span>
+                      <div className="flex items-center justify-between p-1 rounded-md bg-muted/50 text-xs">
+                        <span className="text-muted-foreground">Aids</span>
                         <Badge
                           variant={room.allowVisualAids ? "default" : "outline"}
-                          className="text-xs"
+                          className="text-xs h-4 px-1"
                         >
                           {room.allowVisualAids ? "On" : "Off"}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center justify-between p-1.5 rounded-md bg-muted/50">
-                        <span className="text-xs text-muted-foreground">
-                          Countdown
-                        </span>
-                        <Badge
-                          variant={room.enableCountdown ? "default" : "outline"}
-                          className="text-xs"
-                        >
-                          {room.enableCountdown ? "On" : "Off"}
                         </Badge>
                       </div>
                     </div>
@@ -1446,13 +1373,13 @@ export default function RoomLobby() {
                 {/* PLAYING STATUS - Live Scores */}
                 {room.status === "playing" && (
                   <>
-                    <div className="flex items-center gap-2 mb-3">
-                      <Trophy className="h-4 w-4 text-primary" />
-                      <h2 className="text-sm font-serif font-semibold">
+                    <div className="flex items-center gap-1 mb-1">
+                      <Trophy className="h-3 w-3 text-primary" />
+                      <h2 className="text-xs font-serif font-semibold">
                         Live Scores
                       </h2>
                     </div>
-                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                    <div className="space-y-0.5">
                       {Object.values(room.players)
                         .sort((a, b) => {
                           if (isSpeedrun) {
@@ -1484,15 +1411,15 @@ export default function RoomLobby() {
                           return (
                             <div
                               key={player.uid}
-                              className={`flex items-center justify-between p-2 rounded-lg transition-all ${
+                              className={`flex items-center justify-between p-1 rounded-md text-xs ${
                                 isCurrentUser
-                                  ? "bg-primary/10 border-2 border-primary ring-2 ring-primary/20"
+                                  ? "bg-primary/10 border border-primary"
                                   : "bg-muted/50 border border-transparent"
                               }`}
                             >
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-1 min-w-0 flex-1">
                                 <span
-                                  className={`font-bold text-sm ${
+                                  className={`font-bold ${
                                     isLeader
                                       ? "text-yellow-600 dark:text-yellow-400"
                                       : "text-muted-foreground"
@@ -1503,13 +1430,13 @@ export default function RoomLobby() {
                                     : `#${index + 1}`}
                                 </span>
                                 <span
-                                  className={`${isCurrentUser ? "font-bold" : ""} truncate max-w-[100px] text-xs`}
+                                  className={`${isCurrentUser ? "font-bold" : ""} truncate`}
                                 >
                                   {player.displayName}
                                   {isCurrentUser && " (You)"}
                                 </span>
                               </div>
-                              <span className="font-bold text-lg tabular-nums">
+                              <span className="font-bold tabular-nums shrink-0">
                                 {displayScore}
                               </span>
                             </div>
@@ -1521,10 +1448,10 @@ export default function RoomLobby() {
               </div>
 
               {/* Chat - Bottom */}
-              <div className="flex-1 overflow-hidden flex flex-col">
+              <div className="flex-1 overflow-hidden flex flex-col min-h-0">
                 {roomId && (
                   <div className="flex-1 overflow-hidden">
-                    <ChatBox roomId={roomId} className="h-full" />
+                    <ChatBox roomId={roomId} compact />
                   </div>
                 )}
               </div>

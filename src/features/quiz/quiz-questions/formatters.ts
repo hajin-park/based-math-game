@@ -142,3 +142,25 @@ function getBaseValue(base: string): number | null {
       return null;
   }
 }
+
+/**
+ * Get the subscript notation for a base
+ * @param base - The base system (Binary, Octal, Decimal, Hexadecimal)
+ * @returns integer subscript string for the base
+ */
+export function getBaseSubscript(base: string): string {
+  const baseLower = base.toLowerCase();
+
+  switch (baseLower) {
+    case "binary":
+      return "2";
+    case "octal":
+      return "8";
+    case "decimal":
+      return "10";
+    case "hexadecimal":
+      return "16";
+    default:
+      return "";
+  }
+}

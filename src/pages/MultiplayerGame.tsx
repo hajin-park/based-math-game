@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useRoom, Room } from "@/hooks/useRoom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
@@ -9,9 +11,9 @@ import { isSpeedrunMode } from "@/types/gameMode";
 import Countdown from "@/components/Countdown";
 import QuizPrompt from "@/features/quiz/quiz-questions/Quiz-Prompt.component";
 import QuizStats from "@/features/quiz/quiz-questions/Quiz-Stats.component";
-import ExitButton from "@/components/ExitButton";
 import KickedModal from "@/components/KickedModal";
 import ChatBox from "@/components/ChatBox";
+import { X, Copy, Check, Trophy, Users, Crown, WifiOff } from "lucide-react";
 
 export default function MultiplayerGame() {
   const { roomId } = useParams<{ roomId: string }>();
@@ -35,6 +37,7 @@ export default function MultiplayerGame() {
     [string, string, number, number] | null
   >(null);
   const [showKickedModal, setShowKickedModal] = useState(false);
+  const [copied, setCopied] = useState(false);
   const scoreRef = useRef(0);
   const questionsRef = useRef<[string, string, number, number][]>([]);
   const hasNavigatedRef = useRef(false);
@@ -325,99 +328,220 @@ export default function MultiplayerGame() {
     setTimerShouldStart(true);
   };
 
+  const handleCopyRoomId = () => {
+    if (roomId) {
+      navigator.clipboard.writeText(roomId);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  // Count active players
+  const playerCount = room
+    ? Object.values(room.players).filter((p) => !p.kicked).length
+    : 0;
+
   return (
     <>
       <KickedModal open={showKickedModal} onClose={handleKickedModalClose} />
-      <ExitButton
-        onExit={handleExit}
-        message="Exit game and return to multiplayer menu? You will leave the room."
-      />
       {showCountdown && (
         <Countdown onComplete={handleCountdownComplete} duration={3} />
       )}
-      <div className="container mx-auto px-4 py-8 min-h-screen">
-        <div className="grid gap-6 lg:grid-cols-3">
-          {/* Main game area */}
-          <div className="lg:col-span-2">
-            <Card className="shadow-lg">
-              <QuizStats
-                expiryTimestamp={expiryTimestamp}
-                setRunning={handleTimerExpire}
-                score={score}
-                shouldStartTimer={timerShouldStart}
-                isSpeedrun={isSpeedrun}
-                targetQuestions={room?.gameMode.targetQuestions}
-                gameStartTime={room?.startedAt}
-              />
-              <CardContent className="p-0">
-                <QuizPrompt
-                  score={score}
-                  setScore={setScore}
-                  setting={randomSetting}
-                  seed={questionSeed}
-                  gameSettings={gameSettings}
-                  allowVisualAids={room?.allowVisualAids ?? true}
-                />
-              </CardContent>
-            </Card>
-          </div>
+      <div className="flex flex-col h-screen overflow-hidden">
+        {/* Row 1 - Header */}
+        <div className="flex-none border-b-2 border-border bg-card paper-texture">
+          <div className="px-2 py-1.5">
+            <div className="flex items-center justify-between gap-2">
+              {/* Exit Button - Left */}
+              <Button
+                onClick={handleExit}
+                variant="outline"
+                size="sm"
+                className="gap-1 shrink-0"
+              >
+                <X className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Exit</span>
+              </Button>
 
-          {/* Leaderboard */}
-          <div className="lg:sticky lg:top-8 lg:self-start space-y-4">
-            <Card className="shadow-lg">
-              <CardHeader className="border-b">
-                <CardTitle className="flex items-center gap-2">
-                  <span className="text-xl">🏆</span>
-                  Live Scores
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-4">
-                <div className="space-y-2">
+              {/* Game Title - Center */}
+              <div className="flex-1 text-center min-w-0">
+                <h1 className="text-sm md:text-base font-serif font-bold truncate">
+                  {room.gameMode.name}
+                </h1>
+              </div>
+
+              {/* Room Code Display - Right */}
+              <div className="flex items-center gap-1 shrink-0">
+                <div className="text-right hidden sm:block">
+                  <p className="text-xs text-muted-foreground leading-tight">
+                    Room Code
+                  </p>
+                  <p className="font-mono font-bold text-xs tracking-wider uppercase text-primary">
+                    {roomId}
+                  </p>
+                </div>
+                <Button
+                  onClick={handleCopyRoomId}
+                  variant="outline"
+                  size="sm"
+                  className="h-7 w-7 p-0"
+                  title="Copy room code"
+                >
+                  {copied ? (
+                    <Check className="h-3 w-3" />
+                  ) : (
+                    <Copy className="h-3 w-3" />
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Row 2 - Main Content (Desktop: 3 columns, Mobile: 3 rows) */}
+        <div className="flex-1 overflow-hidden min-h-0">
+          <div className="h-full flex flex-col lg:grid lg:grid-cols-[minmax(200px,280px)_1fr_minmax(200px,280px)] gap-0">
+            {/* Desktop Left Column - User List */}
+            <div className="hidden lg:flex flex-col border-r-2 border-border bg-card paper-texture overflow-hidden">
+              <div className="flex-none p-1.5 border-b border-border">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <Users className="h-3.5 w-3.5 text-primary" />
+                    <h2 className="text-xs font-serif font-semibold">
+                      Players ({playerCount}/{room.maxPlayers || 4})
+                    </h2>
+                  </div>
+                </div>
+              </div>
+              <div className="flex-1 overflow-y-auto p-1.5 space-y-1">
+                {Object.values(room.players).map((player) => {
+                  const isPlayerHost = player.uid === room.hostUid;
+                  const wins = player.wins || 0;
+                  const isDisconnected = player.disconnected === true;
+                  const isKicked = player.kicked === true;
+
+                  if (isKicked) return null;
+
+                  return (
+                    <div
+                      key={player.uid}
+                      className={`flex items-center justify-between p-1.5 rounded-md border text-xs ${
+                        isDisconnected
+                          ? "bg-muted/30 border-muted"
+                          : "bg-muted/50 border-muted"
+                      }`}
+                    >
+                      <div className="flex flex-col min-w-0 flex-1">
+                        <div className="flex items-center gap-1">
+                          <span
+                            className={`font-medium truncate ${isDisconnected ? "text-muted-foreground" : ""}`}
+                          >
+                            {player.displayName}
+                          </span>
+                          {isPlayerHost && (
+                            <Crown className="h-3 w-3 text-yellow-600 shrink-0" />
+                          )}
+                        </div>
+                        {wins > 0 && (
+                          <span className="text-xs text-muted-foreground flex items-center gap-0.5">
+                            <Trophy className="h-2.5 w-2.5" />
+                            {wins}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-0.5 shrink-0">
+                        {isDisconnected && (
+                          <Badge
+                            variant="destructive"
+                            className="h-5 px-1.5 text-xs"
+                          >
+                            <WifiOff className="h-2.5 w-2.5" />
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Desktop Middle Column - Main Game Window */}
+            <div className="flex flex-col h-full bg-background overflow-hidden">
+              <div className="flex-1 overflow-y-auto p-1.5 min-h-0">
+                <Card className="shadow-lg h-full flex flex-col">
+                  <QuizStats
+                    expiryTimestamp={expiryTimestamp}
+                    setRunning={handleTimerExpire}
+                    score={score}
+                    shouldStartTimer={timerShouldStart}
+                    isSpeedrun={isSpeedrun}
+                    targetQuestions={room?.gameMode.targetQuestions}
+                    gameStartTime={room?.startedAt}
+                  />
+                  <CardContent className="p-0 flex-1">
+                    <QuizPrompt
+                      score={score}
+                      setScore={setScore}
+                      setting={randomSetting}
+                      seed={questionSeed}
+                      gameSettings={gameSettings}
+                      allowVisualAids={room?.allowVisualAids ?? true}
+                    />
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+
+            {/* Desktop Right Column - Live Scores + Chat */}
+            <div className="hidden lg:flex flex-col border-l-2 border-border bg-card paper-texture overflow-hidden">
+              {/* Live Scores - Top */}
+              <div className="flex-none p-1.5 border-b border-border max-h-[40vh] overflow-y-auto">
+                <div className="flex items-center gap-1 mb-1">
+                  <Trophy className="h-3 w-3 text-primary" />
+                  <h2 className="text-xs font-serif font-semibold">
+                    Live Scores
+                  </h2>
+                </div>
+                <div className="space-y-0.5">
                   {Object.values(room.players)
                     .sort((a, b) => {
-                      // For speedrun: sort by finished status first, then by score (time)
                       if (isSpeedrun) {
                         if (a.finished && !b.finished) return -1;
                         if (!a.finished && b.finished) return 1;
-                        if (a.finished && b.finished) return a.score - b.score; // Lower time is better
-                        return b.score - a.score; // More questions answered is better
+                        if (a.finished && b.finished) return a.score - b.score;
+                        return b.score - a.score;
                       }
-                      // For timed: sort by score descending
                       return b.score - a.score;
                     })
                     .map((player, index) => {
                       const isCurrentUser = player.uid === user?.uid;
                       const isLeader = index === 0 && player.score > 0;
 
-                      // Display logic for speedrun vs timed modes
                       let displayScore: string;
                       if (isSpeedrun) {
                         if (player.finished) {
-                          // Show finish time
                           displayScore = `${player.score}s`;
                         } else {
-                          // Show progress: #answered/#target
                           const targetQuestions =
                             room.gameMode.targetQuestions || 0;
                           displayScore = `${player.score}/${targetQuestions}`;
                         }
                       } else {
-                        // Timed mode: just show score
                         displayScore = `${player.score}`;
                       }
 
                       return (
                         <div
                           key={player.uid}
-                          className={`flex items-center justify-between p-3 rounded-lg transition-all ${
+                          className={`flex items-center justify-between p-1 rounded-md text-xs ${
                             isCurrentUser
-                              ? "bg-primary/10 border-2 border-primary ring-2 ring-primary/20"
+                              ? "bg-primary/10 border border-primary"
                               : "bg-muted/50 border border-transparent"
                           }`}
                         >
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-1 min-w-0 flex-1">
                             <span
-                              className={`font-bold text-lg ${
+                              className={`font-bold ${
                                 isLeader
                                   ? "text-yellow-600 dark:text-yellow-400"
                                   : "text-muted-foreground"
@@ -428,24 +552,141 @@ export default function MultiplayerGame() {
                                 : `#${index + 1}`}
                             </span>
                             <span
-                              className={`${isCurrentUser ? "font-bold" : ""} truncate max-w-[120px]`}
+                              className={`${isCurrentUser ? "font-bold" : ""} truncate`}
                             >
                               {player.displayName}
                               {isCurrentUser && " (You)"}
                             </span>
                           </div>
-                          <span className="font-bold text-xl tabular-nums">
+                          <span className="font-bold tabular-nums shrink-0">
                             {displayScore}
                           </span>
                         </div>
                       );
                     })}
                 </div>
-              </CardContent>
-            </Card>
+              </div>
 
-            {/* Chat Box */}
-            {roomId && <ChatBox roomId={roomId} />}
+              {/* Chat - Bottom */}
+              <div className="flex-1 overflow-hidden flex flex-col min-h-0">
+                {roomId && (
+                  <div className="flex-1 overflow-hidden">
+                    <ChatBox roomId={roomId} compact />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Mobile Row 3 - User List and Live Scores Side by Side */}
+            <div className="lg:hidden grid grid-cols-2 gap-1.5 p-1.5">
+              {/* Mobile User List */}
+              <Card className="shadow-sm">
+                <CardHeader className="p-1.5 border-b">
+                  <CardTitle className="text-xs flex items-center gap-1">
+                    <Users className="h-3 w-3" />
+                    Players
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-1.5 space-y-0.5 max-h-32 overflow-y-auto">
+                  {Object.values(room.players).map((player) => {
+                    const isPlayerHost = player.uid === room.hostUid;
+                    const isDisconnected = player.disconnected === true;
+                    const isKicked = player.kicked === true;
+
+                    if (isKicked) return null;
+
+                    return (
+                      <div
+                        key={player.uid}
+                        className="flex items-center justify-between p-1 rounded-md border text-xs bg-muted/50"
+                      >
+                        <div className="flex items-center gap-1 min-w-0 flex-1">
+                          <span
+                            className={`font-medium truncate ${isDisconnected ? "text-muted-foreground" : ""}`}
+                          >
+                            {player.displayName}
+                          </span>
+                          {isPlayerHost && (
+                            <Crown className="h-2.5 w-2.5 text-yellow-600 shrink-0" />
+                          )}
+                        </div>
+                        {isDisconnected && (
+                          <WifiOff className="h-2.5 w-2.5 text-destructive" />
+                        )}
+                      </div>
+                    );
+                  })}
+                </CardContent>
+              </Card>
+
+              {/* Mobile Live Scores */}
+              <Card className="shadow-sm">
+                <CardHeader className="p-1.5 border-b">
+                  <CardTitle className="text-xs flex items-center gap-1">
+                    <Trophy className="h-3 w-3" />
+                    Scores
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-1.5 space-y-0.5 max-h-32 overflow-y-auto">
+                  {Object.values(room.players)
+                    .sort((a, b) => {
+                      if (isSpeedrun) {
+                        if (a.finished && !b.finished) return -1;
+                        if (!a.finished && b.finished) return 1;
+                        if (a.finished && b.finished) return a.score - b.score;
+                        return b.score - a.score;
+                      }
+                      return b.score - a.score;
+                    })
+                    .map((player, index) => {
+                      const isCurrentUser = player.uid === user?.uid;
+                      const isLeader = index === 0 && player.score > 0;
+
+                      let displayScore: string;
+                      if (isSpeedrun) {
+                        if (player.finished) {
+                          displayScore = `${player.score}s`;
+                        } else {
+                          const targetQuestions =
+                            room.gameMode.targetQuestions || 0;
+                          displayScore = `${player.score}/${targetQuestions}`;
+                        }
+                      } else {
+                        displayScore = `${player.score}`;
+                      }
+
+                      return (
+                        <div
+                          key={player.uid}
+                          className={`flex items-center justify-between p-1 rounded-md text-xs ${
+                            isCurrentUser
+                              ? "bg-primary/10 border border-primary"
+                              : "bg-muted/50"
+                          }`}
+                        >
+                          <div className="flex items-center gap-0.5 min-w-0 flex-1">
+                            <span
+                              className={`text-xs ${isLeader ? "text-yellow-600" : "text-muted-foreground"}`}
+                            >
+                              {index === 0 && player.score > 0
+                                ? "👑"
+                                : `#${index + 1}`}
+                            </span>
+                            <span
+                              className={`${isCurrentUser ? "font-bold" : ""} truncate text-xs`}
+                            >
+                              {player.displayName}
+                            </span>
+                          </div>
+                          <span className="font-bold tabular-nums text-xs shrink-0">
+                            {displayScore}
+                          </span>
+                        </div>
+                      );
+                    })}
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       </div>
