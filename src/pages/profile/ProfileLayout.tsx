@@ -1,13 +1,21 @@
-import { Outlet, NavLink, useNavigate } from "react-router-dom";
+import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { User, Settings, LogOut, Gamepad2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { RuledSeparator } from "@/components/ui/academic";
 import { useEffect } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function ProfileLayout() {
   const { isGuest, signOut } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Redirect guests to signup
   useEffect(() => {
@@ -26,15 +34,46 @@ export default function ProfileLayout() {
   }
 
   const navItems = [
-    { name: "Overview", href: "/profile", icon: User, end: true },
-    { name: "Settings", href: "/profile/settings", icon: Settings },
-    { name: "Game Settings", href: "/profile/game-settings", icon: Gamepad2 },
+    {
+      name: "Overview",
+      href: "/profile",
+      icon: User,
+      end: true,
+      value: "overview",
+    },
+    {
+      name: "Settings",
+      href: "/profile/settings",
+      icon: Settings,
+      value: "settings",
+    },
+    {
+      name: "Game Settings",
+      href: "/profile/game-settings",
+      icon: Gamepad2,
+      value: "game-settings",
+    },
   ];
+
+  // Determine current section for mobile dropdown
+  const getCurrentSection = () => {
+    if (location.pathname === "/profile") return "overview";
+    if (location.pathname === "/profile/settings") return "settings";
+    if (location.pathname === "/profile/game-settings") return "game-settings";
+    return "overview";
+  };
+
+  const handleMobileNavChange = (value: string) => {
+    const item = navItems.find((item) => item.value === value);
+    if (item) {
+      navigate(item.href);
+    }
+  };
 
   return (
     <div className="flex safe-vh-screen bg-background overflow-hidden h-screen max-h-screen">
-      {/* Sidebar */}
-      <aside className="w-72 border-r-2 border-border flex-shrink-0 flex flex-col bg-card paper-texture overflow-hidden h-full">
+      {/* Sidebar - Hidden on mobile */}
+      <aside className="hidden lg:flex w-72 border-r-2 border-border flex-shrink-0 flex-col bg-card paper-texture overflow-hidden h-full">
         <div className="p-6 space-y-2 flex-shrink-0">
           <h2 className="text-2xl font-serif font-bold gradient-text tracking-academic">
             Profile
@@ -83,7 +122,50 @@ export default function ProfileLayout() {
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto min-h-0 h-full">
-        <div className="container mx-auto p-6 max-w-5xl h-full">
+        {/* Mobile Header with Navigation */}
+        <div className="lg:hidden sticky top-0 z-10 bg-card border-b-2 border-border p-4 space-y-3">
+          <div className="space-y-1">
+            <h2 className="text-xl font-serif font-bold gradient-text tracking-academic">
+              Profile
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              Manage your account settings
+            </p>
+          </div>
+
+          {/* Mobile Navigation Dropdown */}
+          <Select
+            value={getCurrentSection()}
+            onValueChange={handleMobileNavChange}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {navItems.map((item) => (
+                <SelectItem key={item.value} value={item.value}>
+                  <div className="flex items-center gap-2">
+                    <item.icon className="h-4 w-4" />
+                    {item.name}
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* Mobile Sign Out Button */}
+          <Button
+            onClick={handleSignOut}
+            variant="outline"
+            size="sm"
+            className="w-full text-destructive hover:text-destructive hover:bg-destructive/10"
+          >
+            <LogOut className="h-4 w-4 mr-2" />
+            Sign Out
+          </Button>
+        </div>
+
+        <div className="container mx-auto p-4 lg:p-6 max-w-5xl h-full">
           <Outlet />
         </div>
       </main>

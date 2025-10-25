@@ -204,9 +204,123 @@ export default function Quiz() {
   return (
     <div className="container mx-auto px-4 py-6 min-h-[calc(100vh-8rem)]">
       <div className="max-w-7xl mx-auto space-y-4">
-        {/* Main Content Grid */}
+        {/* Main Content Grid - Mobile: Results first, then graphs. Desktop: Graphs left, results right */}
         <div className="grid lg:grid-cols-[1fr,400px] gap-4">
-          {/* Left Side - Performance Graphs */}
+          {/* Mobile: Results Card (shown first on mobile) */}
+          <div className="lg:hidden space-y-4">
+            <Card className="border-2 shadow-lg h-full flex flex-col">
+              <CardHeader className="text-center space-y-4 pb-4">
+                {/* Header - Quiz Complete + Game Mode */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-center gap-2">
+                    <Trophy className="h-7 w-7 text-success" />
+                    <h1 className="text-2xl font-bold gradient-text">
+                      Quiz Complete!
+                    </h1>
+                  </div>
+                  {gameMode && (
+                    <Badge variant="secondary" className="text-sm px-3 py-1">
+                      {gameMode.name}
+                    </Badge>
+                  )}
+                </div>
+
+                <Separator />
+
+                {/* Score - Primary Metric */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                    {isSpeedrun ? (
+                      <Clock className="h-5 w-5" />
+                    ) : (
+                      <Trophy className="h-5 w-5" />
+                    )}
+                    <p className="text-sm font-medium uppercase tracking-wide">
+                      {isSpeedrun ? "Completion Time" : "Your Score"}
+                    </p>
+                  </div>
+                  <p className="text-5xl font-bold gradient-text">
+                    {isSpeedrun ? `${results.score}s` : results.score}
+                  </p>
+                  {isSpeedrun && gameMode?.targetQuestions && (
+                    <p className="text-sm text-muted-foreground">
+                      {gameMode.targetQuestions} questions completed
+                    </p>
+                  )}
+                </div>
+              </CardHeader>
+
+              <Separator />
+
+              <CardContent className="pt-4 space-y-4">
+                {/* Secondary Metrics */}
+                <div className="grid grid-cols-2 gap-3">
+                  {results.accuracy !== undefined && (
+                    <div className="text-center space-y-1 p-3 rounded-lg bg-muted/50">
+                      <div className="flex items-center justify-center gap-1 text-muted-foreground">
+                        <Target className="h-4 w-4" />
+                        <p className="text-xs font-medium uppercase">
+                          Accuracy
+                        </p>
+                      </div>
+                      <p className="text-xl font-bold">
+                        {results.accuracy.toFixed(1)}%
+                      </p>
+                    </div>
+                  )}
+                  {bestScore !== null && (
+                    <div className="text-center space-y-1 p-3 rounded-lg bg-muted/50">
+                      <div className="flex items-center justify-center gap-1 text-muted-foreground">
+                        <Trophy className="h-4 w-4" />
+                        <p className="text-xs font-medium uppercase">
+                          Best {isSpeedrun ? "Time" : "Score"}
+                        </p>
+                      </div>
+                      <p className="text-xl font-bold">
+                        {isSpeedrun ? `${bestScore}s` : bestScore}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Status Messages */}
+                {saving && (
+                  <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                    <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
+                    <span>Saving results...</span>
+                  </div>
+                )}
+                {!shouldTrack && (
+                  <div className="flex items-center justify-center gap-2 p-3 rounded-lg bg-muted/50 text-sm text-muted-foreground">
+                    <Info className="h-4 w-4" />
+                    <span className="italic">This game was not tracked</span>
+                  </div>
+                )}
+              </CardContent>
+
+              <Separator />
+
+              <CardFooter className="flex flex-col gap-3 pt-4">
+                <Button
+                  onClick={() => navigate("/stats")}
+                  variant="outline"
+                  className="w-full"
+                >
+                  <BarChart3 className="mr-2 h-4 w-4" />
+                  View Stats
+                </Button>
+                <Button
+                  onClick={() => navigate("/singleplayer")}
+                  className="w-full shadow-sm"
+                >
+                  <Home className="mr-2 h-4 w-4" />
+                  Play Again
+                </Button>
+              </CardFooter>
+            </Card>
+          </div>
+
+          {/* Desktop & Mobile: Performance Graphs */}
           <div className="space-y-4">
             {/* Scores Over Time Graph */}
             <PaperCard variant="folded-sm" padding="sm">
@@ -393,8 +507,8 @@ export default function Quiz() {
             </PaperCard>
           </div>
 
-          {/* Right Side - Current Results */}
-          <div className="space-y-4">
+          {/* Desktop: Results Card (hidden on mobile, shown on desktop) */}
+          <div className="hidden lg:block space-y-4">
             <Card className="border-2 shadow-lg h-full flex flex-col">
               <CardHeader className="text-center space-y-4 pb-4">
                 {/* Header - Quiz Complete + Game Mode */}

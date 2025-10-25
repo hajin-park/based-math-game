@@ -1670,9 +1670,9 @@ export default function RoomLobby() {
 
             {/* Bottom Section - Host Controls + Action Buttons */}
             <div className="flex-none border-t-2 border-border bg-card shadow-sm">
-              {/* Host Controls - Only for Host and only in waiting status */}
+              {/* Host Controls - Only for Host and only in waiting status - Hidden on mobile to avoid duplication */}
               {isHost && room.status === "waiting" && (
-                <div className="p-3 sm:p-4 border-b border-border space-y-2">
+                <div className="hidden lg:block p-3 sm:p-4 border-b border-border space-y-2">
                   <div className="flex items-center gap-2">
                     <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                     <span className="text-sm sm:text-base font-semibold">
