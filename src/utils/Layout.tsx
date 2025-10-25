@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { NavigationBar, Footer } from "@features/ui";
 import ScrollToTop from "./ScrollToTop.jsx";
 import {
@@ -21,6 +21,12 @@ export const Layout = () => {
     score: 0,
   });
   const { loading } = useAuth();
+  const location = useLocation();
+
+  // Check if current route is a multiplayer room page (lobby, game, or results)
+  const isMultiplayerRoom = /^\/multiplayer\/(lobby|game|results)\//.test(
+    location.pathname,
+  );
 
   if (loading) {
     return (
@@ -35,9 +41,11 @@ export const Layout = () => {
       <ScrollToTop />
       <ConnectionStatus />
       <CookieConsent />
-      <div className="flex-none">
-        <NavigationBar />
-      </div>
+      {!isMultiplayerRoom && (
+        <div className="flex-none">
+          <NavigationBar />
+        </div>
+      )}
       <div className="flex-auto">
         <ResultContext.Provider value={{ results, setResults }}>
           <QuizContext.Provider value={{ settings, setSettings }}>
@@ -45,9 +53,11 @@ export const Layout = () => {
           </QuizContext.Provider>
         </ResultContext.Provider>
       </div>
-      <div className="flex-none">
-        <Footer />
-      </div>
+      {!isMultiplayerRoom && (
+        <div className="flex-none">
+          <Footer />
+        </div>
+      )}
     </main>
   );
 };

@@ -2,27 +2,27 @@
   "rules": {
     "users": {
       "$uid": {
-        ".read": "$uid === auth.uid || $uid.beginsWith('guest_')",
-        ".write": "$uid === auth.uid || ($uid.beginsWith('guest_') && newData.child('uid').val() === $uid && newData.child('isGuest').val() === true)"
+        ".read": "$uid === auth.uid || $uid.matches(/^guest_/)",
+        ".write": "$uid === auth.uid || ($uid.matches(/^guest_/) && newData.child('uid').val() === $uid && newData.child('isGuest').val() === true)"
       }
     },
     "rooms": {
       ".read": "true",
       "$roomId": {
-        ".write": "!data.exists() || data.child('hostUid').val() === auth.uid || data.child('hostUid').val().beginsWith('guest_') || (auth != null && data.child('players').child(auth.uid).exists()) || data.child('players').hasChild(newData.child('hostUid').val())",
+        ".write": "!data.exists() || data.child('hostUid').val() === auth.uid || data.child('hostUid').val().matches(/^guest_/) || (auth != null && data.child('players').child(auth.uid).exists()) || data.child('players').hasChild(newData.child('hostUid').val())",
         ".validate": "newData.hasChildren(['hostUid', 'gameMode', 'status'])",
         "players": {
           "$playerId": {
-            ".write": "$playerId === auth.uid || ($playerId.beginsWith('guest_') && newData.child('uid').val() === $playerId) || root.child('rooms').child($roomId).child('hostUid').val() === auth.uid || root.child('rooms').child($roomId).child('hostUid').val() === $playerId"
+            ".write": "$playerId === auth.uid || $playerId.matches(/^guest_/) || root.child('rooms').child($roomId).child('hostUid').val() === auth.uid || root.child('rooms').child($roomId).child('hostUid').val() === $playerId"
           }
         },
         "gameState": {
-          ".write": "root.child('rooms').child($roomId).child('hostUid').val() === auth.uid || root.child('rooms').child($roomId).child('hostUid').val().beginsWith('guest_')"
+          ".write": "root.child('rooms').child($roomId).child('hostUid').val() === auth.uid || root.child('rooms').child($roomId).child('hostUid').val().matches(/^guest_/)"
         },
         "chat": {
           ".read": "true",
           "$messageId": {
-            ".write": "(auth != null && root.child('rooms').child($roomId).child('players').child(auth.uid).exists()) || (newData.child('senderId').val().beginsWith('guest_') && root.child('rooms').child($roomId).child('players').hasChild(newData.child('senderId').val()))",
+            ".write": "(auth != null && root.child('rooms').child($roomId).child('players').child(auth.uid).exists()) || (newData.child('senderId').val().matches(/^guest_/) && root.child('rooms').child($roomId).child('players').hasChild(newData.child('senderId').val()))",
             ".validate": "newData.hasChildren(['senderId', 'displayName', 'message', 'timestamp']) && newData.child('message').isString() && newData.child('message').val().length > 0 && newData.child('message').val().length <= 500"
           }
         }
@@ -35,7 +35,7 @@
     "presence": {
       "$uid": {
         ".read": true,
-        ".write": "$uid === auth.uid || ($uid.beginsWith('guest_') && (!newData.exists() || newData.child('uid').val() === $uid))"
+        ".write": "$uid === auth.uid || ($uid.matches(/^guest_/) && (!newData.exists() || newData.child('uid').val() === $uid))"
       }
     }
   }

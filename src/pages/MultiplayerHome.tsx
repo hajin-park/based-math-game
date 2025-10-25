@@ -14,8 +14,8 @@ export default function MultiplayerHome() {
   const navigate = useNavigate();
 
   return (
-    <div className="container mx-auto px-4 py-6 flex items-center justify-center min-h-[calc(100vh-8rem)]">
-      <div className="w-full max-w-2xl space-y-6 animate-in">
+    <div className="container mx-auto px-fluid py-fluid flex items-center justify-center safe-vh-full">
+      <div className="w-full max-w-2xl flex-gap-fluid flex flex-col animate-in">
         {/* Header */}
         <SectionHeader
           title="Multiplayer Mode"

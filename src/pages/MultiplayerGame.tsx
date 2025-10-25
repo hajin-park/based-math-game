@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,7 +18,6 @@ import { X, Copy, Check, Trophy, Users, Crown, WifiOff } from "lucide-react";
 export default function MultiplayerGame() {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
-  const location = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
   const {
@@ -93,16 +92,16 @@ export default function MultiplayerGame() {
   // Handle cleanup when component unmounts (user navigates away)
   useEffect(() => {
     const isLeavingRefValue = isLeavingRef;
-    const currentPath = location.pathname;
 
     return () => {
       // Check if we're navigating away from the room entirely
-      // Use the path captured when the effect ran, not window.location during cleanup
+      // Use window.location.pathname to get the NEW path during cleanup
+      const newPath = window.location.pathname;
       const isStillInRoom =
         roomId &&
-        (currentPath.includes(`/multiplayer/lobby/${roomId}`) ||
-          currentPath.includes(`/multiplayer/game/${roomId}`) ||
-          currentPath.includes(`/multiplayer/results/${roomId}`));
+        (newPath.includes(`/multiplayer/lobby/${roomId}`) ||
+          newPath.includes(`/multiplayer/game/${roomId}`) ||
+          newPath.includes(`/multiplayer/results/${roomId}`));
 
       // Only leave if we're not in the same room and not explicitly leaving
       if (roomId && user && !isStillInRoom && !isLeavingRefValue.current) {
@@ -111,7 +110,7 @@ export default function MultiplayerGame() {
         });
       }
     };
-  }, [roomId, user, leaveRoom, location.pathname]);
+  }, [roomId, user, leaveRoom]);
 
   useEffect(() => {
     if (!roomId) return;
@@ -122,6 +121,18 @@ export default function MultiplayerGame() {
         // Prevent multiple navigations
         if (hasNavigatedRef.current) return;
         hasNavigatedRef.current = true;
+
+        // Only navigate if user is still on a room-related page
+        const currentPath = window.location.pathname;
+        const isOnRoomPage =
+          currentPath.includes(`/multiplayer/lobby/${roomId}`) ||
+          currentPath.includes(`/multiplayer/game/${roomId}`) ||
+          currentPath.includes(`/multiplayer/results/${roomId}`);
+
+        if (!isOnRoomPage) {
+          // User has already left the room, don't navigate
+          return;
+        }
 
         // Navigate first, then show toast
         navigate("/multiplayer", { replace: true });
@@ -347,50 +358,50 @@ export default function MultiplayerGame() {
       {showCountdown && (
         <Countdown onComplete={handleCountdownComplete} duration={3} />
       )}
-      <div className="flex flex-col h-screen overflow-hidden">
+      <div className="flex flex-col h-full overflow-hidden">
         {/* Row 1 - Header */}
-        <div className="flex-none border-b-2 border-border bg-card paper-texture">
-          <div className="px-2 py-1.5">
-            <div className="flex items-center justify-between gap-2">
+        <div className="flex-none border-b-2 border-border bg-card paper-texture shadow-sm">
+          <div className="px-fluid py-3 sm:py-4">
+            <div className="flex items-center justify-between gap-3 sm:gap-4">
               {/* Exit Button - Left */}
               <Button
                 onClick={handleExit}
                 variant="outline"
-                size="sm"
-                className="gap-1 shrink-0"
+                size="default"
+                className="gap-2 shrink-0 text-sm sm:text-base"
               >
-                <X className="h-3.5 w-3.5" />
+                <X className="h-4 w-4 sm:h-5 sm:w-5" />
                 <span className="hidden sm:inline">Exit</span>
               </Button>
 
               {/* Game Title - Center */}
               <div className="flex-1 text-center min-w-0">
-                <h1 className="text-sm md:text-base font-serif font-bold truncate">
+                <h1 className="text-base sm:text-lg md:text-xl lg:text-2xl font-serif font-bold truncate">
                   {room.gameMode.name}
                 </h1>
               </div>
 
               {/* Room Code Display - Right */}
-              <div className="flex items-center gap-1 shrink-0">
+              <div className="flex items-center gap-2 shrink-0">
                 <div className="text-right hidden sm:block">
-                  <p className="text-xs text-muted-foreground leading-tight">
+                  <p className="text-xs sm:text-sm text-muted-foreground leading-tight">
                     Room Code
                   </p>
-                  <p className="font-mono font-bold text-xs tracking-wider uppercase text-primary">
+                  <p className="font-mono font-bold text-sm sm:text-base tracking-wider uppercase text-primary">
                     {roomId}
                   </p>
                 </div>
                 <Button
                   onClick={handleCopyRoomId}
                   variant="outline"
-                  size="sm"
-                  className="h-7 w-7 p-0"
+                  size="default"
+                  className="h-9 w-9 sm:h-10 sm:w-10 p-0"
                   title="Copy room code"
                 >
                   {copied ? (
-                    <Check className="h-3 w-3" />
+                    <Check className="h-4 w-4 sm:h-5 sm:w-5" />
                   ) : (
-                    <Copy className="h-3 w-3" />
+                    <Copy className="h-4 w-4 sm:h-5 sm:w-5" />
                   )}
                 </Button>
               </div>
@@ -398,25 +409,195 @@ export default function MultiplayerGame() {
           </div>
         </div>
 
-        {/* Row 2 - Main Content (Desktop: 3 columns, Mobile: 3 rows) */}
-        <div className="flex-1 overflow-hidden min-h-0">
-          <div className="h-full flex flex-col lg:grid lg:grid-cols-[minmax(200px,280px)_1fr_minmax(200px,280px)] gap-0">
-            {/* Desktop Left Column - User List */}
-            <div className="hidden lg:flex flex-col border-r-2 border-border bg-card paper-texture overflow-hidden">
-              <div className="flex-none p-1.5 border-b border-border">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <Users className="h-3.5 w-3.5 text-primary" />
-                    <h2 className="text-xs font-serif font-semibold">
-                      Players ({playerCount}/{room.maxPlayers || 4})
-                    </h2>
-                  </div>
+        {/* Row 2 - Main Content (Desktop: 3 columns, Mobile: stacked) */}
+        <div className="flex-1 min-h-0 flex flex-col lg:grid lg:grid-cols-[minmax(200px,280px)_1fr_minmax(200px,280px)] gap-0">
+          {/* Desktop Left Column - User List */}
+          <div className="hidden lg:flex flex-col border-r-2 border-border bg-card paper-texture min-h-0">
+            <div className="flex-none p-3 sm:p-4 border-b border-border">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Users className="h-5 w-5 text-primary" />
+                  <h2 className="text-sm sm:text-base font-serif font-semibold">
+                    Players ({playerCount}/{room.maxPlayers || 4})
+                  </h2>
                 </div>
               </div>
-              <div className="flex-1 overflow-y-auto p-1.5 space-y-1">
+            </div>
+            <div className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-4 space-y-2">
+              {Object.values(room.players).map((player) => {
+                const isPlayerHost = player.uid === room.hostUid;
+                const wins = player.wins || 0;
+                const isDisconnected = player.disconnected === true;
+                const isKicked = player.kicked === true;
+
+                if (isKicked) return null;
+
+                return (
+                  <div
+                    key={player.uid}
+                    className={`flex items-center justify-between p-3 rounded-md border text-sm ${
+                      isDisconnected
+                        ? "bg-muted/30 border-muted"
+                        : "bg-muted/50 border-muted"
+                    }`}
+                  >
+                    <div className="flex flex-col min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className={`font-medium truncate ${isDisconnected ? "text-muted-foreground" : ""}`}
+                        >
+                          {player.displayName}
+                        </span>
+                        {isPlayerHost && (
+                          <Crown className="h-4 w-4 text-yellow-600 shrink-0" />
+                        )}
+                      </div>
+                      {wins > 0 && (
+                        <span className="text-sm text-muted-foreground flex items-center gap-1">
+                          <Trophy className="h-3.5 w-3.5" />
+                          {wins}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      {isDisconnected && (
+                        <Badge
+                          variant="destructive"
+                          className="h-6 px-2 text-sm"
+                        >
+                          <WifiOff className="h-3.5 w-3.5" />
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Desktop Middle Column - Main Game Window */}
+          <div className="flex flex-col min-h-0 bg-background">
+            <div className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-4 lg:p-6">
+              <Card className="shadow-lg h-full flex flex-col">
+                <QuizStats
+                  expiryTimestamp={expiryTimestamp}
+                  setRunning={handleTimerExpire}
+                  score={score}
+                  shouldStartTimer={timerShouldStart}
+                  isSpeedrun={isSpeedrun}
+                  targetQuestions={room?.gameMode.targetQuestions}
+                  gameStartTime={room?.startedAt}
+                />
+                <CardContent className="p-0 flex-1">
+                  <QuizPrompt
+                    score={score}
+                    setScore={setScore}
+                    setting={randomSetting}
+                    seed={questionSeed}
+                    gameSettings={gameSettings}
+                    allowVisualAids={room?.allowVisualAids ?? true}
+                  />
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+
+          {/* Desktop Right Column - Live Scores + Chat */}
+          <div className="hidden lg:flex flex-col border-l-2 border-border bg-card paper-texture min-h-0 overflow-hidden">
+            {/* Live Scores - Top */}
+            <div className="flex-none p-3 sm:p-4 border-b border-border max-h-[40vh] overflow-y-auto">
+              <div className="flex items-center gap-2 mb-3">
+                <Trophy className="h-5 w-5 text-primary" />
+                <h2 className="text-sm sm:text-base font-serif font-semibold">
+                  Live Scores
+                </h2>
+              </div>
+              <div className="space-y-2">
+                {Object.values(room.players)
+                  .sort((a, b) => {
+                    if (isSpeedrun) {
+                      if (a.finished && !b.finished) return -1;
+                      if (!a.finished && b.finished) return 1;
+                      if (a.finished && b.finished) return a.score - b.score;
+                      return b.score - a.score;
+                    }
+                    return b.score - a.score;
+                  })
+                  .map((player, index) => {
+                    const isCurrentUser = player.uid === user?.uid;
+                    const isLeader = index === 0 && player.score > 0;
+
+                    let displayScore: string;
+                    if (isSpeedrun) {
+                      if (player.finished) {
+                        displayScore = `${player.score}s`;
+                      } else {
+                        const targetQuestions =
+                          room.gameMode.targetQuestions || 0;
+                        displayScore = `${player.score}/${targetQuestions}`;
+                      }
+                    } else {
+                      displayScore = `${player.score}`;
+                    }
+
+                    return (
+                      <div
+                        key={player.uid}
+                        className={`flex items-center justify-between p-2.5 rounded-md text-sm ${
+                          isCurrentUser
+                            ? "bg-primary/10 border border-primary"
+                            : "bg-muted/50 border border-transparent"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <span
+                            className={`font-bold ${
+                              isLeader ? "text-trophy" : "text-muted-foreground"
+                            }`}
+                          >
+                            {index === 0 && player.score > 0
+                              ? "👑"
+                              : `#${index + 1}`}
+                          </span>
+                          <span
+                            className={`${isCurrentUser ? "font-bold" : ""} truncate`}
+                          >
+                            {player.displayName}
+                            {isCurrentUser && " (You)"}
+                          </span>
+                        </div>
+                        <span className="font-bold tabular-nums shrink-0">
+                          {displayScore}
+                        </span>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+
+            {/* Chat - Bottom */}
+            <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+              {roomId && (
+                <div className="flex-1 overflow-hidden">
+                  <ChatBox roomId={roomId} compact />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Mobile Row 3 - User List and Live Scores Side by Side */}
+          <div className="lg:hidden grid grid-cols-2 gap-1.5 p-1.5">
+            {/* Mobile User List */}
+            <Card className="shadow-sm">
+              <CardHeader className="p-1.5 border-b">
+                <CardTitle className="text-xs flex items-center gap-1">
+                  <Users className="h-3 w-3" />
+                  Players
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-1.5 space-y-0.5 max-h-32 overflow-y-auto">
                 {Object.values(room.players).map((player) => {
                   const isPlayerHost = player.uid === room.hostUid;
-                  const wins = player.wins || 0;
                   const isDisconnected = player.disconnected === true;
                   const isKicked = player.kicked === true;
 
@@ -425,268 +606,94 @@ export default function MultiplayerGame() {
                   return (
                     <div
                       key={player.uid}
-                      className={`flex items-center justify-between p-1.5 rounded-md border text-xs ${
-                        isDisconnected
-                          ? "bg-muted/30 border-muted"
-                          : "bg-muted/50 border-muted"
-                      }`}
+                      className="flex items-center justify-between p-1 rounded-md border text-xs bg-muted/50"
                     >
-                      <div className="flex flex-col min-w-0 flex-1">
-                        <div className="flex items-center gap-1">
-                          <span
-                            className={`font-medium truncate ${isDisconnected ? "text-muted-foreground" : ""}`}
-                          >
-                            {player.displayName}
-                          </span>
-                          {isPlayerHost && (
-                            <Crown className="h-3 w-3 text-yellow-600 shrink-0" />
-                          )}
-                        </div>
-                        {wins > 0 && (
-                          <span className="text-xs text-muted-foreground flex items-center gap-0.5">
-                            <Trophy className="h-2.5 w-2.5" />
-                            {wins}
-                          </span>
+                      <div className="flex items-center gap-1 min-w-0 flex-1">
+                        <span
+                          className={`font-medium truncate ${isDisconnected ? "text-muted-foreground" : ""}`}
+                        >
+                          {player.displayName}
+                        </span>
+                        {isPlayerHost && (
+                          <Crown className="h-2.5 w-2.5 text-yellow-600 shrink-0" />
                         )}
                       </div>
-                      <div className="flex items-center gap-0.5 shrink-0">
-                        {isDisconnected && (
-                          <Badge
-                            variant="destructive"
-                            className="h-5 px-1.5 text-xs"
-                          >
-                            <WifiOff className="h-2.5 w-2.5" />
-                          </Badge>
-                        )}
-                      </div>
+                      {isDisconnected && (
+                        <WifiOff className="h-2.5 w-2.5 text-destructive" />
+                      )}
                     </div>
                   );
                 })}
-              </div>
-            </div>
+              </CardContent>
+            </Card>
 
-            {/* Desktop Middle Column - Main Game Window */}
-            <div className="flex flex-col h-full bg-background overflow-hidden">
-              <div className="flex-1 overflow-y-auto p-1.5 min-h-0">
-                <Card className="shadow-lg h-full flex flex-col">
-                  <QuizStats
-                    expiryTimestamp={expiryTimestamp}
-                    setRunning={handleTimerExpire}
-                    score={score}
-                    shouldStartTimer={timerShouldStart}
-                    isSpeedrun={isSpeedrun}
-                    targetQuestions={room?.gameMode.targetQuestions}
-                    gameStartTime={room?.startedAt}
-                  />
-                  <CardContent className="p-0 flex-1">
-                    <QuizPrompt
-                      score={score}
-                      setScore={setScore}
-                      setting={randomSetting}
-                      seed={questionSeed}
-                      gameSettings={gameSettings}
-                      allowVisualAids={room?.allowVisualAids ?? true}
-                    />
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-
-            {/* Desktop Right Column - Live Scores + Chat */}
-            <div className="hidden lg:flex flex-col border-l-2 border-border bg-card paper-texture overflow-hidden">
-              {/* Live Scores - Top */}
-              <div className="flex-none p-1.5 border-b border-border max-h-[40vh] overflow-y-auto">
-                <div className="flex items-center gap-1 mb-1">
-                  <Trophy className="h-3 w-3 text-primary" />
-                  <h2 className="text-xs font-serif font-semibold">
-                    Live Scores
-                  </h2>
-                </div>
-                <div className="space-y-0.5">
-                  {Object.values(room.players)
-                    .sort((a, b) => {
-                      if (isSpeedrun) {
-                        if (a.finished && !b.finished) return -1;
-                        if (!a.finished && b.finished) return 1;
-                        if (a.finished && b.finished) return a.score - b.score;
-                        return b.score - a.score;
-                      }
+            {/* Mobile Live Scores */}
+            <Card className="shadow-sm">
+              <CardHeader className="p-1.5 border-b">
+                <CardTitle className="text-xs flex items-center gap-1">
+                  <Trophy className="h-3 w-3" />
+                  Scores
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-1.5 space-y-0.5 max-h-32 overflow-y-auto">
+                {Object.values(room.players)
+                  .sort((a, b) => {
+                    if (isSpeedrun) {
+                      if (a.finished && !b.finished) return -1;
+                      if (!a.finished && b.finished) return 1;
+                      if (a.finished && b.finished) return a.score - b.score;
                       return b.score - a.score;
-                    })
-                    .map((player, index) => {
-                      const isCurrentUser = player.uid === user?.uid;
-                      const isLeader = index === 0 && player.score > 0;
+                    }
+                    return b.score - a.score;
+                  })
+                  .map((player, index) => {
+                    const isCurrentUser = player.uid === user?.uid;
+                    const isLeader = index === 0 && player.score > 0;
 
-                      let displayScore: string;
-                      if (isSpeedrun) {
-                        if (player.finished) {
-                          displayScore = `${player.score}s`;
-                        } else {
-                          const targetQuestions =
-                            room.gameMode.targetQuestions || 0;
-                          displayScore = `${player.score}/${targetQuestions}`;
-                        }
+                    let displayScore: string;
+                    if (isSpeedrun) {
+                      if (player.finished) {
+                        displayScore = `${player.score}s`;
                       } else {
-                        displayScore = `${player.score}`;
+                        const targetQuestions =
+                          room.gameMode.targetQuestions || 0;
+                        displayScore = `${player.score}/${targetQuestions}`;
                       }
-
-                      return (
-                        <div
-                          key={player.uid}
-                          className={`flex items-center justify-between p-1 rounded-md text-xs ${
-                            isCurrentUser
-                              ? "bg-primary/10 border border-primary"
-                              : "bg-muted/50 border border-transparent"
-                          }`}
-                        >
-                          <div className="flex items-center gap-1 min-w-0 flex-1">
-                            <span
-                              className={`font-bold ${
-                                isLeader
-                                  ? "text-trophy"
-                                  : "text-muted-foreground"
-                              }`}
-                            >
-                              {index === 0 && player.score > 0
-                                ? "👑"
-                                : `#${index + 1}`}
-                            </span>
-                            <span
-                              className={`${isCurrentUser ? "font-bold" : ""} truncate`}
-                            >
-                              {player.displayName}
-                              {isCurrentUser && " (You)"}
-                            </span>
-                          </div>
-                          <span className="font-bold tabular-nums shrink-0">
-                            {displayScore}
-                          </span>
-                        </div>
-                      );
-                    })}
-                </div>
-              </div>
-
-              {/* Chat - Bottom */}
-              <div className="flex-1 overflow-hidden flex flex-col min-h-0">
-                {roomId && (
-                  <div className="flex-1 overflow-hidden">
-                    <ChatBox roomId={roomId} compact />
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Mobile Row 3 - User List and Live Scores Side by Side */}
-            <div className="lg:hidden grid grid-cols-2 gap-1.5 p-1.5">
-              {/* Mobile User List */}
-              <Card className="shadow-sm">
-                <CardHeader className="p-1.5 border-b">
-                  <CardTitle className="text-xs flex items-center gap-1">
-                    <Users className="h-3 w-3" />
-                    Players
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-1.5 space-y-0.5 max-h-32 overflow-y-auto">
-                  {Object.values(room.players).map((player) => {
-                    const isPlayerHost = player.uid === room.hostUid;
-                    const isDisconnected = player.disconnected === true;
-                    const isKicked = player.kicked === true;
-
-                    if (isKicked) return null;
+                    } else {
+                      displayScore = `${player.score}`;
+                    }
 
                     return (
                       <div
                         key={player.uid}
-                        className="flex items-center justify-between p-1 rounded-md border text-xs bg-muted/50"
+                        className={`flex items-center justify-between p-1 rounded-md text-xs ${
+                          isCurrentUser
+                            ? "bg-primary/10 border border-primary"
+                            : "bg-muted/50"
+                        }`}
                       >
-                        <div className="flex items-center gap-1 min-w-0 flex-1">
+                        <div className="flex items-center gap-0.5 min-w-0 flex-1">
                           <span
-                            className={`font-medium truncate ${isDisconnected ? "text-muted-foreground" : ""}`}
+                            className={`text-xs ${isLeader ? "text-yellow-600" : "text-muted-foreground"}`}
+                          >
+                            {index === 0 && player.score > 0
+                              ? "👑"
+                              : `#${index + 1}`}
+                          </span>
+                          <span
+                            className={`${isCurrentUser ? "font-bold" : ""} truncate text-xs`}
                           >
                             {player.displayName}
                           </span>
-                          {isPlayerHost && (
-                            <Crown className="h-2.5 w-2.5 text-yellow-600 shrink-0" />
-                          )}
                         </div>
-                        {isDisconnected && (
-                          <WifiOff className="h-2.5 w-2.5 text-destructive" />
-                        )}
+                        <span className="font-bold tabular-nums text-xs shrink-0">
+                          {displayScore}
+                        </span>
                       </div>
                     );
                   })}
-                </CardContent>
-              </Card>
-
-              {/* Mobile Live Scores */}
-              <Card className="shadow-sm">
-                <CardHeader className="p-1.5 border-b">
-                  <CardTitle className="text-xs flex items-center gap-1">
-                    <Trophy className="h-3 w-3" />
-                    Scores
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-1.5 space-y-0.5 max-h-32 overflow-y-auto">
-                  {Object.values(room.players)
-                    .sort((a, b) => {
-                      if (isSpeedrun) {
-                        if (a.finished && !b.finished) return -1;
-                        if (!a.finished && b.finished) return 1;
-                        if (a.finished && b.finished) return a.score - b.score;
-                        return b.score - a.score;
-                      }
-                      return b.score - a.score;
-                    })
-                    .map((player, index) => {
-                      const isCurrentUser = player.uid === user?.uid;
-                      const isLeader = index === 0 && player.score > 0;
-
-                      let displayScore: string;
-                      if (isSpeedrun) {
-                        if (player.finished) {
-                          displayScore = `${player.score}s`;
-                        } else {
-                          const targetQuestions =
-                            room.gameMode.targetQuestions || 0;
-                          displayScore = `${player.score}/${targetQuestions}`;
-                        }
-                      } else {
-                        displayScore = `${player.score}`;
-                      }
-
-                      return (
-                        <div
-                          key={player.uid}
-                          className={`flex items-center justify-between p-1 rounded-md text-xs ${
-                            isCurrentUser
-                              ? "bg-primary/10 border border-primary"
-                              : "bg-muted/50"
-                          }`}
-                        >
-                          <div className="flex items-center gap-0.5 min-w-0 flex-1">
-                            <span
-                              className={`text-xs ${isLeader ? "text-yellow-600" : "text-muted-foreground"}`}
-                            >
-                              {index === 0 && player.score > 0
-                                ? "👑"
-                                : `#${index + 1}`}
-                            </span>
-                            <span
-                              className={`${isCurrentUser ? "font-bold" : ""} truncate text-xs`}
-                            >
-                              {player.displayName}
-                            </span>
-                          </div>
-                          <span className="font-bold tabular-nums text-xs shrink-0">
-                            {displayScore}
-                          </span>
-                        </div>
-                      );
-                    })}
-                </CardContent>
-              </Card>
-            </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>

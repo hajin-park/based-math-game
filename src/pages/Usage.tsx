@@ -26,7 +26,7 @@ import { Badge } from "@/components/ui/badge";
 
 export default function Usage() {
   return (
-    <div className="container mx-auto px-2 py-4 max-w-5xl">
+    <div className="container mx-auto px-fluid py-fluid max-w-5xl">
       <SectionHeader
         icon={BookOpen}
         title="How to Play"

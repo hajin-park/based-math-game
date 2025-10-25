@@ -172,11 +172,11 @@ export default function CreateRoom() {
   }, [categoryFilter, searchQuery, difficultyFilter, typeFilter]);
 
   return (
-    <div className="min-h-[calc(100vh-8rem)] paper-texture">
+    <div className="safe-vh-full paper-texture flex flex-col">
       {/* Subtle background gradient */}
       <div className="absolute inset-0 bg-gradient-to-b from-muted/10 via-background to-background -z-10" />
 
-      <div className="container mx-auto px-4 py-4">
+      <div className="container mx-auto px-fluid py-fluid flex-1 flex flex-col min-h-0">
         {/* Exit Button - Top Left */}
         <div className="mb-3">
           <Button
@@ -433,9 +433,9 @@ export default function CreateRoom() {
                 </PaperCard>
 
                 {/* Main Content - Grid Layout with Defined Scroll Area */}
-                <div className="flex-1 min-w-0">
-                  <div className="border-2 border-muted rounded-lg bg-muted/10 p-2">
-                    <ScrollArea className="h-[calc(100vh-240px)]">
+                <div className="flex-1 min-w-0 min-h-0 flex flex-col">
+                  <div className="border-2 border-muted rounded-lg bg-muted/10 p-2 flex-1 min-h-0 flex flex-col">
+                    <ScrollArea className="flex-1 min-h-0">
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 pr-2 auto-rows-max">
                         {filteredModes.map((mode) => (
                           <PaperCard

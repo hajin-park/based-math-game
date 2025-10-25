@@ -134,6 +134,43 @@ module.exports = {
         "7xl": ["4.5rem", { lineHeight: "1.1" }],
         "8xl": ["6rem", { lineHeight: "1" }],
         "9xl": ["8rem", { lineHeight: "1" }],
+        /* Fluid typography using clamp() for responsive design */
+        "fluid-xs": [
+          "clamp(0.7rem, 0.5vw + 0.6rem, 0.75rem)",
+          { lineHeight: "1.5" },
+        ],
+        "fluid-sm": [
+          "clamp(0.8rem, 0.5vw + 0.7rem, 0.875rem)",
+          { lineHeight: "1.6" },
+        ],
+        "fluid-base": [
+          "clamp(0.9rem, 0.5vw + 0.8rem, 1rem)",
+          { lineHeight: "1.7" },
+        ],
+        "fluid-lg": [
+          "clamp(1rem, 0.5vw + 0.9rem, 1.125rem)",
+          { lineHeight: "1.7" },
+        ],
+        "fluid-xl": [
+          "clamp(1.125rem, 0.5vw + 1rem, 1.25rem)",
+          { lineHeight: "1.6" },
+        ],
+        "fluid-2xl": [
+          "clamp(1.25rem, 1vw + 1rem, 1.5rem)",
+          { lineHeight: "1.5" },
+        ],
+        "fluid-3xl": [
+          "clamp(1.5rem, 1.5vw + 1rem, 1.875rem)",
+          { lineHeight: "1.4" },
+        ],
+        "fluid-4xl": [
+          "clamp(1.875rem, 2vw + 1rem, 2.25rem)",
+          { lineHeight: "1.3" },
+        ],
+        "fluid-5xl": [
+          "clamp(2.25rem, 3vw + 1rem, 3rem)",
+          { lineHeight: "1.2" },
+        ],
       },
       fontFamily: {
         sans: [
@@ -150,6 +187,14 @@ module.exports = {
         18: "4.5rem",
         88: "22rem",
         128: "32rem",
+        /* Fluid spacing utilities using clamp() for responsive design */
+        "fluid-xs": "clamp(0.25rem, 0.5vw, 0.5rem)" /* 4px - 8px */,
+        "fluid-sm": "clamp(0.5rem, 1vw, 1rem)" /* 8px - 16px */,
+        "fluid-md": "clamp(0.75rem, 1.5vw, 1.5rem)" /* 12px - 24px */,
+        "fluid-lg": "clamp(1rem, 2vw, 2rem)" /* 16px - 32px */,
+        "fluid-xl": "clamp(1.5rem, 3vw, 3rem)" /* 24px - 48px */,
+        "fluid-2xl": "clamp(2rem, 4vw, 4rem)" /* 32px - 64px */,
+        "fluid-3xl": "clamp(3rem, 6vw, 6rem)" /* 48px - 96px */,
       },
       maxWidth: {
         content: "65ch" /* Academic optimal reading width */,

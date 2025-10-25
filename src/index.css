@@ -766,4 +766,65 @@
     border-color: oklch(0.5 0.08 75);
     opacity: 0.1;
   }
+
+  /* Responsive Layout Utilities */
+  /* Fluid container that adapts to viewport */
+  .fluid-container {
+    width: 100%;
+    max-width: min(100%, 1400px);
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: clamp(0.5rem, 2vw, 2rem);
+    padding-right: clamp(0.5rem, 2vw, 2rem);
+  }
+
+  /* Responsive grid that auto-fits columns */
+  .responsive-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+    gap: clamp(0.75rem, 2vw, 1.5rem);
+  }
+
+  /* Fluid height that respects viewport */
+  .fluid-height {
+    min-height: 0;
+    height: auto;
+  }
+
+  /* Safe viewport height (accounts for mobile browser chrome) */
+  .safe-vh-full {
+    min-height: 100vh;
+    min-height: 100dvh; /* Dynamic viewport height for mobile */
+  }
+
+  .safe-vh-screen {
+    height: 100vh;
+    height: 100dvh; /* Dynamic viewport height for mobile */
+  }
+
+  /* Prevent layout overflow */
+  .no-overflow {
+    overflow: hidden;
+    max-width: 100%;
+  }
+
+  /* Responsive flex gap */
+  .flex-gap-fluid {
+    gap: clamp(0.5rem, 1.5vw, 1.5rem);
+  }
+
+  /* Responsive padding */
+  .p-fluid {
+    padding: clamp(0.75rem, 2vw, 1.5rem);
+  }
+
+  .px-fluid {
+    padding-left: clamp(0.75rem, 2vw, 1.5rem);
+    padding-right: clamp(0.75rem, 2vw, 1.5rem);
+  }
+
+  .py-fluid {
+    padding-top: clamp(0.75rem, 2vw, 1.5rem);
+    padding-bottom: clamp(0.75rem, 2vw, 1.5rem);
+  }
 }

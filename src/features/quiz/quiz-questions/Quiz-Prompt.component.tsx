@@ -3,7 +3,6 @@ import { Input } from "@/components/ui/input";
 import { generateQuestion } from "./generator";
 import { validateAnswer } from "./validator";
 import { convertBase } from "./converter";
-import { getBaseSubscript } from "./formatters";
 import { cn } from "@/lib/utils";
 import { GameSettings } from "@/hooks/useGameSettings";
 
@@ -257,25 +256,20 @@ export default function QuizPrompt({
             {setting[0]}
           </div>
           <div className="flex flex-col items-center gap-1">
-            {/* Question number with subscript and optional hints */}
+            {/* Question number with optional hints */}
             <div className="relative bg-muted px-4 sm:px-6 py-3 sm:py-4 rounded-lg min-w-[160px] sm:min-w-[180px] flex justify-center">
-              <div className="relative inline-block pr-6">
-                <NumberWithHints
-                  value={question}
-                  base={setting[0]}
-                  grouped={showGroupedDigits ?? false}
-                  showHints={
-                    !!(
-                      showIndexHints &&
-                      setting[0].toLowerCase() !== "decimal" &&
-                      question
-                    )
-                  }
-                />
-                <span className="absolute bottom-1 right-0 text-lg sm:text-xl md:text-2xl font-extrabold font-mono text-foreground/70">
-                  {getBaseSubscript(setting[0])}
-                </span>
-              </div>
+              <NumberWithHints
+                value={question}
+                base={setting[0]}
+                grouped={showGroupedDigits ?? false}
+                showHints={
+                  !!(
+                    showIndexHints &&
+                    setting[0].toLowerCase() !== "decimal" &&
+                    question
+                  )
+                }
+              />
             </div>
           </div>
         </div>
@@ -307,11 +301,6 @@ export default function QuizPrompt({
               inputMode="text"
               pattern={VALID_PATTERNS[setting[1].toLowerCase()]?.source}
             />
-
-            {/* Subscript positioned outside at bottom right corner of input box */}
-            <span className="absolute -bottom-2 right-0 translate-x-full ml-1 text-lg sm:text-xl md:text-2xl font-extrabold font-mono text-foreground/70 pointer-events-none">
-              {getBaseSubscript(setting[1])}
-            </span>
 
             {/* Success animation */}
             {showSuccess && (

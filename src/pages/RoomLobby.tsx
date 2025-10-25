@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   PaperCard,
   PaperCardContent,
@@ -41,6 +41,12 @@ import {
   Trophy,
   Play,
   Medal,
+  MessageSquare,
+  Loader2,
+  Clock,
+  Layers,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import {
   OFFICIAL_GAME_MODES,
@@ -55,11 +61,17 @@ import QuizStats from "@/features/quiz/quiz-questions/Quiz-Stats.component";
 import { PlaygroundSettings } from "@features/quiz";
 import { QuestionSetting } from "@/contexts/GameContexts";
 import ChatBox from "@/components/ChatBox";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 
 export default function RoomLobby() {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
-  const location = useLocation();
   const { user } = useAuth();
   const {
     joinRoom,
@@ -84,6 +96,7 @@ export default function RoomLobby() {
   const [transferHostUid, setTransferHostUid] = useState<string | null>(null);
   const [showKickedModal, setShowKickedModal] = useState(false);
   const [showPlaygroundSettings, setShowPlaygroundSettings] = useState(false);
+  const [expandedModeId, setExpandedModeId] = useState<string | null>(null);
   const { toast } = useToast();
 
   // Game state
@@ -135,16 +148,15 @@ export default function RoomLobby() {
 
   // Handle cleanup when component unmounts (user navigates away)
   useEffect(() => {
-    const currentPath = location.pathname;
-
     return () => {
       // Check if we're navigating away from the room entirely
-      // Use the path captured when the effect ran, not window.location during cleanup
+      // Use window.location.pathname to get the NEW path during cleanup
+      const newPath = window.location.pathname;
       const isStillInRoom =
         roomId &&
-        (currentPath.includes(`/multiplayer/lobby/${roomId}`) ||
-          currentPath.includes(`/multiplayer/game/${roomId}`) ||
-          currentPath.includes(`/multiplayer/results/${roomId}`));
+        (newPath.includes(`/multiplayer/lobby/${roomId}`) ||
+          newPath.includes(`/multiplayer/game/${roomId}`) ||
+          newPath.includes(`/multiplayer/results/${roomId}`));
 
       // Only leave if we're not in the same room and not explicitly leaving
       if (roomId && user && !isStillInRoom && !isLeavingRef.current) {
@@ -153,7 +165,7 @@ export default function RoomLobby() {
         });
       }
     };
-  }, [roomId, user, leaveRoom, location.pathname]);
+  }, [roomId, user, leaveRoom]);
 
   useEffect(() => {
     if (!roomId) return;
@@ -164,6 +176,18 @@ export default function RoomLobby() {
         // Prevent multiple navigations
         if (hasNavigatedRef.current) return;
         hasNavigatedRef.current = true;
+
+        // Only navigate if user is still on a room-related page
+        const currentPath = window.location.pathname;
+        const isOnRoomPage =
+          currentPath.includes(`/multiplayer/lobby/${roomId}`) ||
+          currentPath.includes(`/multiplayer/game/${roomId}`) ||
+          currentPath.includes(`/multiplayer/results/${roomId}`);
+
+        if (!isOnRoomPage) {
+          // User has already left the room, don't navigate
+          return;
+        }
 
         // Navigate first, then show toast
         navigate("/multiplayer", { replace: true });
@@ -199,10 +223,29 @@ export default function RoomLobby() {
 
       // Handle game state transitions
       if (updatedRoom.status === "playing" && !countdownShownRef.current) {
-        // Show countdown when game starts
         countdownShownRef.current = true;
-        setShowCountdown(true);
-        setTimerShouldStart(false);
+
+        // Check if game just started (within last 5 seconds) to avoid replaying countdown on reconnect
+        const gameJustStarted =
+          updatedRoom.startedAt && Date.now() - updatedRoom.startedAt < 5000;
+
+        console.log("RoomLobby: Game starting", {
+          enableCountdown: updatedRoom.enableCountdown,
+          gameJustStarted,
+          startedAt: updatedRoom.startedAt,
+          now: Date.now(),
+        });
+
+        // Show countdown if enabled and game just started, otherwise start timer immediately
+        if (updatedRoom.enableCountdown && gameJustStarted) {
+          console.log("RoomLobby: Showing countdown");
+          setShowCountdown(true);
+          setTimerShouldStart(false);
+        } else {
+          console.log("RoomLobby: Starting timer immediately");
+          setShowCountdown(false);
+          setTimerShouldStart(true);
+        }
       }
 
       // Handle game finish - increment wins for winner
@@ -575,50 +618,50 @@ export default function RoomLobby() {
       {showCountdown && room?.enableCountdown && (
         <Countdown onComplete={handleCountdownComplete} duration={3} />
       )}
-      <div className="flex flex-col h-screen overflow-hidden">
+      <div className="flex flex-col safe-vh-screen overflow-hidden">
         {/* Row 1 - Header */}
-        <div className="flex-none border-b-2 border-border bg-card paper-texture">
-          <div className="px-2 py-1.5">
-            <div className="flex items-center justify-between gap-2">
+        <div className="flex-none border-b-2 border-border bg-card paper-texture shadow-sm">
+          <div className="px-fluid py-3 sm:py-4">
+            <div className="flex items-center justify-between gap-3 sm:gap-4">
               {/* Exit Button - Left */}
               <Button
                 onClick={handleLeave}
                 variant="outline"
-                size="sm"
-                className="gap-1 shrink-0"
+                size="default"
+                className="gap-2 shrink-0 text-sm sm:text-base"
               >
-                <X className="h-3.5 w-3.5" />
+                <X className="h-4 w-4 sm:h-5 sm:w-5" />
                 <span className="hidden sm:inline">Exit</span>
               </Button>
 
               {/* Game Title - Center */}
               <div className="flex-1 text-center min-w-0">
-                <h1 className="text-sm md:text-base font-serif font-bold truncate">
+                <h1 className="text-base sm:text-lg md:text-xl lg:text-2xl font-serif font-bold truncate">
                   {room.gameMode.name}
                 </h1>
               </div>
 
               {/* Room Code Display - Right */}
-              <div className="flex items-center gap-1 shrink-0">
+              <div className="flex items-center gap-2 shrink-0">
                 <div className="text-right hidden sm:block">
-                  <p className="text-xs text-muted-foreground leading-tight">
+                  <p className="text-xs sm:text-sm text-muted-foreground leading-tight">
                     Room Code
                   </p>
-                  <p className="font-mono font-bold text-xs tracking-wider uppercase text-primary">
+                  <p className="font-mono font-bold text-sm sm:text-base tracking-wider uppercase text-primary">
                     {roomId}
                   </p>
                 </div>
                 <Button
                   onClick={handleCopyRoomId}
                   variant="outline"
-                  size="sm"
-                  className="h-7 w-7 p-0"
+                  size="default"
+                  className="h-9 w-9 sm:h-10 sm:w-10 p-0"
                   title="Copy room code"
                 >
                   {copied ? (
-                    <Check className="h-3 w-3" />
+                    <Check className="h-4 w-4 sm:h-5 sm:w-5" />
                   ) : (
-                    <Copy className="h-3 w-3" />
+                    <Copy className="h-4 w-4 sm:h-5 sm:w-5" />
                   )}
                 </Button>
               </div>
@@ -626,416 +669,829 @@ export default function RoomLobby() {
           </div>
         </div>
 
-        {/* Row 2 - Main Content (Desktop: 3 columns, Mobile: 3 rows) */}
-        <div className="flex-1 overflow-hidden min-h-0">
-          <div className="h-full flex flex-col lg:grid lg:grid-cols-[minmax(200px,280px)_1fr_minmax(200px,280px)] gap-0">
-            {/* Desktop Left Column - User List */}
-            <div className="hidden lg:flex flex-col border-r-2 border-border bg-card paper-texture overflow-hidden">
-              <div className="flex-none p-2 border-b border-border">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <Users className="h-3.5 w-3.5 text-primary" />
-                    <h2 className="text-xs font-serif font-semibold">
-                      Players ({playerCount}/{room.maxPlayers || 4})
-                    </h2>
-                  </div>
-                  {nonHostPlayers.length > 0 && (
-                    <Badge variant="secondary" className="text-xs h-4 px-1.5">
-                      {readyCount}/{nonHostPlayers.length}
-                    </Badge>
-                  )}
+        {/* Row 2 - Main Content (Desktop: 3 columns, Mobile: stacked) */}
+        <div className="flex-1 min-h-0 flex flex-col lg:grid lg:grid-cols-[minmax(200px,280px)_1fr_minmax(200px,280px)] gap-0">
+          {/* Desktop Left Column - User List */}
+          <div className="hidden lg:flex flex-col border-r-2 border-border bg-card paper-texture min-h-0">
+            <div className="flex-none p-3 sm:p-4 border-b border-border">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Users className="h-5 w-5 text-primary" />
+                  <h2 className="text-sm sm:text-base font-serif font-semibold">
+                    Players ({playerCount}/{room.maxPlayers || 4})
+                  </h2>
                 </div>
-              </div>
-
-              <div className="flex-1 overflow-y-auto p-1.5 space-y-1">
-                {Object.values(room.players).map((player) => {
-                  const isPlayerHost = player.uid === room.hostUid;
-                  const wins = player.wins || 0;
-                  const isDisconnected = player.disconnected === true;
-                  const isKicked = player.kicked === true;
-
-                  // Don't show kicked players
-                  if (isKicked) return null;
-
-                  return (
-                    <div
-                      key={player.uid}
-                      className={`flex items-center justify-between p-1.5 rounded-md border text-xs ${
-                        isDisconnected
-                          ? "bg-muted/30 border-muted"
-                          : "bg-muted/50 border-muted"
-                      }`}
-                    >
-                      <div className="flex flex-col min-w-0 flex-1">
-                        <div className="flex items-center gap-1">
-                          <span
-                            className={`font-medium truncate ${isDisconnected ? "text-muted-foreground" : ""}`}
-                          >
-                            {player.displayName}
-                          </span>
-                          {isPlayerHost && (
-                            <Crown className="h-3 w-3 text-yellow-600 shrink-0" />
-                          )}
-                        </div>
-                        {wins > 0 && (
-                          <span className="text-xs text-muted-foreground flex items-center gap-0.5">
-                            <Trophy className="h-2.5 w-2.5" />
-                            {wins}
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-0.5 shrink-0">
-                        {isDisconnected ? (
-                          <Badge
-                            variant="destructive"
-                            className="h-5 px-1.5 text-xs"
-                          >
-                            <WifiOff className="h-2.5 w-2.5" />
-                          </Badge>
-                        ) : isPlayerHost ? (
-                          <Badge
-                            variant="secondary"
-                            className="h-5 px-1.5 text-xs"
-                          >
-                            Host
-                          </Badge>
-                        ) : player.ready ? (
-                          <Badge className="bg-success h-5 px-1.5 text-xs">
-                            <Check className="h-2.5 w-2.5" />
-                          </Badge>
-                        ) : (
-                          <Badge
-                            variant="outline"
-                            className="h-5 px-1.5 text-xs"
-                          >
-                            Not Ready
-                          </Badge>
-                        )}
-                        {/* Transfer host button */}
-                        {isHost && !isPlayerHost && !isDisconnected && (
-                          <Button
-                            onClick={() => setTransferHostUid(player.uid)}
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 w-6 p-0 hover:bg-primary hover:text-primary-foreground"
-                            title="Transfer host"
-                          >
-                            <UserCog className="h-3 w-3" />
-                          </Button>
-                        )}
-                        {/* Kick button */}
-                        {isHost && !isPlayerHost && (
-                          <Button
-                            onClick={() => handleKickPlayer(player.uid)}
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground"
-                            title="Kick player"
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
+                {nonHostPlayers.length > 0 && (
+                  <Badge variant="secondary" className="text-sm h-6 px-2">
+                    {readyCount}/{nonHostPlayers.length}
+                  </Badge>
+                )}
               </div>
             </div>
 
-            {/* Desktop Middle Column - Main Game Window + User Controls */}
-            <div className="flex flex-col h-full bg-background overflow-hidden">
-              {/* Main Game Window - Row 1 */}
-              <div className="flex-1 overflow-y-auto p-1.5 min-h-0">
-                {/* WAITING STATUS - Lobby View */}
-                {room.status === "waiting" && (
-                  <div className="space-y-1.5">
-                    {/* Mobile Row 3 - User List and Chat Side by Side */}
-                    <div className="lg:hidden grid grid-cols-2 gap-1.5">
-                      {/* Mobile User List */}
+            <div className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-4 space-y-2">
+              {Object.values(room.players).map((player) => {
+                const isPlayerHost = player.uid === room.hostUid;
+                const wins = player.wins || 0;
+                const isDisconnected = player.disconnected === true;
+                const isKicked = player.kicked === true;
+
+                // Don't show kicked players
+                if (isKicked) return null;
+
+                return (
+                  <div
+                    key={player.uid}
+                    className={`flex items-center justify-between p-3 rounded-md border text-sm ${
+                      isDisconnected
+                        ? "bg-muted/30 border-muted"
+                        : "bg-muted/50 border-muted"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <span
+                        className={`font-medium truncate ${isDisconnected ? "text-muted-foreground" : ""}`}
+                      >
+                        {player.displayName}
+                      </span>
+                      {isPlayerHost && (
+                        <Crown className="h-4 w-4 text-yellow-600 shrink-0" />
+                      )}
+                      {wins > 0 && (
+                        <span className="text-xs text-muted-foreground flex items-center gap-0.5 shrink-0">
+                          <Trophy className="h-3 w-3" />
+                          {wins}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      {isDisconnected ? (
+                        <Badge
+                          variant="destructive"
+                          className="h-6 px-2 text-sm"
+                        >
+                          <WifiOff className="h-3.5 w-3.5" />
+                        </Badge>
+                      ) : isPlayerHost ? (
+                        <Badge
+                          variant="secondary"
+                          className="h-6 px-2 text-xs w-20 justify-center"
+                        >
+                          Host
+                        </Badge>
+                      ) : player.ready ? (
+                        <Badge className="bg-success h-6 px-2 text-xs w-20 justify-center">
+                          Ready
+                        </Badge>
+                      ) : (
+                        <Badge
+                          variant="outline"
+                          className="h-6 px-2 text-xs w-20 justify-center"
+                        >
+                          Not Ready
+                        </Badge>
+                      )}
+                      {/* Transfer host button */}
+                      {isHost && !isPlayerHost && !isDisconnected && (
+                        <Button
+                          onClick={() => setTransferHostUid(player.uid)}
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 hover:bg-primary hover:text-primary-foreground"
+                          title="Transfer host"
+                        >
+                          <UserCog className="h-4 w-4" />
+                        </Button>
+                      )}
+                      {/* Kick button */}
+                      {isHost && !isPlayerHost && (
+                        <Button
+                          onClick={() => handleKickPlayer(player.uid)}
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                          title="Kick player"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Desktop Middle Column - Main Game Window + User Controls */}
+          <div className="flex flex-col min-h-0 bg-background">
+            {/* Main Game Window - Row 1 */}
+            <div className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-4 lg:p-6">
+              {/* WAITING STATUS - Lobby View */}
+              {room.status === "waiting" && (
+                <div className="space-y-3 sm:space-y-4">
+                  {/* Mobile Room Info Card */}
+                  <div className="lg:hidden">
+                    <PaperCard
+                      variant="folded-sm"
+                      padding="sm"
+                      className="border"
+                    >
+                      <div className="flex items-center gap-2 mb-3">
+                        <Trophy className="h-4 w-4 text-primary" />
+                        <h3 className="text-sm font-serif font-semibold">
+                          Room Info
+                        </h3>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between min-h-6">
+                          <p className="text-xs text-muted-foreground leading-none">
+                            Mode:
+                          </p>
+                          <div className="flex items-center gap-1.5">
+                            <p className="text-sm font-semibold leading-none">
+                              {room.gameMode.name}
+                            </p>
+                            <Badge
+                              className={cn(
+                                "text-xs h-5 px-2",
+                                getDifficultyColor(room.gameMode.difficulty),
+                              )}
+                              variant="secondary"
+                            >
+                              {room.gameMode.difficulty}
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between min-h-6">
+                          <p className="text-xs text-muted-foreground leading-none">
+                            {room.gameMode.targetQuestions
+                              ? "Questions:"
+                              : "Time Limit:"}
+                          </p>
+                          <p className="text-sm font-semibold leading-none">
+                            {room.gameMode.targetQuestions
+                              ? `${room.gameMode.targetQuestions} questions`
+                              : `${room.gameMode.duration} seconds`}
+                          </p>
+                        </div>
+                        <div className="flex items-center justify-between min-h-6">
+                          <p className="text-xs text-muted-foreground leading-none">
+                            Players:
+                          </p>
+                          <p className="text-sm font-semibold leading-none">
+                            {playerCount} / {room.maxPlayers || 4}
+                          </p>
+                        </div>
+                        <div className="flex items-center justify-between min-h-6">
+                          <p className="text-xs text-muted-foreground leading-none">
+                            Visual Aids:
+                          </p>
+                          <Badge
+                            variant={
+                              room.allowVisualAids ? "default" : "outline"
+                            }
+                            className="text-xs h-5 px-2"
+                          >
+                            {room.allowVisualAids ? "Enabled" : "Disabled"}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center justify-between min-h-6">
+                          <p className="text-xs text-muted-foreground leading-none">
+                            Countdown:
+                          </p>
+                          <Badge
+                            variant={
+                              room.enableCountdown ? "default" : "outline"
+                            }
+                            className="text-xs h-5 px-2"
+                          >
+                            {room.enableCountdown ? "Enabled" : "Disabled"}
+                          </Badge>
+                        </div>
+                      </div>
+                    </PaperCard>
+                  </div>
+
+                  {/* Mobile Game Selection - Host Only */}
+                  {isHost && (
+                    <div className="lg:hidden">
                       <PaperCard
                         variant="folded-sm"
                         padding="none"
-                        className="h-fit"
+                        className="max-h-[50vh] flex flex-col"
                       >
-                        <PaperCardHeader className="p-1.5 border-b border-border">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-1">
-                              <Users className="h-3 w-3 text-primary" />
-                              <PaperCardTitle className="text-xs">
-                                Players ({playerCount}/{room.maxPlayers || 4})
-                              </PaperCardTitle>
-                            </div>
-                            {nonHostPlayers.length > 0 && (
-                              <Badge
-                                variant="secondary"
-                                className="text-xs h-4 px-1"
-                              >
-                                {readyCount}/{nonHostPlayers.length}
-                              </Badge>
-                            )}
+                        <PaperCardHeader className="p-2.5 sm:p-3 border-b border-border flex-none">
+                          <div className="flex items-center gap-1.5">
+                            <Settings className="h-4 w-4 text-primary" />
+                            <PaperCardTitle className="text-sm">
+                              Game Mode
+                            </PaperCardTitle>
                           </div>
                         </PaperCardHeader>
-                        <PaperCardContent className="p-1.5 space-y-1 max-h-28 overflow-y-auto">
-                          {Object.values(room.players).map((player) => {
-                            const isPlayerHost = player.uid === room.hostUid;
-                            const isDisconnected = player.disconnected === true;
+                        <PaperCardContent className="p-2.5 sm:p-3 flex-1 min-h-0 overflow-hidden">
+                          <ScrollArea className="h-full">
+                            <div className="grid grid-cols-1 gap-2 pr-2">
+                              {OFFICIAL_GAME_MODES.slice(0, 12).map((mode) => (
+                                <PaperCard
+                                  key={mode.id}
+                                  variant="interactive"
+                                  padding="sm"
+                                  className={cn(
+                                    "group cursor-pointer transition-all duration-200 hover:shadow-lg hover:border-primary/50 border-2 folded-corner-sm",
+                                    room.gameMode.id === mode.id &&
+                                      "border-primary bg-primary/10",
+                                  )}
+                                  onClick={() =>
+                                    room.gameMode.id !== mode.id &&
+                                    handleChangeGameMode(mode)
+                                  }
+                                >
+                                  <PaperCardHeader className="p-2 pb-1">
+                                    <div className="flex items-start justify-between gap-2">
+                                      <PaperCardTitle className="text-xs leading-tight font-serif">
+                                        {mode.name}
+                                      </PaperCardTitle>
+                                      <Badge
+                                        className={cn(
+                                          "shrink-0 text-xs h-5 px-1.5",
+                                          getDifficultyColor(mode.difficulty),
+                                        )}
+                                        variant="secondary"
+                                      >
+                                        {mode.difficulty.charAt(0)}
+                                      </Badge>
+                                    </div>
+                                  </PaperCardHeader>
+                                  <PaperCardContent className="p-2 pt-0">
+                                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                      <div className="flex items-center gap-0.5">
+                                        <Clock className="h-3 w-3" />
+                                        <span>
+                                          {mode.targetQuestions
+                                            ? `${mode.targetQuestions}q`
+                                            : `${mode.duration}s`}
+                                        </span>
+                                      </div>
+                                      <div className="flex items-center gap-0.5">
+                                        <Layers className="h-3 w-3" />
+                                        <span>
+                                          {mode.questions.length} types
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </PaperCardContent>
+                                </PaperCard>
+                              ))}
+                            </div>
+                          </ScrollArea>
+                        </PaperCardContent>
+                      </PaperCard>
+                    </div>
+                  )}
+
+                  {/* Mobile Host Controls */}
+                  {isHost && (
+                    <div className="lg:hidden">
+                      <PaperCard
+                        variant="folded-sm"
+                        padding="sm"
+                        className="border"
+                      >
+                        <div className="flex items-center gap-2 mb-3">
+                          <UserCog className="h-4 w-4 text-primary" />
+                          <h3 className="text-sm font-serif font-semibold">
+                            Host Controls
+                          </h3>
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5">
+                              <Eye className="h-3.5 w-3.5 text-muted-foreground" />
+                              <span className="text-xs text-muted-foreground">
+                                Visual Aids
+                              </span>
+                            </div>
+                            <Switch
+                              checked={room.allowVisualAids ?? true}
+                              onCheckedChange={async (checked) => {
+                                if (roomId) {
+                                  try {
+                                    await updateRoomSettings(roomId, {
+                                      allowVisualAids: checked,
+                                    });
+                                  } catch {
+                                    toast({
+                                      title: "Error",
+                                      description:
+                                        "Failed to update visual aids setting",
+                                      variant: "destructive",
+                                    });
+                                  }
+                                }
+                              }}
+                            />
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5">
+                              <Timer className="h-3.5 w-3.5 text-muted-foreground" />
+                              <span className="text-xs text-muted-foreground">
+                                Countdown
+                              </span>
+                            </div>
+                            <Switch
+                              checked={room.enableCountdown ?? true}
+                              onCheckedChange={async (checked) => {
+                                if (roomId) {
+                                  try {
+                                    await updateRoomSettings(roomId, {
+                                      enableCountdown: checked,
+                                    });
+                                  } catch {
+                                    toast({
+                                      title: "Error",
+                                      description:
+                                        "Failed to update countdown setting",
+                                      variant: "destructive",
+                                    });
+                                  }
+                                }
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </PaperCard>
+                    </div>
+                  )}
+
+                  {/* Mobile Row 3 - User List and Chat Side by Side */}
+                  <div className="lg:hidden grid grid-cols-2 gap-3">
+                    {/* Mobile User List */}
+                    <PaperCard
+                      variant="folded-sm"
+                      padding="none"
+                      className="flex flex-col"
+                    >
+                      <PaperCardHeader className="p-2.5 sm:p-3 border-b border-border flex-none">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1.5">
+                            <Users className="h-4 w-4 text-primary" />
+                            <PaperCardTitle className="text-sm">
+                              Players ({playerCount}/{room.maxPlayers || 4})
+                            </PaperCardTitle>
+                          </div>
+                          {nonHostPlayers.length > 0 && (
+                            <Badge
+                              variant="secondary"
+                              className="text-sm h-5 px-2"
+                            >
+                              {readyCount}/{nonHostPlayers.length}
+                            </Badge>
+                          )}
+                        </div>
+                      </PaperCardHeader>
+                      <PaperCardContent className="p-2.5 sm:p-3 space-y-2 flex-1 overflow-y-auto">
+                        {Object.values(room.players).map((player) => {
+                          const isPlayerHost = player.uid === room.hostUid;
+                          const isDisconnected = player.disconnected === true;
+                          const isKicked = player.kicked === true;
+
+                          if (isKicked) return null;
+
+                          return (
+                            <div
+                              key={player.uid}
+                              className={`flex items-center justify-between p-2 rounded-md border text-sm ${
+                                isDisconnected
+                                  ? "bg-muted/30 border-muted"
+                                  : "bg-muted/50 border-muted"
+                              }`}
+                            >
+                              <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                                <span
+                                  className={`font-medium truncate ${isDisconnected ? "text-muted-foreground" : ""}`}
+                                >
+                                  {player.displayName}
+                                </span>
+                                {isPlayerHost && (
+                                  <Crown className="h-3.5 w-3.5 text-yellow-600 shrink-0" />
+                                )}
+                              </div>
+                              <div className="flex items-center gap-1 shrink-0">
+                                {isDisconnected ? (
+                                  <WifiOff className="h-3.5 w-3.5 text-destructive" />
+                                ) : player.ready ? (
+                                  <Check className="h-3.5 w-3.5 text-success" />
+                                ) : (
+                                  <span className="text-sm text-muted-foreground">
+                                    -
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </PaperCardContent>
+                    </PaperCard>
+
+                    {/* Mobile Chat */}
+                    <PaperCard
+                      variant="folded-sm"
+                      padding="none"
+                      className="flex flex-col"
+                    >
+                      <PaperCardHeader className="p-2.5 sm:p-3 border-b border-border flex-none">
+                        <PaperCardTitle className="text-sm flex items-center gap-1.5">
+                          <MessageSquare className="h-4 w-4 text-primary" />
+                          Chat
+                        </PaperCardTitle>
+                      </PaperCardHeader>
+                      <PaperCardContent className="p-0 flex-1 overflow-hidden">
+                        {roomId && (
+                          <div className="h-full">
+                            <ChatBox roomId={roomId} compact />
+                          </div>
+                        )}
+                      </PaperCardContent>
+                    </PaperCard>
+                  </div>
+
+                  {/* Host View: Game Selection */}
+                  {isHost && !showPlaygroundSettings && (
+                    <div className="hidden lg:flex flex-col flex-1 min-h-0 max-h-full">
+                      <div className="flex items-center gap-2 mb-2 flex-none">
+                        <Settings className="h-4 w-4 text-primary" />
+                        <h3 className="text-sm font-serif font-semibold">
+                          Select Game Mode
+                        </h3>
+                      </div>
+                      <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+                        <ScrollArea className="flex-1">
+                          <div className="grid grid-cols-1 xl:grid-cols-2 gap-2 pr-2 auto-rows-max">
+                            {OFFICIAL_GAME_MODES.map((mode) => (
+                              <PaperCard
+                                key={mode.id}
+                                variant="interactive"
+                                padding="sm"
+                                className={cn(
+                                  "group cursor-pointer transition-all duration-200 hover:shadow-lg hover:border-primary/50 border-2 folded-corner-sm",
+                                  room.gameMode.id === mode.id &&
+                                    "border-primary bg-primary/10",
+                                )}
+                                onClick={() =>
+                                  room.gameMode.id !== mode.id &&
+                                  handleChangeGameMode(mode)
+                                }
+                              >
+                                <PaperCardHeader className="p-2 pb-1">
+                                  <div className="flex items-start justify-between gap-2">
+                                    <PaperCardTitle className="text-sm leading-tight font-serif">
+                                      {mode.name}
+                                    </PaperCardTitle>
+                                    <Badge
+                                      className={cn(
+                                        "shrink-0 text-xs h-5 px-2",
+                                        getDifficultyColor(mode.difficulty),
+                                      )}
+                                      variant="secondary"
+                                    >
+                                      {mode.difficulty}
+                                    </Badge>
+                                  </div>
+                                </PaperCardHeader>
+                                <PaperCardContent className="space-y-2 p-2 pt-0">
+                                  <Collapsible
+                                    open={expandedModeId === mode.id}
+                                    onOpenChange={(open) =>
+                                      setExpandedModeId(open ? mode.id : null)
+                                    }
+                                  >
+                                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                      <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-0.5">
+                                          <Clock className="h-3 w-3" />
+                                          <span>
+                                            {mode.targetQuestions
+                                              ? `${mode.targetQuestions}q`
+                                              : `${mode.duration}s`}
+                                          </span>
+                                        </div>
+                                        <div className="flex items-center gap-0.5">
+                                          <Layers className="h-3 w-3" />
+                                          <span>
+                                            {mode.questions.length} types
+                                          </span>
+                                        </div>
+                                      </div>
+                                      <CollapsibleTrigger asChild>
+                                        <button
+                                          className="flex items-center gap-0.5 hover:text-foreground transition-colors text-xs"
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
+                                          {expandedModeId === mode.id ? (
+                                            <ChevronUp className="h-3 w-3" />
+                                          ) : (
+                                            <ChevronDown className="h-3 w-3" />
+                                          )}
+                                          <span>(View details)</span>
+                                        </button>
+                                      </CollapsibleTrigger>
+                                    </div>
+                                    <CollapsibleContent className="pt-1.5">
+                                      <div className="space-y-1.5 text-xs">
+                                        <div className="p-1.5 rounded-md bg-muted/50">
+                                          <p className="font-semibold mb-0.5">
+                                            Question Types:
+                                          </p>
+                                          <ul className="space-y-0.5 text-muted-foreground">
+                                            {mode.questions.map((q, idx) => (
+                                              <li key={idx}>
+                                                • {q[0]} → {q[1]} ({q[2]}-{q[3]}
+                                                )
+                                              </li>
+                                            ))}
+                                          </ul>
+                                        </div>
+                                        {mode.targetQuestions && (
+                                          <div className="p-1.5 rounded-md bg-muted/50">
+                                            <p className="font-semibold">
+                                              Speed Run Mode
+                                            </p>
+                                            <p className="text-muted-foreground">
+                                              Complete {mode.targetQuestions}{" "}
+                                              questions as fast as possible
+                                            </p>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </CollapsibleContent>
+                                  </Collapsible>
+                                </PaperCardContent>
+                              </PaperCard>
+                            ))}
+                            {/* Custom Playground Option */}
+                            <PaperCard
+                              variant="interactive"
+                              padding="sm"
+                              className={cn(
+                                "group cursor-pointer transition-all duration-200 hover:shadow-lg hover:border-primary/50 border-2 folded-corner-sm",
+                                room.gameMode.id === "custom-playground" &&
+                                  "border-primary bg-primary/10",
+                              )}
+                              onClick={() => setShowPlaygroundSettings(true)}
+                            >
+                              <PaperCardHeader className="p-2 pb-1">
+                                <div className="flex items-start justify-between gap-2">
+                                  <PaperCardTitle className="text-sm leading-tight font-serif">
+                                    Custom
+                                  </PaperCardTitle>
+                                  <Badge
+                                    className="bg-purple-500 text-white shrink-0 text-xs h-5 px-2"
+                                    variant="secondary"
+                                  >
+                                    C
+                                  </Badge>
+                                </div>
+                              </PaperCardHeader>
+                              <PaperCardContent className="p-2 pt-0">
+                                <p className="text-xs text-muted-foreground">
+                                  Create your own custom game mode
+                                </p>
+                              </PaperCardContent>
+                            </PaperCard>
+                          </div>
+                        </ScrollArea>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Custom Playground Settings */}
+                  {isHost && showPlaygroundSettings && (
+                    <div className="hidden lg:block">
+                      <div className="flex items-center justify-between px-1 mb-1">
+                        <div className="flex items-center gap-1.5">
+                          <Settings className="h-3.5 w-3.5 text-primary" />
+                          <h3 className="text-xs font-serif font-semibold">
+                            Custom Playground
+                          </h3>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowPlaygroundSettings(false)}
+                          className="h-6 text-xs px-2"
+                        >
+                          Back
+                        </Button>
+                      </div>
+                      <div className="max-h-[calc(100vh-400px)] overflow-y-auto pr-1">
+                        <PlaygroundSettings
+                          onStartQuiz={handleCustomPlayground}
+                          buttonText="Update Settings"
+                          showHeader={false}
+                          isMultiplayer={true}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Non-Host View: Waiting Status */}
+                  {!isHost && (
+                    <PaperCard
+                      variant="folded-sm"
+                      padding="default"
+                      className="hidden lg:block"
+                    >
+                      <div className="text-center space-y-1.5">
+                        <Users className="h-6 w-6 mx-auto text-muted-foreground" />
+                        <p className="text-xs text-muted-foreground">
+                          {allReady
+                            ? "Waiting for host to start..."
+                            : "Waiting for players..."}
+                        </p>
+                      </div>
+                    </PaperCard>
+                  )}
+                </div>
+              )}
+
+              {/* PLAYING STATUS - Game View */}
+              {room.status === "playing" && randomSetting && room.startedAt && (
+                <div className="space-y-3 sm:space-y-4">
+                  {/* Game View */}
+                  <div className="flex items-center justify-center p-2">
+                    <Card className="w-full max-w-4xl shadow-lg">
+                      <QuizStats
+                        expiryTimestamp={expiryTimestamp}
+                        setRunning={handleTimerExpire}
+                        score={score}
+                        shouldStartTimer={timerShouldStart}
+                        isSpeedrun={isSpeedrun}
+                        targetQuestions={room?.gameMode.targetQuestions}
+                        gameStartTime={room?.startedAt}
+                      />
+                      <CardContent className="p-0">
+                        <QuizPrompt
+                          score={score}
+                          setScore={setScore}
+                          setting={randomSetting}
+                          seed={questionSeed}
+                          gameSettings={gameSettings}
+                          allowVisualAids={room?.allowVisualAids ?? true}
+                        />
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Mobile Row 3 - User List and Live Scores Side by Side */}
+                  <div className="lg:hidden grid grid-cols-2 gap-3">
+                    {/* Mobile User List */}
+                    <PaperCard
+                      variant="folded-sm"
+                      padding="none"
+                      className="h-fit"
+                    >
+                      <PaperCardHeader className="p-2.5 sm:p-3 border-b border-border">
+                        <div className="flex items-center gap-1.5">
+                          <Users className="h-4 w-4 text-primary" />
+                          <PaperCardTitle className="text-sm">
+                            Players
+                          </PaperCardTitle>
+                        </div>
+                      </PaperCardHeader>
+                      <PaperCardContent className="p-2.5 sm:p-3 space-y-2 max-h-48 overflow-y-auto">
+                        {Object.values(room.players).map((player) => {
+                          const isPlayerHost = player.uid === room.hostUid;
+                          const isDisconnected = player.disconnected === true;
+                          const isKicked = player.kicked === true;
+
+                          if (isKicked) return null;
+
+                          return (
+                            <div
+                              key={player.uid}
+                              className={`flex items-center justify-between p-2 rounded-md border text-sm ${
+                                isDisconnected
+                                  ? "bg-muted/30 border-muted"
+                                  : "bg-muted/50 border-muted"
+                              }`}
+                            >
+                              <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                                <span
+                                  className={`font-medium truncate ${isDisconnected ? "text-muted-foreground" : ""}`}
+                                >
+                                  {player.displayName}
+                                </span>
+                                {isPlayerHost && (
+                                  <Crown className="h-3.5 w-3.5 text-yellow-600 shrink-0" />
+                                )}
+                              </div>
+                              {isDisconnected && (
+                                <WifiOff className="h-3.5 w-3.5 text-destructive" />
+                              )}
+                            </div>
+                          );
+                        })}
+                      </PaperCardContent>
+                    </PaperCard>
+
+                    {/* Mobile Live Scores */}
+                    <PaperCard
+                      variant="folded-sm"
+                      padding="none"
+                      className="h-fit"
+                    >
+                      <PaperCardHeader className="p-2.5 sm:p-3 border-b border-border">
+                        <div className="flex items-center gap-1.5">
+                          <Trophy className="h-4 w-4 text-primary" />
+                          <PaperCardTitle className="text-sm">
+                            Live Scores
+                          </PaperCardTitle>
+                        </div>
+                      </PaperCardHeader>
+                      <PaperCardContent className="p-2.5 sm:p-3 space-y-2 max-h-48 overflow-y-auto">
+                        {Object.values(room.players)
+                          .sort((a, b) => {
+                            if (isSpeedrun) {
+                              if (a.finished && !b.finished) return -1;
+                              if (!a.finished && b.finished) return 1;
+                              if (a.finished && b.finished)
+                                return a.score - b.score;
+                              return b.score - a.score;
+                            }
+                            return b.score - a.score;
+                          })
+                          .map((player, index) => {
+                            const isCurrentUser = player.uid === user?.uid;
+                            const isLeader = index === 0 && player.score > 0;
                             const isKicked = player.kicked === true;
 
                             if (isKicked) return null;
 
+                            let displayScore: string;
+                            if (isSpeedrun) {
+                              if (player.finished) {
+                                displayScore = `${player.score}s`;
+                              } else {
+                                const targetQuestions =
+                                  room.gameMode.targetQuestions || 0;
+                                displayScore = `${player.score}/${targetQuestions}`;
+                              }
+                            } else {
+                              displayScore = `${player.score}`;
+                            }
+
                             return (
                               <div
                                 key={player.uid}
-                                className={`flex items-center justify-between p-1 rounded-md border text-xs ${
-                                  isDisconnected
-                                    ? "bg-muted/30 border-muted"
+                                className={`flex items-center justify-between p-2 rounded-md border text-sm ${
+                                  isCurrentUser
+                                    ? "bg-primary/10 border-primary/30"
                                     : "bg-muted/50 border-muted"
                                 }`}
                               >
-                                <div className="flex items-center gap-1 min-w-0 flex-1">
-                                  <span
-                                    className={`font-medium truncate ${isDisconnected ? "text-muted-foreground" : ""}`}
-                                  >
+                                <div className="flex items-center gap-1.5">
+                                  {isLeader && (
+                                    <Crown className="h-3.5 w-3.5 text-yellow-600" />
+                                  )}
+                                  <span className="font-medium truncate">
                                     {player.displayName}
                                   </span>
-                                  {isPlayerHost && (
-                                    <Crown className="h-2.5 w-2.5 text-yellow-600 shrink-0" />
-                                  )}
                                 </div>
-                                <div className="flex items-center gap-0.5 shrink-0">
-                                  {isDisconnected ? (
-                                    <WifiOff className="h-2.5 w-2.5 text-destructive" />
-                                  ) : player.ready ? (
-                                    <Check className="h-2.5 w-2.5 text-success" />
-                                  ) : (
-                                    <span className="text-xs text-muted-foreground">
-                                      -
-                                    </span>
-                                  )}
-                                </div>
+                                <span className="font-bold">
+                                  {displayScore}
+                                </span>
                               </div>
                             );
                           })}
-                        </PaperCardContent>
-                      </PaperCard>
-
-                      {/* Mobile Chat */}
-                      {roomId && (
-                        <div className="h-28">
-                          <ChatBox roomId={roomId} compact />
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Host View: Game Selection */}
-                    {isHost && !showPlaygroundSettings && (
-                      <div className="hidden lg:block">
-                        <div className="flex items-center gap-1.5 px-1 mb-1">
-                          <Settings className="h-3.5 w-3.5 text-primary" />
-                          <h3 className="text-xs font-serif font-semibold">
-                            Select Game Mode
-                          </h3>
-                        </div>
-                        <div className="space-y-0.5 max-h-[calc(100vh-400px)] overflow-y-auto pr-1">
-                          {OFFICIAL_GAME_MODES.map((mode) => (
-                            <div
-                              key={mode.id}
-                              className={`p-1.5 rounded-md border cursor-pointer transition-all duration-150 ${
-                                room.gameMode.id === mode.id
-                                  ? "border-primary bg-primary/10"
-                                  : "border-border bg-card hover:border-primary/50"
-                              }`}
-                              onClick={() =>
-                                room.gameMode.id !== mode.id &&
-                                handleChangeGameMode(mode)
-                              }
-                            >
-                              <div className="flex items-center justify-between gap-1.5">
-                                <span className="text-xs font-medium truncate">
-                                  {mode.name}
-                                </span>
-                                <Badge
-                                  className={`${getDifficultyColor(mode.difficulty)} text-xs h-4 px-1 shrink-0`}
-                                  variant="secondary"
-                                >
-                                  {mode.difficulty.charAt(0)}
-                                </Badge>
-                              </div>
-                            </div>
-                          ))}
-                          {/* Custom Playground Option */}
-                          <div
-                            className={`p-1.5 rounded-md border cursor-pointer transition-all duration-150 ${
-                              room.gameMode.id === "custom-playground"
-                                ? "border-primary bg-primary/10"
-                                : "border-border bg-card hover:border-primary/50"
-                            }`}
-                            onClick={() => setShowPlaygroundSettings(true)}
-                          >
-                            <div className="flex items-center justify-between gap-1.5">
-                              <span className="text-xs font-medium">
-                                Custom
-                              </span>
-                              <Badge
-                                className="bg-purple-500 text-white text-xs h-4 px-1 shrink-0"
-                                variant="secondary"
-                              >
-                                C
-                              </Badge>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Custom Playground Settings */}
-                    {isHost && showPlaygroundSettings && (
-                      <div className="hidden lg:block">
-                        <div className="flex items-center justify-between px-1 mb-1">
-                          <div className="flex items-center gap-1.5">
-                            <Settings className="h-3.5 w-3.5 text-primary" />
-                            <h3 className="text-xs font-serif font-semibold">
-                              Custom Playground
-                            </h3>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setShowPlaygroundSettings(false)}
-                            className="h-6 text-xs px-2"
-                          >
-                            Back
-                          </Button>
-                        </div>
-                        <div className="max-h-[calc(100vh-400px)] overflow-y-auto pr-1">
-                          <PlaygroundSettings
-                            onStartQuiz={handleCustomPlayground}
-                            buttonText="Update Settings"
-                            showHeader={false}
-                            isMultiplayer={true}
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Non-Host View: Waiting Status */}
-                    {!isHost && (
-                      <PaperCard
-                        variant="folded-sm"
-                        padding="default"
-                        className="hidden lg:block"
-                      >
-                        <div className="text-center space-y-1.5">
-                          <Users className="h-6 w-6 mx-auto text-muted-foreground" />
-                          <p className="text-xs text-muted-foreground">
-                            {allReady
-                              ? "Waiting for host to start..."
-                              : "Waiting for players..."}
-                          </p>
-                        </div>
-                      </PaperCard>
-                    )}
-
-                    {/* Mobile Room Summary */}
-                    <div className="lg:hidden">
-                      <PaperCard variant="folded-sm" padding="none">
-                        <PaperCardHeader className="p-1.5 border-b border-border">
-                          <div className="flex items-center gap-1">
-                            <Trophy className="h-3 w-3 text-primary" />
-                            <PaperCardTitle className="text-xs">
-                              Room Info
-                            </PaperCardTitle>
-                          </div>
-                        </PaperCardHeader>
-                        <PaperCardContent className="p-1.5 space-y-0.5">
-                          <div className="flex items-center justify-between p-1 rounded-md bg-muted/50 text-xs">
-                            <span className="text-muted-foreground">Mode</span>
-                            <Badge
-                              variant="secondary"
-                              className="text-xs h-4 px-1"
-                            >
-                              {room.gameMode.difficulty.charAt(0)}
-                            </Badge>
-                          </div>
-                          <div className="flex items-center justify-between p-1 rounded-md bg-muted/50 text-xs">
-                            <span className="text-muted-foreground">
-                              {room.gameMode.targetQuestions
-                                ? "Target"
-                                : "Time"}
-                            </span>
-                            <span className="font-semibold">
-                              {room.gameMode.targetQuestions
-                                ? `${room.gameMode.targetQuestions}q`
-                                : `${room.gameMode.duration}s`}
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-between p-1 rounded-md bg-muted/50 text-xs">
-                            <span className="text-muted-foreground">Aids</span>
-                            <Badge
-                              variant={
-                                room.allowVisualAids ? "default" : "outline"
-                              }
-                              className="text-xs h-4 px-1"
-                            >
-                              {room.allowVisualAids ? "On" : "Off"}
-                            </Badge>
-                          </div>
-                        </PaperCardContent>
-                      </PaperCard>
-                    </div>
+                      </PaperCardContent>
+                    </PaperCard>
                   </div>
-                )}
+                </div>
+              )}
 
-                {/* PLAYING STATUS - Game View */}
-                {room.status === "playing" &&
-                  randomSetting &&
-                  room.startedAt && (
-                    <div className="h-full flex items-center justify-center p-2">
-                      <Card className="w-full max-w-4xl shadow-lg">
-                        <QuizStats
-                          expiryTimestamp={expiryTimestamp}
-                          setRunning={handleTimerExpire}
-                          score={score}
-                          shouldStartTimer={timerShouldStart}
-                          isSpeedrun={isSpeedrun}
-                          targetQuestions={room?.gameMode.targetQuestions}
-                          gameStartTime={room?.startedAt}
-                        />
-                        <CardContent className="p-0">
-                          <QuizPrompt
-                            score={score}
-                            setScore={setScore}
-                            setting={randomSetting}
-                            seed={questionSeed}
-                            gameSettings={gameSettings}
-                            allowVisualAids={room?.allowVisualAids ?? true}
-                          />
-                        </CardContent>
-                      </Card>
-                    </div>
-                  )}
+              {/* FINISHED STATUS - Results View */}
+              {room.status === "finished" &&
+                (() => {
+                  const players = Object.values(room.players);
+                  const sortedPlayers = players.sort((a, b) =>
+                    isSpeedrun ? a.score - b.score : b.score - a.score,
+                  );
+                  const winner = sortedPlayers[0];
 
-                {/* FINISHED STATUS - Results View */}
-                {room.status === "finished" &&
-                  (() => {
-                    const players = Object.values(room.players);
-                    const sortedPlayers = players.sort((a, b) =>
-                      isSpeedrun ? a.score - b.score : b.score - a.score,
-                    );
-                    const winner = sortedPlayers[0];
+                  const getRankIcon = (index: number) => {
+                    if (index === 0)
+                      return <Crown className="h-6 w-6 text-yellow-600" />;
+                    if (index === 1)
+                      return <Medal className="h-6 w-6 text-gray-400" />;
+                    if (index === 2)
+                      return <Medal className="h-6 w-6 text-amber-700" />;
+                    return null;
+                  };
 
-                    const getRankIcon = (index: number) => {
-                      if (index === 0)
-                        return <Crown className="h-6 w-6 text-yellow-600" />;
-                      if (index === 1)
-                        return <Medal className="h-6 w-6 text-gray-400" />;
-                      if (index === 2)
-                        return <Medal className="h-6 w-6 text-amber-700" />;
-                      return null;
-                    };
-
-                    return (
-                      <div className="h-full overflow-y-auto p-2">
+                  return (
+                    <div className="space-y-3 sm:space-y-4">
+                      {/* Results View */}
+                      <div className="overflow-y-auto p-2">
                         <div className="max-w-2xl mx-auto space-y-4">
                           {/* Header */}
                           <div className="text-center space-y-2">
@@ -1133,328 +1589,427 @@ export default function RoomLobby() {
                           </Card>
                         </div>
                       </div>
-                    );
-                  })()}
-              </div>
 
-              {/* Bottom Section - Host Controls + Action Buttons */}
-              <div className="flex-none border-t-2 border-border bg-card">
-                {/* Host Controls - Only for Host and only in waiting status */}
-                {isHost && room.status === "waiting" && (
-                  <div className="p-1.5 border-b border-border space-y-1">
-                    <div className="flex items-center gap-2">
-                      <Shield className="h-3 w-3 text-primary" />
-                      <span className="text-xs font-semibold">
-                        Host Controls
-                      </span>
+                      {/* Mobile Row 3 - Final Standings and Chat Side by Side */}
+                      <div className="lg:hidden grid grid-cols-2 gap-3">
+                        {/* Mobile Final Standings */}
+                        <PaperCard
+                          variant="folded-sm"
+                          padding="none"
+                          className="h-fit"
+                        >
+                          <PaperCardHeader className="p-2.5 sm:p-3 border-b border-border">
+                            <div className="flex items-center gap-1.5">
+                              <Trophy className="h-4 w-4 text-primary" />
+                              <PaperCardTitle className="text-sm">
+                                Final Standings
+                              </PaperCardTitle>
+                            </div>
+                          </PaperCardHeader>
+                          <PaperCardContent className="p-2.5 sm:p-3 space-y-2 max-h-48 overflow-y-auto">
+                            {sortedPlayers.map((player, index) => {
+                              const isKicked = player.kicked === true;
+                              if (isKicked) return null;
+
+                              return (
+                                <div
+                                  key={player.uid}
+                                  className={`flex items-center justify-between p-2 rounded-md border text-sm ${
+                                    index === 0
+                                      ? "bg-yellow-500/10 border-yellow-600/30"
+                                      : "bg-muted/50 border-muted"
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-1.5">
+                                    {index === 0 && (
+                                      <Crown className="h-3.5 w-3.5 text-yellow-600" />
+                                    )}
+                                    <span className="font-medium truncate">
+                                      {player.displayName}
+                                    </span>
+                                  </div>
+                                  <span className="font-bold">
+                                    {isSpeedrun
+                                      ? `${player.score}s`
+                                      : player.score}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </PaperCardContent>
+                        </PaperCard>
+
+                        {/* Mobile Chat */}
+                        <PaperCard
+                          variant="folded-sm"
+                          padding="none"
+                          className="h-fit"
+                        >
+                          <PaperCardHeader className="p-2.5 sm:p-3 border-b border-border">
+                            <PaperCardTitle className="text-sm flex items-center gap-1.5">
+                              <MessageSquare className="h-4 w-4 text-primary" />
+                              Chat
+                            </PaperCardTitle>
+                          </PaperCardHeader>
+                          <PaperCardContent className="p-0 h-48">
+                            {roomId && (
+                              <div className="h-full">
+                                <ChatBox roomId={roomId} compact />
+                              </div>
+                            )}
+                          </PaperCardContent>
+                        </PaperCard>
+                      </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-1.5">
-                      {/* Visual Aids Toggle */}
-                      <div className="flex items-center justify-between gap-2 p-1.5 rounded-md bg-muted/30 border">
-                        <div className="flex items-center gap-1.5">
-                          <Eye className="h-3 w-3 text-muted-foreground" />
-                          <span className="text-xs">Visual Aids</span>
-                        </div>
-                        <Switch
-                          checked={room.allowVisualAids ?? true}
-                          onCheckedChange={async (checked) => {
-                            if (roomId) {
-                              try {
-                                await updateRoomSettings(roomId, {
-                                  allowVisualAids: checked,
-                                });
-                              } catch {
-                                toast({
-                                  title: "Error",
-                                  description:
-                                    "Failed to update visual aids setting",
-                                  variant: "destructive",
-                                });
-                              }
-                            }
-                          }}
-                        />
+                  );
+                })()}
+            </div>
+
+            {/* Bottom Section - Host Controls + Action Buttons */}
+            <div className="flex-none border-t-2 border-border bg-card shadow-sm">
+              {/* Host Controls - Only for Host and only in waiting status */}
+              {isHost && room.status === "waiting" && (
+                <div className="p-3 sm:p-4 border-b border-border space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                    <span className="text-sm sm:text-base font-semibold">
+                      Host Controls
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                    {/* Visual Aids Toggle */}
+                    <div className="flex items-center justify-between gap-2 p-2.5 sm:p-3 rounded-md bg-muted/30 border">
+                      <div className="flex items-center gap-2">
+                        <Eye className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm">Visual Aids</span>
                       </div>
-                      {/* Countdown Toggle */}
-                      <div className="flex items-center justify-between gap-2 p-1.5 rounded-md bg-muted/30 border">
-                        <div className="flex items-center gap-1.5">
-                          <Timer className="h-3 w-3 text-muted-foreground" />
-                          <span className="text-xs">Countdown</span>
-                        </div>
-                        <Switch
-                          checked={room.enableCountdown ?? true}
-                          onCheckedChange={async (checked) => {
-                            if (roomId) {
-                              try {
-                                await updateRoomSettings(roomId, {
-                                  enableCountdown: checked,
-                                });
-                              } catch {
-                                toast({
-                                  title: "Error",
-                                  description:
-                                    "Failed to update countdown setting",
-                                  variant: "destructive",
-                                });
-                              }
+                      <Switch
+                        checked={room.allowVisualAids ?? true}
+                        onCheckedChange={async (checked) => {
+                          if (roomId) {
+                            try {
+                              await updateRoomSettings(roomId, {
+                                allowVisualAids: checked,
+                              });
+                            } catch {
+                              toast({
+                                title: "Error",
+                                description:
+                                  "Failed to update visual aids setting",
+                                variant: "destructive",
+                              });
                             }
-                          }}
-                        />
+                          }
+                        }}
+                      />
+                    </div>
+                    {/* Countdown Toggle */}
+                    <div className="flex items-center justify-between gap-2 p-2.5 sm:p-3 rounded-md bg-muted/30 border">
+                      <div className="flex items-center gap-2">
+                        <Timer className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm">Countdown</span>
                       </div>
+                      <Switch
+                        checked={room.enableCountdown ?? true}
+                        onCheckedChange={async (checked) => {
+                          if (roomId) {
+                            try {
+                              await updateRoomSettings(roomId, {
+                                enableCountdown: checked,
+                              });
+                            } catch {
+                              toast({
+                                title: "Error",
+                                description:
+                                  "Failed to update countdown setting",
+                                variant: "destructive",
+                              });
+                            }
+                          }
+                        }}
+                      />
                     </div>
                   </div>
-                )}
+                </div>
+              )}
 
-                {/* Action Buttons */}
-                <div className="p-1.5 space-y-1">
-                  {/* WAITING STATUS - Normal lobby buttons */}
-                  {room.status === "waiting" && (
-                    <>
-                      <div className="flex gap-2">
-                        {/* Copy Invite Link Button */}
+              {/* Action Buttons */}
+              <div className="p-3 sm:p-4 space-y-2">
+                {/* WAITING STATUS - Normal lobby buttons */}
+                {room.status === "waiting" && (
+                  <>
+                    <div className="flex gap-2 sm:gap-3">
+                      {/* Copy Invite Link Button */}
+                      <Button
+                        onClick={handleCopyInviteLink}
+                        variant="secondary"
+                        size="default"
+                        className="flex-1 text-sm sm:text-base"
+                      >
+                        {linkCopied ? (
+                          <>
+                            <Check className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+                            Copied!
+                          </>
+                        ) : (
+                          <>
+                            <Link2 className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+                            Invite
+                          </>
+                        )}
+                      </Button>
+
+                      {/* Ready/Start Game Button */}
+                      {isHost ? (
                         <Button
-                          onClick={handleCopyInviteLink}
-                          variant="secondary"
-                          size="sm"
-                          className="flex-1"
+                          onClick={handleStart}
+                          disabled={!allReady || playerCount < 2}
+                          size="default"
+                          className="flex-1 text-sm sm:text-base"
                         >
-                          {linkCopied ? (
+                          {playerCount < 2 ? (
                             <>
-                              <Check className="h-3.5 w-3.5 mr-1.5" />
-                              Copied!
+                              <Users className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+                              Need at least 2 players
+                            </>
+                          ) : !allReady && nonHostPlayers.length > 0 ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
+                              Waiting for {nonHostPlayers.length - readyCount}{" "}
+                              player
+                              {nonHostPlayers.length - readyCount !== 1
+                                ? "s"
+                                : ""}
+                              ...
                             </>
                           ) : (
                             <>
-                              <Link2 className="h-3.5 w-3.5 mr-1.5" />
-                              Invite
+                              <Play className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+                              Start Game
                             </>
                           )}
                         </Button>
-
-                        {/* Ready/Start Game Button */}
-                        {isHost ? (
-                          <Button
-                            onClick={handleStart}
-                            disabled={!allReady || playerCount < 2}
-                            size="sm"
-                            className="flex-1"
-                          >
-                            <Play className="mr-1.5 h-3.5 w-3.5" />
-                            Start Game
-                          </Button>
-                        ) : (
-                          <Button
-                            onClick={handleToggleReady}
-                            variant={isReady ? "outline" : "default"}
-                            size="sm"
-                            className="flex-1"
-                          >
-                            {isReady ? (
-                              <>
-                                <X className="mr-1.5 h-3.5 w-3.5" />
-                                Not Ready
-                              </>
-                            ) : (
-                              <>
-                                <Check className="mr-1.5 h-3.5 w-3.5" />
-                                Ready
-                              </>
-                            )}
-                          </Button>
-                        )}
-                      </div>
-
-                      {/* Status Messages */}
-                      {isHost && !allReady && nonHostPlayers.length > 0 && (
-                        <div className="text-center p-2 rounded-md bg-muted/50 border">
-                          <p className="text-xs text-muted-foreground">
-                            Waiting for {nonHostPlayers.length - readyCount}{" "}
-                            player
-                            {nonHostPlayers.length - readyCount !== 1
-                              ? "s"
-                              : ""}{" "}
-                            to be ready...
-                          </p>
-                        </div>
-                      )}
-                      {isHost && playerCount < 2 && (
-                        <div className="text-center p-2 rounded-md bg-warning/10 border border-warning/20">
-                          <p className="text-xs text-warning-foreground">
-                            Need at least 2 players to start
-                          </p>
-                        </div>
-                      )}
-                    </>
-                  )}
-
-                  {/* PLAYING STATUS - Disabled buttons */}
-                  {room.status === "playing" && (
-                    <div className="text-center p-2 rounded-md bg-muted/50 border">
-                      <p className="text-xs text-muted-foreground">
-                        Game in progress...
-                      </p>
-                    </div>
-                  )}
-
-                  {/* FINISHED STATUS - Return to lobby button */}
-                  {room.status === "finished" && (
-                    <div className="flex gap-2">
-                      {isHost ? (
-                        <Button
-                          onClick={handleReturnToLobby}
-                          size="sm"
-                          className="flex-1"
-                        >
-                          <Play className="mr-1.5 h-3.5 w-3.5" />
-                          Play Again
-                        </Button>
                       ) : (
-                        <div className="text-center p-2 rounded-md bg-muted/50 border flex-1">
-                          <p className="text-xs text-muted-foreground">
-                            Waiting for host to start next game...
-                          </p>
-                        </div>
+                        <Button
+                          onClick={handleToggleReady}
+                          variant={isReady ? "outline" : "default"}
+                          size="default"
+                          className="flex-1 text-sm sm:text-base"
+                        >
+                          {isReady ? (
+                            <>
+                              <X className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+                              Not Ready
+                            </>
+                          ) : (
+                            <>
+                              <Check className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+                              Ready
+                            </>
+                          )}
+                        </Button>
                       )}
                     </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Desktop Right Column - Room Stats + Chat */}
-            <div className="hidden lg:flex flex-col border-l-2 border-border bg-card paper-texture overflow-hidden">
-              {/* Top Section - Room Summary or Live Scores */}
-              <div className="flex-none p-1.5 border-b border-border max-h-[40vh] overflow-y-auto">
-                {/* WAITING/FINISHED STATUS - Room Summary */}
-                {(room.status === "waiting" || room.status === "finished") && (
-                  <>
-                    <div className="flex items-center gap-1 mb-1">
-                      <Trophy className="h-3 w-3 text-primary" />
-                      <h2 className="text-xs font-serif font-semibold">
-                        Room Info
-                      </h2>
-                    </div>
-                    <div className="space-y-0.5">
-                      <div className="flex items-center justify-between p-1 rounded-md bg-muted/50 text-xs">
-                        <span className="text-muted-foreground">Mode</span>
-                        <Badge variant="secondary" className="text-xs h-4 px-1">
-                          {room.gameMode.difficulty.charAt(0)}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center justify-between p-1 rounded-md bg-muted/50 text-xs">
-                        <span className="text-muted-foreground">
-                          {room.gameMode.targetQuestions ? "Target" : "Time"}
-                        </span>
-                        <span className="font-semibold">
-                          {room.gameMode.targetQuestions
-                            ? `${room.gameMode.targetQuestions}q`
-                            : `${room.gameMode.duration}s`}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between p-1 rounded-md bg-muted/50 text-xs">
-                        <span className="text-muted-foreground">Players</span>
-                        <span className="font-semibold">
-                          {playerCount}/{room.maxPlayers || 4}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between p-1 rounded-md bg-muted/50 text-xs">
-                        <span className="text-muted-foreground">Aids</span>
-                        <Badge
-                          variant={room.allowVisualAids ? "default" : "outline"}
-                          className="text-xs h-4 px-1"
-                        >
-                          {room.allowVisualAids ? "On" : "Off"}
-                        </Badge>
-                      </div>
-                    </div>
                   </>
                 )}
 
-                {/* PLAYING STATUS - Live Scores */}
+                {/* PLAYING STATUS - Disabled buttons */}
                 {room.status === "playing" && (
-                  <>
-                    <div className="flex items-center gap-1 mb-1">
-                      <Trophy className="h-3 w-3 text-primary" />
-                      <h2 className="text-xs font-serif font-semibold">
-                        Live Scores
-                      </h2>
-                    </div>
-                    <div className="space-y-0.5">
-                      {Object.values(room.players)
-                        .sort((a, b) => {
-                          if (isSpeedrun) {
-                            if (a.finished && !b.finished) return -1;
-                            if (!a.finished && b.finished) return 1;
-                            if (a.finished && b.finished)
-                              return a.score - b.score;
-                            return b.score - a.score;
-                          }
-                          return b.score - a.score;
-                        })
-                        .map((player, index) => {
-                          const isCurrentUser = player.uid === user?.uid;
-                          const isLeader = index === 0 && player.score > 0;
-
-                          let displayScore: string;
-                          if (isSpeedrun) {
-                            if (player.finished) {
-                              displayScore = `${player.score}s`;
-                            } else {
-                              const targetQuestions =
-                                room.gameMode.targetQuestions || 0;
-                              displayScore = `${player.score}/${targetQuestions}`;
-                            }
-                          } else {
-                            displayScore = `${player.score}`;
-                          }
-
-                          return (
-                            <div
-                              key={player.uid}
-                              className={`flex items-center justify-between p-1 rounded-md text-xs ${
-                                isCurrentUser
-                                  ? "bg-primary/10 border border-primary"
-                                  : "bg-muted/50 border border-transparent"
-                              }`}
-                            >
-                              <div className="flex items-center gap-1 min-w-0 flex-1">
-                                <span
-                                  className={`font-bold ${
-                                    isLeader
-                                      ? "text-trophy"
-                                      : "text-muted-foreground"
-                                  }`}
-                                >
-                                  {index === 0 && player.score > 0
-                                    ? "👑"
-                                    : `#${index + 1}`}
-                                </span>
-                                <span
-                                  className={`${isCurrentUser ? "font-bold" : ""} truncate`}
-                                >
-                                  {player.displayName}
-                                  {isCurrentUser && " (You)"}
-                                </span>
-                              </div>
-                              <span className="font-bold tabular-nums shrink-0">
-                                {displayScore}
-                              </span>
-                            </div>
-                          );
-                        })}
-                    </div>
-                  </>
+                  <div className="text-center p-2 rounded-md bg-muted/50 border">
+                    <p className="text-xs text-muted-foreground">
+                      Game in progress...
+                    </p>
+                  </div>
                 )}
-              </div>
 
-              {/* Chat - Bottom */}
-              <div className="flex-1 overflow-hidden flex flex-col min-h-0">
-                {roomId && (
-                  <div className="flex-1 overflow-hidden">
-                    <ChatBox roomId={roomId} compact />
+                {/* FINISHED STATUS - Return to lobby button */}
+                {room.status === "finished" && (
+                  <div className="flex gap-2">
+                    {isHost ? (
+                      <Button
+                        onClick={handleReturnToLobby}
+                        size="sm"
+                        className="flex-1"
+                      >
+                        <Play className="mr-1.5 h-3.5 w-3.5" />
+                        Play Again
+                      </Button>
+                    ) : (
+                      <div className="text-center p-2 rounded-md bg-muted/50 border flex-1">
+                        <p className="text-xs text-muted-foreground">
+                          Waiting for host to start next game...
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
+            </div>
+          </div>
+
+          {/* Desktop Right Column - Room Stats + Chat */}
+          <div className="hidden lg:flex flex-col border-l-2 border-border bg-card paper-texture min-h-0 overflow-hidden">
+            {/* Top Section - Room Summary or Live Scores */}
+            <div className="flex-none p-3 sm:p-4 border-b border-border max-h-[40vh] overflow-y-auto">
+              {/* WAITING/FINISHED STATUS - Room Summary */}
+              {(room.status === "waiting" || room.status === "finished") && (
+                <PaperCard variant="folded-sm" padding="sm" className="border">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Trophy className="h-4 w-4 text-primary" />
+                    <h3 className="text-sm font-serif font-semibold">
+                      Room Info
+                    </h3>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between min-h-6">
+                      <p className="text-xs text-muted-foreground leading-none">
+                        Mode:
+                      </p>
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-sm font-semibold leading-none">
+                          {room.gameMode.name}
+                        </p>
+                        <Badge
+                          className={cn(
+                            "text-xs h-5 px-2",
+                            getDifficultyColor(room.gameMode.difficulty),
+                          )}
+                          variant="secondary"
+                        >
+                          {room.gameMode.difficulty}
+                        </Badge>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between min-h-6">
+                      <p className="text-xs text-muted-foreground leading-none">
+                        {room.gameMode.targetQuestions
+                          ? "Questions:"
+                          : "Time Limit:"}
+                      </p>
+                      <p className="text-sm font-semibold leading-none">
+                        {room.gameMode.targetQuestions
+                          ? `${room.gameMode.targetQuestions} questions`
+                          : `${room.gameMode.duration} seconds`}
+                      </p>
+                    </div>
+                    <div className="flex items-center justify-between min-h-6">
+                      <p className="text-xs text-muted-foreground leading-none">
+                        Players:
+                      </p>
+                      <p className="text-sm font-semibold leading-none">
+                        {playerCount} / {room.maxPlayers || 4}
+                      </p>
+                    </div>
+                    <div className="flex items-center justify-between min-h-6">
+                      <p className="text-xs text-muted-foreground leading-none">
+                        Visual Aids:
+                      </p>
+                      <Badge
+                        variant={room.allowVisualAids ? "default" : "outline"}
+                        className="text-xs h-5 px-2"
+                      >
+                        {room.allowVisualAids ? "Enabled" : "Disabled"}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between min-h-6">
+                      <p className="text-xs text-muted-foreground leading-none">
+                        Countdown:
+                      </p>
+                      <Badge
+                        variant={room.enableCountdown ? "default" : "outline"}
+                        className="text-xs h-5 px-2"
+                      >
+                        {room.enableCountdown ? "Enabled" : "Disabled"}
+                      </Badge>
+                    </div>
+                  </div>
+                </PaperCard>
+              )}
+
+              {/* PLAYING STATUS - Live Scores */}
+              {room.status === "playing" && (
+                <>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Trophy className="h-5 w-5 text-primary" />
+                    <h2 className="text-sm sm:text-base font-serif font-semibold">
+                      Live Scores
+                    </h2>
+                  </div>
+                  <div className="space-y-2">
+                    {Object.values(room.players)
+                      .sort((a, b) => {
+                        if (isSpeedrun) {
+                          if (a.finished && !b.finished) return -1;
+                          if (!a.finished && b.finished) return 1;
+                          if (a.finished && b.finished)
+                            return a.score - b.score;
+                          return b.score - a.score;
+                        }
+                        return b.score - a.score;
+                      })
+                      .map((player, index) => {
+                        const isCurrentUser = player.uid === user?.uid;
+                        const isLeader = index === 0 && player.score > 0;
+
+                        let displayScore: string;
+                        if (isSpeedrun) {
+                          if (player.finished) {
+                            displayScore = `${player.score}s`;
+                          } else {
+                            const targetQuestions =
+                              room.gameMode.targetQuestions || 0;
+                            displayScore = `${player.score}/${targetQuestions}`;
+                          }
+                        } else {
+                          displayScore = `${player.score}`;
+                        }
+
+                        return (
+                          <div
+                            key={player.uid}
+                            className={`flex items-center justify-between p-2.5 rounded-md text-sm ${
+                              isCurrentUser
+                                ? "bg-primary/10 border border-primary"
+                                : "bg-muted/50 border border-transparent"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 min-w-0 flex-1">
+                              <span
+                                className={`font-bold ${
+                                  isLeader
+                                    ? "text-trophy"
+                                    : "text-muted-foreground"
+                                }`}
+                              >
+                                {index === 0 && player.score > 0
+                                  ? "👑"
+                                  : `#${index + 1}`}
+                              </span>
+                              <span
+                                className={`${isCurrentUser ? "font-bold" : ""} truncate`}
+                              >
+                                {player.displayName}
+                                {isCurrentUser && " (You)"}
+                              </span>
+                            </div>
+                            <span className="font-bold tabular-nums shrink-0">
+                              {displayScore}
+                            </span>
+                          </div>
+                        );
+                      })}
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Chat - Bottom */}
+            <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+              {roomId && (
+                <div className="flex-1 overflow-hidden">
+                  <ChatBox roomId={roomId} compact />
+                </div>
+              )}
             </div>
           </div>
         </div>

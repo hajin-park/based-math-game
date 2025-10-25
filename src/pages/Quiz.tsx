@@ -56,26 +56,37 @@ export default function Quiz() {
   const totalKeystrokesRef = useRef(0);
   const backspaceCountRef = useRef(0);
 
+  // Track if we've initialized the countdown state from settings
+  const hasInitializedCountdownRef = useRef(false);
+
   // Track if timer should start (after countdown)
-  const [timerShouldStart, setTimerShouldStart] = useState(
-    !gameSettings.countdownStart,
-  );
+  const [timerShouldStart, setTimerShouldStart] = useState(false);
 
   // Create expiry timestamp - will be set when countdown completes or immediately if no countdown
   const [expiryTimestamp, setExpiryTimestamp] = useState<Date>(() => {
-    // If no countdown, create timestamp immediately
-    if (!gameSettings.countdownStart) {
-      const time = new Date();
-      const duration =
-        isSpeedrun || settings.duration === 0 ? 86400 : settings.duration;
-      time.setSeconds(time.getSeconds() + duration);
-      return time;
-    }
-    // Otherwise, create a placeholder timestamp (will be replaced when countdown completes)
     const time = new Date();
     time.setSeconds(time.getSeconds() + 60); // Placeholder
     return time;
   });
+
+  // Update countdown state when gameSettings loads (only once)
+  useEffect(() => {
+    if (!hasInitializedCountdownRef.current) {
+      hasInitializedCountdownRef.current = true;
+      setShowCountdown(gameSettings.countdownStart);
+      setTimerShouldStart(!gameSettings.countdownStart);
+
+      // If countdown is disabled, create the expiry timestamp immediately and start timer
+      if (!gameSettings.countdownStart) {
+        const time = new Date();
+        const duration =
+          isSpeedrun || settings.duration === 0 ? 86400 : settings.duration;
+        time.setSeconds(time.getSeconds() + duration);
+        setExpiryTimestamp(time);
+        startTimeRef.current = Date.now();
+      }
+    }
+  }, [gameSettings.countdownStart, isSpeedrun, settings.duration]);
 
   // Validate settings - if invalid, redirect to home
   useEffect(() => {

@@ -132,7 +132,7 @@ export default function ChatBox({
       >
         {/* Messages Area */}
         <div
-          className={`${compact ? "flex-1" : "h-64"} w-full rounded-lg ${compact ? "border" : "border-2"} bg-muted/30 ${compact ? "p-1.5" : "p-3"} overflow-y-auto`}
+          className={`${compact ? "flex-1" : "flex-1 min-h-[200px] max-h-[400px]"} w-full rounded-lg ${compact ? "border" : "border-2"} bg-muted/30 ${compact ? "p-1.5" : "p-3"} overflow-y-auto`}
           onScroll={handleScroll}
           ref={scrollAreaRef}
         >

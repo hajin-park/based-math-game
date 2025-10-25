@@ -52,6 +52,9 @@ export default function QuizStats({
   // Track if timer has been started
   const hasStartedRef = useRef(false);
 
+  // Track the previous expiry timestamp to detect changes
+  const prevExpiryRef = useRef<Date | null>(null);
+
   // Track when the timer actually started (for speedrun elapsed time calculation)
   // Use state instead of ref so changes trigger the animation loop effect
   const [timerStartTime, setTimerStartTime] = useState<number | null>(null);
@@ -60,19 +63,40 @@ export default function QuizStats({
   const [, forceUpdate] = useState(0);
   const animationFrameRef = useRef<number | null>(null);
 
-  // For singleplayer, restart the timer when shouldStartTimer becomes true
+  // For singleplayer and multiplayer without external timer, restart the timer when shouldStartTimer becomes true
   useEffect(() => {
-    if (!externalTimer && shouldStartTimer && !hasStartedRef.current) {
-      // Restart timer to ensure it starts counting down
-      internalTimer.restart(expiryTimestamp, true);
-      hasStartedRef.current = true;
-      // Record the actual start time for speedrun elapsed calculation
-      if (isSpeedrun) {
-        setTimerStartTime(Date.now());
+    if (!externalTimer && shouldStartTimer) {
+      // Check if expiry timestamp changed
+      const expiryChanged =
+        prevExpiryRef.current === null ||
+        prevExpiryRef.current.getTime() !== expiryTimestamp.getTime();
+
+      // Restart if not already started, or if expiry timestamp changed
+      if (!hasStartedRef.current || expiryChanged) {
+        console.log("QuizStats: Starting/restarting timer", {
+          hasStarted: hasStartedRef.current,
+          expiryChanged,
+          expiryTimestamp,
+          shouldStartTimer,
+        });
+        // Restart timer to ensure it starts counting down
+        internalTimer.restart(expiryTimestamp, true);
+        hasStartedRef.current = true;
+        prevExpiryRef.current = expiryTimestamp;
+        // Record the actual start time for speedrun elapsed calculation
+        if (isSpeedrun && !timerStartTime) {
+          setTimerStartTime(Date.now());
+        }
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [shouldStartTimer]); // Start when shouldStartTimer becomes true
+  }, [
+    shouldStartTimer,
+    externalTimer,
+    internalTimer,
+    expiryTimestamp,
+    isSpeedrun,
+    timerStartTime,
+  ]); // Restart when shouldStartTimer or expiryTimestamp changes
 
   // For speedrun mode, update the display using requestAnimationFrame for smooth, accurate updates
   useEffect(() => {

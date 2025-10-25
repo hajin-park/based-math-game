@@ -593,11 +593,12 @@ export function useRoom() {
 
         const players = validPlayers.map(([, p]) => p as RoomPlayer);
 
-        // Check if host is disconnected and transfer to first connected player
+        // Check if host is disconnected/removed and transfer to first connected player
         const host = players.find((p: RoomPlayer) => p.uid === room.hostUid);
-        const hostDisconnected = host?.disconnected === true;
+        const hostMissing = !host; // Guest users are removed on disconnect
+        const hostDisconnected = host?.disconnected === true; // Authenticated users are marked disconnected
 
-        if (hostDisconnected && players.length > 1) {
+        if ((hostMissing || hostDisconnected) && players.length > 0) {
           // Find first connected, non-kicked player to transfer host to
           const newHost = players.find(
             (p: RoomPlayer) =>
@@ -617,7 +618,7 @@ export function useRoom() {
               console.error("Error transferring host:", error);
             }
           }
-          // If no connected players available, keep disconnected host
+          // If no connected players available, keep disconnected host or delete room
         }
 
         // Check if all players are disconnected or kicked - delete room

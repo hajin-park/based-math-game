@@ -18,7 +18,7 @@ export default function Tutorials() {
   const [hexInput, setHexInput] = useState("2A");
 
   return (
-    <div className="container mx-auto px-2 py-4 max-w-6xl">
+    <div className="container mx-auto px-fluid py-fluid max-w-6xl">
       <SectionHeader
         icon={GraduationCap}
         title="Base Conversion Tutorials"
