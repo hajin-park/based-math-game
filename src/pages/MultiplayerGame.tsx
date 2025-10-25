@@ -208,12 +208,9 @@ export default function MultiplayerGame() {
       }
 
       // Show countdown when game starts (only once)
+      // Countdown is always enabled in multiplayer
       // But skip countdown if reconnecting after game already started
-      if (
-        updatedRoom.status === "playing" &&
-        updatedRoom.enableCountdown &&
-        !countdownShownRef.current
-      ) {
+      if (updatedRoom.status === "playing" && !countdownShownRef.current) {
         const now = Date.now();
         const gameAlreadyStarted =
           updatedRoom.startedAt && updatedRoom.startedAt <= now;
@@ -227,16 +224,6 @@ export default function MultiplayerGame() {
           setShowCountdown(true);
           countdownShownRef.current = true;
         }
-      }
-
-      // Start timer immediately if countdown is disabled
-      if (
-        updatedRoom.status === "playing" &&
-        !updatedRoom.enableCountdown &&
-        !countdownShownRef.current
-      ) {
-        setTimerShouldStart(true);
-        countdownShownRef.current = true;
       }
 
       // Navigate to lobby if game was reset (host left mid-game)
@@ -303,30 +290,16 @@ export default function MultiplayerGame() {
     isSpeedrun,
   ]);
 
-  // Update expiry timestamp when timer should start (both countdown enabled and disabled cases)
+  // Update expiry timestamp when timer should start
+  // Countdown is always enabled in multiplayer
   useEffect(() => {
     // Only set expiry when we have all required data and timer should start
     if (timerShouldStart && room?.startedAt && room?.gameMode.duration) {
       const duration = isSpeedrun ? 86400 : room.gameMode.duration;
       const now = Date.now();
 
-      // For countdown disabled: startedAt is current time when game started
-      // For countdown enabled: startedAt is future time (after countdown)
-      // In both cases, calculate expiry from startedAt for synchronization
-      if (!room.enableCountdown) {
-        // Countdown disabled: calculate expiry from startedAt for synchronization
-        const expiry = new Date(room.startedAt + duration * 1000);
-
-        console.log("Setting expiry timestamp (countdown disabled):", {
-          startedAt: room.startedAt,
-          duration,
-          isSpeedrun,
-          expiry: expiry.toISOString(),
-        });
-
-        setExpiryTimestamp(expiry);
-      } else if (room.startedAt <= now) {
-        // Countdown enabled, but game already started (reconnecting after countdown finished)
+      // Check if game already started (reconnecting after countdown finished)
+      if (room.startedAt <= now) {
         // Calculate expiry from startedAt + duration for synchronization
         const expiry = new Date(room.startedAt + duration * 1000);
 
@@ -343,15 +316,9 @@ export default function MultiplayerGame() {
 
         setExpiryTimestamp(expiry);
       }
-      // For countdown enabled and not yet started, expiry is set in handleCountdownComplete
+      // If game hasn't started yet (startedAt is in future), expiry is set in handleCountdownComplete
     }
-  }, [
-    timerShouldStart,
-    room?.startedAt,
-    room?.gameMode.duration,
-    room?.enableCountdown,
-    isSpeedrun,
-  ]);
+  }, [timerShouldStart, room?.startedAt, room?.gameMode.duration, isSpeedrun]);
 
   // Generate deterministic seed for multiplayer questions
   // Combine room ID hash with score to ensure all players get same questions

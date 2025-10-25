@@ -37,7 +37,7 @@ export interface Room {
   startedAt?: number;
   maxPlayers: number; // Maximum number of players (2-10)
   allowVisualAids: boolean; // Host control: allow visual aids for all players
-  enableCountdown: boolean; // Host control: enable countdown before game starts
+  enableCountdown: boolean; // Always true - countdown is required for multiplayer timer synchronization
 }
 
 export function useRoom() {
@@ -350,12 +350,12 @@ export function useRoom() {
 
         await set(ref(database, `rooms/${roomId}/status`), "playing");
 
-        // If countdown is enabled, set startedAt to future time (after countdown completes)
+        // Countdown is always enabled in multiplayer
+        // Set startedAt to future time (after countdown completes)
         // Countdown duration: 3 seconds (counts 3, 2, 1, then completes)
-        const countdownDelay = room.enableCountdown ? 3000 : 0;
         await set(
           ref(database, `rooms/${roomId}/startedAt`),
-          Date.now() + countdownDelay,
+          Date.now() + 3000,
         );
       } catch (error) {
         console.error("Error starting game:", error);
@@ -656,10 +656,7 @@ export function useRoom() {
   );
 
   const updateRoomSettings = useCallback(
-    async (
-      roomId: string,
-      settings: { allowVisualAids?: boolean; enableCountdown?: boolean },
-    ) => {
+    async (roomId: string, settings: { allowVisualAids?: boolean }) => {
       if (!user) return;
 
       const roomRef = ref(database, `rooms/${roomId}`);
@@ -676,7 +673,7 @@ export function useRoom() {
           throw new Error("Only the host can update room settings");
         }
 
-        // Update settings
+        // Update settings (countdown is always enabled in multiplayer)
         await update(roomRef, settings);
       } catch (error) {
         console.error("Error updating room settings:", error);

@@ -33,7 +33,6 @@ import {
   Settings,
   X,
   Eye,
-  Timer,
   UserCog,
   Users,
   Crown,
@@ -223,30 +222,30 @@ export default function RoomLobby() {
       }
 
       // Handle game state transitions
+      // Countdown is always enabled in multiplayer
       if (updatedRoom.status === "playing" && !countdownShownRef.current) {
         countdownShownRef.current = true;
 
         const now = Date.now();
-        // When countdown is enabled, startedAt is set to future time (now + 3000ms)
-        // When countdown is disabled, startedAt is set to current time
+        // startedAt is set to future time (now + 3000ms) to account for countdown
         // Check if game already started by seeing if startedAt has passed
         const gameAlreadyStarted =
           updatedRoom.startedAt && updatedRoom.startedAt <= now;
 
         console.log("RoomLobby: Game starting", {
-          enableCountdown: updatedRoom.enableCountdown,
           gameAlreadyStarted,
           startedAt: updatedRoom.startedAt,
           now,
         });
 
-        // Show countdown if enabled and game hasn't started yet (startedAt is in future)
-        if (updatedRoom.enableCountdown && !gameAlreadyStarted) {
+        // Show countdown if game hasn't started yet (startedAt is in future)
+        // Otherwise start timer immediately (reconnecting after game started)
+        if (!gameAlreadyStarted) {
           console.log("RoomLobby: Showing countdown");
           setShowCountdown(true);
           setTimerShouldStart(false);
         } else {
-          console.log("RoomLobby: Starting timer immediately");
+          console.log("RoomLobby: Starting timer immediately (reconnecting)");
           setShowCountdown(false);
           setTimerShouldStart(true);
         }
@@ -352,9 +351,17 @@ export default function RoomLobby() {
       // Calculate expiry directly from startedAt to ensure synchronization
       // startedAt is the actual game start time (after countdown if enabled)
       const expiry = new Date(room.startedAt + duration * 1000);
+      console.log("RoomLobby: Calculating expiry timestamp", {
+        startedAt: room.startedAt,
+        duration,
+        isSpeedrun,
+        expiry: expiry.toISOString(),
+        now: new Date().toISOString(),
+      });
       return expiry;
     }
     // Fallback for when game hasn't started yet
+    console.log("RoomLobby: Using fallback expiry (game not started)");
     const time = new Date();
     time.setSeconds(time.getSeconds() + (isSpeedrun ? 86400 : 60));
     return time;
@@ -620,7 +627,7 @@ export default function RoomLobby() {
   return (
     <>
       <KickedModal open={showKickedModal} onClose={handleKickedModalClose} />
-      {showCountdown && room?.enableCountdown && (
+      {showCountdown && (
         <Countdown onComplete={handleCountdownComplete} duration={3} />
       )}
       <div className="flex flex-col safe-vh-screen overflow-hidden">
@@ -1007,33 +1014,6 @@ export default function RoomLobby() {
                                       title: "Error",
                                       description:
                                         "Failed to update visual aids setting",
-                                      variant: "destructive",
-                                    });
-                                  }
-                                }
-                              }}
-                            />
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-1.5">
-                              <Timer className="h-3.5 w-3.5 text-muted-foreground" />
-                              <span className="text-xs text-muted-foreground">
-                                Countdown
-                              </span>
-                            </div>
-                            <Switch
-                              checked={room.enableCountdown ?? true}
-                              onCheckedChange={async (checked) => {
-                                if (roomId) {
-                                  try {
-                                    await updateRoomSettings(roomId, {
-                                      enableCountdown: checked,
-                                    });
-                                  } catch {
-                                    toast({
-                                      title: "Error",
-                                      description:
-                                        "Failed to update countdown setting",
                                       variant: "destructive",
                                     });
                                   }
@@ -1719,32 +1699,6 @@ export default function RoomLobby() {
                                 title: "Error",
                                 description:
                                   "Failed to update visual aids setting",
-                                variant: "destructive",
-                              });
-                            }
-                          }
-                        }}
-                      />
-                    </div>
-                    {/* Countdown Toggle */}
-                    <div className="flex items-center justify-between gap-2 p-2.5 sm:p-3 rounded-md bg-muted/30 border">
-                      <div className="flex items-center gap-2">
-                        <Timer className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">Countdown</span>
-                      </div>
-                      <Switch
-                        checked={room.enableCountdown ?? true}
-                        onCheckedChange={async (checked) => {
-                          if (roomId) {
-                            try {
-                              await updateRoomSettings(roomId, {
-                                enableCountdown: checked,
-                              });
-                            } catch {
-                              toast({
-                                title: "Error",
-                                description:
-                                  "Failed to update countdown setting",
                                 variant: "destructive",
                               });
                             }

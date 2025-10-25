@@ -76,11 +76,14 @@ export default function QuizStats({
         console.log("QuizStats: Starting/restarting timer", {
           hasStarted: hasStartedRef.current,
           expiryChanged,
-          expiryTimestamp,
+          expiryTimestamp: expiryTimestamp.toISOString(),
+          expiryTime: expiryTimestamp.getTime(),
+          now: Date.now(),
           shouldStartTimer,
         });
         // Restart timer to ensure it starts counting down
-        internalTimer.restart(expiryTimestamp, true);
+        // Use timerRef to avoid dependency on internalTimer object
+        timerRef.current.restart(expiryTimestamp, true);
         hasStartedRef.current = true;
         prevExpiryRef.current = expiryTimestamp;
         // Record the actual start time for speedrun elapsed calculation
@@ -92,7 +95,6 @@ export default function QuizStats({
   }, [
     shouldStartTimer,
     externalTimer,
-    internalTimer,
     expiryTimestamp,
     isSpeedrun,
     timerStartTime,
