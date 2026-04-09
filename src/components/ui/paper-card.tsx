@@ -29,7 +29,8 @@ const paperCardVariants = cva(
 );
 
 export interface PaperCardProps
-  extends React.HTMLAttributes<HTMLDivElement>,
+  extends
+    React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof paperCardVariants> {}
 
 const PaperCard = React.forwardRef<HTMLDivElement, PaperCardProps>(

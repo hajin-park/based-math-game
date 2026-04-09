@@ -28,7 +28,8 @@ const ruledSeparatorVariants = cva("shrink-0 bg-border", {
 });
 
 export interface RuledSeparatorProps
-  extends React.HTMLAttributes<HTMLDivElement>,
+  extends
+    React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof ruledSeparatorVariants> {
   decorative?: boolean;
 }

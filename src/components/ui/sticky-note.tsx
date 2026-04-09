@@ -23,7 +23,8 @@ const stickyNoteVariants = cva("sticky-note rounded-sm", {
 });
 
 export interface StickyNoteProps
-  extends React.HTMLAttributes<HTMLDivElement>,
+  extends
+    React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof stickyNoteVariants> {}
 
 const StickyNote = React.forwardRef<HTMLDivElement, StickyNoteProps>(

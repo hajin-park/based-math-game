@@ -24,7 +24,8 @@ const notebookInputVariants = cva(
 );
 
 export interface NotebookInputProps
-  extends React.InputHTMLAttributes<HTMLInputElement | HTMLTextAreaElement>,
+  extends
+    React.InputHTMLAttributes<HTMLInputElement | HTMLTextAreaElement>,
     VariantProps<typeof notebookInputVariants> {
   multiline?: boolean;
 }

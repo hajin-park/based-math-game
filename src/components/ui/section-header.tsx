@@ -47,7 +47,8 @@ const titleVariants = cva(
 );
 
 export interface SectionHeaderProps
-  extends React.HTMLAttributes<HTMLDivElement>,
+  extends
+    React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof sectionHeaderVariants> {
   title: string;
   description?: string;
