@@ -152,7 +152,8 @@ export function GameSurface({
           { duration: 160, easing: "cubic-bezier(.2,.8,.2,1)" },
         );
       }
-      announce(next ? `Correct. Next: ${questionLabel(next)}` : "Correct.");
+      const tally = `Correct, ${run.correct} so far.`;
+      announce(next ? `${tally} Next: ${questionLabel(next)}` : tally);
     } else {
       cues.play("miss");
       cues.buzz();
