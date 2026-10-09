@@ -25,7 +25,7 @@
  * begins (server start + countdown), and speedrun finishers' `score` is their
  * time in seconds.
  */
-import { useState, useCallback } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   ref,
   get,
@@ -37,7 +37,7 @@ import {
   serverTimestamp,
 } from "firebase/database";
 import { auth, database } from "@/firebase/config";
-import { useAuth } from "@/contexts/AuthContext";
+import { ensureSignedIn } from "@/lib/ensureUser";
 import { GameMode, isSpeedrunMode } from "@/types/gameMode";
 import { RoomModeRef, toLegacyGameMode, toRoomMode } from "@/lib/roomMode";
 import { serverNow, serverToLocal } from "@/lib/serverTime";
@@ -296,7 +296,16 @@ export function normalizeRoom(
   };
 }
 
+/** Rooms with a live subscription: their latest snapshot is authoritative. */
+const liveRooms = new Map<string, number>();
+
 async function readRoom(roomId: string): Promise<RawRoom | null> {
+  // With a live listener the local cache is already current (including our
+  // own pending writes); calling get() on a listened path can also make the
+  // RTDB SDK drop later listener events, so prefer the snapshot we have.
+  if ((liveRooms.get(roomId) ?? 0) > 0 && latestRaw.has(roomId)) {
+    return latestRaw.get(roomId) ?? null;
+  }
   const snap = await get(roomRef(roomId));
   if (!snap.exists()) {
     latestRaw.delete(roomId);
@@ -356,581 +365,583 @@ function resetOwnNodeUpdates(uid: string, isHost: boolean) {
   };
 }
 
-export function useRoom() {
-  const { ensureUser } = useAuth();
-  const [loading, setLoading] = useState(false);
+// ---------------------------------------------------------------------------
+// Room operations. Plain async functions (usable outside React, e.g. in
+// tests); `useRoom()` below exposes them with a `loading` flag.
 
-  const createRoom = useCallback(
-    async (
-      gameMode: GameMode | RoomModeRef,
-      maxPlayers: number = 4,
-    ): Promise<string> => {
-      if (maxPlayers < 2 || maxPlayers > ROOM_MAX_PLAYERS) {
-        throw new Error("Max players must be between 2 and 10");
-      }
-      setLoading(true);
+const createRoom = async (
+  gameMode: GameMode | RoomModeRef,
+  maxPlayers: number = 4,
+): Promise<string> => {
+  if (maxPlayers < 2 || maxPlayers > ROOM_MAX_PLAYERS) {
+    throw new Error("Max players must be between 2 and 10");
+  }
+  try {
+    const user = await ensureSignedIn();
+    const mode = toRoomMode(gameMode);
+    for (let attempt = 0; attempt < 10; attempt++) {
+      const roomId = randomRoomCode();
+      const existing = await readRoom(roomId);
+      if (existing && !(await removeIfStale(roomId, existing))) continue;
       try {
-        const user = await ensureUser();
-        const mode = toRoomMode(gameMode);
-        for (let attempt = 0; attempt < 10; attempt++) {
-          const roomId = randomRoomCode();
-          const existing = await readRoom(roomId);
-          if (existing && !(await removeIfStale(roomId, existing))) continue;
-          try {
-            await set(roomRef(roomId), {
-              hostUid: user.uid,
-              status: "waiting",
-              mode,
-              maxPlayers,
-              allowVisualAids: true,
-              createdAt: serverTimestamp(),
-              lastActivityAt: serverTimestamp(),
-              slots: { "0": user.uid },
-              players: {
-                [user.uid]: { ...newPlayer(user.uid, "0"), ready: true },
-              },
-            });
-          } catch (error) {
-            // Lost a race for this code; try another.
-            if (isPermissionDenied(error)) continue;
-            throw error;
-          }
-          await armDisconnect(roomId, user.uid);
-          void setPresence(user.uid, roomId);
-          return roomId;
-        }
-        throw new Error(
-          "Failed to generate unique room code. Please try again.",
-        );
-      } catch (error) {
-        console.error("Error creating room:", error);
-        throw error;
-      } finally {
-        setLoading(false);
-      }
-    },
-    [ensureUser],
-  );
-
-  const joinRoom = useCallback(
-    async (roomId: string) => {
-      setLoading(true);
-      try {
-        const user = await ensureUser();
-        for (let attempt = 0; attempt < 4; attempt++) {
-          const raw = await readRoom(roomId);
-          if (!raw || (await removeIfStale(roomId, raw))) {
-            throw new Error("Room not found");
-          }
-          if (raw.kicked?.[user.uid]) {
-            throw new Error("You have been removed from this room");
-          }
-
-          if (raw.players?.[user.uid]) {
-            // Reconnecting (any room status).
-            await update(roomRef(roomId), {
-              [`players/${user.uid}/disconnected`]: false,
-              [`players/${user.uid}/disconnectedAt`]: null,
-              lastActivityAt: serverTimestamp(),
-            });
-          } else {
-            if (raw.status !== "waiting") {
-              throw new Error("Room is not accepting players");
-            }
-            const taken = new Set(slotHolders(raw).map(([slot]) => slot));
-            let slot: string | null = null;
-            for (
-              let i = 0;
-              i < Math.min(raw.maxPlayers, ROOM_MAX_PLAYERS);
-              i++
-            ) {
-              if (!taken.has(String(i))) {
-                slot = String(i);
-                break;
-              }
-            }
-            if (slot === null) throw new Error("Room is full");
-            try {
-              await update(roomRef(roomId), {
-                [`slots/${slot}`]: user.uid,
-                [`players/${user.uid}`]: newPlayer(user.uid, slot),
-                lastActivityAt: serverTimestamp(),
-              });
-            } catch (error) {
-              // Someone took the seat (or the game started) in the meantime.
-              if (isPermissionDenied(error) && attempt < 3) continue;
-              throw isPermissionDenied(error)
-                ? new Error("Room is full or no longer accepting players")
-                : error;
-            }
-          }
-          await armDisconnect(roomId, user.uid);
-          void setPresence(user.uid, roomId);
-          return;
-        }
-      } catch (error) {
-        console.error("Error joining room:", error);
-        throw error;
-      } finally {
-        setLoading(false);
-      }
-    },
-    [ensureUser],
-  );
-
-  const leaveRoom = useCallback(async (roomId: string) => {
-    const uid = auth.currentUser?.uid;
-    if (!uid) return;
-    try {
-      await onDisconnect(playerRef(roomId, uid)).cancel();
-      const raw = await readRoom(roomId);
-      scoreState.delete(roomId);
-      if (!raw || !raw.players?.[uid]) return;
-
-      const others = entries<RawPlayer>(raw.players)
-        .map(([, p]) => p)
-        .filter((p) => p.uid !== uid);
-      const othersConnected = others.filter((p) => !p.disconnected);
-
-      if (
-        others.length === 0 ||
-        (raw.status === "waiting" && othersConnected.length === 0)
-      ) {
-        try {
-          await remove(roomRef(roomId));
-          latestRaw.delete(roomId);
-          return;
-        } catch {
-          // Fall through to a normal leave.
-        }
-      }
-
-      const mySlot = raw.players[uid]?.slot;
-      const updates: Record<string, unknown> = {
-        [`players/${uid}`]: null,
-        lastActivityAt: serverTimestamp(),
-      };
-      if (mySlot !== undefined) updates[`slots/${mySlot}`] = null;
-
-      if (raw.hostUid === uid) {
-        const nextHost =
-          activePlayers(raw).find((p) => p.uid !== uid) ?? others[0];
-        if (nextHost) {
-          updates.hostUid = nextHost.uid;
-          if (raw.status === "playing") updates.status = "waiting";
-        }
-      }
-      await update(roomRef(roomId), updates);
-    } catch (error) {
-      console.error("Error leaving room:", error);
-      throw error;
-    } finally {
-      void setPresence(uid, null);
-    }
-  }, []);
-
-  const setPlayerReady = useCallback(async (roomId: string, ready: boolean) => {
-    const uid = auth.currentUser?.uid;
-    if (!uid) return;
-    await set(ref(database, `rooms/${roomId}/players/${uid}/ready`), ready);
-  }, []);
-
-  const startGame = useCallback(async (roomId: string) => {
-    const uid = currentUid();
-    const raw = await readRoom(roomId);
-    if (!raw) throw new Error("Room not found");
-    if (raw.hostUid !== uid) throw new Error("Only host can start the game");
-    const others = activePlayers(raw).filter((p) => p.uid !== raw.hostUid);
-    if (others.length === 0 || !others.every((p) => p.ready)) {
-      throw new Error("All players must be ready");
-    }
-    await update(roomRef(roomId), {
-      status: "playing",
-      startedAt: serverTimestamp(),
-      seed: randomSeed(),
-      lastActivityAt: serverTimestamp(),
-    });
-  }, []);
-
-  /**
-   * Records the caller's score for the current round. `correct` defaults to
-   * `score` (legacy modes score one point per correct answer).
-   */
-  const updatePlayerScore = useCallback(
-    async (roomId: string, score: number, correct?: number) => {
-      const uid = auth.currentUser?.uid;
-      if (!uid) return;
-      const raw = latestRaw.get(roomId) ?? (await readRoom(roomId));
-      if (
-        !raw ||
-        raw.status === "waiting" ||
-        typeof raw.startedAt !== "number"
-      ) {
-        return; // Nothing to record outside a round.
-      }
-      const round = raw.startedAt;
-      const value = Math.max(0, Math.floor(score));
-      let state = scoreState.get(roomId);
-      if (!state || state.round !== round) {
-        const mine = raw.players?.[uid];
-        const sameRound = mine?.round === round;
-        const history = sameRound ? historyArray(mine?.scoreHistory) : [];
-        state = {
-          round,
-          nextIndex: history.length,
-          lastScore: sameRound ? (mine?.score ?? 0) : -1,
-        };
-        scoreState.set(roomId, state);
-      }
-      // Scores are monotonic within a round (the rules reject decreases).
-      if (value <= state.lastScore) return;
-
-      const updates: Record<string, unknown> = {
-        [`players/${uid}/round`]: round,
-        [`players/${uid}/score`]: value,
-        [`players/${uid}/correct`]: Math.max(0, Math.floor(correct ?? value)),
-        lastActivityAt: serverTimestamp(),
-      };
-      if (state.nextIndex === 0) {
-        updates[`players/${uid}/scoreHistory/0`] = 0;
-        state.nextIndex = 1;
-      }
-      if (value > 0 && state.nextIndex < 1000) {
-        updates[`players/${uid}/scoreHistory/${state.nextIndex}`] = value;
-        state.nextIndex += 1;
-      }
-      const previous = state.lastScore;
-      state.lastScore = value;
-      try {
-        await update(roomRef(roomId), updates);
-      } catch (error) {
-        state.lastScore = previous;
-        console.error("Error updating score:", error);
-      }
-    },
-    [],
-  );
-
-  const finishGame = useCallback(
-    async (roomId: string, options?: { finishMs?: number }) => {
-      const uid = auth.currentUser?.uid;
-      if (!uid) return;
-      try {
-        const raw = await readRoom(roomId);
-        if (
-          !raw ||
-          raw.status !== "playing" ||
-          typeof raw.startedAt !== "number"
-        ) {
-          return;
-        }
-        const me = raw.players?.[uid];
-        if (!me) return;
-        const updates: Record<string, unknown> = {
-          [`players/${uid}/finished`]: true,
-          [`players/${uid}/round`]: raw.startedAt,
+        await set(roomRef(roomId), {
+          hostUid: user.uid,
+          status: "waiting",
+          mode,
+          maxPlayers,
+          allowVisualAids: true,
+          createdAt: serverTimestamp(),
           lastActivityAt: serverTimestamp(),
-        };
-        if (me.round !== raw.startedAt) {
-          // Finished without scoring this round.
-          updates[`players/${uid}/score`] = 0;
-          updates[`players/${uid}/correct`] = 0;
-        }
-        if (
-          options?.finishMs !== undefined &&
-          !(me.round === raw.startedAt && me.finished)
-        ) {
-          updates[`players/${uid}/finishMs`] = Math.max(
-            0,
-            Math.round(options.finishMs),
-          );
-        }
-        await update(roomRef(roomId), updates);
-
-        // End the round once every connected player has finished.
-        const after = await readRoom(roomId);
-        if (!after || after.status !== "playing") return;
-        const active = activePlayers(after);
-        const allFinished =
-          active.length > 0 &&
-          active.every((p) => p.finished && p.round === after.startedAt);
-        if (allFinished) {
-          await set(ref(database, `rooms/${roomId}/status`), "finished");
-        }
-      } catch (error) {
-        console.error("Error finishing game:", error);
-        throw error;
-      }
-    },
-    [],
-  );
-
-  const resetRoom = useCallback(async (roomId: string) => {
-    const uid = currentUid();
-    const raw = await readRoom(roomId);
-    if (!raw) throw new Error("Room not found");
-    const isHost = raw.hostUid === uid;
-    if (!isHost && raw.status === "playing") {
-      throw new Error("Only the host can stop a game in progress");
-    }
-    // Back to the lobby. Every client resets its own round data when it sees
-    // status "waiting" (see subscribeToRoom), so scores never leak across rounds.
-    await update(roomRef(roomId), {
-      status: "waiting",
-      lastActivityAt: serverTimestamp(),
-    });
-    scoreState.delete(roomId);
-    await update(roomRef(roomId), resetOwnNodeUpdates(uid, isHost)).catch(
-      () => undefined,
-    );
-  }, []);
-
-  const incrementWins = useCallback(
-    async (roomId: string, winnerId: string) => {
-      const uid = auth.currentUser?.uid;
-      // Rules only let players write their own node, so only the winner counts it.
-      if (!uid || uid !== winnerId) return;
-      try {
-        const raw = await readRoom(roomId);
-        const me = raw?.players?.[uid];
-        if (!raw || !me || raw.status !== "finished") return;
-        if (me.lastWinRound === raw.startedAt) return; // already counted
-        await update(roomRef(roomId), {
-          [`players/${uid}/wins`]: (me.wins ?? 0) + 1,
-          [`players/${uid}/lastWinRound`]: raw.startedAt,
+          slots: { "0": user.uid },
+          players: {
+            [user.uid]: { ...newPlayer(user.uid, "0"), ready: true },
+          },
         });
       } catch (error) {
-        console.error("Error incrementing wins:", error);
+        // Lost a race for this code; try another.
+        if (isPermissionDenied(error)) continue;
         throw error;
       }
-    },
-    [],
-  );
+      await armDisconnect(roomId, user.uid);
+      void setPresence(user.uid, roomId);
+      return roomId;
+    }
+    throw new Error("Failed to generate unique room code. Please try again.");
+  } catch (error) {
+    console.error("Error creating room:", error);
+    throw error;
+  }
+};
 
-  const updateGameMode = useCallback(
-    async (roomId: string, gameMode: GameMode | RoomModeRef) => {
-      const uid = currentUid();
+const joinRoom = async (roomId: string) => {
+  try {
+    const user = await ensureSignedIn();
+    for (let attempt = 0; attempt < 4; attempt++) {
       const raw = await readRoom(roomId);
-      if (!raw) throw new Error("Room not found");
-      if (raw.hostUid !== uid)
-        throw new Error("Only the host can update game mode");
-      if (raw.status !== "waiting") {
-        throw new Error("Cannot update game mode while game is in progress");
+      if (!raw || (await removeIfStale(roomId, raw))) {
+        throw new Error("Room not found");
       }
-      await update(roomRef(roomId), {
-        mode: toRoomMode(gameMode),
-        lastActivityAt: serverTimestamp(),
-      });
-    },
-    [],
-  );
+      if (raw.kicked?.[user.uid]) {
+        throw new Error("You have been removed from this room");
+      }
 
-  const kickPlayer = useCallback(async (roomId: string, playerUid: string) => {
-    const uid = currentUid();
+      if (raw.players?.[user.uid]) {
+        // Reconnecting (any room status).
+        await update(roomRef(roomId), {
+          [`players/${user.uid}/disconnected`]: false,
+          [`players/${user.uid}/disconnectedAt`]: null,
+          lastActivityAt: serverTimestamp(),
+        });
+      } else {
+        if (raw.status !== "waiting") {
+          throw new Error("Room is not accepting players");
+        }
+        const taken = new Set(slotHolders(raw).map(([slot]) => slot));
+        let slot: string | null = null;
+        for (let i = 0; i < Math.min(raw.maxPlayers, ROOM_MAX_PLAYERS); i++) {
+          if (!taken.has(String(i))) {
+            slot = String(i);
+            break;
+          }
+        }
+        if (slot === null) throw new Error("Room is full");
+        try {
+          await update(roomRef(roomId), {
+            [`slots/${slot}`]: user.uid,
+            [`players/${user.uid}`]: newPlayer(user.uid, slot),
+            lastActivityAt: serverTimestamp(),
+          });
+        } catch (error) {
+          // Someone took the seat (or the game started) in the meantime.
+          if (isPermissionDenied(error) && attempt < 3) continue;
+          throw isPermissionDenied(error)
+            ? new Error("Room is full or no longer accepting players")
+            : error;
+        }
+      }
+      await armDisconnect(roomId, user.uid);
+      void setPresence(user.uid, roomId);
+      return;
+    }
+  } catch (error) {
+    console.error("Error joining room:", error);
+    throw error;
+  }
+};
+
+const leaveRoom = async (roomId: string) => {
+  const uid = auth.currentUser?.uid;
+  if (!uid) return;
+  try {
+    await onDisconnect(playerRef(roomId, uid)).cancel();
     const raw = await readRoom(roomId);
-    if (!raw) throw new Error("Room not found");
-    if (raw.hostUid !== uid) throw new Error("Only the host can kick players");
-    if (playerUid === uid) throw new Error("Cannot kick yourself");
-    const target = raw.players?.[playerUid];
+    scoreState.delete(roomId);
+    if (!raw || !raw.players?.[uid]) return;
+
+    const others = entries<RawPlayer>(raw.players)
+      .map(([, p]) => p)
+      .filter((p) => p.uid !== uid);
+    const othersConnected = others.filter((p) => !p.disconnected);
+
+    if (
+      others.length === 0 ||
+      (raw.status === "waiting" && othersConnected.length === 0)
+    ) {
+      try {
+        await remove(roomRef(roomId));
+        latestRaw.delete(roomId);
+        return;
+      } catch {
+        // Fall through to a normal leave.
+      }
+    }
+
+    const mySlot = raw.players[uid]?.slot;
     const updates: Record<string, unknown> = {
-      [`kicked/${playerUid}`]: true,
-      [`players/${playerUid}`]: null,
+      [`players/${uid}`]: null,
       lastActivityAt: serverTimestamp(),
     };
-    if (target?.slot !== undefined) updates[`slots/${target.slot}`] = null;
+    if (mySlot !== undefined) updates[`slots/${mySlot}`] = null;
+
+    if (raw.hostUid === uid) {
+      const nextHost =
+        activePlayers(raw).find((p) => p.uid !== uid) ?? others[0];
+      if (nextHost) {
+        updates.hostUid = nextHost.uid;
+        if (raw.status === "playing") updates.status = "waiting";
+      }
+    }
     await update(roomRef(roomId), updates);
-  }, []);
+  } catch (error) {
+    console.error("Error leaving room:", error);
+    throw error;
+  } finally {
+    void setPresence(uid, null);
+  }
+};
 
-  const transferHost = useCallback(
-    async (roomId: string, newHostUid: string) => {
-      const uid = currentUid();
-      const raw = await readRoom(roomId);
-      if (!raw) throw new Error("Room not found");
-      if (raw.hostUid !== uid) {
-        throw new Error("Only the host can transfer host privileges");
-      }
-      const target = raw.players?.[newHostUid];
-      if (!target || target.disconnected || raw.kicked?.[newHostUid]) {
-        throw new Error("New host must be an active player in the room");
-      }
-      await update(roomRef(roomId), {
-        hostUid: newHostUid,
-        [`players/${uid}/ready`]: false,
-        lastActivityAt: serverTimestamp(),
-      });
-    },
-    [],
-  );
+const setPlayerReady = async (roomId: string, ready: boolean) => {
+  const uid = auth.currentUser?.uid;
+  if (!uid) return;
+  await set(ref(database, `rooms/${roomId}/players/${uid}/ready`), ready);
+};
 
-  const updateRoomSettings = useCallback(
-    async (roomId: string, settings: { allowVisualAids?: boolean }) => {
-      const uid = currentUid();
-      const raw = await readRoom(roomId);
-      if (!raw) throw new Error("Room not found");
-      if (raw.hostUid !== uid) {
-        throw new Error("Only the host can update room settings");
-      }
-      const updates: Record<string, unknown> = {
-        lastActivityAt: serverTimestamp(),
-      };
-      if (typeof settings.allowVisualAids === "boolean") {
-        updates.allowVisualAids = settings.allowVisualAids;
-      }
-      await update(roomRef(roomId), updates);
-    },
-    [],
-  );
+const startGame = async (roomId: string) => {
+  const uid = currentUid();
+  const raw = await readRoom(roomId);
+  if (!raw) throw new Error("Room not found");
+  if (raw.hostUid !== uid) throw new Error("Only host can start the game");
+  const others = activePlayers(raw).filter((p) => p.uid !== raw.hostUid);
+  if (others.length === 0 || !others.every((p) => p.ready)) {
+    throw new Error("All players must be ready");
+  }
+  await update(roomRef(roomId), {
+    status: "playing",
+    startedAt: serverTimestamp(),
+    seed: randomSeed(),
+    lastActivityAt: serverTimestamp(),
+  });
+};
 
-  const subscribeToRoom = useCallback(
-    (roomId: string, callback: (room: Room | null) => void) => {
-      const rRef = roomRef(roomId);
-      let claiming = false;
-      let finishing = false;
-      let resetting = false;
-      let restoring = false;
-      let connected = false;
-      let lastRaw: RawRoom | null = null;
+/**
+ * Records the caller's score for the current round. `correct` defaults to
+ * `score` (legacy modes score one point per correct answer).
+ */
+const updatePlayerScore = async (
+  roomId: string,
+  score: number,
+  correct?: number,
+) => {
+  const uid = auth.currentUser?.uid;
+  if (!uid) return;
+  const raw = latestRaw.get(roomId) ?? (await readRoom(roomId));
+  if (!raw || raw.status === "waiting" || typeof raw.startedAt !== "number") {
+    return; // Nothing to record outside a round.
+  }
+  const round = raw.startedAt;
+  const value = Math.max(0, Math.floor(score));
+  let state = scoreState.get(roomId);
+  if (!state || state.round !== round) {
+    const mine = raw.players?.[uid];
+    const sameRound = mine?.round === round;
+    const history = sameRound ? historyArray(mine?.scoreHistory) : [];
+    state = {
+      round,
+      nextIndex: history.length,
+      lastScore: sameRound ? (mine?.score ?? 0) : -1,
+    };
+    scoreState.set(roomId, state);
+  }
+  // Scores are monotonic within a round (the rules reject decreases).
+  if (value <= state.lastScore) return;
 
-      const restoreConnection = (rearm: boolean) => {
-        const uid = auth.currentUser?.uid;
-        if (restoring || !uid || !lastRaw) return;
-        const me = lastRaw.players?.[uid];
-        if (!me || lastRaw.kicked?.[uid]) return;
-        if (!me.disconnected && !rearm) return;
-        restoring = true;
-        update(rRef, {
-          [`players/${uid}/disconnected`]: false,
-          [`players/${uid}/disconnectedAt`]: null,
-        })
-          .then(() => armDisconnect(roomId, uid))
-          .catch((e) => console.error("Error restoring connection:", e))
-          .finally(() => {
-            restoring = false;
-          });
-      };
+  const updates: Record<string, unknown> = {
+    [`players/${uid}/round`]: round,
+    [`players/${uid}/score`]: value,
+    [`players/${uid}/correct`]: Math.max(0, Math.floor(correct ?? value)),
+    lastActivityAt: serverTimestamp(),
+  };
+  if (state.nextIndex === 0) {
+    updates[`players/${uid}/scoreHistory/0`] = 0;
+    state.nextIndex = 1;
+  }
+  if (value > 0 && state.nextIndex < 1000) {
+    updates[`players/${uid}/scoreHistory/${state.nextIndex}`] = value;
+    state.nextIndex += 1;
+  }
+  const previous = state.lastScore;
+  state.lastScore = value;
+  try {
+    await update(roomRef(roomId), updates);
+  } catch (error) {
+    state.lastScore = previous;
+    console.error("Error updating score:", error);
+  }
+};
 
-      const unsubscribeRoom = onValue(
-        rRef,
-        (snapshot) => {
-          const uid = auth.currentUser?.uid;
-          if (!snapshot.exists()) {
-            latestRaw.delete(roomId);
-            lastRaw = null;
-            callback(null);
-            return;
-          }
-          const raw = snapshot.val() as RawRoom;
-          latestRaw.set(roomId, raw);
-          lastRaw = raw;
+const finishGame = async (roomId: string, options?: { finishMs?: number }) => {
+  const uid = auth.currentUser?.uid;
+  if (!uid) return;
+  try {
+    const raw = await readRoom(roomId);
+    if (!raw || raw.status !== "playing" || typeof raw.startedAt !== "number") {
+      return;
+    }
+    const me = raw.players?.[uid];
+    if (!me) return;
+    const updates: Record<string, unknown> = {
+      [`players/${uid}/finished`]: true,
+      [`players/${uid}/round`]: raw.startedAt,
+      lastActivityAt: serverTimestamp(),
+    };
+    if (me.round !== raw.startedAt) {
+      // Finished without scoring this round.
+      updates[`players/${uid}/score`] = 0;
+      updates[`players/${uid}/correct`] = 0;
+    }
+    if (
+      options?.finishMs !== undefined &&
+      !(me.round === raw.startedAt && me.finished)
+    ) {
+      updates[`players/${uid}/finishMs`] = Math.max(
+        0,
+        Math.round(options.finishMs),
+      );
+    }
+    await update(roomRef(roomId), updates);
 
-          const players = entries<RawPlayer>(raw.players);
-          if (players.length === 0) {
-            // Husk without players: clean up if allowed, report as gone.
-            void removeIfStale(roomId, raw);
-            callback(null);
-            return;
-          }
-
-          const me = uid ? raw.players?.[uid] : undefined;
-          if (uid && me && !raw.kicked?.[uid]) {
-            // Marked disconnected while this tab is connected (e.g. a network
-            // blip or another tab of ours closed): we are here, say so.
-            if (connected && me.disconnected) restoreConnection(false);
-
-            // Host left or disconnected: the earliest-joined connected player
-            // claims host (rules allow this only when the host is gone).
-            const host = raw.players?.[raw.hostUid];
-            if (!claiming && (!host || host.disconnected)) {
-              const successor = activePlayers(raw).find(
-                (p) => p.uid !== raw.hostUid,
-              );
-              if (successor?.uid === uid) {
-                claiming = true;
-                update(rRef, {
-                  hostUid: uid,
-                  lastActivityAt: serverTimestamp(),
-                })
-                  .catch((e) => console.error("Error claiming host:", e))
-                  .finally(() => {
-                    claiming = false;
-                  });
-              }
-            }
-
-            // Host ends the round once every connected player finished.
-            if (!finishing && raw.hostUid === uid && raw.status === "playing") {
-              const active = activePlayers(raw);
-              if (
-                active.length > 0 &&
-                active.every((p) => p.finished && p.round === raw.startedAt)
-              ) {
-                finishing = true;
-                set(ref(database, `rooms/${roomId}/status`), "finished")
-                  .catch((e) => console.error("Error finishing round:", e))
-                  .finally(() => {
-                    finishing = false;
-                  });
-              }
-            }
-
-            // Back in the lobby: clear my previous round's data.
-            if (
-              !resetting &&
-              raw.status === "waiting" &&
-              (me.round !== undefined || me.finished || (me.score ?? 0) > 0)
-            ) {
-              resetting = true;
-              scoreState.delete(roomId);
-              update(rRef, resetOwnNodeUpdates(uid, raw.hostUid === uid))
-                .catch((e) => console.error("Error resetting player:", e))
-                .finally(() => {
-                  resetting = false;
-                });
-            }
-          }
-
-          callback(normalizeRoom(roomId, raw, uid));
-        },
+    // End the round once every connected player has finished.
+    const after = await readRoom(roomId);
+    if (!after || after.status !== "playing") return;
+    const active = activePlayers(after);
+    const allFinished =
+      active.length > 0 &&
+      active.every((p) => p.finished && p.round === after.startedAt);
+    if (allFinished) {
+      // The host's subscription usually gets there first; losing that race
+      // (status already "finished") is fine.
+      await set(ref(database, `rooms/${roomId}/status`), "finished").catch(
         (error) => {
-          console.error("Room subscription error:", error);
-          callback(null);
+          if (!isPermissionDenied(error)) throw error;
         },
       );
+    }
+  } catch (error) {
+    console.error("Error finishing game:", error);
+    throw error;
+  }
+};
 
-      // After a network drop the server ran our onDisconnect (marking us
-      // disconnected and dropping the handler); once the connection is back,
-      // mark ourselves connected again and re-arm the handler.
-      const unsubscribeConnected = onValue(
-        ref(database, ".info/connected"),
-        (snap) => {
-          connected = snap.val() === true;
-          if (connected) restoreConnection(true);
-        },
-      );
+const resetRoom = async (roomId: string) => {
+  const uid = currentUid();
+  const raw = await readRoom(roomId);
+  if (!raw) throw new Error("Room not found");
+  const isHost = raw.hostUid === uid;
+  if (!isHost && raw.status === "playing") {
+    throw new Error("Only the host can stop a game in progress");
+  }
+  // Back to the lobby. Every client resets its own round data when it sees
+  // status "waiting" (see subscribeToRoom), so scores never leak across rounds.
+  await update(roomRef(roomId), {
+    status: "waiting",
+    lastActivityAt: serverTimestamp(),
+  });
+  scoreState.delete(roomId);
+  await update(roomRef(roomId), resetOwnNodeUpdates(uid, isHost)).catch(
+    () => undefined,
+  );
+};
 
-      return () => {
-        unsubscribeRoom();
-        unsubscribeConnected();
-      };
+const incrementWins = async (roomId: string, winnerId: string) => {
+  const uid = auth.currentUser?.uid;
+  // Rules only let players write their own node, so only the winner counts it.
+  if (!uid || uid !== winnerId) return;
+  try {
+    const raw = await readRoom(roomId);
+    const me = raw?.players?.[uid];
+    if (!raw || !me || raw.status !== "finished") return;
+    if (me.lastWinRound === raw.startedAt) return; // already counted
+    await update(roomRef(roomId), {
+      [`players/${uid}/wins`]: (me.wins ?? 0) + 1,
+      [`players/${uid}/lastWinRound`]: raw.startedAt,
+    });
+  } catch (error) {
+    console.error("Error incrementing wins:", error);
+    throw error;
+  }
+};
+
+const updateGameMode = async (
+  roomId: string,
+  gameMode: GameMode | RoomModeRef,
+) => {
+  const uid = currentUid();
+  const raw = await readRoom(roomId);
+  if (!raw) throw new Error("Room not found");
+  if (raw.hostUid !== uid)
+    throw new Error("Only the host can update game mode");
+  if (raw.status !== "waiting") {
+    throw new Error("Cannot update game mode while game is in progress");
+  }
+  await update(roomRef(roomId), {
+    mode: toRoomMode(gameMode),
+    lastActivityAt: serverTimestamp(),
+  });
+};
+
+const kickPlayer = async (roomId: string, playerUid: string) => {
+  const uid = currentUid();
+  const raw = await readRoom(roomId);
+  if (!raw) throw new Error("Room not found");
+  if (raw.hostUid !== uid) throw new Error("Only the host can kick players");
+  if (playerUid === uid) throw new Error("Cannot kick yourself");
+  const target = raw.players?.[playerUid];
+  const updates: Record<string, unknown> = {
+    [`kicked/${playerUid}`]: true,
+    [`players/${playerUid}`]: null,
+    lastActivityAt: serverTimestamp(),
+  };
+  if (target?.slot !== undefined) updates[`slots/${target.slot}`] = null;
+  await update(roomRef(roomId), updates);
+};
+
+const transferHost = async (roomId: string, newHostUid: string) => {
+  const uid = currentUid();
+  const raw = await readRoom(roomId);
+  if (!raw) throw new Error("Room not found");
+  if (raw.hostUid !== uid) {
+    throw new Error("Only the host can transfer host privileges");
+  }
+  const target = raw.players?.[newHostUid];
+  if (!target || target.disconnected || raw.kicked?.[newHostUid]) {
+    throw new Error("New host must be an active player in the room");
+  }
+  await update(roomRef(roomId), {
+    hostUid: newHostUid,
+    [`players/${uid}/ready`]: false,
+    lastActivityAt: serverTimestamp(),
+  });
+};
+
+const updateRoomSettings = async (
+  roomId: string,
+  settings: { allowVisualAids?: boolean },
+) => {
+  const uid = currentUid();
+  const raw = await readRoom(roomId);
+  if (!raw) throw new Error("Room not found");
+  if (raw.hostUid !== uid) {
+    throw new Error("Only the host can update room settings");
+  }
+  const updates: Record<string, unknown> = {
+    lastActivityAt: serverTimestamp(),
+  };
+  if (typeof settings.allowVisualAids === "boolean") {
+    updates.allowVisualAids = settings.allowVisualAids;
+  }
+  await update(roomRef(roomId), updates);
+};
+
+const subscribeToRoom = (
+  roomId: string,
+  callback: (room: Room | null) => void,
+) => {
+  const rRef = roomRef(roomId);
+  let claiming = false;
+  let finishing = false;
+  let resetting = false;
+  let restoring = false;
+  let connected = false;
+  let lastRaw: RawRoom | null = null;
+
+  const restoreConnection = (rearm: boolean) => {
+    const uid = auth.currentUser?.uid;
+    if (restoring || !uid || !lastRaw) return;
+    const me = lastRaw.players?.[uid];
+    if (!me || lastRaw.kicked?.[uid]) return;
+    if (!me.disconnected && !rearm) return;
+    restoring = true;
+    update(rRef, {
+      [`players/${uid}/disconnected`]: false,
+      [`players/${uid}/disconnectedAt`]: null,
+    })
+      .then(() => armDisconnect(roomId, uid))
+      .catch((e) => console.error("Error restoring connection:", e))
+      .finally(() => {
+        restoring = false;
+      });
+  };
+
+  liveRooms.set(roomId, (liveRooms.get(roomId) ?? 0) + 1);
+  const unsubscribeRoom = onValue(
+    rRef,
+    (snapshot) => {
+      const uid = auth.currentUser?.uid;
+      if (!snapshot.exists()) {
+        latestRaw.delete(roomId);
+        lastRaw = null;
+        callback(null);
+        return;
+      }
+      const raw = snapshot.val() as RawRoom;
+      latestRaw.set(roomId, raw);
+      lastRaw = raw;
+
+      const players = entries<RawPlayer>(raw.players);
+      if (players.length === 0) {
+        // Husk without players: clean up if allowed, report as gone.
+        void removeIfStale(roomId, raw);
+        callback(null);
+        return;
+      }
+
+      // Deliver first: the writes below raise local events synchronously
+      // (re-entering this listener), and an older snapshot must never be
+      // delivered after a newer one.
+      callback(normalizeRoom(roomId, raw, uid));
+
+      const me = uid ? raw.players?.[uid] : undefined;
+      if (uid && me && !raw.kicked?.[uid]) {
+        // Marked disconnected while this tab is connected (e.g. a network
+        // blip or another tab of ours closed): we are here, say so.
+        if (connected && me.disconnected) restoreConnection(false);
+
+        // Host left or disconnected: the earliest-joined connected player
+        // claims host (rules allow this only when the host is gone).
+        const host = raw.players?.[raw.hostUid];
+        if (!claiming && (!host || host.disconnected)) {
+          const successor = activePlayers(raw).find(
+            (p) => p.uid !== raw.hostUid,
+          );
+          if (successor?.uid === uid) {
+            claiming = true;
+            update(rRef, {
+              hostUid: uid,
+              lastActivityAt: serverTimestamp(),
+            })
+              .catch((e) => console.error("Error claiming host:", e))
+              .finally(() => {
+                claiming = false;
+              });
+          }
+        }
+
+        // Host ends the round once every connected player finished.
+        if (!finishing && raw.hostUid === uid && raw.status === "playing") {
+          const active = activePlayers(raw);
+          if (
+            active.length > 0 &&
+            active.every((p) => p.finished && p.round === raw.startedAt)
+          ) {
+            finishing = true;
+            set(ref(database, `rooms/${roomId}/status`), "finished")
+              .catch((e) => console.error("Error finishing round:", e))
+              .finally(() => {
+                finishing = false;
+              });
+          }
+        }
+
+        // Back in the lobby: clear my previous round's data.
+        if (
+          !resetting &&
+          raw.status === "waiting" &&
+          (me.round !== undefined || me.finished || (me.score ?? 0) > 0)
+        ) {
+          resetting = true;
+          scoreState.delete(roomId);
+          update(rRef, resetOwnNodeUpdates(uid, raw.hostUid === uid))
+            .catch((e) => console.error("Error resetting player:", e))
+            .finally(() => {
+              resetting = false;
+            });
+        }
+      }
     },
+    (error) => {
+      console.error("Room subscription error:", error);
+      callback(null);
+    },
+  );
+
+  // After a network drop the server ran our onDisconnect (marking us
+  // disconnected and dropping the handler); once the connection is back,
+  // mark ourselves connected again and re-arm the handler.
+  const unsubscribeConnected = onValue(
+    ref(database, ".info/connected"),
+    (snap) => {
+      connected = snap.val() === true;
+      if (connected) restoreConnection(true);
+    },
+  );
+
+  return () => {
+    unsubscribeRoom();
+    liveRooms.set(roomId, Math.max(0, (liveRooms.get(roomId) ?? 1) - 1));
+    unsubscribeConnected();
+  };
+};
+
+export const roomApi = {
+  createRoom,
+  joinRoom,
+  leaveRoom,
+  setPlayerReady,
+  startGame,
+  updatePlayerScore,
+  finishGame,
+  resetRoom,
+  incrementWins,
+  updateGameMode,
+  kickPlayer,
+  updateRoomSettings,
+  transferHost,
+  subscribeToRoom,
+};
+
+export function useRoom() {
+  const [pending, setPending] = useState(0);
+
+  const withLoading = useCallback(
+    <A extends unknown[], R>(fn: (...args: A) => Promise<R>) =>
+      async (...args: A): Promise<R> => {
+        setPending((n) => n + 1);
+        try {
+          return await fn(...args);
+        } finally {
+          setPending((n) => n - 1);
+        }
+      },
     [],
   );
+
+  const create = useMemo(() => withLoading(createRoom), [withLoading]);
+  const join = useMemo(() => withLoading(joinRoom), [withLoading]);
 
   return {
-    loading,
-    createRoom,
-    joinRoom,
-    leaveRoom,
-    setPlayerReady,
-    startGame,
-    updatePlayerScore,
-    finishGame,
-    resetRoom,
-    incrementWins,
-    updateGameMode,
-    kickPlayer,
-    updateRoomSettings,
-    transferHost,
-    subscribeToRoom,
+    ...roomApi,
+    loading: pending > 0,
+    createRoom: create,
+    joinRoom: join,
   };
 }

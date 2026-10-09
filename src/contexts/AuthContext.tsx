@@ -20,7 +20,6 @@ import {
   onAuthStateChanged,
   reauthenticateWithCredential,
   reauthenticateWithPopup,
-  signInAnonymously,
   signInWithCredential,
   signInWithEmailAndPassword,
   signInWithPopup,
@@ -31,6 +30,7 @@ import { ref, remove } from "firebase/database";
 import { auth, database } from "@/firebase/config";
 import { validateDisplayName } from "@/utils/displayNameValidator";
 import { generateGuestName } from "@/lib/guestName";
+import { ensureSignedIn } from "@/lib/ensureUser";
 import {
   clampDisplayName,
   deleteUserData,
@@ -116,28 +116,7 @@ function friendlyError(
   return Object.assign(new Error(message), { code });
 }
 
-// One in-flight anonymous sign-in shared by everybody who needs a uid.
-let pendingAnonymous: Promise<User> | null = null;
-
-function signInGuest(): Promise<User> {
-  if (auth.currentUser) return Promise.resolve(auth.currentUser);
-  if (!pendingAnonymous) {
-    pendingAnonymous = signInAnonymously(auth)
-      .then(async ({ user }) => {
-        if (!user.displayName) {
-          // Best effort: a friendly name for rooms/chat. Not fatal if it fails.
-          await updateProfile(user, { displayName: generateGuestName() }).catch(
-            () => undefined,
-          );
-        }
-        return user;
-      })
-      .finally(() => {
-        pendingAnonymous = null;
-      });
-  }
-  return pendingAnonymous;
-}
+const signInGuest = ensureSignedIn;
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(auth.currentUser);

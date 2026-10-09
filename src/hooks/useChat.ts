@@ -37,14 +37,22 @@ export interface ChatMessage {
 
 let lastSentAt = 0;
 
-async function postMessage(roomId: string, text: string, isSystem: boolean) {
+/** Sends a chat message as the signed-in user (plain function, no React). */
+export async function postMessage(
+  roomId: string,
+  text: string,
+  isSystem = false,
+) {
   const user = auth.currentUser;
   const message = text.trim().slice(0, CHAT_MAX_LENGTH);
   if (!user || !message) return;
 
-  const wait = lastSentAt + CHAT_MIN_INTERVAL_MS - Date.now();
+  // Small margin over the server-side limit to absorb network jitter.
+  const wait = lastSentAt + CHAT_MIN_INTERVAL_MS + 200 - Date.now();
   if (wait > 0) {
-    throw new Error("You're sending messages too quickly. Please wait a moment.");
+    throw new Error(
+      "You're sending messages too quickly. Please wait a moment.",
+    );
   }
 
   const roomPath = `rooms/${roomId}`;
@@ -72,6 +80,38 @@ async function postMessage(roomId: string, text: string, isSystem: boolean) {
     }
     throw error;
   }
+}
+
+/** Live list of the last `messageLimit` messages, oldest first. */
+export function subscribeToChat(
+  roomId: string,
+  callback: (messages: ChatMessage[]) => void,
+  messageLimit: number = 50,
+) {
+  const chatQuery = query(
+    ref(database, `rooms/${roomId}/chat`),
+    orderByChild("timestamp"),
+    limitToLast(messageLimit),
+  );
+
+  return onValue(
+    chatQuery,
+    (snapshot) => {
+      const messages: ChatMessage[] = [];
+      snapshot.forEach((child) => {
+        const data = child.val();
+        if (data && typeof data === "object") {
+          messages.push({ id: child.key || "", ...data });
+        }
+      });
+      messages.sort((a, b) => a.timestamp - b.timestamp);
+      callback(messages);
+    },
+    (error) => {
+      console.error("Chat subscription error:", error);
+      callback([]);
+    },
+  );
 }
 
 export function useChat() {
@@ -104,39 +144,7 @@ export function useChat() {
     [],
   );
 
-  const subscribeToMessages = useCallback(
-    (
-      roomId: string,
-      callback: (messages: ChatMessage[]) => void,
-      messageLimit: number = 50,
-    ) => {
-      const chatQuery = query(
-        ref(database, `rooms/${roomId}/chat`),
-        orderByChild("timestamp"),
-        limitToLast(messageLimit),
-      );
-
-      return onValue(
-        chatQuery,
-        (snapshot) => {
-          const messages: ChatMessage[] = [];
-          snapshot.forEach((child) => {
-            const data = child.val();
-            if (data && typeof data === "object") {
-              messages.push({ id: child.key || "", ...data });
-            }
-          });
-          messages.sort((a, b) => a.timestamp - b.timestamp);
-          callback(messages);
-        },
-        (error) => {
-          console.error("Chat subscription error:", error);
-          callback([]);
-        },
-      );
-    },
-    [],
-  );
+  const subscribeToMessages = subscribeToChat;
 
   return {
     loading,
