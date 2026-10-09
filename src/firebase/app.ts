@@ -1,11 +1,13 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, connectAuthEmulator } from "firebase/auth";
-import { getDatabase, connectDatabaseEmulator } from "firebase/database";
-import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
 import {
   initializeAppCheck,
   ReCaptchaEnterpriseProvider,
 } from "firebase/app-check";
+
+// Firebase app + Auth. Realtime Database and Firestore live in their own
+// modules (./database, ./firestore) so the entry bundle only carries Auth;
+// pages that need data pull those SDKs in with their own lazy chunks.
 
 // Firebase configuration from environment variables
 const firebaseConfig = {
@@ -21,7 +23,7 @@ const firebaseConfig = {
 // Initialize Firebase
 export const app = initializeApp(firebaseConfig);
 
-const useEmulators =
+export const useEmulators =
   import.meta.env.DEV && import.meta.env.VITE_USE_FIREBASE_EMULATORS === "true";
 
 /**
@@ -57,29 +59,15 @@ if (appCheckSiteKey && !useEmulators && typeof window !== "undefined") {
   }
 }
 
-// Initialize Firebase services
 export const auth = getAuth(app);
-export const database = getDatabase(app); // Realtime Database for ephemeral data
-export const firestore = getFirestore(app); // Firestore for persistent data
 
-// Connect to emulators in development
+/** Host and ports of the local emulators (dev only). */
+export const emulatorHost = import.meta.env.VITE_EMULATOR_HOST || "127.0.0.1";
+
 if (useEmulators) {
-  const env = import.meta.env;
-  const host = env.VITE_EMULATOR_HOST || "127.0.0.1";
   connectAuthEmulator(
     auth,
-    `http://${host}:${env.VITE_EMULATOR_AUTH_PORT || 9099}`,
+    `http://${emulatorHost}:${import.meta.env.VITE_EMULATOR_AUTH_PORT || 9099}`,
     { disableWarnings: true },
   );
-  connectDatabaseEmulator(
-    database,
-    host,
-    Number(env.VITE_EMULATOR_DATABASE_PORT || 9000),
-  );
-  connectFirestoreEmulator(
-    firestore,
-    host,
-    Number(env.VITE_EMULATOR_FIRESTORE_PORT || 8080),
-  );
-  console.log("Connected to Firebase Emulators (Auth, RTDB, Firestore)");
 }

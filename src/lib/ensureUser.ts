@@ -1,5 +1,5 @@
 import { signInAnonymously, updateProfile, type User } from "firebase/auth";
-import { auth } from "@/firebase/config";
+import { auth } from "@/firebase/app";
 import { generateGuestName } from "@/lib/guestName";
 
 // One in-flight anonymous sign-in shared by everybody who needs a uid.

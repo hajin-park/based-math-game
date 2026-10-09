@@ -15,7 +15,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { DEFAULT_GAME_SETTINGS, getLocalRuns } from "@/data";
 import { getLocalSettings } from "@/data/localStore";
 import { saveUserSettings } from "@/data/profile";
-import { auth } from "@/firebase/config";
+import { auth } from "@/firebase/app";
 import { friendlyAuthError, safeNextPath } from "@/lib/authErrors";
 import {
   DISPLAY_NAME_MAX,

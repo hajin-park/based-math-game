@@ -1,5 +1,5 @@
 import { onDisconnect, ref, serverTimestamp, set } from "firebase/database";
-import { database } from "@/firebase/config";
+import { database } from "@/firebase/database";
 
 /**
  * Self-only presence at `presence/{uid}` (rules: only the user can read or

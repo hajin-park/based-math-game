@@ -4,7 +4,7 @@
  */
 import { useEffect, useRef, useState } from "react";
 import { onValue, ref } from "firebase/database";
-import { database } from "@/firebase/config";
+import { database } from "@/firebase/database";
 import { roomApi, type Room } from "@/hooks/useRoom";
 import { subscribeToChat, type ChatMessage } from "@/hooks/useChat";
 import { serverNow } from "@/lib/serverTime";

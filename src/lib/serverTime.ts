@@ -1,5 +1,5 @@
 import { onValue, ref } from "firebase/database";
-import { database } from "@/firebase/config";
+import { database } from "@/firebase/database";
 
 let offsetMs = 0;
 let listening = false;

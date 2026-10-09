@@ -6,7 +6,8 @@ import {
   getDoc,
 } from "firebase/firestore";
 import type { User } from "firebase/auth";
-import { auth, firestore } from "@/firebase/config";
+import { auth } from "@/firebase/app";
+import { firestore } from "@/firebase/firestore";
 import { isRankedModeId } from "./limits";
 import { submitLeaderboardEntry } from "./leaderboard";
 import {

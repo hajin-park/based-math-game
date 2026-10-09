@@ -42,7 +42,8 @@ import {
   set,
   serverTimestamp,
 } from "firebase/database";
-import { auth, database } from "@/firebase/config";
+import { auth } from "@/firebase/app";
+import { database } from "@/firebase/database";
 import { ensureSignedIn } from "@/lib/ensureUser";
 import type { GameMode } from "@/game";
 import { RoomModeRef, resolveRoomMode, toRoomMode } from "@/lib/roomMode";

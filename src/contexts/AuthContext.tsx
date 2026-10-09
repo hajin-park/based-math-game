@@ -27,19 +27,18 @@ import {
   signOut as firebaseSignOut,
   updateProfile,
 } from "firebase/auth";
-import { ref, remove } from "firebase/database";
-import { auth, database } from "@/firebase/config";
+import { auth } from "@/firebase/app";
 import { validateDisplayName } from "@/utils/displayNameValidator";
 import { generateGuestName } from "@/lib/guestName";
 import { ensureSignedIn } from "@/lib/ensureUser";
-import {
-  clampDisplayName,
-  deleteUserData,
-  ensureUserProfile,
-  propagateDisplayName,
-} from "@/data/profile";
-import { importLocalRuns } from "@/data/runs";
+import { clampDisplayName } from "@/data/names";
 import { clearLocalRuns, clearLocalSettings } from "@/data/localStore";
+
+// Firestore and the Realtime Database are loaded on demand so the entry
+// bundle only carries Firebase Auth.
+const loadProfile = () => import("@/data/profile");
+const ensureUserProfile = async (user: User) =>
+  (await loadProfile()).ensureUserProfile(user);
 
 /**
  * Authentication model
@@ -182,7 +181,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await ensureUserProfile(upgraded).catch((error) =>
         console.error("Error creating user profile:", error),
       );
-      await importLocalRuns(upgraded);
+      await (await import("@/data/runs")).importLocalRuns(upgraded);
       refreshUser();
     },
     [refreshUser],
@@ -316,7 +315,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const name = clampDisplayName(displayName);
       await updateProfile(current, { displayName: name });
       if (!current.isAnonymous) {
-        await propagateDisplayName(current.uid, name);
+        await (await loadProfile()).propagateDisplayName(current.uid, name);
       }
       refreshUser();
     },
@@ -348,12 +347,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           );
         }
       }
-      await deleteUserData(current.uid);
+      await (await loadProfile()).deleteUserData(current.uid);
     }
 
-    await remove(ref(database, `presence/${current.uid}`)).catch(
-      () => undefined,
-    );
+    await Promise.all([
+      import("firebase/database"),
+      import("@/firebase/database"),
+    ])
+      .then(([{ ref, remove }, { database }]) =>
+        remove(ref(database, `presence/${current.uid}`)),
+      )
+      .catch(() => undefined);
     clearLocalRuns();
     clearLocalSettings();
 

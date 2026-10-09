@@ -1,19 +1,17 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { onValue, ref } from "firebase/database";
 import { Wifi, WifiOff } from "lucide-react";
-import { database } from "@/firebase/config";
 import { cn } from "@/lib/utils";
 
 /** How long a drop must last before we mention it. */
 const GRACE_MS = 3000;
 
 /**
- * Global "you're offline" notice. RTDB reports "disconnected" for the first
- * moments of every page load, so nothing is shown until a connection that
- * once worked has been gone for a few seconds; "Back online" is shown only
- * to people who saw the offline notice. Room pages show their own
- * connection state in the room bar, so this stays out of their way.
+ * Global "you're offline" notice, driven by the browser's online/offline
+ * events (no database socket is opened just for this). Nothing is shown
+ * until a drop has lasted a few seconds; "Back online" is shown only to
+ * people who saw the offline notice. Room pages show their own connection
+ * state in the room bar, so this stays out of their way.
  */
 export default function ConnectionStatus() {
   const { pathname } = useLocation();
@@ -22,28 +20,31 @@ export default function ConnectionStatus() {
   );
 
   useEffect(() => {
-    let everConnected = false;
     let shownOffline = false;
     let timer: number | undefined;
-    const unsubscribe = onValue(ref(database, ".info/connected"), (snap) => {
+    const onOnline = () => {
       window.clearTimeout(timer);
-      if (snap.val() === true) {
-        everConnected = true;
-        if (shownOffline) {
-          shownOffline = false;
-          setState("restored");
-          timer = window.setTimeout(() => setState("hidden"), 3000);
-        }
-      } else if (everConnected) {
-        timer = window.setTimeout(() => {
-          shownOffline = true;
-          setState("offline");
-        }, GRACE_MS);
+      if (shownOffline) {
+        shownOffline = false;
+        setState("restored");
+        timer = window.setTimeout(() => setState("hidden"), 3000);
       }
-    });
+    };
+    const onOffline = () => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        if (navigator.onLine) return;
+        shownOffline = true;
+        setState("offline");
+      }, GRACE_MS);
+    };
+    window.addEventListener("online", onOnline);
+    window.addEventListener("offline", onOffline);
+    if (!navigator.onLine) onOffline();
     return () => {
       window.clearTimeout(timer);
-      unsubscribe();
+      window.removeEventListener("online", onOnline);
+      window.removeEventListener("offline", onOffline);
     };
   }, []);
 

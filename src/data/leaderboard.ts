@@ -13,7 +13,7 @@ import {
   type DocumentData,
 } from "firebase/firestore";
 import type { User } from "firebase/auth";
-import { firestore } from "@/firebase/config";
+import { firestore } from "@/firebase/firestore";
 import {
   isDailyModeId,
   isImprovement,

@@ -10,21 +10,20 @@ import {
   writeBatch,
 } from "firebase/firestore";
 import type { User } from "firebase/auth";
-import { firestore } from "@/firebase/config";
-import { isRankedModeId, modeIdFromBestsKey, RULES_LIMITS } from "./limits";
+import { firestore } from "@/firebase/firestore";
+import { isRankedModeId, modeIdFromBestsKey } from "./limits";
+import { clampDisplayName } from "./names";
 import { entryRef } from "./leaderboard";
 import { runsCollection, statsRef } from "./runs";
 import type { GameSettings, UserStatsDoc } from "./types";
 import { DEFAULT_GAME_SETTINGS } from "./types";
 
+export { clampDisplayName };
+
 export function profileRef(uid: string) {
   return doc(firestore, "users", uid);
 }
 
-export function clampDisplayName(name: string | null | undefined): string {
-  const trimmed = (name || "").trim();
-  return (trimmed || "Player").slice(0, RULES_LIMITS.displayNameMax);
-}
 
 /** Creates `users/{uid}` for registered users if it does not exist yet. */
 export async function ensureUserProfile(user: User): Promise<void> {

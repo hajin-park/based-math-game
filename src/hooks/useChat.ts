@@ -18,7 +18,8 @@ import {
   update,
   serverTimestamp,
 } from "firebase/database";
-import { auth, database } from "@/firebase/config";
+import { auth } from "@/firebase/app";
+import { database } from "@/firebase/database";
 import { clampDisplayName } from "@/data/profile";
 
 export const CHAT_MAX_LENGTH = 300;
