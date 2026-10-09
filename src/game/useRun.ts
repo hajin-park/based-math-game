@@ -34,6 +34,8 @@ export interface UseRunOptions {
 }
 
 export interface UseRunResult {
+  /** The mode being played (as passed in; custom configs normalised). */
+  mode: GameMode;
   status: RunStatus;
   /** Current question; null before start() and after the run ends. */
   question: Question | null;
@@ -185,6 +187,7 @@ export function useRun({
 
   const clock = runClock(state);
   return {
+    mode: state.mode,
     status: state.status,
     question: state.status === "running" ? question : null,
     index: state.index,
