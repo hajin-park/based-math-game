@@ -288,6 +288,48 @@ describe("player nodes", () => {
     await assertSucceeds(me.update({ finished: true, finishMs: 12_000 }));
   });
 
+  it("progress marks, score time and skip penalties are round-scoped and bounded", async () => {
+    const startedAt = await seedPlaying(20_000);
+    const me = db("bob").ref(`${R}/players/bob`);
+    await assertSucceeds(
+      me.update({
+        round: startedAt,
+        score: 2,
+        correct: 2,
+        scoreMs: 4_200,
+        "scoreHistory/1": 1_900,
+        "scoreHistory/2": 4_200,
+      }),
+    );
+    await assertFails(me.update({ scoreMs: 60_000 })); // in the future
+    await assertFails(me.update({ scoreMs: -1 }));
+    await assertFails(me.update({ "scoreHistory/3": 3_600_001 }));
+    await assertSucceeds(me.update({ "scoreHistory/3": 90_000 })); // long survival runs
+    await assertSucceeds(me.update({ penaltyMs: 10_000 }));
+    await assertFails(me.update({ penaltyMs: -5 }));
+    await assertFails(me.update({ penaltyMs: "10s" }));
+    // Not in this round: nothing may be recorded.
+    await seed(`${R}/players/alice/round`, startedAt - 1);
+    await assertFails(
+      db("alice").ref(`${R}/players/alice`).update({ scoreMs: 1_000 }),
+    );
+  });
+
+  it("no progress fields while waiting", async () => {
+    await seed(R, room());
+    await assertFails(db("bob").ref(`${R}/players/bob/scoreMs`).set(1));
+    await assertFails(db("bob").ref(`${R}/players/bob/penaltyMs`).set(0));
+  });
+
+  it("players may rename themselves within 1-24 characters", async () => {
+    await seed(R, room());
+    const name = db("bob").ref(`${R}/players/bob/displayName`);
+    await assertSucceeds(name.set("Ada Lovelace"));
+    await assertFails(name.set(""));
+    await assertFails(name.set("x".repeat(25)));
+    await assertFails(db("bob").ref(`${R}/players/alice/displayName`).set("Bob"));
+  });
+
   it("wins: +1 once per finished round, only by the player", async () => {
     const startedAt = await seedPlaying(60_000, { status: "finished" });
     const me = db("bob").ref(`${R}/players/bob`);
