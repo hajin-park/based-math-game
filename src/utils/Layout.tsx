@@ -12,6 +12,7 @@ import ConnectionStatus from "@/components/ConnectionStatus";
 import { CookieConsent } from "@/components/CookieConsent";
 import RouteFallback from "@/components/RouteFallback";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/components/ui/toaster";
 
 export const Layout = () => {
   const [settings, setSettings] = useState<QuizSettings>({
@@ -52,6 +53,7 @@ export const Layout = () => {
           </ResultContext.Provider>
         </main>
         {!immersive && <Footer />}
+        <Toaster />
       </div>
     </TooltipProvider>
   );
