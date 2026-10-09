@@ -569,10 +569,15 @@ function TopicRow({
         <p className="line-clamp-2 text-body-sm text-muted-foreground md:line-clamp-1">
           {topic.summary}
         </p>
-        <TopicExample
-          topicId={topic.id}
-          className="mt-1 text-mono-md md:hidden"
-        />
+        <div className="mt-1 flex flex-wrap items-baseline gap-x-4 gap-y-1 md:hidden">
+          <TopicExample topicId={topic.id} className="text-mono-md" />
+          {(sprintBest || speedBest) && (
+            <span className="font-mono text-[0.75rem] tabular-nums text-muted-foreground">
+              Best {bestText("sprint", sprintBest)} ·{" "}
+              {bestText("speedrun", speedBest)}
+            </span>
+          )}
+        </div>
       </div>
       <TopicExample
         topicId={topic.id}
@@ -728,7 +733,7 @@ function StartButton({ to, disabled }: { to: string; disabled?: boolean }) {
 
 function PanelFooter({ children }: { children: ReactNode }) {
   return (
-    <div className="sticky bottom-0 -mx-6 mt-auto flex flex-col-reverse gap-2 border-t bg-popover px-6 pt-4 xs:flex-row max-md:-mx-4 max-md:px-4">
+    <div className="sticky -bottom-6 -mx-6 -mb-6 mt-auto flex flex-col-reverse gap-2 border-t bg-popover px-6 pb-6 pt-4 xs:flex-row max-md:-mx-4 max-md:px-4">
       {children}
     </div>
   );

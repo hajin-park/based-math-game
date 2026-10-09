@@ -193,7 +193,7 @@ function RunScreen({
       />
       <section
         aria-label="Game"
-        className="relative isolate flex flex-1 flex-col items-center px-4 pb-10 pt-8 sm:justify-center sm:pb-16 sm:pt-10 [@media(max-height:480px)]:justify-start [@media(max-height:480px)]:pt-3"
+        className="relative isolate flex flex-1 flex-col items-center px-4 pb-10 pt-8 sm:justify-center sm:pb-16 sm:pt-10 pointer-coarse:justify-start pointer-coarse:pt-6 [@media(max-height:480px)]:justify-start [@media(max-height:480px)]:pt-3"
       >
         <GridPaper fade className="opacity-70" />
         <div
@@ -202,7 +202,7 @@ function RunScreen({
         >
           <GameSurface run={run} settings={settings} />
         </div>
-        <p className="mt-8 hidden items-center gap-4 text-[0.75rem] text-muted-foreground pointer-fine:flex [@media(max-height:480px)]:hidden">
+        <p className="mt-8 hidden items-center gap-4 text-[0.75rem] text-muted-foreground sm:pointer-fine:flex [@media(max-height:480px)]:hidden">
           <span>
             <kbd className="font-mono">Tab</kbd> skip
           </span>

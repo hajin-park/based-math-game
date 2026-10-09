@@ -140,6 +140,20 @@ export function CustomModeBuilder({
               key={i}
               className="flex flex-col gap-3 rounded-lg border bg-card p-3 sm:p-4"
             >
+              <div className="-mb-1 -mt-1 flex items-center justify-between">
+                <span className="eyebrow">Conversion {i + 1}</span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  className="-mr-1 text-muted-foreground"
+                  onClick={() => removeConversion(i)}
+                  disabled={conversions.length === 1 && kinds.length === 0}
+                  aria-label={`Remove conversion ${i + 1}`}
+                >
+                  <X aria-hidden />
+                </Button>
+              </div>
               <div className="flex items-end gap-2">
                 <BaseSelect
                   id={`${id}-from-${i}`}
@@ -157,17 +171,6 @@ export function CustomModeBuilder({
                   value={c.to}
                   onChange={(to) => setConversion(i, { to })}
                 />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="shrink-0 text-muted-foreground"
-                  onClick={() => removeConversion(i)}
-                  disabled={conversions.length === 1 && kinds.length === 0}
-                  aria-label={`Remove conversion ${i + 1}`}
-                >
-                  <X aria-hidden />
-                </Button>
               </div>
               <div className="flex flex-wrap items-end gap-2">
                 <NumberField
@@ -188,7 +191,7 @@ export function CustomModeBuilder({
                 <div
                   role="group"
                   aria-label={`Range presets for conversion ${i + 1}`}
-                  className="flex flex-wrap gap-1"
+                  className="flex w-full flex-wrap gap-1 sm:w-auto"
                 >
                   {RANGE_PRESETS.map((p) => (
                     <Button
@@ -272,7 +275,7 @@ export function CustomModeBuilder({
             <Segmented
               aria-label="Sprint length"
               id={`${id}-secs`}
-              size="sm"
+              fullWidth
               value={String(Math.round((value.durationMs ?? 60_000) / 1000))}
               onValueChange={(s) =>
                 onChange({ ...value, durationMs: Number(s) * 1000 })
@@ -290,7 +293,7 @@ export function CustomModeBuilder({
             <Segmented
               aria-label="Correct answers to finish"
               id={`${id}-target`}
-              size="sm"
+              fullWidth
               value={String(value.targetCount ?? 15)}
               onValueChange={(t) =>
                 onChange({ ...value, targetCount: Number(t) })
@@ -389,7 +392,7 @@ function NumberField({
     if (clamped !== value) onCommit(clamped);
   };
   return (
-    <div className="flex w-[7.5rem] flex-col gap-1">
+    <div className="flex min-w-0 flex-1 basis-20 flex-col gap-1 sm:max-w-[8.5rem]">
       <label htmlFor={id} className="text-[0.75rem] text-muted-foreground">
         {label}
       </label>
