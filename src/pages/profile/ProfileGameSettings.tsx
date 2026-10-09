@@ -1,7 +1,5 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { doc, setDoc } from "firebase/firestore";
-import { firestore } from "@/firebase/config";
 import {
   PaperCard,
   PaperCardContent,
@@ -18,28 +16,18 @@ import { Info, Loader2, Gamepad2, Eye, Hash, Timer } from "lucide-react";
 import { useGameSettings, GameSettings } from "@/hooks/useGameSettings";
 
 export default function ProfileGameSettings() {
-  const { user, isGuest } = useAuth();
-  const { settings, loading } = useGameSettings();
+  const { isGuest } = useAuth();
+  const { settings, loading, saveSettings } = useGameSettings();
   const [saving, setSaving] = useState(false);
 
   // Use settings directly from the hook
 
-  // Save settings to Firestore
+  // Save settings (Firestore for registered users, this device for guests)
   const updateSetting = async (key: keyof GameSettings, value: boolean) => {
-    if (!user || isGuest) return;
-
-    const newSettings = { ...settings, [key]: value };
     setSaving(true);
 
     try {
-      const userRef = doc(firestore, `users/${user.uid}`);
-      await setDoc(
-        userRef,
-        {
-          gameSettings: newSettings,
-        },
-        { merge: true },
-      );
+      await saveSettings({ [key]: value });
 
       // Settings will be reloaded automatically by the hook
     } catch (error) {
@@ -155,7 +143,7 @@ export default function ProfileGameSettings() {
                 onCheckedChange={(checked) =>
                   updateSetting("groupedDigits", checked)
                 }
-                disabled={saving || isGuest}
+                disabled={saving}
                 className="shrink-0"
               />
             </div>
@@ -189,7 +177,7 @@ export default function ProfileGameSettings() {
                 onCheckedChange={(checked) =>
                   updateSetting("indexValueHints", checked)
                 }
-                disabled={saving || isGuest}
+                disabled={saving}
                 className="shrink-0"
               />
             </div>
@@ -219,7 +207,7 @@ export default function ProfileGameSettings() {
                 onCheckedChange={(checked) =>
                   updateSetting("countdownStart", checked)
                 }
-                disabled={saving || isGuest}
+                disabled={saving}
                 className="shrink-0"
               />
             </div>

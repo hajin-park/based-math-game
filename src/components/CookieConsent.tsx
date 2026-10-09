@@ -2,10 +2,11 @@ import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Cookie, X } from "lucide-react";
+import { analytics } from "@/utils/analytics";
 
 interface CookiePreferences {
   necessary: boolean; // Always true, can't be disabled
-  functional: boolean; // Theme, guest accounts
+  functional: boolean; // Theme
   analytics: boolean; // Analytics tracking
 }
 
@@ -44,12 +45,8 @@ export function CookieConsent() {
     setPreferences(prefs);
     setShowBanner(false);
 
-    // Apply preferences
-    if (!prefs.analytics) {
-      // Clear any analytics cookies if user opts out
-      // This would be where you'd disable analytics tracking
-      console.log("Analytics disabled");
-    }
+    // Analytics only runs after an explicit opt-in (see utils/analytics.ts).
+    analytics.setConsent(prefs.analytics);
   };
 
   const acceptAll = () => {
@@ -129,8 +126,8 @@ export function CookieConsent() {
                     <div className="flex-1">
                       <p className="font-medium text-sm">Functional Cookies</p>
                       <p className="text-xs text-muted-foreground">
-                        Used to remember your theme preference and guest account
-                        data for a better experience.
+                        Used to remember your theme preference for a better
+                        experience.
                       </p>
                     </div>
                   </div>

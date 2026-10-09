@@ -9,6 +9,7 @@ import Error from "./pages/Error";
 // Home is the landing page: keep it in the entry chunk for first paint.
 import Home from "./pages/Home";
 import "./index.css";
+import { registerServiceWorker } from "@/lib/serviceWorker";
 
 // Every other route is code-split; Layout wraps <Outlet /> in <Suspense>.
 const SingleplayerMode = lazy(() => import("./pages/SingleplayerMode"));
@@ -165,46 +166,4 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
   </React.StrictMode>,
 );
 
-// Register service worker for offline support
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker
-      .register("/sw.js")
-      .then((registration) => {
-        console.log("Service Worker registered:", registration);
-      })
-      .catch((error) => {
-        console.log("Service Worker registration failed:", error);
-      });
-  });
-
-  // Handle controller change (new service worker took over)
-  // Only reload when the page is not visible to avoid interrupting user activity
-  let refreshing = false;
-  navigator.serviceWorker.addEventListener("controllerchange", () => {
-    if (!refreshing) {
-      refreshing = true;
-
-      // If page is hidden, reload immediately
-      if (document.hidden) {
-        window.location.reload();
-      } else {
-        // Otherwise, wait for page to become hidden before reloading
-        const reloadWhenHidden = () => {
-          if (document.hidden) {
-            window.location.reload();
-          }
-        };
-        document.addEventListener("visibilitychange", reloadWhenHidden, {
-          once: true,
-        });
-
-        // Also set a timeout to reload after 30 seconds if user doesn't leave
-        setTimeout(() => {
-          document.removeEventListener("visibilitychange", reloadWhenHidden);
-          window.location.reload();
-        }, 30000);
-      }
-    }
-  });
-}
+registerServiceWorker();

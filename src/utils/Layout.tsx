@@ -8,7 +8,6 @@ import {
   QuizSettings,
   QuizResults,
 } from "@/contexts/GameContexts";
-import { useAuth } from "@/contexts/AuthContext";
 import ConnectionStatus from "@/components/ConnectionStatus";
 import { CookieConsent } from "@/components/CookieConsent";
 import RouteFallback from "@/components/RouteFallback";
@@ -22,7 +21,6 @@ export const Layout = () => {
   const [results, setResults] = useState<QuizResults>({
     score: 0,
   });
-  const { loading } = useAuth();
   const location = useLocation();
 
   // Immersive routes: multiplayer room pages and the active quiz hide chrome.
@@ -32,10 +30,8 @@ export const Layout = () => {
   const isActiveQuiz = location.pathname === "/quiz";
   const immersive = isMultiplayerRoom || isActiveQuiz;
 
-  if (loading) {
-    return <RouteFallback fullScreen />;
-  }
-
+  // Auth no longer blocks rendering: pages render immediately and the
+  // components that need a uid wait for `user` (or call ensureUser()).
   return (
     <TooltipProvider>
       <div className="flex min-h-dvh w-full flex-col">

@@ -1,7 +1,21 @@
 /**
- * Analytics utility for tracking game events
- * Logs events to console in development, can be extended for production analytics
+ * Analytics utility for tracking game events.
+ *
+ * Consent-gated: nothing is recorded unless the user opted in to analytics
+ * in the cookie banner (localStorage "cookieConsent".analytics === true).
+ * No third-party analytics SDK is loaded; if one is added later it must be
+ * loaded from sendToAnalytics() only after consent, and its origins added to
+ * the Content-Security-Policy in firebase.json.
  */
+
+function storedConsent(): boolean {
+  try {
+    const raw = localStorage.getItem("cookieConsent");
+    return raw ? JSON.parse(raw).analytics === true : false;
+  } catch {
+    return false;
+  }
+}
 
 export interface GameEvent {
   eventName: string;
@@ -15,11 +29,24 @@ export interface GameEvent {
 
 class Analytics {
   private events: GameEvent[] = [];
+  private consent: boolean | null = null;
+
+  /** Called by the cookie banner when the user saves their preferences. */
+  setConsent(granted: boolean) {
+    this.consent = granted;
+    if (!granted) this.events = [];
+  }
+
+  private hasConsent(): boolean {
+    if (this.consent === null) this.consent = storedConsent();
+    return this.consent;
+  }
 
   /**
    * Track a game event
    */
   trackEvent(event: Omit<GameEvent, "timestamp">) {
+    if (!this.hasConsent()) return;
     const fullEvent: GameEvent = {
       ...event,
       timestamp: Date.now(),
@@ -139,9 +166,9 @@ class Analytics {
    * Send event to analytics service (placeholder for production)
    */
   private sendToAnalytics(event: GameEvent) {
-    // TODO: Implement actual analytics service integration
-    // Examples: Google Analytics, Mixpanel, Firebase Analytics, etc.
-    console.log("[Analytics - Production]", event);
+    // No analytics backend is configured. Integrations go here and must only
+    // run when hasConsent() is true (trackEvent already checks it).
+    void event;
   }
 
   /**

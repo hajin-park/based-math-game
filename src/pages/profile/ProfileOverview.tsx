@@ -63,11 +63,8 @@ export default function ProfileOverview() {
   };
 
   const getCreatedAt = () => {
-    if (user && "metadata" in user && user.metadata?.creationTime) {
+    if (user?.metadata?.creationTime) {
       return new Date(user.metadata.creationTime).getTime();
-    }
-    if (user && "createdAt" in user) {
-      return user.createdAt;
     }
     return undefined;
   };

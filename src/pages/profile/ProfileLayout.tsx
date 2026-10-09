@@ -13,23 +13,23 @@ import {
 } from "@/components/ui/select";
 
 export default function ProfileLayout() {
-  const { isGuest, signOut } = useAuth();
+  const { isGuest, loading, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   // Redirect guests to signup
   useEffect(() => {
-    if (isGuest) {
+    if (!loading && isGuest) {
       navigate("/signup");
     }
-  }, [isGuest, navigate]);
+  }, [isGuest, loading, navigate]);
 
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
   };
 
-  if (isGuest) {
+  if (loading || isGuest) {
     return null;
   }
 

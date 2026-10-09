@@ -45,7 +45,7 @@ This document provides a concise, fact-based overview of the codebase to help AI
   - Common components (ErrorBoundary, Countdown, ProfileDropdown, etc.)
   - ui/academic.ts (re-exports enhanced UI components)
 - src/contexts/
-  - AuthContext.tsx — auth, guest ID, presence
+  - AuthContext.tsx — Firebase auth (anonymous guests), account upgrade/deletion
   - ThemeContext.tsx — theme persistence
   - GameContexts.tsx — game-related contexts (types used by game modes)
 - src/features/ — feature modules (quiz, tutorials, ui)
@@ -101,46 +101,11 @@ This document provides a concise, fact-based overview of the codebase to help AI
   - Laptop: 1024px-1440px (lg-xl)
   - Desktop: >1440px (2xl)
 
-## Recent bug fixes (2025-01-24)
+## Security & data-layer migration (2026-10)
 
-### Multiplayer Room Bug Fixes
-
-- **Fixed Guest User Host Transfer** (src/hooks/useRoom.ts):
-  - Updated `subscribeToRoom` to detect when guest host is removed (not just disconnected)
-  - Changed host transfer logic from checking only `host?.disconnected === true` to also checking `!host`
-  - Guest users are completely removed from database on disconnect, while authenticated users are marked as disconnected
-  - Host now properly transfers to another player when guest host disconnects
-- **Fixed Room Leave Detection** (all multiplayer room pages):
-  - Updated cleanup effects to properly detect navigation away from room
-  - Changed from using captured `currentPath` to using `window.location.pathname` during cleanup
-  - Users now properly leave rooms when navigating to different pages (not just on refresh/disconnect)
-  - Removed unused `location` imports from `useLocation()` hook
-- **Fixed Firebase Security Rules** (database.rules.json):
-  - Changed from invalid `.beginsWith('guest_')` to `.matches(/^guest_/)`
-  - Guest user authentication now works correctly
-
-### Guest Account Reconnection Improvements (2025-01-25)
-
-- **Guest Account Persistence** (src/contexts/AuthContext.tsx):
-  - Guest accounts now persist in cookies with indefinite TTL
-  - On disconnect, `lastDisconnected` timestamp is set for 5-minute TTL tracking
-  - On reconnect, `lastConnected` timestamp is updated, resetting the TTL window
-  - Guest users can now reconnect within 5 minutes without losing their session
-- **Room Disconnect Handling** (src/hooks/useRoom.ts):
-  - Guest users are now marked as `disconnected` instead of being removed from rooms
-  - Both guest and authenticated users use the same disconnect behavior
-  - Allows guest users to reconnect to rooms within the 5-minute TTL window
-  - Prevents premature kicking of temporarily disconnected guest users
-- **Automated Cleanup Service** (src/services/cleanupService.ts):
-  - Client-side cleanup service runs every 5 minutes on active clients
-  - Uses distributed lock mechanism to ensure only one client runs cleanup at a time
-  - Deletes guest accounts that have been disconnected for more than 5 minutes
-  - Removes deleted guest players from rooms
-  - Cleans up empty rooms (waiting rooms only, keeps playing/finished rooms for reconnection)
-  - Integrated into AuthContext to start automatically when app loads
-- **Database Security Rules** (database.rules.json):
-  - Added `/cleanup/lock` path for distributed lock mechanism
-  - Added validation for user data structure
+The client-side guest ids (`guest_*`), cookie guest accounts, the `/cleanup/lock`
+distributed lock and `src/services/cleanupService.ts` were removed. Guests are
+Firebase anonymous users; rooms/stats/leaderboards were redesigned (sections below).
 
 ## Multiplayer room design standards (Updated 2025-01-24)
 
@@ -187,25 +152,37 @@ This document provides a concise, fact-based overview of the codebase to help AI
   - "/multiplayer/game/:roomId" → MultiplayerGame
   - "/multiplayer/results/:roomId" → MultiplayerResults
 
-## Authentication and presence (AuthContext.tsx, firebase/config.ts)
+## Authentication and presence (AuthContext.tsx, lib/ensureUser.ts, firebase/config.ts)
 
-- Firebase initialized from Vite env vars (see "Environment")
-- Guest IDs generated with prefix: guest*{timestamp}*{random}
-- Exposed methods include: signInAsGuest, signInWithEmail, signUpWithEmail, signInWithGoogle, signOut, updateDisplayName, deleteAccount
-- Presence written to RTDB at presence/{uid} with onDisconnect handlers for both guest and authenticated users
+- Every visitor has a real Firebase uid. Guests are anonymous users
+  (`signInAnonymously`, started eagerly in the background once auth reports no
+  user; crawlers are skipped). Rendering never waits on auth.
+- `useAuth()`: `user` (Firebase User | null), `isGuest` (anonymous or no user),
+  `loading`, `ensureUser()`, `signInAsGuest`, `signInWithEmail`, `signUpWithEmail`,
+  `signInWithGoogle`, `signOut`, `updateDisplayName`, `deleteAccount({password?})`.
+- Upgrading a guest links the credential (`linkWithCredential` / `linkWithPopup`)
+  so the uid is kept; local guest runs are imported. If the credential already
+  belongs to an account, the user is signed into it and guest progress is dropped.
+- Guests get a generated display name (`src/lib/guestName.ts`).
+- Optional App Check (reCAPTCHA Enterprise) when `VITE_APPCHECK_SITE_KEY` is set.
+- Presence: `presence/{uid}` (self-only), written while in a room (`src/lib/presence.ts`).
 
-## Multiplayer rooms and chat (hooks)
+## Multiplayer rooms and chat (hooks/useRoom.ts, hooks/useChat.ts)
 
-- useRoom.ts
-  - createRoom(roomMode, maxPlayers), joinRoom(roomId), leaveRoom
-  - Host/game flow: startGame(roomId), finishGame(roomId), resetRoom
-  - Player state: setPlayerReady, updatePlayerScore, incrementWins
-  - Room management: kickPlayer(host-only), transferHost, updateRoomSettings, updateGameMode
-  - Subscriptions: subscribeToRoom with cleanup; room deletes when all players are disconnected or kicked
-- useChat.ts
-  - sendMessage(roomId, message), sendSystemMessage(roomId, message)
-  - subscribeToMessages(roomId, limit?, onMessage)
-  - Chat message shape includes senderId, displayName, message, timestamp; code also uses isSystem flag
+- RTDB `rooms/{CODE}`: `hostUid`, `status`, `mode {id, custom?}`, `maxPlayers`,
+  `allowVisualAids`, `createdAt`, `lastActivityAt`, `startedAt` + `seed` (host, at
+  start), `slots/{0..9}` (seats), `kicked/{uid}`, `players/{uid}`, `chat`, `lastChatAt/{uid}`.
+- Player nodes are written only by their owner; scores are scoped to a round
+  (`round == startedAt`), monotonic and rate-bounded by the rules.
+- `roomApi` (plain functions) / `useRoom()` (same + `loading`): createRoom, joinRoom,
+  leaveRoom, setPlayerReady, startGame, updatePlayerScore(roomId, score, correct?),
+  finishGame(roomId, {finishMs?}), resetRoom, incrementWins, updateGameMode,
+  kickPlayer, updateRoomSettings, transferHost, subscribeToRoom.
+- `Room.gameMode` is the legacy GameMode resolved from `mode` (src/lib/roomMode.ts);
+  `Room.startedAt` is the local-clock time play begins (server start + 3 s countdown).
+- Host claim: when the host's node is gone or disconnected, the earliest-joined
+  connected player claims host. Rooms idle > 6 h may be deleted by anyone signed in.
+- Chat: `postMessage`, `subscribeToChat` / `useChat()`; 1–300 chars, 1 msg/s per user.
 
 ## Game modes (src/types/gameMode.ts)
 
@@ -213,55 +190,31 @@ This document provides a concise, fact-based overview of the codebase to help AI
 - export const OFFICIAL_GAME_MODES: GameMode[] — curated list of official modes
 - Helpers present and used elsewhere (e.g., isSpeedrunMode imported in stats/history hooks)
 
-## Persistent stats and leaderboards (useStats.ts, useGameHistory.ts)
+## Persistent data (src/data)
 
-- saveGameResult writes into Firestore userStats and user gameHistory (if non-guest)
-- Leaderboards stored per mode in flat collections: "leaderboard-{gameModeId}"
-  - update logic treats speedrun modes as "lower is better", timed modes as "higher is better"
-  - Always syncs latest displayName on write
-- useGameHistory provides: fetchHistory(timeRange, limit), getStatsForTimeRange, getScoresByGameMode, getDurationsByGameMode, getLeaderboardPlacements
+- `saveRun(summary)`: registered users write `users/{uid}/runs/{id}` + `userStats/{uid}`
+  in a transaction, then upsert `leaderboards/{modeId}/entries/{uid}` if ranked,
+  completed and improved. Guests keep the last 50 runs in localStorage.
+- Hooks: `useRunHistory({limit, modeId, since})`, `useUserStats()`,
+  `usePersonalBest(modeId)`, `useLeaderboard(modeId, {limit})`, `useGameSettings()`.
+- `src/data/limits.ts` re-exports the engine's `SCORE_LIMITS`/`isRankedModeId`; the
+  numbers are mirrored in the security rules (a unit test checks they agree).
+- Legacy `useStats` / `useGameHistory` are thin wrappers over the data layer.
 
 ## Data model and security
 
-- Firestore (firestore.rules)
-  - Helpers: isAuthenticated(), isOwner(uid), isNotGuest() where guest UIDs match /^guest\_.\*/
-  - /users/{userId}
-    - read: owner; create/update: owner && isNotGuest; delete: owner
-  - /userStats/{userId}
-    - read: owner; create/update: owner && isNotGuest with required numeric fields: gamesPlayed, totalScore, highScore, averageScore, lastPlayed; optional: totalKeystrokes, totalBackspaces, averageAccuracy
-    - delete: owner
-  - /userStats/{userId}/gameHistory/{gameId}
-    - read: owner; create: owner && isNotGuest with required fields: score (number), duration (number), gameModeId (string), timestamp (number); optional: totalKeystrokes, backspaceCount, accuracy
-    - delete: owner
-  - /leaderboard-{gameModeId}/{userId} (any collection matching /^leaderboard-.\*/)
-    - read: public; create/update: owner && isNotGuest with required fields: displayName (string), score (number), timestamp (number), gameModeId (string); optional: accuracy (number); if isGuest present, must be false
-    - delete: owner
-- Realtime Database (database.rules.json)
-  - /users/{uid}
-    - read: uid === auth.uid OR uid starts with "guest\_"
-    - write: uid === auth.uid OR (guest\_ uid and newData.uid === uid and newData.isGuest === true)
-  - /rooms/{roomId}
-    - read: public
-    - write: allowed for hostUid, guest host, any joined authenticated user, or if new hostUid points to an existing player
-    - validate: must have children [hostUid, gameMode, status]
-    - players/{playerId}.write: self OR guest self OR host
-    - gameState.write: host or guest host
-    - chat/{messageId}
-      - read: public
-      - write: by joined authenticated user OR guest sender who is in players
-      - validate: requires senderId, displayName, message (1..500 chars), timestamp
-  - /gameModes: read-only
-  - /presence/{uid}
-    - read: public; write: self OR guest self when newData absent or matches uid
+- `firestore.rules`: owner-only profiles/runs/stats (registered accounts write),
+  public leaderboards writable by registered owners for ranked modes only, only
+  when the score improves, with per-format plausibility checks; daily is create-only.
+- `database.rules.json` is generated by `scripts/build-database-rules.mjs`
+  (`npm run rules:db`). Rules tests: `npm run test:rules` (needs emulators).
 
 ## PWA and service worker
 
-- public/sw.js registered in main.tsx
-  - Cache name includes build timestamp (updated by scripts/update-sw-version.js)
-  - Network-first for JS/CSS/HTML and assets; cache-first for other static assets
-  - Skips caching Firebase/Google API requests
-  - Auto-reload on controllerchange
-- public/manifest.json present
+- public/sw.js: network-first navigations (offline fallback to the last good
+  index.html), cache-first for hashed /assets/** only, no Firebase/Google traffic.
+- Registered by `registerServiceWorker()` from src/lib/serviceWorker.ts.
+- Security headers + caching live in firebase.json (CSP, HSTS, COOP, ...).
 
 ## Environment
 
@@ -273,7 +226,8 @@ This document provides a concise, fact-based overview of the codebase to help AI
   - VITE_FIREBASE_STORAGE_BUCKET
   - VITE_FIREBASE_MESSAGING_SENDER_ID
   - VITE_FIREBASE_APP_ID
-  - Optional: VITE_USE_FIREBASE_EMULATORS === "true" to connect to local emulators
+  - Optional: VITE_USE_FIREBASE_EMULATORS === "true" to connect to local emulators (ports via VITE_EMULATOR_*)
+  - Optional: VITE_APPCHECK_SITE_KEY enables App Check (reCAPTCHA Enterprise)
 
 ## Error handling
 
@@ -282,6 +236,6 @@ This document provides a concise, fact-based overview of the codebase to help AI
 ## Notes for agents
 
 - Prefer using the path alias "@" for imports from src/
-- Firestore rejects writes from guest\_\* UIDs; guest users operate via RTDB
-- Leaderboards are per-mode collections named "leaderboard-{modeId}"
+- Guests are anonymous Firebase users; check `isGuest` from `useAuth()`, never uid prefixes
+- Leaderboards live at `leaderboards/{modeId}/entries/{uid}`
 - Multiplayer room permissions and flows are enforced by RTDB rules and validated by hook logic
