@@ -23,7 +23,9 @@ export default function RouteFallback({
       className={
         fullScreen
           ? "grid min-h-dvh place-items-center px-4"
-          : "grid min-h-[60vh] place-items-center px-4"
+          : // A full viewport tall, so the footer never jumps into view
+            // and back while a lazy route loads (layout shift).
+            "grid min-h-[calc(100dvh-var(--nav-h))] place-items-center px-4"
       }
     >
       <div
