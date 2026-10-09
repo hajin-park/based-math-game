@@ -24,6 +24,7 @@ const NAME_MAX = 24;
 const MAX_CORRECT_PER_SECOND = 3;
 const MAX_POINTS_PER_SECOND = MAX_CORRECT_PER_SECOND * 5;
 const MIN_MS_PER_CORRECT = 250;
+const MAX_RUN_MS = 3_600_000; // SCORE_LIMITS.maxDurationMs
 
 /** Collapses whitespace so rules can be written readably below. */
 const x = (s) => s.replace(/\s+/g, " ").trim();
@@ -272,6 +273,17 @@ const rules = {
                 && newData.val() >= newData.parent().child('correct').val() * ${MIN_MS_PER_CORRECT}
                 && newData.val() <= now - ${R}.child('startedAt').val()`),
             },
+            // Speedrun skip penalties of a finished run (ranked by finishMs + penaltyMs).
+            penaltyMs: {
+              ".validate": x(`newData.isNumber() && ${inRound}
+                && newData.val() >= 0 && newData.val() <= ${MAX_RUN_MS}`),
+            },
+            // When the current score was reached (sprint/survival tie-break).
+            scoreMs: {
+              ".validate": x(`newData.isNumber() && ${inRound}
+                && newData.val() >= 0
+                && newData.val() <= now - ${R}.child('startedAt').val()`),
+            },
             wins: {
               ".validate": x(`newData.isNumber() && (
                 (!data.exists() && newData.val() === 0)
@@ -285,10 +297,10 @@ const rules = {
             lastWinRound: {
               ".validate": `newData.val() === ${R}.child('startedAt').val()`,
             },
+            // scoreHistory/{k}: ms after play began at which point k was reached.
             scoreHistory: {
               $i: {
-                ".validate":
-                  "$i.matches(/^[0-9]{1,3}$/) && newData.isNumber() && newData.val() >= 0 && newData.val() <= 100000",
+                ".validate": `$i.matches(/^[0-9]{1,3}$/) && newData.isNumber() && newData.val() >= 0 && newData.val() <= ${MAX_RUN_MS}`,
               },
             },
             $other: { ".validate": false },

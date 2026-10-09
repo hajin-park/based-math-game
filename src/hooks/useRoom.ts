@@ -15,17 +15,23 @@
  *   slots/{0..9}     uid holding each seat (bounds the room to maxPlayers)
  *   kicked/{uid}     true for players the host removed (cannot rejoin)
  *   players/{uid}    { uid, displayName, slot, joinedAt, ready, score, correct,
- *                      finished, finishMs?, round?, wins, lastWinRound?,
- *                      scoreHistory?, disconnected?, disconnectedAt? }
+ *                      finished, finishMs?, penaltyMs?, scoreMs?, round?, wins,
+ *                      lastWinRound?, scoreHistory?, disconnected?,
+ *                      disconnectedAt? }
  *                    `round` = startedAt of the round the scores belong to.
+ *                    `score` is points (correct answers / questions cleared),
+ *                    never a time. `scoreMs` = ms after play began at which
+ *                    the current score was reached (sprint tie-break).
+ *                    `finishMs` = raw run time of a finished speedrun,
+ *                    `penaltyMs` = its skip penalties (ranked by the sum).
+ *                    `scoreHistory/{k}` = ms at which point k was reached.
  *   chat/{id}, lastChatAt/{uid}   see useChat
  *
- * The hook keeps the previous page-facing API: `Room.gameMode` is the legacy
- * GameMode resolved from `mode`, `Room.startedAt` is the local-clock time play
- * begins (server start + countdown), and speedrun finishers' `score` is their
- * time in seconds.
+ * `Room.startedAt` is the local-clock time play begins (server start +
+ * countdown); `Room.serverStartedAt` is the raw server timestamp of the
+ * start click. `Room.engineMode` is the resolved engine mode (null when the
+ * stored mode is not playable in a room).
  */
-import { useCallback, useMemo, useState } from "react";
 import {
   ref,
   get,
@@ -38,8 +44,8 @@ import {
 } from "firebase/database";
 import { auth, database } from "@/firebase/config";
 import { ensureSignedIn } from "@/lib/ensureUser";
-import { GameMode, isSpeedrunMode } from "@/types/gameMode";
-import { RoomModeRef, toLegacyGameMode, toRoomMode } from "@/lib/roomMode";
+import type { GameMode } from "@/game";
+import { RoomModeRef, resolveRoomMode, toRoomMode } from "@/lib/roomMode";
 import { serverNow, serverToLocal } from "@/lib/serverTime";
 import { setPresence } from "@/lib/presence";
 import { clampDisplayName } from "@/data/profile";
@@ -51,19 +57,26 @@ export const ROOM_COUNTDOWN_MS = 3000;
 /** Rooms without activity for this long may be deleted by anyone signed in. */
 export const ROOM_STALE_MS = 6 * 60 * 60 * 1000;
 export const ROOM_MAX_PLAYERS = 10;
+/** Progress marks kept per player and round (rules allow keys 1..999). */
+const MAX_HISTORY = 999;
 
 export interface RoomPlayer {
   uid: string;
   displayName: string;
   ready: boolean;
-  /** Points this round (speedrun finishers: finish time in whole seconds). */
+  /** Points this round (correct answers / questions cleared). */
   score: number;
   correct: number;
   finished: boolean;
-  /** Speedrun finish time in ms since play began. */
+  /** Finished speedrun: raw run time in ms (skip penalties excluded). */
   finishMs?: number;
+  /** Finished speedrun: skip penalties in ms. */
+  penaltyMs?: number;
+  /** Ms after play began at which `score` was reached. */
+  scoreMs?: number;
   wins: number;
-  scoreHistory?: number[];
+  /** progress[k] = ms after play began at which point k + 1 was reached. */
+  progress: number[];
   disconnected?: boolean;
   disconnectedAt?: number;
   /** Only ever true for the current user (kicked players are removed). */
@@ -76,8 +89,8 @@ export interface Room {
   id: string;
   hostUid: string;
   mode: RoomModeRef;
-  /** Legacy GameMode resolved from `mode` (for the current pages). */
-  gameMode: GameMode;
+  /** Engine mode resolved from `mode`; null when not playable in a room. */
+  engineMode: GameMode | null;
   players: Record<string, RoomPlayer>;
   status: "waiting" | "playing" | "finished";
   createdAt: number;
@@ -90,8 +103,6 @@ export interface Room {
   seed?: number;
   maxPlayers: number;
   allowVisualAids: boolean;
-  /** Always true: the countdown synchronises the start for everyone. */
-  enableCountdown: boolean;
   kicked: Record<string, boolean>;
 }
 
@@ -105,6 +116,8 @@ interface RawPlayer {
   correct?: number;
   finished?: boolean;
   finishMs?: number;
+  penaltyMs?: number;
+  scoreMs?: number;
   round?: number;
   wins?: number;
   lastWinRound?: number;
@@ -129,14 +142,14 @@ interface RawRoom {
 }
 
 // ---------------------------------------------------------------------------
-// Module state shared by every useRoom() instance.
+// Module state shared by every room subscription and operation.
 
 /** Last raw snapshot seen per room (avoids extra reads on score updates). */
 const latestRaw = new Map<string, RawRoom>();
 /** Per-room score bookkeeping for the current round. */
 const scoreState = new Map<
   string,
-  { round: number; nextIndex: number; lastScore: number }
+  { round: number; written: number; lastScore: number }
 >();
 
 const roomRef = (roomId: string) => ref(database, `rooms/${roomId}`);
@@ -162,11 +175,25 @@ function isStale(raw: RawRoom): boolean {
   );
 }
 
+/**
+ * Codes are read aloud and copied off projectors, so the alphabet leaves out
+ * look-alikes (0/O, 1/I/L). Rejection sampling keeps every character
+ * equally likely.
+ */
+export const ROOM_CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+
 function randomRoomCode(): string {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  const bytes = new Uint8Array(8);
-  crypto.getRandomValues(bytes);
-  return Array.from(bytes, (b) => chars[b % chars.length]).join("");
+  const chars = ROOM_CODE_ALPHABET;
+  const limit = 256 - (256 % chars.length);
+  let code = "";
+  while (code.length < 8) {
+    const bytes = new Uint8Array(16);
+    crypto.getRandomValues(bytes);
+    for (const b of bytes) {
+      if (b < limit && code.length < 8) code += chars[b % chars.length];
+    }
+  }
+  return code;
 }
 
 function randomSeed(): number {
@@ -212,13 +239,14 @@ function activePlayers(raw: RawRoom): RawPlayer[] {
     );
 }
 
-function historyArray(h: RawPlayer["scoreHistory"]): number[] {
-  if (!h) return [0];
+/** Progress marks (ms at which point k was reached), keys 1.. in order. */
+function progressArray(h: RawPlayer["scoreHistory"]): number[] {
+  if (!h) return [];
   const list = Array.isArray(h)
     ? h.map((v, i) => [i, v] as const)
     : Object.entries(h).map(([k, v]) => [Number(k), v] as const);
   return list
-    .filter(([, v]) => typeof v === "number")
+    .filter(([k, v]) => k >= 1 && typeof v === "number")
     .sort((a, b) => a[0] - b[0])
     .map(([, v]) => v as number);
 }
@@ -229,32 +257,26 @@ export function normalizeRoom(
   raw: RawRoom,
   myUid: string | undefined,
 ): Room {
-  const gameMode = toLegacyGameMode(raw.mode);
-  const speedrun = isSpeedrunMode(gameMode);
   const inGame = raw.status !== "waiting" && typeof raw.startedAt === "number";
   const players: Record<string, RoomPlayer> = {};
 
   for (const [uid, p] of entries<RawPlayer>(raw.players)) {
     if (typeof p !== "object" || !p.uid) continue;
     const inRound = inGame && p.round === raw.startedAt;
-    const finished = inRound && !!p.finished;
-    const finishMs = inRound ? p.finishMs : undefined;
-    let score = inRound ? (p.score ?? 0) : 0;
-    if (speedrun && finished && typeof finishMs === "number") {
-      score = Math.floor(finishMs / 1000);
-    }
     players[uid] = {
       uid,
       displayName: p.displayName || "Player",
       slot: p.slot,
       joinedAt: p.joinedAt,
       ready: !!p.ready || uid === raw.hostUid,
-      score,
+      score: inRound ? (p.score ?? 0) : 0,
       correct: inRound ? (p.correct ?? 0) : 0,
-      finished,
-      finishMs,
+      finished: inRound && !!p.finished,
+      finishMs: inRound ? p.finishMs : undefined,
+      penaltyMs: inRound ? p.penaltyMs : undefined,
+      scoreMs: inRound ? p.scoreMs : undefined,
       wins: p.wins ?? 0,
-      scoreHistory: inRound ? historyArray(p.scoreHistory) : [0],
+      progress: inRound ? progressArray(p.scoreHistory) : [],
       disconnected: !!p.disconnected,
       disconnectedAt: p.disconnectedAt,
     };
@@ -270,6 +292,7 @@ export function normalizeRoom(
         correct: 0,
         finished: false,
         wins: 0,
+        progress: [],
       }),
       kicked: true,
     };
@@ -279,7 +302,7 @@ export function normalizeRoom(
     id: roomId,
     hostUid: raw.hostUid,
     mode: raw.mode,
-    gameMode,
+    engineMode: resolveRoomMode(raw.mode),
     players,
     status: raw.status,
     createdAt: raw.createdAt,
@@ -291,7 +314,6 @@ export function normalizeRoom(
     seed: inGame ? raw.seed : undefined,
     maxPlayers: raw.maxPlayers || 4,
     allowVisualAids: raw.allowVisualAids ?? true,
-    enableCountdown: true,
     kicked: raw.kicked ?? {},
   };
 }
@@ -359,6 +381,8 @@ function resetOwnNodeUpdates(uid: string, isHost: boolean) {
     [`players/${uid}/correct`]: 0,
     [`players/${uid}/finished`]: false,
     [`players/${uid}/finishMs`]: null,
+    [`players/${uid}/penaltyMs`]: null,
+    [`players/${uid}/scoreMs`]: null,
     [`players/${uid}/round`]: null,
     [`players/${uid}/scoreHistory`]: null,
     [`players/${uid}/ready`]: isHost,
@@ -367,11 +391,12 @@ function resetOwnNodeUpdates(uid: string, isHost: boolean) {
 
 // ---------------------------------------------------------------------------
 // Room operations. Plain async functions (usable outside React, e.g. in
-// tests); `useRoom()` below exposes them with a `loading` flag.
+// tests); pages call them through `roomApi`.
 
 const createRoom = async (
   gameMode: GameMode | RoomModeRef,
   maxPlayers: number = 4,
+  options: { allowVisualAids?: boolean } = {},
 ): Promise<string> => {
   if (maxPlayers < 2 || maxPlayers > ROOM_MAX_PLAYERS) {
     throw new Error("Max players must be between 2 and 10");
@@ -389,7 +414,7 @@ const createRoom = async (
           status: "waiting",
           mode,
           maxPlayers,
-          allowVisualAids: true,
+          allowVisualAids: options.allowVisualAids ?? true,
           createdAt: serverTimestamp(),
           lastActivityAt: serverTimestamp(),
           slots: { "0": user.uid },
@@ -544,13 +569,16 @@ const startGame = async (roomId: string) => {
 };
 
 /**
- * Records the caller's score for the current round. `correct` defaults to
- * `score` (legacy modes score one point per correct answer).
+ * Records the caller's progress for the current round. `marks[k]` is the ms
+ * after play began at which point k + 1 was reached; marks not yet written
+ * are appended to `scoreHistory` in the same update, so callers can throttle
+ * writes without losing the progression.
  */
 const updatePlayerScore = async (
   roomId: string,
   score: number,
-  correct?: number,
+  correct: number = score,
+  marks: readonly number[] = [],
 ) => {
   const uid = auth.currentUser?.uid;
   if (!uid) return;
@@ -564,42 +592,54 @@ const updatePlayerScore = async (
   if (!state || state.round !== round) {
     const mine = raw.players?.[uid];
     const sameRound = mine?.round === round;
-    const history = sameRound ? historyArray(mine?.scoreHistory) : [];
     state = {
       round,
-      nextIndex: history.length,
+      written: sameRound ? progressArray(mine?.scoreHistory).length : 0,
       lastScore: sameRound ? (mine?.score ?? 0) : -1,
     };
     scoreState.set(roomId, state);
   }
-  // Scores are monotonic within a round (the rules reject decreases).
-  if (value <= state.lastScore) return;
+  const upTo = Math.min(marks.length, MAX_HISTORY);
+  // Scores are monotonic within a round (the rules reject decreases); late
+  // progress marks for the current score are still written.
+  const raises = value > state.lastScore;
+  if (!raises && upTo <= state.written) return;
 
   const updates: Record<string, unknown> = {
     [`players/${uid}/round`]: round,
-    [`players/${uid}/score`]: value,
-    [`players/${uid}/correct`]: Math.max(0, Math.floor(correct ?? value)),
     lastActivityAt: serverTimestamp(),
   };
-  if (state.nextIndex === 0) {
-    updates[`players/${uid}/scoreHistory/0`] = 0;
-    state.nextIndex = 1;
+  if (raises) {
+    updates[`players/${uid}/score`] = value;
+    updates[`players/${uid}/correct`] = Math.max(0, Math.floor(correct));
   }
-  if (value > 0 && state.nextIndex < 1000) {
-    updates[`players/${uid}/scoreHistory/${state.nextIndex}`] = value;
-    state.nextIndex += 1;
+  // When the current score was reached (written once its mark is known).
+  const reachedAt = marks[value - 1];
+  if (typeof reachedAt === "number" && (raises || value > state.written)) {
+    updates[`players/${uid}/scoreMs`] = Math.max(0, Math.round(reachedAt));
   }
-  const previous = state.lastScore;
-  state.lastScore = value;
+  for (let i = state.written; i < upTo; i++) {
+    updates[`players/${uid}/scoreHistory/${i + 1}`] = Math.max(
+      0,
+      Math.round(marks[i]),
+    );
+  }
+  const previous = { lastScore: state.lastScore, written: state.written };
+  state.lastScore = Math.max(state.lastScore, value);
+  state.written = Math.max(state.written, upTo);
   try {
     await update(roomRef(roomId), updates);
   } catch (error) {
-    state.lastScore = previous;
+    state.lastScore = previous.lastScore;
+    state.written = previous.written;
     console.error("Error updating score:", error);
   }
 };
 
-const finishGame = async (roomId: string, options?: { finishMs?: number }) => {
+const finishGame = async (
+  roomId: string,
+  options?: { finishMs?: number; penaltyMs?: number },
+) => {
   const uid = auth.currentUser?.uid;
   if (!uid) return;
   try {
@@ -627,6 +667,12 @@ const finishGame = async (roomId: string, options?: { finishMs?: number }) => {
         0,
         Math.round(options.finishMs),
       );
+      if (options.penaltyMs) {
+        updates[`players/${uid}/penaltyMs`] = Math.max(
+          0,
+          Math.round(options.penaltyMs),
+        );
+      }
     }
     await update(roomRef(roomId), updates);
 
@@ -638,13 +684,25 @@ const finishGame = async (roomId: string, options?: { finishMs?: number }) => {
       active.length > 0 &&
       active.every((p) => p.finished && p.round === after.startedAt);
     if (allFinished) {
-      // The host's subscription usually gets there first; losing that race
-      // (status already "finished") is fine.
-      await set(ref(database, `rooms/${roomId}/status`), "finished").catch(
-        (error) => {
-          if (!isPermissionDenied(error)) throw error;
-        },
-      );
+      // The host's subscription normally ends the round. Others only step in
+      // if it hasn't happened shortly after (e.g. the host's tab stalled),
+      // which avoids a denied write racing the host.
+      const end = () =>
+        set(ref(database, `rooms/${roomId}/status`), "finished").catch(
+          (error) => {
+            if (!isPermissionDenied(error)) console.error(error);
+          },
+        );
+      if (after.hostUid === uid) await end();
+      else
+        setTimeout(() => {
+          const latest = latestRaw.get(roomId);
+          if (
+            latest?.status === "playing" &&
+            latest.startedAt === after.startedAt
+          )
+            void end();
+        }, 2000);
     }
   } catch (error) {
     console.error("Error finishing game:", error);
@@ -745,7 +803,7 @@ const transferHost = async (roomId: string, newHostUid: string) => {
 
 const updateRoomSettings = async (
   roomId: string,
-  settings: { allowVisualAids?: boolean },
+  settings: { allowVisualAids?: boolean; maxPlayers?: number },
 ) => {
   const uid = currentUid();
   const raw = await readRoom(roomId);
@@ -759,8 +817,59 @@ const updateRoomSettings = async (
   if (typeof settings.allowVisualAids === "boolean") {
     updates.allowVisualAids = settings.allowVisualAids;
   }
+  if (typeof settings.maxPlayers === "number") {
+    if (raw.status !== "waiting") {
+      throw new Error("Seats can only change between rounds");
+    }
+    const max = Math.floor(settings.maxPlayers);
+    const seats = slotHolders(raw).map(([slot]) => Number(slot));
+    // Seats are indices: a lower limit must not strand anyone above it.
+    const minimum = Math.max(2, seats.length, ...seats.map((s) => s + 1));
+    if (max < minimum || max > ROOM_MAX_PLAYERS) {
+      throw new Error(`Seats must be between ${minimum} and 10`);
+    }
+    updates.maxPlayers = max;
+  }
   await update(roomRef(roomId), updates);
 };
+
+/** Changes the caller's display name in this room (1-24 characters). */
+const renamePlayer = async (roomId: string, displayName: string) => {
+  const uid = currentUid();
+  await update(roomRef(roomId), {
+    [`players/${uid}/displayName`]: clampDisplayName(displayName),
+    lastActivityAt: serverTimestamp(),
+  });
+};
+
+/** Host: end the round now; unfinished players are ranked by progress. */
+const endRound = async (roomId: string) => {
+  const uid = currentUid();
+  const raw = await readRoom(roomId);
+  if (!raw) throw new Error("Room not found");
+  if (raw.hostUid !== uid) throw new Error("Only the host can end the round");
+  if (raw.status !== "playing") return;
+  await update(roomRef(roomId), {
+    status: "finished",
+    lastActivityAt: serverTimestamp(),
+  });
+};
+
+/** One-off read of a room (join page preview). Null when it is gone. */
+const peekRoom = async (roomId: string): Promise<Room | null> => {
+  await ensureSignedIn();
+  const raw = await readRoom(roomId);
+  if (!raw || isStale(raw) || entries(raw.players).length === 0) return null;
+  return normalizeRoom(roomId, raw, auth.currentUser?.uid);
+};
+
+/** Smallest seat limit the host may set right now. */
+export function minSeatsFor(room: Room): number {
+  const seats = Object.values(room.players)
+    .map((p) => Number(p.slot))
+    .filter((n) => Number.isFinite(n));
+  return Math.max(2, seats.length, ...seats.map((s) => s + 1));
+}
 
 const subscribeToRoom = (
   roomId: string,
@@ -917,31 +1026,7 @@ export const roomApi = {
   updateRoomSettings,
   transferHost,
   subscribeToRoom,
+  renamePlayer,
+  endRound,
+  peekRoom,
 };
-
-export function useRoom() {
-  const [pending, setPending] = useState(0);
-
-  const withLoading = useCallback(
-    <A extends unknown[], R>(fn: (...args: A) => Promise<R>) =>
-      async (...args: A): Promise<R> => {
-        setPending((n) => n + 1);
-        try {
-          return await fn(...args);
-        } finally {
-          setPending((n) => n - 1);
-        }
-      },
-    [],
-  );
-
-  const create = useMemo(() => withLoading(createRoom), [withLoading]);
-  const join = useMemo(() => withLoading(joinRoom), [withLoading]);
-
-  return {
-    ...roomApi,
-    loading: pending > 0,
-    createRoom: create,
-    joinRoom: join,
-  };
-}

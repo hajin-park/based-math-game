@@ -136,6 +136,12 @@
             "finishMs": {
               ".validate": "newData.isNumber() && newData.parent().parent().parent().child('status').val() !== 'waiting' && newData.parent().child('round').val() === newData.parent().parent().parent().child('startedAt').val() && newData.val() >= newData.parent().child('correct').val() * 250 && newData.val() <= now - newData.parent().parent().parent().child('startedAt').val()"
             },
+            "penaltyMs": {
+              ".validate": "newData.isNumber() && newData.parent().parent().parent().child('status').val() !== 'waiting' && newData.parent().child('round').val() === newData.parent().parent().parent().child('startedAt').val() && newData.val() >= 0 && newData.val() <= 3600000"
+            },
+            "scoreMs": {
+              ".validate": "newData.isNumber() && newData.parent().parent().parent().child('status').val() !== 'waiting' && newData.parent().child('round').val() === newData.parent().parent().parent().child('startedAt').val() && newData.val() >= 0 && newData.val() <= now - newData.parent().parent().parent().child('startedAt').val()"
+            },
             "wins": {
               ".validate": "newData.isNumber() && ( (!data.exists() && newData.val() === 0) || newData.val() === data.val() || (newData.val() === data.val() + 1 && newData.parent().parent().parent().child('status').val() === 'finished' && newData.parent().child('lastWinRound').val() === newData.parent().parent().parent().child('startedAt').val() && data.parent().child('lastWinRound').val() !== newData.parent().parent().parent().child('startedAt').val()) )"
             },
@@ -144,7 +150,7 @@
             },
             "scoreHistory": {
               "$i": {
-                ".validate": "$i.matches(/^[0-9]{1,3}$/) && newData.isNumber() && newData.val() >= 0 && newData.val() <= 100000"
+                ".validate": "$i.matches(/^[0-9]{1,3}$/) && newData.isNumber() && newData.val() >= 0 && newData.val() <= 3600000"
               }
             },
             "$other": {

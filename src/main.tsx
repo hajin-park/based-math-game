@@ -40,8 +40,9 @@ const MultiplayerHome = lazy(() => import("./pages/MultiplayerHome"));
 const CreateRoom = lazy(() => import("./pages/CreateRoom"));
 const JoinRoom = lazy(() => import("./pages/JoinRoom"));
 const RoomLobby = lazy(() => import("./pages/RoomLobby"));
-const MultiplayerGame = lazy(() => import("./pages/MultiplayerGame"));
-const MultiplayerResults = lazy(() => import("./pages/MultiplayerResults"));
+const ToRoom = lazy(() =>
+  import("./pages/RoomLobby").then((m) => ({ default: m.ToRoom })),
+);
 
 const router = createBrowserRouter([
   {
@@ -158,12 +159,20 @@ const router = createBrowserRouter([
         element: <RoomLobby />,
       },
       {
+        path: "/multiplayer/join/:code",
+        element: <JoinRoom />,
+      },
+      {
+        path: "/join/:code",
+        element: <JoinRoom />,
+      },
+      {
         path: "/multiplayer/game/:roomId",
-        element: <MultiplayerGame />,
+        element: <ToRoom />,
       },
       {
         path: "/multiplayer/results/:roomId",
-        element: <MultiplayerResults />,
+        element: <ToRoom />,
       },
     ],
   },
