@@ -1,578 +1,557 @@
-import { useState, useEffect, useCallback } from "react";
+import { useMemo, type ReactNode } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import {
-  collection,
-  getDocs,
-  query,
-  orderBy,
-  doc,
-  getDoc,
-} from "firebase/firestore";
-import { firestore } from "@/firebase/config";
-import {
-  PaperCard,
-  PaperCardContent,
-  PaperCardDescription,
-  PaperCardHeader,
-  PaperCardTitle,
-} from "@/components/ui/academic";
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight,
+  RotateCw,
+  Trophy,
+  UserRound,
+} from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/ui/page-header";
+import { Segmented } from "@/components/ui/segmented";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import {
-  OFFICIAL_GAME_MODES,
-  getGameModeById,
-  isSpeedrunMode,
-} from "@/types/gameMode";
 import { useAuth } from "@/contexts/AuthContext";
-import { Badge } from "@/components/ui/badge";
+import { useLeaderboard, type LeaderboardEntry } from "@/data";
 import {
-  Trophy,
-  Loader2,
-  Target,
-  Users,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-} from "lucide-react";
+  TIERS,
+  dailyDateOf,
+  formatScore,
+  getMode,
+  isRankedModeId,
+  isValidDateKey,
+  parseModeId,
+  topicsInTier,
+  utcDateKey,
+  type GameMode,
+  type TopicId,
+} from "@/game";
+import { relativeTime } from "@/lib/timeFormat";
+import { cn } from "@/lib/utils";
 
-interface LeaderboardEntry {
-  uid: string;
-  displayName: string;
-  score: number;
-  timestamp: number;
-  accuracy?: number;
+type Board = "sprint" | "speedrun" | "survival" | "daily";
+
+const BOARD_OPTIONS: { value: Board; label: string }[] = [
+  { value: "sprint", label: "Sprint" },
+  { value: "speedrun", label: "Speedrun" },
+  { value: "survival", label: "Survival" },
+  { value: "daily", label: "Daily" },
+];
+
+const TIER_LABEL: Record<string, string> = {
+  foundations: "Foundations",
+  core: "Core",
+  advanced: "Advanced",
+  applied: "Applied",
+};
+
+const DEFAULT_TOPIC: TopicId = "nibbles";
+const DEFAULT_MODE = `${DEFAULT_TOPIC}:sprint`;
+const DAY_MS = 24 * 3600_000;
+
+function shiftDay(key: string, days: number): string {
+  const t = Date.parse(`${key}T00:00:00Z`) + days * DAY_MS;
+  return utcDateKey(new Date(t));
 }
 
-interface UserRank {
-  rank: number;
-  score: number;
-  totalPlayers: number;
-  accuracy?: number;
+/** Resolves `?mode=` to a ranked mode id (future dailies fall back to today). */
+function resolveModeId(raw: string | null, today: string): string {
+  if (!raw) return DEFAULT_MODE;
+  if (raw === "daily") return `daily:${today}`;
+  const date = dailyDateOf(raw);
+  if (date) return date > today ? `daily:${today}` : raw;
+  return isRankedModeId(raw) ? raw : DEFAULT_MODE;
 }
 
-const ENTRIES_PER_PAGE = 20;
+const UNIT_LABEL: Record<string, string> = {
+  correct: "Correct",
+  ms: "Time",
+  cleared: "Cleared",
+};
+
+function percent(n: number): string {
+  return `${Math.round(n * 100)}%`;
+}
 
 export default function Leaderboard() {
-  const { user, isGuest } = useAuth();
-  const [selectedMode, setSelectedMode] = useState(OFFICIAL_GAME_MODES[0].id);
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
-  const [userRank, setUserRank] = useState<UserRank | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalEntries, setTotalEntries] = useState(0);
+  const [params, setParams] = useSearchParams();
+  const today = utcDateKey();
+  const modeId = resolveModeId(params.get("mode"), today);
+  const mode = getMode(modeId) as GameMode;
+  const parsed = parseModeId(modeId)!;
+  const board: Board =
+    parsed.format === "survival" || parsed.format === "daily"
+      ? parsed.format
+      : (parsed.format as Board);
+  const topicId: TopicId =
+    board === "sprint" || board === "speedrun" ? parsed.topicId : DEFAULT_TOPIC;
+  const dailyDate = parsed.date ?? today;
 
-  const fetchUserRank = useCallback(
-    async (gameModeId: string) => {
-      if (!user || isGuest) return;
+  const { user, isGuest, loading: authLoading } = useAuth();
+  const { entries, me, loading, error, refresh } = useLeaderboard(modeId, {
+    limit: 50,
+  });
 
-      try {
-        const gameMode = getGameModeById(gameModeId);
-        const isSpeedrun = isSpeedrunMode(gameMode);
-
-        // Get user's score
-        const userDocRef = doc(
-          firestore,
-          `leaderboard-${gameModeId}`,
-          user.uid,
-        );
-        const userDoc = await getDoc(userDocRef);
-
-        if (!userDoc.exists()) {
-          setUserRank(null);
-          return;
-        }
-
-        const userData = userDoc.data();
-        const userScore = userData.score as number;
-        const userAccuracy = userData.accuracy as number | undefined;
-
-        // Get all leaderboard entries
-        const leaderboardRef = collection(
-          firestore,
-          `leaderboard-${gameModeId}`,
-        );
-        const leaderboardQuery = query(
-          leaderboardRef,
-          orderBy("score", isSpeedrun ? "asc" : "desc"),
-        );
-
-        const snapshot = await getDocs(leaderboardQuery);
-
-        // Filter out guest users and count rank
-        const validEntries = snapshot.docs.filter((doc) => {
-          const data = doc.data();
-          const isGuestUid = doc.id.startsWith("guest_");
-          const isGuestMarked = data.isGuest === true;
-          return !isGuestUid && !isGuestMarked;
-        });
-
-        const rank = validEntries.findIndex((doc) => doc.id === user.uid) + 1;
-
-        if (rank > 0) {
-          setUserRank({
-            rank,
-            score: userScore,
-            totalPlayers: validEntries.length,
-            accuracy: userAccuracy,
-          });
-        } else {
-          setUserRank(null);
-        }
-      } catch (error) {
-        console.error("Error fetching user rank:", error);
-        setUserRank(null);
-      }
-    },
-    [user, isGuest],
-  );
-
-  const fetchLeaderboard = useCallback(
-    async (gameModeId: string, page: number = 1) => {
-      setLoading(true);
-      try {
-        const gameMode = getGameModeById(gameModeId);
-        const isSpeedrun = isSpeedrunMode(gameMode);
-
-        // Use flat collection structure: leaderboard-{gameModeId}
-        const leaderboardRef = collection(
-          firestore,
-          `leaderboard-${gameModeId}`,
-        );
-
-        // First, get all entries to calculate total count and support pagination
-        // For speedrun: order by score ascending (lower is better)
-        // For timed: order by score descending (higher is better)
-        const allEntriesQuery = query(
-          leaderboardRef,
-          orderBy("score", isSpeedrun ? "asc" : "desc"),
-        );
-
-        const snapshot = await getDocs(allEntriesQuery);
-
-        // Filter out guest users
-        const allEntries: LeaderboardEntry[] = snapshot.docs
-          .filter((doc) => {
-            const data = doc.data();
-            const isGuestUid = doc.id.startsWith("guest_");
-            const isGuestMarked = data.isGuest === true;
-            return !isGuestUid && !isGuestMarked;
-          })
-          .map((doc) => {
-            const data = doc.data();
-            return {
-              uid: doc.id,
-              displayName: data.displayName as string,
-              score: data.score as number,
-              timestamp: data.timestamp as number,
-              accuracy: data.accuracy as number | undefined,
-            };
-          });
-
-        // Set total entries count
-        setTotalEntries(allEntries.length);
-
-        // Paginate the results
-        const startIndex = (page - 1) * ENTRIES_PER_PAGE;
-        const endIndex = startIndex + ENTRIES_PER_PAGE;
-        const paginatedEntries = allEntries.slice(startIndex, endIndex);
-
-        setLeaderboard(paginatedEntries);
-
-        // Fetch user's rank if authenticated and not a guest
-        if (user && !isGuest) {
-          await fetchUserRank(gameModeId);
-        } else {
-          setUserRank(null);
-        }
-      } catch (error) {
-        console.error("Error fetching leaderboard:", error);
-        setLeaderboard([]);
-        setUserRank(null);
-        setTotalEntries(0);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [user, isGuest, fetchUserRank],
-  );
-
-  // Reset to page 1 when mode changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [selectedMode]);
-
-  // Fetch leaderboard when mode or page changes
-  useEffect(() => {
-    fetchLeaderboard(selectedMode, currentPage);
-  }, [selectedMode, currentPage, fetchLeaderboard]);
-
-  const selectedModeData = OFFICIAL_GAME_MODES.find(
-    (mode) => mode.id === selectedMode,
-  );
-  const totalPages = Math.ceil(totalEntries / ENTRIES_PER_PAGE);
-
-  const handlePageChange = (newPage: number) => {
-    if (newPage >= 1 && newPage <= totalPages) {
-      setCurrentPage(newPage);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
+  const setMode = (id: string) => {
+    const next = new URLSearchParams(params);
+    next.set("mode", id);
+    setParams(next, { replace: true });
   };
 
-  const handleJumpToUserRank = () => {
-    if (userRank && userRank.rank > 0) {
-      const userPage = Math.ceil(userRank.rank / ENTRIES_PER_PAGE);
-      if (userPage !== currentPage) {
-        setCurrentPage(userPage);
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }
-    }
+  const onBoard = (b: Board) => {
+    if (b === "survival") setMode("survival");
+    else if (b === "daily") setMode(`daily:${today}`);
+    else setMode(`${topicId}:${b}`);
   };
+
+  const spec = mode.spec;
+  const unit = UNIT_LABEL[spec.scoreUnit] ?? "Score";
+  const myUid = user && !isGuest ? user.uid : null;
+  const myIndex = myUid ? entries.findIndex((e) => e.uid === myUid) : -1;
+  const pinned = myIndex === -1 && me ? me : null;
+  const playHref = `/play?mode=${encodeURIComponent(modeId)}`;
+  const isPastDaily = board === "daily" && dailyDate < today;
+
+  const status = loading
+    ? `Loading ${mode.name}`
+    : error
+      ? "Couldn’t load the leaderboard"
+      : `${entries.length} ${entries.length === 1 ? "player" : "players"} on ${mode.name}`;
 
   return (
-    <div className="container mx-auto px-4 py-4 space-y-4">
-      <PaperCard variant="folded" padding="none" className="shadow-lg">
-        <PaperCardHeader className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Trophy className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <PaperCardTitle className="text-2xl">
-                <span className="highlight-scribble">Global Rankings</span>
-              </PaperCardTitle>
-              <PaperCardDescription className="text-xs annotation">
-                Compete with players worldwide
-              </PaperCardDescription>
-            </div>
+    <div className="container flex flex-col gap-8 py-10 md:gap-10 md:py-14">
+      <PageHeader
+        eyebrow="Leaderboard"
+        title={
+          <>
+            Fastest <em>hands</em>
+          </>
+        }
+        lede="The top 50 in every ranked mode. Scores are checked for plausibility before they count."
+        divider
+        size="md"
+      />
+
+      {/* Filters */}
+      <section
+        aria-label="Choose a leaderboard"
+        className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between"
+      >
+        <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
+          <div className="flex min-w-0 flex-col gap-2">
+            <span className="text-label text-muted-foreground" aria-hidden>
+              Format
+            </span>
+            <Segmented
+              aria-label="Format"
+              id="lb-format"
+              value={board}
+              onValueChange={onBoard}
+              options={BOARD_OPTIONS}
+              className="w-full sm:w-auto [&>button]:shrink [&>button]:px-2 xs:[&>button]:px-3"
+              fullWidth
+            />
           </div>
-        </PaperCardHeader>
-        <PaperCardContent className="p-4 pt-0 space-y-4">
-          {/* Mode selector */}
-          <PaperCard variant="folded-sm" padding="default" className="border">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Target className="h-4 w-4 text-primary" />
-                <Label className="text-sm font-semibold">
-                  Select Game Mode
-                </Label>
-              </div>
-              <Select value={selectedMode} onValueChange={setSelectedMode}>
-                <SelectTrigger className="w-full h-9">
-                  <SelectValue placeholder="Select a game mode" />
+
+          {(board === "sprint" || board === "speedrun") && (
+            <div className="flex min-w-0 flex-col gap-2 sm:w-64">
+              <label htmlFor="lb-topic" className="text-label text-muted-foreground">
+                Topic
+              </label>
+              <Select
+                value={topicId}
+                onValueChange={(t) => setMode(`${t}:${board}`)}
+              >
+                <SelectTrigger id="lb-topic" className="h-11 sm:h-10">
+                  <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="max-h-[400px]">
-                  {/* Group by mode type */}
-                  <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
-                    Timed - 15 Seconds
-                  </div>
-                  {OFFICIAL_GAME_MODES.filter((m) => m.id.includes("-15s")).map(
-                    (mode) => (
-                      <SelectItem key={mode.id} value={mode.id}>
-                        {mode.name}
-                      </SelectItem>
-                    ),
-                  )}
-                  <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground mt-2">
-                    Timed - 60 Seconds
-                  </div>
-                  {OFFICIAL_GAME_MODES.filter((m) => m.id.includes("-60s")).map(
-                    (mode) => (
-                      <SelectItem key={mode.id} value={mode.id}>
-                        {mode.name}
-                      </SelectItem>
-                    ),
-                  )}
-                  <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground mt-2">
-                    Speed Run - 10 Questions
-                  </div>
-                  {OFFICIAL_GAME_MODES.filter((m) => m.id.includes("-10q")).map(
-                    (mode) => (
-                      <SelectItem key={mode.id} value={mode.id}>
-                        {mode.name}
-                      </SelectItem>
-                    ),
-                  )}
-                  <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground mt-2">
-                    Speed Run - 30 Questions
-                  </div>
-                  {OFFICIAL_GAME_MODES.filter((m) => m.id.includes("-30q")).map(
-                    (mode) => (
-                      <SelectItem key={mode.id} value={mode.id}>
-                        {mode.name}
-                      </SelectItem>
-                    ),
-                  )}
+                <SelectContent>
+                  {TIERS.map((tier) => (
+                    <SelectGroup key={tier}>
+                      <SelectLabel>{TIER_LABEL[tier]}</SelectLabel>
+                      {topicsInTier(tier)
+                        .filter((t) => t.id !== "custom")
+                        .map((t) => (
+                          <SelectItem key={t.id} value={t.id}>
+                            {t.name}
+                          </SelectItem>
+                        ))}
+                    </SelectGroup>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
-          </PaperCard>
-
-          {/* Pagination Controls */}
-          {totalPages > 1 && (
-            <PaperCard variant="folded-sm" padding="default" className="border">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handlePageChange(1)}
-                    disabled={currentPage === 1}
-                  >
-                    <ChevronsLeft className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                </div>
-
-                <div className="text-center">
-                  <p className="text-sm font-medium">
-                    Page {currentPage} of {totalPages}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Showing {(currentPage - 1) * ENTRIES_PER_PAGE + 1}-
-                    {Math.min(currentPage * ENTRIES_PER_PAGE, totalEntries)} of{" "}
-                    {totalEntries} players
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handlePageChange(totalPages)}
-                    disabled={currentPage === totalPages}
-                  >
-                    <ChevronsRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </PaperCard>
           )}
 
-          {/* Leaderboard table */}
-          {loading ? (
-            <div className="flex flex-col items-center justify-center py-8">
-              <Loader2 className="h-10 w-10 animate-spin text-primary mb-3" />
-              <p className="text-sm text-muted-foreground annotation">
-                Loading leaderboard...
-              </p>
-            </div>
-          ) : leaderboard.length > 0 ? (
-            <div className="space-y-1">
-              {leaderboard.map((entry, index) => {
-                const isCurrentUser = user && entry.uid === user.uid;
-                const globalRank =
-                  (currentPage - 1) * ENTRIES_PER_PAGE + index + 1;
-                const gameMode = getGameModeById(selectedMode);
-                const isSpeedrun = isSpeedrunMode(gameMode);
-
-                return (
-                  <PaperCard
-                    key={entry.uid}
-                    variant="default"
-                    padding="none"
-                    className={`border transition-all duration-150 ${
-                      isCurrentUser
-                        ? "border-primary bg-primary/5 shadow-sm"
-                        : globalRank <= 3
-                          ? "border-yellow-600/20 bg-yellow-500/5"
-                          : "border-border hover:border-primary/30 hover:shadow-sm"
-                    }`}
+          {board === "daily" && (
+            <div className="flex min-w-0 flex-col gap-2">
+              <label htmlFor="lb-date" className="text-label text-muted-foreground">
+                Day (UTC)
+              </label>
+              <div className="flex items-center gap-1.5">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="pointer-coarse:size-11"
+                  aria-label="Previous day"
+                  onClick={() => setMode(`daily:${shiftDay(dailyDate, -1)}`)}
+                >
+                  <ChevronLeft />
+                </Button>
+                <Input
+                  id="lb-date"
+                  type="date"
+                  value={dailyDate}
+                  max={today}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (isValidDateKey(v) && v <= today) setMode(`daily:${v}`);
+                  }}
+                  className="w-auto min-w-0 flex-1 font-mono tabular-nums pointer-coarse:h-11 sm:w-44 sm:flex-none"
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="pointer-coarse:size-11"
+                  aria-label="Next day"
+                  disabled={dailyDate >= today}
+                  onClick={() => setMode(`daily:${shiftDay(dailyDate, 1)}`)}
+                >
+                  <ChevronRight />
+                </Button>
+                {dailyDate !== today && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-10 pointer-coarse:h-11"
+                    onClick={() => setMode(`daily:${today}`)}
                   >
-                    <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2 sm:gap-3 md:gap-4 p-3 sm:p-4 w-full">
-                      {/* Rank Column - Fixed Width */}
-                      <div
-                        className={`flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full flex-shrink-0 ${
-                          globalRank <= 3
-                            ? "bg-trophy/20 border-2 border-trophy/40"
-                            : "bg-muted"
-                        }`}
-                      >
-                        <span
-                          className={`font-bold text-sm sm:text-base ${
-                            globalRank <= 3
-                              ? "text-trophy"
-                              : "text-muted-foreground"
-                          }`}
-                        >
-                          {globalRank}
-                        </span>
-                      </div>
-
-                      {/* Name & Info Column - Flexible Width */}
-                      <div className="min-w-0 flex items-center gap-1.5 sm:gap-2">
-                        <p className="font-serif font-semibold text-sm sm:text-base truncate m-0">
-                          {entry.displayName}
-                        </p>
-                        {isCurrentUser && (
-                          <Badge
-                            variant="default"
-                            className="text-xs h-5 px-2 flex-shrink-0"
-                          >
-                            You
-                          </Badge>
-                        )}
-                        {globalRank <= 3 && (
-                          <Trophy
-                            className={`h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0 ${
-                              globalRank === 1
-                                ? "text-yellow-500"
-                                : globalRank === 2
-                                  ? "text-gray-400"
-                                  : "text-orange-600"
-                            }`}
-                          />
-                        )}
-                        <span className="text-muted-foreground flex-shrink-0 hidden sm:inline">
-                          •
-                        </span>
-                        <span className="text-xs text-muted-foreground flex-shrink-0 hidden sm:inline">
-                          {new Date(entry.timestamp).toLocaleDateString(
-                            "en-US",
-                            {
-                              month: "short",
-                              day: "numeric",
-                            },
-                          )}
-                        </span>
-                        <span className="text-xs text-muted-foreground flex-shrink-0 hidden md:inline">
-                          {new Date(entry.timestamp).getFullYear()}
-                        </span>
-                        {entry.accuracy !== undefined && (
-                          <>
-                            <span className="text-muted-foreground flex-shrink-0 hidden sm:inline">
-                              •
-                            </span>
-                            <span className="text-xs text-muted-foreground flex-shrink-0 hidden sm:inline">
-                              {entry.accuracy.toFixed(1)}%
-                              <span className="hidden md:inline">
-                                {" "}
-                                accuracy
-                              </span>
-                            </span>
-                          </>
-                        )}
-                      </div>
-
-                      {/* Score Column - Fixed Width */}
-                      <div className="flex items-center gap-1 sm:gap-1.5 justify-end flex-shrink-0 min-w-[70px] sm:min-w-[90px]">
-                        <p className="font-mono font-bold text-lg sm:text-xl m-0">
-                          {isSpeedrun ? `${entry.score}s` : entry.score}
-                        </p>
-                        <p className="text-xs text-muted-foreground hidden sm:inline m-0">
-                          {isSpeedrun ? "time" : "points"}
-                        </p>
-                      </div>
-                    </div>
-                  </PaperCard>
-                );
-              })}
-
-              {/* Compact Your Rank Tag */}
-              {!isGuest &&
-                userRank &&
-                (() => {
-                  const gameMode = getGameModeById(selectedMode);
-                  const isSpeedrun = isSpeedrunMode(gameMode);
-                  const userPage = Math.ceil(userRank.rank / ENTRIES_PER_PAGE);
-                  const isOnUserPage = userPage === currentPage;
-
-                  return (
-                    <div className="mt-3 pt-3 ruled-line">
-                      <PaperCard
-                        variant="folded-sm"
-                        padding="sm"
-                        className="bg-primary/5 border-primary/20"
-                      >
-                        <div className="flex items-center justify-between text-sm">
-                          <div className="flex items-center gap-3">
-                            <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                              <Users className="h-3.5 w-3.5 text-primary" />
-                            </div>
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-muted-foreground text-xs">
-                                Your rank:
-                              </span>
-                              <span className="font-bold text-primary">
-                                #{userRank.rank}
-                              </span>
-                              <span className="text-muted-foreground text-xs">
-                                / {userRank.totalPlayers}
-                              </span>
-                              <span className="text-muted-foreground">•</span>
-                              <span className="text-muted-foreground text-xs">
-                                Score:
-                              </span>
-                              <span className="font-mono font-bold text-primary text-sm">
-                                {isSpeedrun
-                                  ? `${userRank.score}s`
-                                  : userRank.score}
-                              </span>
-                              {userRank.accuracy !== undefined && (
-                                <>
-                                  <span className="text-muted-foreground">
-                                    •
-                                  </span>
-                                  <span className="text-muted-foreground text-xs">
-                                    {userRank.accuracy.toFixed(1)}% accuracy
-                                  </span>
-                                </>
-                              )}
-                            </div>
-                          </div>
-                          {!isOnUserPage && (
-                            <Button
-                              onClick={handleJumpToUserRank}
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 text-xs flex-shrink-0"
-                            >
-                              Jump to page {userPage}
-                            </Button>
-                          )}
-                        </div>
-                      </PaperCard>
-                    </div>
-                  );
-                })()}
-            </div>
-          ) : (
-            <PaperCard
-              variant="folded-sm"
-              padding="default"
-              className="border border-dashed"
-            >
-              <div className="py-6 text-center space-y-2">
-                <Trophy className="h-10 w-10 mx-auto text-muted-foreground/50" />
-                <p className="text-sm text-muted-foreground">
-                  No scores yet for {selectedModeData?.name}. Be the first!
-                </p>
+                    Today
+                  </Button>
+                )}
               </div>
-            </PaperCard>
+            </div>
           )}
-        </PaperCardContent>
-      </PaperCard>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {!isPastDaily && (
+            <Button asChild variant="outline" className="flex-1 sm:flex-none">
+              <Link to={playHref}>
+                Play {board === "daily" ? "today’s daily" : mode.name}
+                <ArrowRight aria-hidden />
+              </Link>
+            </Button>
+          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Refresh leaderboard"
+            onClick={refresh}
+            disabled={loading}
+          >
+            <RotateCw className={cn(loading && "motion-safe:animate-spin")} />
+          </Button>
+        </div>
+      </section>
+
+      <section aria-labelledby="lb-title" className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b pb-3">
+          <h2 id="lb-title" className="text-title font-semibold">
+            {mode.name}
+          </h2>
+          <p className="text-body-sm text-muted-foreground">
+            {spec.summary}{" "}
+            <span className="whitespace-nowrap text-foreground">
+              {spec.scoreOrder === "lower-better"
+                ? "Lower is better."
+                : "Higher is better."}
+            </span>
+          </p>
+        </div>
+
+        <p className="sr-only" role="status" aria-live="polite">
+          {status}
+        </p>
+
+        {!authLoading && isGuest && (
+          <Alert variant="info" role="note">
+            <UserRound aria-hidden />
+            <p className="mb-1 text-[0.9375rem] font-semibold leading-snug">
+              Create an account to appear here
+            </p>
+            <AlertDescription>
+              Guest runs are saved on this device only and aren’t ranked.{" "}
+              <Link
+                className="link"
+                to={`/signup?next=${encodeURIComponent(`/leaderboard?mode=${modeId}`)}`}
+              >
+                Create a free account
+              </Link>{" "}
+              and your best scores go up here.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {loading ? (
+          <TableSkeleton />
+        ) : error ? (
+          <EmptyState
+            icon={<RotateCw />}
+            title="Couldn’t load the leaderboard"
+            description="Check your connection, then try again."
+            action={
+              <Button variant="outline" onClick={refresh}>
+                Try again
+              </Button>
+            }
+          />
+        ) : entries.length === 0 ? (
+          <EmptyState
+            icon={<Trophy />}
+            title={
+              isPastDaily
+                ? "Nobody ranked on this day"
+                : "No scores yet. The top spot is open."
+            }
+            description={
+              isPastDaily
+                ? "Daily challenges can only be ranked on their own day (UTC)."
+                : isGuest
+                  ? "Create an account, then set the first score in this mode."
+                  : "Set the first score in this mode and it shows up here."
+            }
+            action={
+              isPastDaily ? (
+                <Button onClick={() => setMode(`daily:${today}`)}>
+                  See today’s daily
+                </Button>
+              ) : (
+                <Button asChild>
+                  <Link to={playHref}>
+                    Play {mode.name}
+                    <ArrowRight aria-hidden />
+                  </Link>
+                </Button>
+              )
+            }
+          />
+        ) : (
+          <LeaderboardTable
+            entries={entries}
+            myUid={myUid}
+            unitLabel={unit}
+            format={(s) => formatScore(spec, s)}
+            caption={`Top ${entries.length} on ${mode.name}`}
+            pinned={
+              pinned ? (
+                <PinnedRow
+                  rank={pinned.rank}
+                  entry={pinned.entry}
+                  format={(s) => formatScore(spec, s)}
+                />
+              ) : null
+            }
+          />
+        )}
+
+        {!loading && !error && myUid && myIndex === -1 && !me && (
+          <p className="text-body-sm text-muted-foreground">
+            You haven’t set a score in this mode yet.{" "}
+            {!isPastDaily && (
+              <Link className="link" to={playHref}>
+                Play it now
+              </Link>
+            )}
+          </p>
+        )}
+      </section>
     </div>
   );
 }
+
+/* -------------------------------------------------------------------------- */
+
+function rankLabel(rank: number): string {
+  return String(rank).padStart(2, "0");
+}
+
+function LeaderboardTable({
+  entries,
+  myUid,
+  unitLabel,
+  format,
+  caption,
+  pinned,
+}: {
+  entries: LeaderboardEntry[];
+  myUid: string | null;
+  unitLabel: string;
+  format: (score: number) => string;
+  caption: string;
+  pinned: ReactNode;
+}) {
+  const now = useMemo(() => Date.now(), []);
+  return (
+    <div className="overflow-hidden rounded-lg border bg-card">
+      <table className="w-full table-fixed border-collapse text-body-sm tabular-nums">
+        <caption className="sr-only">{caption}</caption>
+        <colgroup>
+          <col className="w-12 sm:w-16" />
+          <col />
+          <col className="w-[7.25rem] sm:w-32" />
+          <col className="hidden w-24 sm:table-column" />
+          <col className="hidden w-36 md:table-column" />
+        </colgroup>
+        <thead className="bg-sunken/60">
+          <tr className="border-b border-border-strong text-left text-[0.75rem] font-medium text-muted-foreground">
+            <th scope="col" className="h-10 pl-3 sm:pl-5">
+              Rank
+            </th>
+            <th scope="col" className="h-10 px-2">
+              Player
+            </th>
+            <th scope="col" className="h-10 px-3 text-right">
+              {unitLabel}
+            </th>
+            <th
+              scope="col"
+              className="hidden h-10 px-3 text-right sm:table-cell"
+            >
+              Accuracy
+            </th>
+            <th
+              scope="col"
+              className="hidden h-10 pr-5 text-right md:table-cell"
+            >
+              Updated
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {entries.map((e, i) => {
+            const mine = e.uid === myUid;
+            return (
+              <tr
+                key={e.uid}
+                aria-current={mine ? "true" : undefined}
+                className={cn(
+                  "border-b last:border-b-0",
+                  mine && "bg-primary/[0.06]",
+                )}
+              >
+                <td
+                  className={cn(
+                    "h-12 pl-3 font-mono text-[0.8125rem] sm:pl-5",
+                    i < 3 ? "text-foreground" : "text-muted-foreground",
+                  )}
+                >
+                  {rankLabel(i + 1)}
+                </td>
+                <td className="h-12 min-w-0 px-2">
+                  <span className="flex min-w-0 items-center gap-2">
+                    <span className="truncate">
+                      {e.displayName || "Player"}
+                    </span>
+                    {mine && (
+                      <span className="shrink-0 text-[0.75rem] font-medium text-primary">
+                        you
+                      </span>
+                    )}
+                  </span>
+                </td>
+                <td className="h-12 whitespace-nowrap px-3 text-right font-mono text-[0.875rem] text-foreground">
+                  {format(e.score)}
+                </td>
+                <td className="hidden h-12 px-3 text-right font-mono text-[0.8125rem] text-muted-foreground sm:table-cell">
+                  {percent(e.accuracy)}
+                </td>
+                <td className="hidden h-12 whitespace-nowrap pr-5 text-right text-[0.8125rem] text-muted-foreground md:table-cell">
+                  <time dateTime={new Date(e.updatedAt).toISOString()}>
+                    {relativeTime(e.updatedAt, now)}
+                  </time>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+        {pinned && <tfoot>{pinned}</tfoot>}
+      </table>
+    </div>
+  );
+}
+
+function PinnedRow({
+  rank,
+  entry,
+  format,
+}: {
+  rank: number | null;
+  entry: LeaderboardEntry;
+  format: (score: number) => string;
+}) {
+  return (
+    <tr
+      aria-current="true"
+      className="border-t-2 border-border-strong bg-primary/[0.06]"
+    >
+      <td className="h-12 pl-3 font-mono text-[0.8125rem] text-foreground sm:pl-5">
+        {rank === null ? "100+" : rankLabel(rank)}
+      </td>
+      <td className="h-12 min-w-0 px-2">
+        <span className="flex min-w-0 items-center gap-2">
+          <span className="truncate">{entry.displayName || "You"}</span>
+          <span className="shrink-0 text-[0.75rem] font-medium text-primary">
+            you
+          </span>
+        </span>
+      </td>
+      <td className="h-12 whitespace-nowrap px-3 text-right font-mono text-[0.875rem]">
+        {format(entry.score)}
+      </td>
+      <td className="hidden h-12 px-3 text-right font-mono text-[0.8125rem] text-muted-foreground sm:table-cell">
+        {percent(entry.accuracy)}
+      </td>
+      <td className="hidden h-12 whitespace-nowrap pr-5 text-right text-[0.8125rem] text-muted-foreground md:table-cell">
+        {relativeTime(entry.updatedAt)}
+      </td>
+    </tr>
+  );
+}
+
+function TableSkeleton() {
+  return (
+    <div
+      className="overflow-hidden rounded-lg border bg-card"
+      aria-hidden
+      data-testid="leaderboard-loading"
+    >
+      <div className="h-10 border-b border-border-strong bg-sunken/60" />
+      {Array.from({ length: 8 }, (_, i) => (
+        <div
+          key={i}
+          className="flex h-12 items-center gap-4 border-b px-3 last:border-b-0 sm:px-5"
+        >
+          <Skeleton className="h-3.5 w-6" />
+          <Skeleton className="h-3.5 flex-1 sm:max-w-48" />
+          <Skeleton className="ml-auto h-3.5 w-16" />
+        </div>
+      ))}
+    </div>
+  );
+}
+

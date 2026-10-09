@@ -1,48 +1,78 @@
-import { useState, useEffect } from "react";
-import { ref, onValue } from "firebase/database";
-import { database } from "@/firebase/config";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { WifiOff, Wifi } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
+import { Wifi, WifiOff } from "lucide-react";
+import { cn } from "@/lib/utils";
 
+/** How long a drop must last before we mention it. */
+const GRACE_MS = 3000;
+
+/**
+ * Global "you're offline" notice, driven by the browser's online/offline
+ * events (no database socket is opened just for this). Nothing is shown
+ * until a drop has lasted a few seconds; "Back online" is shown only to
+ * people who saw the offline notice. Room pages show their own connection
+ * state in the room bar, so this stays out of their way.
+ */
 export default function ConnectionStatus() {
-  const [isConnected, setIsConnected] = useState(true);
-  const [showAlert, setShowAlert] = useState(false);
+  const { pathname } = useLocation();
+  const [state, setState] = useState<"hidden" | "offline" | "restored">(
+    "hidden",
+  );
 
   useEffect(() => {
-    const connectedRef = ref(database, ".info/connected");
-
-    const unsubscribe = onValue(connectedRef, (snapshot) => {
-      const connected = snapshot.val() === true;
-      setIsConnected(connected);
-
-      // Show alert when disconnected
-      if (!connected) {
-        setShowAlert(true);
-      } else {
-        // Hide alert after reconnection with a delay
-        setTimeout(() => setShowAlert(false), 3000);
+    let shownOffline = false;
+    let timer: number | undefined;
+    const onOnline = () => {
+      window.clearTimeout(timer);
+      if (shownOffline) {
+        shownOffline = false;
+        setState("restored");
+        timer = window.setTimeout(() => setState("hidden"), 3000);
       }
-    });
-
-    return () => unsubscribe();
+    };
+    const onOffline = () => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        if (navigator.onLine) return;
+        shownOffline = true;
+        setState("offline");
+      }, GRACE_MS);
+    };
+    window.addEventListener("online", onOnline);
+    window.addEventListener("offline", onOffline);
+    if (!navigator.onLine) onOffline();
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener("online", onOnline);
+      window.removeEventListener("offline", onOffline);
+    };
   }, []);
 
-  if (!showAlert) return null;
+  const inRoom = pathname.startsWith("/multiplayer/lobby/");
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 max-w-sm">
-      <Alert variant={isConnected ? "default" : "destructive"}>
-        {isConnected ? (
-          <Wifi className="h-4 w-4" />
-        ) : (
-          <WifiOff className="h-4 w-4" />
-        )}
-        <AlertDescription>
-          {isConnected
-            ? "Connection restored"
-            : "No internet connection. Some features may be unavailable."}
-        </AlertDescription>
-      </Alert>
+    <div
+      role="status"
+      aria-live="polite"
+      className="pointer-events-none fixed inset-x-3 bottom-3 z-50 flex justify-center sm:inset-x-auto sm:bottom-4 sm:right-4"
+    >
+      {state !== "hidden" && !inRoom && (
+        <p
+          className={cn(
+            "pointer-events-auto flex max-w-sm items-center gap-2 rounded-lg border bg-popover px-4 py-3 text-body-sm shadow-lg",
+            state === "offline" && "border-warning/40",
+          )}
+        >
+          {state === "offline" ? (
+            <WifiOff aria-hidden className="size-4 shrink-0 text-warning" />
+          ) : (
+            <Wifi aria-hidden className="size-4 shrink-0 text-success" />
+          )}
+          {state === "offline"
+            ? "You're offline. Multiplayer resumes when the connection is back."
+            : "Back online."}
+        </p>
+      )}
     </div>
   );
 }

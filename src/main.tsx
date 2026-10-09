@@ -1,36 +1,48 @@
-import React from "react";
+import React, { lazy } from "react";
 import ReactDOM from "react-dom/client";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import {
+  createBrowserRouter,
+  Navigate,
+  RouterProvider,
+} from "react-router-dom";
 import { Layout } from "./utils/Layout";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import ErrorBoundary from "./components/ErrorBoundary";
 import Error from "./pages/Error";
+import LegacyRedirect from "./components/LegacyRedirect";
+// Home is the landing page: keep it in the entry chunk for first paint.
 import Home from "./pages/Home";
-import SingleplayerMode from "./pages/SingleplayerMode";
-import Usage from "./pages/Usage";
-import Tutorials from "./pages/Tutorials";
-import About from "./pages/About";
-import Privacy from "./pages/Privacy";
-import Terms from "./pages/Terms";
-import Settings from "./pages/Settings";
-import Quiz from "./pages/Quiz";
-import Results from "./pages/Results";
-import Leaderboard from "./pages/Leaderboard";
-import Stats from "./pages/Stats";
-import ProfileLayout from "./pages/profile/ProfileLayout";
-import ProfileOverview from "./pages/profile/ProfileOverview";
-import ProfileSettings from "./pages/profile/ProfileSettings";
-import ProfileGameSettings from "./pages/profile/ProfileGameSettings";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
-import MultiplayerHome from "./pages/MultiplayerHome";
-import CreateRoom from "./pages/CreateRoom";
-import JoinRoom from "./pages/JoinRoom";
-import RoomLobby from "./pages/RoomLobby";
-import MultiplayerGame from "./pages/MultiplayerGame";
-import MultiplayerResults from "./pages/MultiplayerResults";
 import "./index.css";
+import { registerServiceWorker } from "@/lib/serviceWorker";
+
+// Every other route is code-split; Layout wraps <Outlet /> in <Suspense>.
+const Play = lazy(() => import("./pages/Play"));
+const PlayRun = lazy(() => import("./pages/PlayRun"));
+const Daily = lazy(() => import("./pages/Daily"));
+const Usage = lazy(() => import("./pages/Usage"));
+const Tutorials = lazy(() => import("./pages/Tutorials"));
+const About = lazy(() => import("./pages/About"));
+const Privacy = lazy(() => import("./pages/Privacy"));
+const Terms = lazy(() => import("./pages/Terms"));
+const Results = lazy(() => import("./pages/Results"));
+const Leaderboard = lazy(() => import("./pages/Leaderboard"));
+const Stats = lazy(() => import("./pages/Stats"));
+const ProfileLayout = lazy(() => import("./pages/profile/ProfileLayout"));
+const ProfileOverview = lazy(() => import("./pages/profile/ProfileOverview"));
+const ProfileSettings = lazy(() => import("./pages/profile/ProfileSettings"));
+const ProfileGameSettings = lazy(
+  () => import("./pages/profile/ProfileGameSettings"),
+);
+const Login = lazy(() => import("./pages/Login"));
+const Signup = lazy(() => import("./pages/Signup"));
+const MultiplayerHome = lazy(() => import("./pages/MultiplayerHome"));
+const CreateRoom = lazy(() => import("./pages/CreateRoom"));
+const JoinRoom = lazy(() => import("./pages/JoinRoom"));
+const RoomLobby = lazy(() => import("./pages/RoomLobby"));
+const ToRoom = lazy(() =>
+  import("./pages/RoomLobby").then((m) => ({ default: m.ToRoom })),
+);
 
 const router = createBrowserRouter([
   {
@@ -43,20 +55,33 @@ const router = createBrowserRouter([
         element: <Home />,
       },
       {
-        path: "/singleplayer",
-        element: <SingleplayerMode />,
+        path: "/play",
+        element: <Play />,
       },
       {
-        path: "/settings",
-        element: <Settings />,
+        path: "/play/:modeId",
+        element: <PlayRun />,
       },
       {
-        path: "/quiz",
-        element: <Quiz />,
+        path: "/daily",
+        element: <Daily />,
       },
       {
         path: "/results",
         element: <Results />,
+      },
+      // Old single-player URLs.
+      {
+        path: "/singleplayer",
+        element: <LegacyRedirect to="/play" />,
+      },
+      {
+        path: "/quiz",
+        element: <LegacyRedirect to="/play" />,
+      },
+      {
+        path: "/settings",
+        element: <Navigate to="/play?panel=settings" replace />,
       },
       {
         path: "/leaderboard",
@@ -97,8 +122,13 @@ const router = createBrowserRouter([
         element: <Usage />,
       },
       {
-        path: "/tutorials",
+        path: "/learn",
         element: <Tutorials />,
+      },
+      {
+        // Legacy URL: keep old links (and their #anchors) working.
+        path: "/tutorials",
+        element: <LegacyRedirect to="/learn" />,
       },
       {
         path: "/about",
@@ -129,12 +159,20 @@ const router = createBrowserRouter([
         element: <RoomLobby />,
       },
       {
+        path: "/multiplayer/join/:code",
+        element: <JoinRoom />,
+      },
+      {
+        path: "/join/:code",
+        element: <JoinRoom />,
+      },
+      {
         path: "/multiplayer/game/:roomId",
-        element: <MultiplayerGame />,
+        element: <ToRoom />,
       },
       {
         path: "/multiplayer/results/:roomId",
-        element: <MultiplayerResults />,
+        element: <ToRoom />,
       },
     ],
   },
@@ -152,46 +190,4 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
   </React.StrictMode>,
 );
 
-// Register service worker for offline support
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker
-      .register("/sw.js")
-      .then((registration) => {
-        console.log("Service Worker registered:", registration);
-      })
-      .catch((error) => {
-        console.log("Service Worker registration failed:", error);
-      });
-  });
-
-  // Handle controller change (new service worker took over)
-  // Only reload when the page is not visible to avoid interrupting user activity
-  let refreshing = false;
-  navigator.serviceWorker.addEventListener("controllerchange", () => {
-    if (!refreshing) {
-      refreshing = true;
-
-      // If page is hidden, reload immediately
-      if (document.hidden) {
-        window.location.reload();
-      } else {
-        // Otherwise, wait for page to become hidden before reloading
-        const reloadWhenHidden = () => {
-          if (document.hidden) {
-            window.location.reload();
-          }
-        };
-        document.addEventListener("visibilitychange", reloadWhenHidden, {
-          once: true,
-        });
-
-        // Also set a timeout to reload after 30 seconds if user doesn't leave
-        setTimeout(() => {
-          document.removeEventListener("visibilitychange", reloadWhenHidden);
-          window.location.reload();
-        }, 30000);
-      }
-    }
-  });
-}
+registerServiceWorker();

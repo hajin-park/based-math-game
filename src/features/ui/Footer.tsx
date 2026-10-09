@@ -1,95 +1,79 @@
 import { Link } from "react-router-dom";
-import { RuledSeparator } from "@/components/ui/academic";
-import { Github, Binary } from "lucide-react";
+import { Github } from "lucide-react";
+import { Wordmark } from "@/components/ui/logo";
+
+const SECTIONS = [
+  {
+    title: "Play",
+    links: [
+      { name: "Solo sprint", href: "/play" },
+      { name: "Multiplayer rooms", href: "/multiplayer" },
+      { name: "Leaderboard", href: "/leaderboard" },
+      { name: "Your stats", href: "/stats" },
+    ],
+  },
+  {
+    title: "Learn",
+    links: [
+      { name: "Tutorials", href: "/learn" },
+      { name: "How to play", href: "/how-to-play" },
+      { name: "About", href: "/about" },
+    ],
+  },
+  {
+    title: "Legal",
+    links: [
+      { name: "Privacy", href: "/privacy" },
+      { name: "Terms", href: "/terms" },
+      {
+        name: "GPL-3.0 license",
+        href: "https://github.com/hajin-park/based-math-game/blob/main/LICENSE",
+        external: true,
+      },
+    ],
+  },
+];
 
 export default function Footer() {
-  const currentYear = new Date().getFullYear();
-
-  const footerSections = [
-    {
-      title: "Learn",
-      links: [
-        { name: "Tutorials", href: "/tutorials" },
-        { name: "How to Play", href: "/how-to-play" },
-        { name: "About", href: "/about" },
-      ],
-    },
-    {
-      title: "Play",
-      links: [
-        { name: "Singleplayer", href: "/singleplayer" },
-        { name: "Multiplayer", href: "/multiplayer" },
-        { name: "Leaderboard", href: "/leaderboard" },
-        { name: "Stats", href: "/stats" },
-      ],
-    },
-    {
-      title: "Legal",
-      links: [
-        { name: "Privacy Policy", href: "/privacy" },
-        { name: "Terms of Service", href: "/terms" },
-        {
-          name: "License (GPL-3.0)",
-          href: "https://github.com/hajin-park/based-math-game/blob/main/LICENSE",
-          external: true,
-        },
-      ],
-    },
-  ];
+  const year = new Date().getFullYear();
 
   return (
-    <footer className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 paper-texture">
-      <RuledSeparator spacing="none" variant="default" />
-      <div className="container px-4 py-10 md:py-12">
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-5">
-          {/* Brand Section */}
-          <div className="lg:col-span-2 space-y-3">
-            <div className="flex items-center gap-2">
-              <Binary className="h-5 w-5 text-primary" />
-              <h3 className="font-serif font-bold text-lg gradient-text">
-                Based Math Game
-              </h3>
-            </div>
-            <p className="text-sm text-muted-foreground max-w-xs leading-relaxed">
-              Master base conversion through interactive practice and timed
-              quizzes. Challenge yourself and compete with others!
-            </p>
-            <div className="flex items-center gap-4">
-              <a
-                href="https://github.com/hajin-park/based-math-game"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors ink-underline"
-                aria-label="GitHub Repository"
-              >
-                <Github className="h-4 w-4" />
-                <span>View on GitHub</span>
-              </a>
-            </div>
-          </div>
+    <footer className="border-t bg-background">
+      <div className="container grid gap-10 py-12 md:grid-cols-[1.4fr_repeat(3,1fr)] md:gap-8 md:py-16">
+        <div className="flex max-w-xs flex-col gap-4">
+          <Link
+            to="/"
+            aria-label="Based Math Game — home"
+            className="-ml-1 flex w-fit items-center rounded-md px-1 py-1"
+          >
+            <Wordmark />
+          </Link>
+          <p className="text-body-sm text-muted-foreground">
+            Timed drills for converting between binary, octal, decimal and
+            hexadecimal. Free and open source.
+          </p>
+        </div>
 
-          {/* Footer Links */}
-          {footerSections.map((section) => (
-            <div key={section.title}>
-              <h3 className="font-serif font-semibold text-sm mb-3 ink-underline-visible">
-                {section.title}
-              </h3>
-              <ul className="space-y-2">
+        <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 md:col-span-3">
+          {SECTIONS.map((section) => (
+            <div key={section.title} className="flex flex-col gap-3">
+              <h2 className="eyebrow">{section.title}</h2>
+              <ul className="flex flex-col gap-1">
                 {section.links.map((link) => (
                   <li key={link.name}>
-                    {link.external ? (
+                    {"external" in link && link.external ? (
                       <a
                         href={link.href}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-sm text-muted-foreground hover:text-primary transition-colors link-underline"
+                        className="inline-flex min-h-8 items-center text-body-sm text-foreground/80 transition-colors duration-fast hover:text-foreground"
                       >
                         {link.name}
                       </a>
                     ) : (
                       <Link
                         to={link.href}
-                        className="text-sm text-muted-foreground hover:text-primary transition-colors link-underline"
+                        className="inline-flex min-h-8 items-center text-body-sm text-foreground/80 transition-colors duration-fast hover:text-foreground"
                       >
                         {link.name}
                       </Link>
@@ -100,26 +84,36 @@ export default function Footer() {
             </div>
           ))}
         </div>
+      </div>
 
-        <RuledSeparator className="my-6" variant="double" />
-
-        {/* Bottom Section */}
-        <div className="flex flex-col gap-3 md:flex-row md:justify-between md:items-center">
-          <p className="text-xs text-muted-foreground margin-note">
-            © {currentYear} Based Math Game. Open source under GPL-3.0.
-          </p>
-          <p className="text-xs text-muted-foreground">
-            Inspired by{" "}
-            <a
-              href="https://arithmetic.zetamac.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary link-underline font-medium"
-            >
-              zetamac
-            </a>
-          </p>
-        </div>
+      <div className="container flex flex-col gap-3 border-t py-5 text-[0.8125rem] text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+        <p>
+          © {year}{" "}
+          <span
+            className="font-mono text-[0.75rem]"
+            title={`${year} in hexadecimal`}
+          >
+            (0x{year.toString(16).toUpperCase()})
+          </span>{" "}
+          Based Math Game · Inspired by{" "}
+          <a
+            href="https://arithmetic.zetamac.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="link font-normal text-muted-foreground"
+          >
+            zetamac
+          </a>
+        </p>
+        <a
+          href="https://github.com/hajin-park/based-math-game"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex min-h-8 w-fit items-center gap-2 transition-colors duration-fast hover:text-foreground"
+        >
+          <Github className="size-4" aria-hidden />
+          Source on GitHub
+        </a>
       </div>
     </footer>
   );

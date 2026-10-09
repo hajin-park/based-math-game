@@ -1,263 +1,223 @@
-import {
-  PaperCard,
-  PaperCardContent,
-  PaperCardHeader,
-  PaperCardTitle,
-  SectionHeader,
-} from "@/components/ui/academic";
-import { FileText } from "lucide-react";
+import { Link } from "react-router-dom";
+
+import { LegalDocument, type LegalSection } from "@/components/LegalDocument";
+
+const REPO = "https://github.com/hajin-park/based-math-game";
+
+const Ext = ({ href, children }: { href: string; children: React.ReactNode }) => (
+  <a className="link" href={href} target="_blank" rel="noopener noreferrer">
+    {children}
+  </a>
+);
+
+const SUMMARY = [
+  <>Based Math Game is free and open source. Play as a guest or with a free account.</>,
+  <>Play fair: no bots, scripts or tampering with scores. Suspicious scores can be removed.</>,
+  <>Keep display names and chat suitable for a classroom.</>,
+  <>The game is provided as is, without guarantees, and may change.</>,
+  <>
+    Your data is handled as described in the{" "}
+    <Link className="link" to="/privacy">
+      Privacy notice
+    </Link>
+    .
+  </>,
+];
+
+const SECTIONS: LegalSection[] = [
+  {
+    id: "using",
+    title: "Using the game",
+    body: (
+      <>
+        <p>
+          These terms apply when you use Based Math Game, the website and its
+          multiplayer rooms. By playing you agree to them. If you don’t agree,
+          please don’t use the game.
+        </p>
+        <p>
+          The game is free. Every mode, including multiplayer, works without an
+          account; guests are simply not ranked on leaderboards and their runs
+          stay in their browser.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: "accounts",
+    title: "Accounts",
+    body: (
+      <ul>
+        <li>One account per person. Use an email address you control.</li>
+        <li>
+          Keep your password to yourself. You’re responsible for what happens
+          on your account.
+        </li>
+        <li>
+          If you’re under 13, or under the age where you live at which you can
+          agree to these terms yourself, get a parent, guardian or your school
+          to agree on your behalf, or play as a guest.
+        </li>
+        <li>
+          You can delete your account at any time under{" "}
+          <Link className="link" to="/profile/settings">
+            Profile → Account
+          </Link>
+          .
+        </li>
+      </ul>
+    ),
+  },
+  {
+    id: "fair-play",
+    title: "Fair play and leaderboards",
+    body: (
+      <>
+        <p>
+          Leaderboards only mean something if everyone plays by hand. Don’t use
+          bots, scripts, auto-typers or modified clients, and don’t submit
+          scores any other way than by playing.
+        </p>
+        <p>
+          Scores are sent by the game in your browser. Our database rules check
+          each one for plausibility (for example, how fast answers can
+          physically be typed) before it is accepted, but they can’t prove a
+          score was earned fairly. We may remove leaderboard entries, or
+          suspend accounts, that look automated or tampered with.
+        </p>
+        <p>
+          Each daily challenge has one ranked attempt per account, on its own
+          day (UTC).
+        </p>
+      </>
+    ),
+  },
+  {
+    id: "conduct",
+    title: "Names and chat",
+    body: (
+      <>
+        <p>
+          Display names and room chat are seen by other players, often
+          classmates. Keep them suitable for a classroom:
+        </p>
+        <ul>
+          <li>No harassment, hate, sexual content or threats.</li>
+          <li>Don’t share other people’s personal information, or your own beyond what you’re comfortable with.</li>
+          <li>Don’t impersonate other people, teachers or the project.</li>
+          <li>No spam or advertising.</li>
+        </ul>
+        <p>
+          Room hosts can remove players from their room. We may rename or
+          remove accounts that break these rules.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: "content",
+    title: "Content and licence",
+    body: (
+      <>
+        <p>
+          The game’s source code is licensed under the{" "}
+          <Ext href={`${REPO}/blob/main/LICENSE`}>GNU General Public License v3.0</Ext>
+          . You’re free to study, change and share it under that licence.
+        </p>
+        <p>
+          You keep any rights you have in the messages you write. By sending
+          them in a room you let us store and show them to that room for as
+          long as the room exists.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: "availability",
+    title: "Availability and changes",
+    body: (
+      <p>
+        We run the game on a best-effort basis. Features, modes and scoring
+        may change, the service may be interrupted, and leaderboards may be
+        reset if a scoring rule changes. We’ll try to keep your saved runs
+        safe, but please don’t rely on the game as the only record of
+        anything important, such as coursework grades.
+      </p>
+    ),
+  },
+  {
+    id: "warranty",
+    title: "No warranty",
+    body: (
+      <p>
+        The game is provided “as is” and “as available”, without warranties of
+        any kind, to the extent the law allows. This matches the GPL-3.0
+        licence the code is released under.
+      </p>
+    ),
+  },
+  {
+    id: "liability",
+    title: "Limitation of liability",
+    body: (
+      <p>
+        To the extent the law allows, the maintainers are not liable for any
+        indirect or consequential loss arising from your use of the game,
+        including lost data or scores. Nothing in these terms limits rights
+        you have under laws that can’t be waived.
+      </p>
+    ),
+  },
+  {
+    id: "ending",
+    title: "Ending",
+    body: (
+      <p>
+        You can stop playing at any time and delete your account from your
+        profile. We may suspend or delete accounts that seriously or
+        repeatedly break these terms.
+      </p>
+    ),
+  },
+  {
+    id: "changes",
+    title: "Changes to these terms",
+    body: (
+      <p>
+        If we change these terms, we update this page and the date at the top.
+        The full history is public in the{" "}
+        <Ext href={REPO}>project’s repository</Ext>. Continuing to play after a
+        change means you accept the new terms.
+      </p>
+    ),
+  },
+  {
+    id: "contact",
+    title: "Contact",
+    body: (
+      <p>
+        Questions, reports of abuse or cheating: open an issue at{" "}
+        <Ext href={`${REPO}/issues`}>github.com/hajin-park/based-math-game/issues</Ext>
+        . Please don’t post personal information in public issues.
+      </p>
+    ),
+  },
+];
 
 export default function Terms() {
   return (
-    <div className="container mx-auto px-2 py-4 max-w-5xl">
-      <SectionHeader
-        icon={FileText}
-        title="Terms of Service"
-        description={`Last updated: ${new Date().toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        })}`}
-        className="mb-6"
-      />
-
-      <div className="space-y-3">
-        <PaperCard variant="folded-sm" padding="sm">
-          <PaperCardHeader>
-            <PaperCardTitle className="text-base">
-              Agreement to Terms
-            </PaperCardTitle>
-          </PaperCardHeader>
-          <PaperCardContent className="space-y-2">
-            <p className="text-sm">
-              By accessing or using Based Math Game, you agree to be bound by
-              these Terms of Service. If you disagree with any part of these
-              terms, you may not access the service.
-            </p>
-          </PaperCardContent>
-        </PaperCard>
-
-        <PaperCard variant="folded-sm" padding="sm">
-          <PaperCardHeader>
-            <PaperCardTitle className="text-base">Use License</PaperCardTitle>
-          </PaperCardHeader>
-          <PaperCardContent className="space-y-2">
-            <p className="text-sm">
-              Permission is granted to use Based Math Game for personal,
-              educational, and non-commercial purposes. This license shall
-              automatically terminate if you violate any of these restrictions.
-            </p>
-            <div>
-              <h3 className="font-semibold mb-1 text-base">You may not:</h3>
-              <ul className="space-y-2 text-sm">
-                <li className="flex items-start gap-2">
-                  <span className="text-primary font-bold">•</span>
-                  <span>Use the service for any illegal purpose</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary font-bold">•</span>
-                  <span>
-                    Attempt to gain unauthorized access to any part of the
-                    service
-                  </span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary font-bold">•</span>
-                  <span>
-                    Use automated systems or bots to manipulate scores or
-                    leaderboards
-                  </span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary font-bold">•</span>
-                  <span>Interfere with or disrupt the service or servers</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary font-bold">•</span>
-                  <span>
-                    Impersonate another user or provide false information
-                  </span>
-                </li>
-              </ul>
-            </div>
-          </PaperCardContent>
-        </PaperCard>
-
-        <PaperCard variant="folded-sm" padding="sm">
-          <PaperCardHeader>
-            <PaperCardTitle className="text-base">User Accounts</PaperCardTitle>
-          </PaperCardHeader>
-          <PaperCardContent className="space-y-2">
-            <p className="text-sm">
-              You are responsible for maintaining the confidentiality of your
-              account credentials and for all activities that occur under your
-              account.
-            </p>
-            <p className="text-sm">
-              You must notify us immediately of any unauthorized use of your
-              account or any other breach of security.
-            </p>
-          </PaperCardContent>
-        </PaperCard>
-
-        <PaperCard variant="folded-sm" padding="sm">
-          <PaperCardHeader>
-            <PaperCardTitle className="text-base">Guest Users</PaperCardTitle>
-          </PaperCardHeader>
-          <PaperCardContent className="space-y-2">
-            <p className="text-sm">
-              Guest users can access most features without creating an account.
-              However, guest data is temporary and will be deleted when you
-              close your browser or sign out.
-            </p>
-            <p className="text-sm">
-              Guest users cannot appear on global leaderboards. To save your
-              progress permanently, you must create an account.
-            </p>
-          </PaperCardContent>
-        </PaperCard>
-
-        <PaperCard variant="folded-sm" padding="sm">
-          <PaperCardHeader>
-            <PaperCardTitle className="text-base">
-              Leaderboards and Scores
-            </PaperCardTitle>
-          </PaperCardHeader>
-          <PaperCardContent className="space-y-2">
-            <p className="text-sm">
-              We reserve the right to remove any scores or users from
-              leaderboards if we suspect cheating, manipulation, or violation of
-              these terms.
-            </p>
-            <p className="text-sm">
-              All scores are subject to verification. Suspicious activity may
-              result in account suspension or deletion.
-            </p>
-          </PaperCardContent>
-        </PaperCard>
-
-        <PaperCard variant="folded-sm" padding="sm">
-          <PaperCardHeader>
-            <PaperCardTitle className="text-base">
-              Intellectual Property
-            </PaperCardTitle>
-          </PaperCardHeader>
-          <PaperCardContent className="space-y-2">
-            <p className="text-sm">
-              Based Math Game is open source software licensed under the GNU
-              General Public License v3.0 (GPL-3.0). The source code is
-              available on GitHub.
-            </p>
-            <p className="text-sm">
-              The service name, logo, and branding are property of the project
-              maintainers. All other trademarks and service marks are the
-              property of their respective owners.
-            </p>
-          </PaperCardContent>
-        </PaperCard>
-
-        <PaperCard variant="folded-sm" padding="sm">
-          <PaperCardHeader>
-            <PaperCardTitle className="text-base">
-              Disclaimer of Warranties
-            </PaperCardTitle>
-          </PaperCardHeader>
-          <PaperCardContent className="space-y-2">
-            <p className="text-sm">
-              The service is provided "as is" and "as available" without any
-              warranties of any kind, either express or implied.
-            </p>
-            <p className="text-sm text-muted-foreground">
-              We do not warrant that the service will be uninterrupted, secure,
-              or error-free. We do not warrant the accuracy or reliability of
-              any information obtained through the service.
-            </p>
-          </PaperCardContent>
-        </PaperCard>
-
-        <PaperCard variant="folded-sm" padding="sm">
-          <PaperCardHeader>
-            <PaperCardTitle className="text-base">
-              Limitation of Liability
-            </PaperCardTitle>
-          </PaperCardHeader>
-          <PaperCardContent>
-            <p className="text-sm">
-              In no event shall Based Math Game or its maintainers be liable for
-              any indirect, incidental, special, consequential, or punitive
-              damages arising out of or relating to your use of the service.
-            </p>
-          </PaperCardContent>
-        </PaperCard>
-
-        <PaperCard variant="folded-sm" padding="sm">
-          <PaperCardHeader>
-            <PaperCardTitle className="text-base">
-              Modifications to Service
-            </PaperCardTitle>
-          </PaperCardHeader>
-          <PaperCardContent>
-            <p className="text-sm">
-              We reserve the right to modify or discontinue the service at any
-              time, with or without notice. We shall not be liable to you or any
-              third party for any modification, suspension, or discontinuance of
-              the service.
-            </p>
-          </PaperCardContent>
-        </PaperCard>
-
-        <PaperCard variant="folded-sm" padding="sm">
-          <PaperCardHeader>
-            <PaperCardTitle className="text-base">
-              Changes to Terms
-            </PaperCardTitle>
-          </PaperCardHeader>
-          <PaperCardContent className="space-y-2">
-            <p className="text-sm">
-              We reserve the right to update these Terms of Service at any time.
-              We will notify users of any material changes by posting the new
-              terms on this page and updating the "Last updated" date.
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Your continued use of the service after any changes constitutes
-              acceptance of the new terms.
-            </p>
-          </PaperCardContent>
-        </PaperCard>
-
-        <PaperCard variant="folded-sm" padding="sm">
-          <PaperCardHeader>
-            <PaperCardTitle className="text-base">Governing Law</PaperCardTitle>
-          </PaperCardHeader>
-          <PaperCardContent>
-            <p className="text-sm">
-              These Terms shall be governed by and construed in accordance with
-              applicable laws, without regard to conflict of law provisions.
-            </p>
-          </PaperCardContent>
-        </PaperCard>
-
-        <PaperCard variant="folded-sm" padding="sm">
-          <PaperCardHeader>
-            <PaperCardTitle className="text-base">
-              Contact Information
-            </PaperCardTitle>
-          </PaperCardHeader>
-          <PaperCardContent>
-            <p className="text-sm">
-              If you have any questions about these Terms of Service, please
-              visit our{" "}
-              <a
-                href="https://github.com/hajin-park/based-math-game"
-                className="text-primary hover:underline link-underline"
-              >
-                GitHub repository
-              </a>{" "}
-              to open an issue or contact the maintainers.
-            </p>
-          </PaperCardContent>
-        </PaperCard>
-      </div>
-    </div>
+    <LegalDocument
+      eyebrow="Terms"
+      title={
+        <>
+          The <em>rules</em> of the game
+        </>
+      }
+      lede="The agreement between you and the maintainers of Based Math Game, in plain language."
+      updated="9 October 2026"
+      updatedIso="2026-10-09"
+      summary={SUMMARY}
+      sections={SECTIONS}
+    />
   );
 }

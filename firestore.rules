@@ -1,96 +1,270 @@
 rules_version = '2';
+
+// Schema (see src/data/index.ts):
+//   users/{uid}                          profile + settings      (owner; registered accounts write)
+//   users/{uid}/runs/{runId}             run history             (owner; create-only, no updates)
+//   userStats/{uid}                      aggregates + bests      (owner; registered accounts write)
+//   users/{uid}/dailyLocks/{modeId}      one ranked daily try    (owner; create-only, see below)
+//   leaderboards/{modeId}/entries/{uid}  best ranked result      (public read; owner write if improved)
+//
+// Guests are Firebase anonymous users. They keep runs/settings in localStorage
+// and never write Firestore; their data is imported when they upgrade.
+//
+// Limits mirror SCORE_LIMITS (src/game/scoring.ts), the format constants
+// (src/game/formats.ts) and RULES_LIMITS (src/data/limits.ts).
+// src/data/limits.test.ts fails if these numbers drift apart.
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Helper functions
-    function isAuthenticated() {
+
+    function signedIn() {
       return request.auth != null;
     }
-    
+
     function isOwner(uid) {
-      return isAuthenticated() && request.auth.uid == uid;
+      return signedIn() && request.auth.uid == uid;
     }
-    
-    function isNotGuest() {
-      return isAuthenticated() && !request.auth.uid.matches('guest_.*');
+
+    // Registered = signed in with a real provider (not anonymous).
+    function isRegistered() {
+      return signedIn()
+        && request.auth.token.firebase.sign_in_provider != 'anonymous';
     }
-    
-    // User profiles - authenticated users only
-    match /users/{userId} {
-      // Users can read their own profile
-      allow read: if isOwner(userId);
-      
-      // Users can create/update their own profile (authenticated users only)
-      allow create, update: if isOwner(userId) && isNotGuest();
-      
-      // Users can delete their own profile
-      allow delete: if isOwner(userId);
+
+    function isNum(v) {
+      return v is int || v is float;
     }
-    
-    // User statistics - authenticated users only
-    match /userStats/{userId} {
-      // Users can read their own stats
-      allow read: if isOwner(userId);
 
-      // Users can create/update their own stats (authenticated users only)
-      allow create, update: if isOwner(userId) && isNotGuest()
-        && request.resource.data.keys().hasAll(['gamesPlayed', 'totalScore', 'highScore', 'averageScore', 'lastPlayed'])
-        && request.resource.data.gamesPlayed is number
-        && request.resource.data.totalScore is number
-        && request.resource.data.highScore is number
-        && request.resource.data.averageScore is number
-        && request.resource.data.lastPlayed is number
-        // Optional accuracy fields
-        && (!request.resource.data.keys().hasAny(['totalKeystrokes']) || request.resource.data.totalKeystrokes is number)
-        && (!request.resource.data.keys().hasAny(['totalBackspaces']) || request.resource.data.totalBackspaces is number)
-        && (!request.resource.data.keys().hasAny(['averageAccuracy']) || request.resource.data.averageAccuracy is number);
-
-      // Users can delete their own stats
-      allow delete: if isOwner(userId);
+    function numIn(v, lo, hi) {
+      return isNum(v) && v >= lo && v <= hi;
     }
-    
-    // Game history - authenticated users only
-    match /userStats/{userId}/gameHistory/{gameId} {
-      // Users can read their own game history
-      allow read: if isOwner(userId);
 
-      // Users can create game history entries (authenticated users only)
-      allow create: if isOwner(userId) && isNotGuest()
-        && request.resource.data.keys().hasAll(['score', 'duration', 'gameModeId', 'timestamp'])
-        && request.resource.data.score is number
-        && request.resource.data.duration is number
-        && request.resource.data.gameModeId is string
-        && request.resource.data.timestamp is number
-        // Optional accuracy fields
-        && (!request.resource.data.keys().hasAny(['totalKeystrokes']) || request.resource.data.totalKeystrokes is number)
-        && (!request.resource.data.keys().hasAny(['backspaceCount']) || request.resource.data.backspaceCount is number)
-        && (!request.resource.data.keys().hasAny(['accuracy']) || request.resource.data.accuracy is number);
-
-      // Users can delete their own game history
-      allow delete: if isOwner(userId);
+    function intIn(v, lo, hi) {
+      return v is int && v >= lo && v <= hi;
     }
-    
-    // Global leaderboards - authenticated users only can write, everyone can read
-    // Using flat collection structure: leaderboard-{gameModeId}
-    // Match any collection that starts with "leaderboard-"
-    match /{leaderboardCollection}/{userId} {
-      // Anyone can read leaderboards (including unauthenticated users)
-      allow read: if leaderboardCollection.matches('leaderboard-.*');
 
-      // Only authenticated (non-guest) users can write to leaderboards
-      allow create, update: if leaderboardCollection.matches('leaderboard-.*')
-        && isOwner(userId) && isNotGuest()
-        && request.resource.data.keys().hasAll(['displayName', 'score', 'timestamp', 'gameModeId'])
-        && request.resource.data.displayName is string
-        && request.resource.data.score is number
-        && request.resource.data.timestamp is number
-        && request.resource.data.gameModeId is string
-        && (!request.resource.data.keys().hasAny(['isGuest']) || request.resource.data.isGuest == false)
-        && (!request.resource.data.keys().hasAny(['accuracy']) || request.resource.data.accuracy is number);
+    // 1..24 characters, none of them invisible: C0 controls, DEL, zero-width
+    // characters, bidi embeddings/overrides/isolates (INVISIBLE_NAME_CHARS in
+    // src/utils/displayNameValidator.ts).
+    function validName(n) {
+      return n is string && n.size() >= 1 && n.size() <= 24
+        && !n.matches('(?s).*[\\x{0000}-\\x{001F}\\x{007F}\\x{200B}\\x{200E}\\x{200F}\\x{202A}-\\x{202E}\\x{2066}-\\x{2069}].*');
+    }
 
-      // Users can delete their own leaderboard entries
-      allow delete: if leaderboardCollection.matches('leaderboard-.*') && isOwner(userId);
+    // ---- limits ----
+    function maxCorrectPerSecond() { return 3; }        // SCORE_LIMITS.maxCorrectPerSecond
+    function minMsPerCorrect() { return 250; }          // SCORE_LIMITS.minMsPerCorrect
+    function maxDurationMs() { return 3600000; }        // SCORE_LIMITS.maxDurationMs
+    function sprintMaxCorrect() { return 180; }         // SCORE_LIMITS.sprintMaxCorrect
+    function speedrunMinMs() { return 3750; }           // SCORE_LIMITS.speedrunMinMs
+    function dailyMinMs() { return 2500; }              // SCORE_LIMITS.dailyMinMs
+    function survivalMaxCleared() { return 1000; }      // SCORE_LIMITS.survivalMaxCleared
+    function sprintMs() { return 60000; }               // SPRINT_DURATION_MS
+    function sprintToleranceMs() { return 2000; }       // RULES_LIMITS.sprintToleranceMs
+    function speedrunTarget() { return 15; }            // SPEEDRUN_TARGET
+    function speedrunSkipMs() { return 5000; }          // SPEEDRUN_SKIP_PENALTY_MS
+    function dailyQuestions() { return 10; }            // DAILY_QUESTION_COUNT
+    function dailySkipMs() { return 10000; }            // DAILY_SKIP_PENALTY_MS
+    function maxCount() { return 10000; }               // RULES_LIMITS.maxCorrect
+    function maxRunMs() { return 21600000; }            // stored runs (practice is untimed): 6 h
+    function maxRunScore() { return 1000000000; }
+
+    // ---- profiles ----
+    function validSettings(s) {
+      return s is map && s.size() <= 32;
+    }
+
+    function validProfile(d) {
+      return d.keys().hasOnly(['displayName', 'createdAt', 'settings'])
+        && (!('displayName' in d) || validName(d.displayName))
+        && (!('settings' in d) || validSettings(d.settings));
+    }
+
+    match /users/{uid} {
+      allow read, delete: if isOwner(uid);
+      allow create: if isOwner(uid) && isRegistered()
+        && validProfile(request.resource.data)
+        && request.resource.data.createdAt == request.time;
+      allow update: if isOwner(uid) && isRegistered()
+        && validProfile(request.resource.data)
+        && request.resource.data.get('createdAt', null) == resource.data.get('createdAt', null);
+
+      // ---- run history ----
+      function validRun(d) {
+        return d.keys().hasOnly(['modeId', 'topicId', 'format', 'score', 'correct', 'skipped',
+                                 'durationMs', 'accuracy', 'typingAccuracy', 'endedAt', 'completed'])
+          && d.keys().hasAll(['modeId', 'topicId', 'format', 'score', 'correct', 'skipped',
+                              'durationMs', 'accuracy', 'typingAccuracy', 'endedAt'])
+          && d.modeId is string && d.modeId.size() >= 1 && d.modeId.size() <= 64
+          && d.topicId is string && d.topicId.size() >= 1 && d.topicId.size() <= 32
+          && d.format in ['sprint', 'speedrun', 'survival', 'daily', 'practice']
+          && numIn(d.score, 0, maxRunScore())
+          && intIn(d.correct, 0, maxCount())
+          && intIn(d.skipped, 0, maxCount())
+          && numIn(d.durationMs, 0, maxRunMs())
+          && numIn(d.accuracy, 0, 1)
+          && numIn(d.typingAccuracy, 0, 1)
+          && numIn(d.endedAt, 0, request.time.toMillis() + 300000)
+          && (!('completed' in d) || d.completed is bool)
+          // At most 3 correct answers per second (one free answer for tiny runs).
+          && d.correct * 1000 <= d.durationMs * maxCorrectPerSecond() + 1000;
+      }
+
+      match /runs/{runId} {
+        allow read, delete: if isOwner(uid);
+        allow create: if isOwner(uid) && isRegistered()
+          && validRun(request.resource.data);
+      }
+
+      // ---- daily locks ----
+      // One ranked daily attempt: a daily leaderboard entry can only be
+      // created in the same batch as this lock, and only while no lock
+      // exists. The lock cannot be deleted while that day's entry could
+      // still be created (so deleting the entry never allows a second try);
+      // afterwards the owner may delete it (account deletion), and the TTL
+      // policy on expireAt (= the moment the day closes; firestore.indexes.json)
+      // removes it anyway, typically within a day.
+      match /dailyLocks/{modeId} {
+        allow read: if isOwner(uid);
+        allow create: if isOwner(uid) && isRegistered()
+          && isDaily(modeId) && isRankedMode(modeId) && dailyOpen(modeId)
+          && request.resource.data.keys().hasOnly(['expireAt'])
+          && request.resource.data.expireAt == dailyStart(modeId) + duration.value(1, 'd') + dailyGrace();
+        allow delete: if isOwner(uid)
+          && (!isRankedMode(modeId) || !isDaily(modeId) || dailyClosed(modeId));
+      }
+    }
+
+    // ---- aggregates ----
+    function validStats(d) {
+      return d.keys().hasOnly(['gamesPlayed', 'totalCorrect', 'totalDurationMs', 'lastPlayedAt', 'bests'])
+        && d.keys().hasAll(['gamesPlayed', 'totalCorrect', 'totalDurationMs', 'lastPlayedAt', 'bests'])
+        && d.gamesPlayed is int && d.gamesPlayed >= 0
+        && d.totalCorrect is int && d.totalCorrect >= 0
+        && isNum(d.totalDurationMs) && d.totalDurationMs >= 0
+        && isNum(d.lastPlayedAt)
+        && d.bests is map && d.bests.size() <= 1000;
+    }
+
+    match /userStats/{uid} {
+      allow read, delete: if isOwner(uid);
+      allow create: if isOwner(uid) && isRegistered()
+        && validStats(request.resource.data);
+      allow update: if isOwner(uid) && isRegistered()
+        && validStats(request.resource.data)
+        && request.resource.data.gamesPlayed >= resource.data.gamesPlayed;
+    }
+
+    // ---- leaderboards ----
+    // Ranked ids (engine isRankedModeId / RANKED_MODE_RE in src/data/limits.ts):
+    //   `${topic}:sprint`, `${topic}:speedrun`, `survival`, `daily:YYYY-MM-DD`.
+    function isRankedMode(modeId) {
+      return modeId.matches('^((nibbles|powers|bytes-bin|bytes-hex|octal|words|twos|bitwise|binary-add|applied|mixed):(sprint|speedrun)|survival|daily:[0-9]{4}-[0-9]{2}-[0-9]{2})$');
+    }
+
+    function isDaily(modeId) {
+      return modeId.matches('^daily:.*');
+    }
+
+    // Daily challenges are per UTC day; a run finished just after midnight
+    // may still be saved for 10 minutes (DAILY_GRACE_MS in src/data/limits.ts).
+    // Callers check isRankedMode(modeId) && isDaily(modeId) first.
+    function dailyStart(modeId) {
+      let p = modeId.split(':')[1].split('-');
+      return timestamp.date(int(p[0]), int(p[1]), int(p[2]));
+    }
+
+    function dailyGrace() { return duration.value(10, 'm'); }
+
+    function dailyOpen(modeId) {
+      return request.time >= dailyStart(modeId)
+        && request.time < dailyStart(modeId) + duration.value(1, 'd') + dailyGrace();
+    }
+
+    function dailyClosed(modeId) {
+      return request.time >= dailyStart(modeId) + duration.value(1, 'd') + dailyGrace();
+    }
+
+    function dailyLock(modeId) {
+      return /databases/$(database)/documents/users/$(request.auth.uid)/dailyLocks/$(modeId);
+    }
+
+    function isSpeedrun(modeId) {
+      return modeId.matches('.*:speedrun$');
+    }
+
+    function isSprint(modeId) {
+      return modeId.matches('.*:sprint$');
+    }
+
+    function lowerIsBetter(modeId) {
+      return isDaily(modeId) || isSpeedrun(modeId);
+    }
+
+    // Per-format plausibility (see SCORE_LIMITS in src/game/scoring.ts).
+    function plausible(modeId, d) {
+      return d.correct * 1000 <= d.durationMs * maxCorrectPerSecond() + 1000
+        && d.durationMs >= d.correct * minMsPerCorrect()
+        && (isSprint(modeId)
+              ? (d.score == d.correct
+                 && d.score <= sprintMaxCorrect()
+                 && d.durationMs >= sprintMs() - sprintToleranceMs()
+                 && d.durationMs <= sprintMs() + sprintToleranceMs())
+          : isSpeedrun(modeId)
+              ? (d.correct == speedrunTarget()
+                 && d.score == d.durationMs + d.skipped * speedrunSkipMs()
+                 && d.score >= speedrunMinMs())
+          : isDaily(modeId)
+              ? (d.correct + d.skipped == dailyQuestions()
+                 && dailyOpen(modeId)
+                 && d.score == d.durationMs + d.skipped * dailySkipMs()
+                 && d.score >= dailyMinMs())
+          // survival
+              : (d.score == d.correct && d.score <= survivalMaxCleared()));
+    }
+
+    function validEntry(modeId, uid, d) {
+      return d.keys().hasOnly(['uid', 'displayName', 'score', 'correct', 'skipped', 'durationMs',
+                               'accuracy', 'completed', 'updatedAt'])
+        && d.keys().hasAll(['uid', 'displayName', 'score', 'correct', 'skipped', 'durationMs',
+                            'accuracy', 'completed', 'updatedAt'])
+        && d.uid == uid
+        && validName(d.displayName)
+        && d.completed == true
+        && isNum(d.score) && d.score >= 0
+        && intIn(d.correct, 0, maxCount())
+        && intIn(d.skipped, 0, maxCount())
+        && numIn(d.durationMs, 1, maxDurationMs())
+        && numIn(d.accuracy, 0, 1)
+        && d.updatedAt == request.time
+        && plausible(modeId, d);
+    }
+
+    function improves(modeId, next, prev) {
+      return lowerIsBetter(modeId) ? next.score < prev.score : next.score > prev.score;
+    }
+
+    // Display-name propagation: only the name changes (rank/tie-break kept).
+    function nameOnlyUpdate() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName'])
+        && validName(request.resource.data.displayName);
+    }
+
+    match /leaderboards/{modeId}/entries/{uid} {
+      allow get: if true;
+      // Pages of at most 100 (count() aggregations are denied too, so a
+      // player's rank is computed from a bounded "who is ahead" query).
+      allow list: if request.query.limit <= 100;
+      allow create: if isOwner(uid) && isRegistered() && isRankedMode(modeId)
+        && validEntry(modeId, uid, request.resource.data)
+        // Daily: one ranked attempt, claimed by creating the lock in this batch.
+        && (!isDaily(modeId)
+            || (!exists(dailyLock(modeId)) && existsAfter(dailyLock(modeId))));
+      allow update: if isOwner(uid) && isRegistered() && isRankedMode(modeId)
+        && (nameOnlyUpdate()
+            || (!isDaily(modeId)   // daily: one ranked attempt per day
+                && validEntry(modeId, uid, request.resource.data)
+                && improves(modeId, request.resource.data, resource.data)));
+      allow delete: if isOwner(uid);
     }
   }
 }
-

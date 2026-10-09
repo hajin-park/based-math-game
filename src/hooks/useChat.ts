@@ -1,15 +1,33 @@
-import { useState, useCallback } from "react";
+/**
+ * Room chat on the Realtime Database.
+ *
+ * Schema: `rooms/{roomId}/chat/{uid}_{previous lastChatAt or 0}` =
+ *   { senderId, displayName, message (1..300 chars), timestamp (server), isSystem }
+ * plus `rooms/{roomId}/lastChatAt/{uid}` (server time of the sender's last
+ * message). Rules require the sender to be the signed-in, non-kicked member,
+ * `timestamp == now`, at least CHAT_MIN_INTERVAL_MS between messages, and
+ * exactly one message per write: its key is derived from the sender's
+ * previous lastChatAt, which moves to `now` in the same atomic update.
+ */
 import {
   ref,
-  push,
   onValue,
-  off,
   query,
   orderByChild,
   limitToLast,
+  update,
+  serverTimestamp,
 } from "firebase/database";
-import { database } from "@/firebase/config";
-import { useAuth } from "@/contexts/AuthContext";
+import { auth } from "@/firebase/app";
+import { database } from "@/firebase/database";
+import { clampDisplayName } from "@/data/profile";
+import { chatKeyFor } from "@/hooks/useRoom";
+
+export const CHAT_MAX_LENGTH = 300;
+/** Must match the rate limit in database.rules.json. */
+export const CHAT_MIN_INTERVAL_MS = 1000;
+/** Most messages a chat view keeps (the subscription is limited to this). */
+export const CHAT_HISTORY_LIMIT = 100;
 
 export interface ChatMessage {
   id: string;
@@ -17,104 +35,101 @@ export interface ChatMessage {
   displayName: string;
   message: string;
   timestamp: number;
-  isSystem?: boolean; // True for system messages (joins, leaves, winners)
+  isSystem?: boolean; // True for host-sent system messages
 }
 
-export function useChat() {
-  const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
+let lastSentAt = 0;
 
-  const sendMessage = useCallback(
-    async (roomId: string, message: string) => {
-      if (!user || !message.trim()) return;
+/** Sends a chat message as the signed-in user (plain function, no React). */
+export async function postMessage(
+  roomId: string,
+  text: string,
+  isSystem = false,
+) {
+  const user = auth.currentUser;
+  const message = text.trim().slice(0, CHAT_MAX_LENGTH);
+  if (!user || !message) return;
 
-      setLoading(true);
-      try {
-        const chatRef = ref(database, `rooms/${roomId}/chat`);
+  // Small margin over the server-side limit to absorb network jitter.
+  const wait = lastSentAt + CHAT_MIN_INTERVAL_MS + 200 - Date.now();
+  if (wait > 0) {
+    throw new Error(
+      "You're sending messages too quickly. Please wait a moment.",
+    );
+  }
 
-        const chatMessage: Omit<ChatMessage, "id"> = {
-          senderId: user.uid,
-          displayName: user.displayName || "Guest",
-          message: message.trim(),
-          timestamp: Date.now(),
-          isSystem: false,
-        };
-
-        await push(chatRef, chatMessage);
-      } catch (error) {
-        console.error("Error sending message:", error);
-        throw error;
-      } finally {
-        setLoading(false);
-      }
-    },
-    [user],
-  );
-
-  const sendSystemMessage = useCallback(
-    async (roomId: string, message: string) => {
-      if (!message.trim()) return;
-
-      try {
-        const chatRef = ref(database, `rooms/${roomId}/chat`);
-
-        const chatMessage: Omit<ChatMessage, "id"> = {
-          senderId: "system",
-          displayName: "System",
-          message: message.trim(),
-          timestamp: Date.now(),
-          isSystem: true,
-        };
-
-        await push(chatRef, chatMessage);
-      } catch (error) {
-        console.error("Error sending system message:", error);
-        throw error;
-      }
-    },
-    [],
-  );
-
-  const subscribeToMessages = useCallback(
-    (
-      roomId: string,
-      callback: (messages: ChatMessage[]) => void,
-      messageLimit: number = 50,
-    ) => {
-      const chatRef = ref(database, `rooms/${roomId}/chat`);
-      const chatQuery = query(
-        chatRef,
-        orderByChild("timestamp"),
-        limitToLast(messageLimit),
+  const roomPath = `rooms/${roomId}`;
+  const send = async () =>
+    update(ref(database, roomPath), {
+      [`chat/${await chatKeyFor(roomId, user.uid)}`]: {
+        senderId: user.uid,
+        displayName: clampDisplayName(user.displayName),
+        message,
+        timestamp: serverTimestamp(),
+        isSystem,
+      },
+      [`lastChatAt/${user.uid}`]: serverTimestamp(),
+      lastActivityAt: serverTimestamp(),
+    });
+  lastSentAt = Date.now();
+  try {
+    try {
+      await send();
+    } catch (error) {
+      // The key comes from our lastChatAt as last seen; if it moved meanwhile
+      // (our previous message's server time not seen yet, or another tab of
+      // ours sent one), let the room snapshot catch up and try once more.
+      if (!isPermissionDenied(error)) throw error;
+      await new Promise((r) => setTimeout(r, 400));
+      await send();
+    }
+  } catch (error) {
+    if (isPermissionDenied(error)) {
+      throw new Error(
+        "Message not sent. You may be sending too quickly or are no longer in this room.",
       );
+    }
+    throw error;
+  }
+}
 
-      const listener = onValue(chatQuery, (snapshot) => {
-        const messages: ChatMessage[] = [];
+function isPermissionDenied(error: unknown): boolean {
+  return String((error as Error)?.message ?? error)
+    .toLowerCase()
+    .includes("permission");
+}
 
-        snapshot.forEach((childSnapshot) => {
-          const messageData = childSnapshot.val();
-          if (messageData && typeof messageData === "object") {
-            messages.push({
-              id: childSnapshot.key || "",
-              ...messageData,
-            });
-          }
-        });
-
-        // Sort by timestamp to ensure correct order
-        messages.sort((a, b) => a.timestamp - b.timestamp);
-        callback(messages);
-      });
-
-      return () => off(chatQuery, "value", listener);
-    },
-    [],
+/** Live list of the last `messageLimit` (at most 100) messages, oldest first. */
+export function subscribeToChat(
+  roomId: string,
+  callback: (messages: ChatMessage[]) => void,
+  messageLimit: number = 50,
+) {
+  const chatQuery = query(
+    ref(database, `rooms/${roomId}/chat`),
+    orderByChild("timestamp"),
+    limitToLast(Math.min(Math.max(1, messageLimit), CHAT_HISTORY_LIMIT)),
   );
 
-  return {
-    loading,
-    sendMessage,
-    sendSystemMessage,
-    subscribeToMessages,
-  };
+  return onValue(
+    chatQuery,
+    (snapshot) => {
+      const messages: ChatMessage[] = [];
+      snapshot.forEach((child) => {
+        const data = child.val();
+        if (data && typeof data === "object") {
+          messages.push({ id: child.key || "", ...data });
+        }
+      });
+      messages.sort((a, b) => a.timestamp - b.timestamp);
+      callback(messages);
+    },
+    (error) => {
+      // Permission is only refused to players removed from the room; the
+      // room view explains that, so it is not an error worth logging.
+      if (!isPermissionDenied(error))
+        console.error("Chat subscription error:", error);
+      callback([]);
+    },
+  );
 }

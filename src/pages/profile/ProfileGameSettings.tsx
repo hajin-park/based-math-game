@@ -1,251 +1,199 @@
-import { useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
-import { doc, setDoc } from "firebase/firestore";
-import { firestore } from "@/firebase/config";
-import {
-  PaperCard,
-  PaperCardContent,
-  PaperCardDescription,
-  PaperCardHeader,
-  PaperCardTitle,
-  SectionHeader,
-  StickyNote,
-  RuledSeparator,
-} from "@/components/ui/academic";
-import { Label } from "@/components/ui/label";
+import { useId, useState } from "react";
+import { Link } from "react-router-dom";
+import { Volume2, VolumeX } from "lucide-react";
+
 import { Switch } from "@/components/ui/switch";
-import { Info, Loader2, Gamepad2, Eye, Hash, Timer } from "lucide-react";
-import { useGameSettings, GameSettings } from "@/hooks/useGameSettings";
+import { Digits } from "@/components/ui/digits";
+import { BaseTag } from "@/components/ui/base-tag";
+import { GridPaper } from "@/components/ui/grid-paper";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/contexts/AuthContext";
+import { useGameSettings, type GameSettings } from "@/data";
+import { cn } from "@/lib/utils";
+
+const OPTIONS: {
+  key: keyof GameSettings;
+  title: string;
+  body: string;
+}[] = [
+  {
+    key: "groupedDigits",
+    title: "Group digits",
+    body: "Split long numbers into readable groups: binary in fours, hex in pairs, decimal in thousands.",
+  },
+  {
+    key: "indexValueHints",
+    title: "Place-value hints",
+    body: "Show the weight of each digit (128 64 32 … 1) under the number you’re converting.",
+  },
+  {
+    key: "countdownStart",
+    title: "Countdown before a run",
+    body: "A 3-2-1 countdown before the clock starts. Off: the first question appears straight away.",
+  },
+  {
+    key: "soundEffects",
+    title: "Sound effects",
+    body: "Short tones for a correct answer, a skip and the last seconds on the clock.",
+  },
+];
+
+function SettingRow({
+  title,
+  body,
+  checked,
+  disabled,
+  onChange,
+}: {
+  title: string;
+  body: string;
+  checked: boolean;
+  disabled?: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  const id = useId();
+  return (
+    <li className="flex items-start justify-between gap-6 border-b py-4 last:border-b-0">
+      <div className="flex min-w-0 flex-col gap-1">
+        <label htmlFor={id} className="cursor-pointer text-[0.9375rem] font-medium">
+          {title}
+        </label>
+        <p id={`${id}-d`} className="text-body-sm text-muted-foreground text-pretty">
+          {body}
+        </p>
+      </div>
+      <Switch
+        id={id}
+        checked={checked}
+        disabled={disabled}
+        onCheckedChange={onChange}
+        aria-describedby={`${id}-d`}
+        className="mt-0.5"
+      />
+    </li>
+  );
+}
+
+function Preview({ settings }: { settings: GameSettings }) {
+  return (
+    <figure
+      aria-label="Preview of a question with these settings"
+      className="relative isolate overflow-hidden rounded-xl border bg-card shadow-md"
+    >
+      <GridPaper fade />
+      <div className="flex items-center justify-between border-b px-5 py-3">
+        <span className="eyebrow">Preview</span>
+        <span className="flex items-center gap-2 text-[0.75rem] text-muted-foreground">
+          {settings.soundEffects ? (
+            <Volume2 className="size-4" aria-hidden />
+          ) : (
+            <VolumeX className="size-4" aria-hidden />
+          )}
+          {settings.soundEffects ? "Sound on" : "Muted"}
+        </span>
+      </div>
+      <div className="flex min-h-[13rem] flex-col items-center justify-center gap-5 px-5 py-8">
+        <p className="flex items-center gap-2 text-label text-muted-foreground">
+          <BaseTag base="bin" size="sm" /> to <BaseTag base="dec" size="sm" />
+        </p>
+        <Digits
+          base="bin"
+          value="10110110"
+          size="lg"
+          group={settings.groupedDigits ? 4 : false}
+          placeValues={settings.indexValueHints}
+          className="max-w-full"
+        />
+        <p className="font-mono text-[0.8125rem] text-muted-foreground">
+          = <span className="text-foreground">182</span>
+        </p>
+      </div>
+      <figcaption className="border-t px-5 py-3 text-[0.75rem] text-muted-foreground">
+        {settings.countdownStart
+          ? "Runs start after a 3-2-1 countdown."
+          : "Runs start the moment you press play."}
+      </figcaption>
+    </figure>
+  );
+}
 
 export default function ProfileGameSettings() {
-  const { user, isGuest } = useAuth();
-  const { settings, loading } = useGameSettings();
-  const [saving, setSaving] = useState(false);
+  const { isGuest } = useAuth();
+  const { settings, loading, saveSettings } = useGameSettings();
+  const [status, setStatus] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
-  // Use settings directly from the hook
-
-  // Save settings to Firestore
-  const updateSetting = async (key: keyof GameSettings, value: boolean) => {
-    if (!user || isGuest) return;
-
-    const newSettings = { ...settings, [key]: value };
-    setSaving(true);
-
+  const update = async (key: keyof GameSettings, value: boolean) => {
+    setError(null);
     try {
-      const userRef = doc(firestore, `users/${user.uid}`);
-      await setDoc(
-        userRef,
-        {
-          gameSettings: newSettings,
-        },
-        { merge: true },
+      await saveSettings({ [key]: value });
+      setStatus(
+        `${OPTIONS.find((o) => o.key === key)?.title} ${value ? "on" : "off"}. Saved ${isGuest ? "on this device" : "to your account"}.`,
       );
-
-      // Settings will be reloaded automatically by the hook
-    } catch (error) {
-      console.error("Error saving game settings:", error);
-      alert("Failed to save settings. Please try again.");
-    } finally {
-      setSaving(false);
+    } catch {
+      setError("Couldn’t save that change. Check your connection and try again.");
     }
   };
 
-  if (loading) {
-    return (
-      <div className="space-y-6 animate-in fade-in duration-300">
-        <SectionHeader
-          title="Game Settings"
-          description="Customize your gameplay experience"
-          icon={Gamepad2}
-          align="left"
-          titleSize="lg"
-        />
-        <div className="flex flex-col items-center justify-center py-16">
-          <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-          <p className="text-sm text-muted-foreground">Loading settings...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
-      <SectionHeader
-        title="Game Settings"
-        description="Customize your gameplay experience"
-        icon={Gamepad2}
-        align="left"
-        titleSize="lg"
-      />
-
-      {/* Guest User Notice */}
-      {isGuest && (
-        <StickyNote variant="warning">
-          <div className="flex items-start gap-2">
-            <Info className="h-4 w-4 text-warning mt-0.5 flex-shrink-0" />
-            <p className="text-sm">
-              <span className="font-semibold">Guest Account:</span> Your
-              settings will be saved temporarily but may be lost if you clear
-              your browser data.
-              <a
-                href="/signup"
-                className="font-medium underline ml-1 text-warning hover:text-warning/80"
-              >
-                Sign up
-              </a>{" "}
-              to save your settings permanently.
-            </p>
-          </div>
-        </StickyNote>
-      )}
-
-      {/* Game Settings */}
-      <PaperCard variant="folded" padding="none" className="shadow-lg">
-        <PaperCardHeader className="p-6">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Eye className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <PaperCardTitle className="text-2xl">
-                Gameplay Preferences
-              </PaperCardTitle>
-              <PaperCardDescription className="text-base">
-                Customize your gameplay experience with visual aids and game
-                flow options
-              </PaperCardDescription>
-            </div>
-          </div>
-        </PaperCardHeader>
-        <PaperCardContent className="p-6 pt-0 space-y-4">
-          {/* Grouped Digits */}
-          <PaperCard variant="folded-sm" padding="sm" className="border-2">
-            <div className="flex items-start justify-between gap-6">
-              <div className="flex-1 space-y-3">
-                <div className="flex items-center gap-2">
-                  <Hash className="h-5 w-5 text-primary" />
-                  <Label
-                    htmlFor="grouped-digits"
-                    className="text-lg font-semibold cursor-pointer"
-                  >
-                    Grouped Digits
-                  </Label>
+    <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:gap-14">
+      <section aria-labelledby="gs-title" className="flex flex-col gap-2">
+        <h2 id="gs-title" className="text-title font-semibold">
+          Game settings
+        </h2>
+        <p className="text-body-sm text-muted-foreground text-pretty">
+          {isGuest ? (
+            <>
+              Saved in this browser.{" "}
+              <Link className="link" to="/signup?next=%2Fprofile%2Fgame-settings">
+                Create an account
+              </Link>{" "}
+              to use them on every device.
+            </>
+          ) : (
+            "Saved to your account and used on every device you sign in on."
+          )}{" "}
+          In multiplayer, the host can switch visual aids off for everyone.
+        </p>
+        {loading ? (
+          <div className="mt-4 flex flex-col gap-6">
+            {OPTIONS.map((o) => (
+              <div key={o.key} className="flex items-center justify-between gap-6">
+                <div className="flex flex-1 flex-col gap-2">
+                  <Skeleton className="h-4 w-40" />
+                  <Skeleton className="h-3 w-full max-w-sm" />
                 </div>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  Visually group digits in numbers for easier reading:
-                </p>
-                <ul className="text-sm text-muted-foreground space-y-1 ml-4">
-                  <li className="flex items-start gap-2">
-                    <span className="text-primary font-bold">•</span>
-                    <span>Binary/Hex: Groups of 4 (e.g., 1010 1101)</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-primary font-bold">•</span>
-                    <span>Octal: Groups of 3 (e.g., 123 456)</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-primary font-bold">•</span>
-                    <span>Decimal: Commas for thousands (e.g., 1,234)</span>
-                  </li>
-                </ul>
+                <Skeleton className="h-6 w-10 rounded-full" />
               </div>
-              <Switch
-                id="grouped-digits"
-                checked={settings.groupedDigits}
-                onCheckedChange={(checked) =>
-                  updateSetting("groupedDigits", checked)
-                }
-                disabled={saving || isGuest}
-                className="shrink-0"
-              />
-            </div>
-          </PaperCard>
-
-          {/* Index Value Hints */}
-          <PaperCard variant="folded-sm" padding="sm" className="border-2">
-            <div className="flex items-start justify-between gap-6">
-              <div className="flex-1 space-y-3">
-                <div className="flex items-center gap-2">
-                  <Eye className="h-5 w-5 text-primary" />
-                  <Label
-                    htmlFor="index-hints"
-                    className="text-lg font-semibold cursor-pointer"
-                  >
-                    Index Value Hints
-                  </Label>
-                </div>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  Show positional values underneath each digit during gameplay.
-                  Helps you understand how each digit contributes to the total
-                  value.
-                  <span className="block mt-1 italic">
-                    (Not shown when converting from decimal)
-                  </span>
-                </p>
-              </div>
-              <Switch
-                id="index-hints"
-                checked={settings.indexValueHints}
-                onCheckedChange={(checked) =>
-                  updateSetting("indexValueHints", checked)
-                }
-                disabled={saving || isGuest}
-                className="shrink-0"
-              />
-            </div>
-          </PaperCard>
-
-          {/* Countdown Start */}
-          <PaperCard variant="folded-sm" padding="sm" className="border-2">
-            <div className="flex items-start justify-between gap-6">
-              <div className="flex-1 space-y-3">
-                <div className="flex items-center gap-2">
-                  <Timer className="h-5 w-5 text-primary" />
-                  <Label
-                    htmlFor="countdown-start"
-                    className="text-lg font-semibold cursor-pointer"
-                  >
-                    Countdown Start
-                  </Label>
-                </div>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  Show a 3-2-1 countdown before the game starts. Gives you time
-                  to prepare before the timer begins.
-                </p>
-              </div>
-              <Switch
-                id="countdown-start"
-                checked={settings.countdownStart}
-                onCheckedChange={(checked) =>
-                  updateSetting("countdownStart", checked)
-                }
-                disabled={saving || isGuest}
-                className="shrink-0"
-              />
-            </div>
-          </PaperCard>
-        </PaperCardContent>
-      </PaperCard>
-
-      {/* Info Card */}
-      <StickyNote variant="info">
-        <div className="flex gap-3">
-          <Info className="h-5 w-5 text-info flex-shrink-0 mt-0.5" />
-          <div className="space-y-3 text-sm">
-            <p className="text-foreground">
-              <strong className="text-info">Multiplayer Note:</strong> In
-              multiplayer games, the host can control whether visual aids are
-              allowed for all players. If the host disables visual aids, your
-              personal settings will be overridden for that game.
-            </p>
-            <RuledSeparator />
-            <p className="text-muted-foreground">
-              Your settings are automatically saved and will apply to all future
-              games.
-            </p>
+            ))}
           </div>
-        </div>
-      </StickyNote>
+        ) : (
+          <ul className="mt-2 flex flex-col">
+            {OPTIONS.map((o) => (
+              <SettingRow
+                key={o.key}
+                title={o.title}
+                body={o.body}
+                checked={settings[o.key]}
+                onChange={(v) => void update(o.key, v)}
+              />
+            ))}
+          </ul>
+        )}
+        <p
+          role="status"
+          className={cn(
+            "min-h-5 text-[0.8125rem]",
+            error ? "text-destructive" : "text-muted-foreground",
+          )}
+        >
+          {error ?? status}
+        </p>
+      </section>
+
+      <div className="lg:sticky lg:top-[calc(var(--nav-h)+2rem)] lg:self-start">
+        <Preview settings={settings} />
+      </div>
     </div>
   );
 }
