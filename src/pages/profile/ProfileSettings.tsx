@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { warmUpGoogleSignIn } from "@/lib/googleAuth";
 import { Link, useNavigate } from "react-router-dom";
 import { Check, Loader2, LogOut, MailCheck } from "lucide-react";
 
@@ -402,6 +403,8 @@ function DeleteDialog({
 /* -------------------------------------------------------------------------- */
 
 export default function ProfileSettings() {
+  // Google sign-in opens a popup; load its helper before the click.
+  useEffect(warmUpGoogleSignIn, []);
   const navigate = useNavigate();
   const { user, isGuest, loading, signOut } = useAuth();
   const [deleteOpen, setDeleteOpen] = useState(false);

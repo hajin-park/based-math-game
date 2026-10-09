@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { warmUpGoogleSignIn } from "@/lib/googleAuth";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { CloudUpload, Loader2 } from "lucide-react";
 
@@ -26,7 +27,9 @@ const PASSWORD_MIN = 8;
 type Busy = null | "email" | "google";
 
 /** Guest settings live in localStorage; carry them into the new account. */
-async function carryOverGuestSettings(settings: ReturnType<typeof getLocalSettings>) {
+async function carryOverGuestSettings(
+  settings: ReturnType<typeof getLocalSettings>,
+) {
   const uid = auth.currentUser?.uid;
   if (!uid || auth.currentUser?.isAnonymous) return;
   const changed = (
@@ -37,6 +40,8 @@ async function carryOverGuestSettings(settings: ReturnType<typeof getLocalSettin
 }
 
 export default function Signup() {
+  // Google sign-in opens a popup; load its helper before the click.
+  useEffect(warmUpGoogleSignIn, []);
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const next = safeNextPath(params.get("next"), "/");
@@ -55,12 +60,15 @@ export default function Signup() {
   }>({});
 
   // Offer the guest's generated name (it's what rooms already show).
-  const guestName = isGuest ? user?.displayName ?? "" : "";
+  const guestName = isGuest ? (user?.displayName ?? "") : "";
   useEffect(() => {
     if (guestName) setDisplayName((cur) => cur || guestName);
   }, [guestName]);
 
-  const guestRuns = useMemo(() => (isGuest ? getLocalRuns().length : 0), [isGuest]);
+  const guestRuns = useMemo(
+    () => (isGuest ? getLocalRuns().length : 0),
+    [isGuest],
+  );
   const loginHref = `/login${params.get("next") ? `?next=${encodeURIComponent(next)}` : ""}`;
 
   const fail = (e: unknown) => {
