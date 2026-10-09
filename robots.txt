@@ -1,8 +1,0 @@
-User-agent: *
-Allow: /
-
-Disallow: /admin/
-Disallow: /private/
-Disallow: /temp/
-
-Sitemap: https://www.basedmathgame.com/sitemap.xml

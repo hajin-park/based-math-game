@@ -141,8 +141,8 @@ export function friendlyAuthError(error: unknown): FriendlyAuthError {
 
 /**
  * A same-origin, app-relative redirect target from `?next=`, or the fallback.
- * Rejects absolute URLs, protocol-relative ("//evil"), backslash tricks and
- * auth pages (to avoid loops).
+ * Rejects absolute URLs, protocol-relative ("//evil", also after dot-segment
+ * normalization), backslash tricks and auth pages (to avoid loops).
  */
 export function safeNextPath(
   raw: string | null | undefined,
@@ -162,7 +162,12 @@ export function safeNextPath(
     const url = new URL(value, "https://app.invalid");
     if (url.origin !== "https://app.invalid") return fallback;
     if (/^\/(login|signup)\/?$/.test(url.pathname)) return fallback;
-    return url.pathname + url.search + url.hash;
+    const out = url.pathname + url.search + url.hash;
+    // Dot segments can normalize into a protocol-relative path
+    // ("/.//evil.example" -> "//evil.example"), which a router or the
+    // browser would treat as another origin.
+    if (out.startsWith("//") || out.startsWith("/\\")) return fallback;
+    return out;
   } catch {
     return fallback;
   }

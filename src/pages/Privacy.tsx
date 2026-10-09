@@ -252,8 +252,12 @@ const SECTIONS: LegalSection[] = [
         </li>
         <li>
           <strong>Multiplayer rooms and chat</strong>: deleted when the last
-          player leaves. Rooms idle for 6 hours count as expired and are deleted
-          the next time anyone opens them.
+          player leaves the room. If everyone just closes the page instead,
+          the room stays stored (it can only be opened with its code) until it
+          has been idle for 6 hours. It then counts as expired: nobody can join
+          it, and it is deleted the next time anyone opens it. There is no
+          scheduled clean-up yet, so an expired room nobody opens again can
+          stay stored; contact us and we’ll delete it.
         </li>
         <li>
           <strong>Online-status record</strong>: overwritten each time you join
@@ -275,7 +279,9 @@ const SECTIONS: LegalSection[] = [
           . This immediately deletes your profile, every saved run, your stats
           and personal bests, all your leaderboard entries, your online-status
           record and your sign-in account, and clears the game data in that
-          browser. For your security we may ask for your password, or ask
+          browser. If you played today’s daily challenge, an empty marker
+          that you used today’s ranked attempt is removed automatically after
+          the day ends, usually within a day. For your security we may ask for your password, or ask
           Google to confirm it’s you, first.
         </p>
         <p>

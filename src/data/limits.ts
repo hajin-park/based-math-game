@@ -29,8 +29,11 @@ export const RULES_LIMITS = {
   displayNameMax: 24,
   /** Upper bound on correct/skipped counts in a stored run. */
   maxCorrect: 10_000,
-  /** Multiplayer: max points per correct answer (score <= 15/s). */
-  maxPointsPerCorrect: 5,
+  /**
+   * A daily (UTC day) can still be submitted this long after midnight, so a
+   * run finished just after the day rolls over still counts.
+   */
+  dailyGraceMs: 10 * 60_000,
 } as const;
 
 /** Topics with ranked `${topic}:sprint|speedrun` modes. */
@@ -60,6 +63,47 @@ export type ScoreOrder = "higher-better" | "lower-better";
 
 export function isDailyModeId(modeId: string): boolean {
   return modeId.startsWith("daily:");
+}
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** UTC midnight starting a daily mode's day, or null for other ids. */
+export function dailyStartMs(modeId: string): number | null {
+  const m = /^daily:(\d{4})-(\d{2})-(\d{2})$/.exec(modeId);
+  if (!m) return null;
+  const ms = Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  // Reject dates that roll over ("2026-02-31") like the rules do.
+  if (!Number.isFinite(ms)) return null;
+  return new Date(ms).toISOString().slice(0, 10) === modeId.slice(6) ? ms : null;
+}
+
+/**
+ * Whether a daily can still be submitted to its leaderboard at `now`: from
+ * its UTC midnight until the next one plus the grace period (mirrors
+ * `dailyOpen()` in firestore.rules).
+ */
+export function isDailyOpen(modeId: string, now = Date.now()): boolean {
+  const start = dailyStartMs(modeId);
+  return (
+    start !== null &&
+    now >= start &&
+    now < start + DAY_MS + RULES_LIMITS.dailyGraceMs
+  );
+}
+
+/** The day is over, so its lock may be deleted (`dailyClosed()` in the rules). */
+export function isDailyClosed(modeId: string, now = Date.now()): boolean {
+  const start = dailyStartMs(modeId);
+  return start !== null && now >= start + DAY_MS + RULES_LIMITS.dailyGraceMs;
+}
+
+/**
+ * TTL of a daily lock document: the moment its day closes for submissions
+ * (Firestore deletes it some time after; never before).
+ */
+export function dailyLockExpiresMs(modeId: string): number | null {
+  const start = dailyStartMs(modeId);
+  return start === null ? null : start + DAY_MS + RULES_LIMITS.dailyGraceMs;
 }
 
 /** Leaderboard ordering for a mode id (speedrun/daily: lower is better). */
@@ -92,17 +136,21 @@ export function modeIdFromBestsKey(key: string): string {
 
 /**
  * Client-side mirror of `validEntry()` in firestore.rules. Returns null when
- * the leaderboard write would be accepted, otherwise the reason.
+ * the leaderboard write would be accepted, otherwise the reason. `now` only
+ * matters for the daily (today's challenge only).
  */
-export function leaderboardRejection(entry: {
-  modeId: string;
-  score: number;
-  correct: number;
-  skipped: number;
-  durationMs: number;
-  accuracy: number;
-  completed?: boolean;
-}): string | null {
+export function leaderboardRejection(
+  entry: {
+    modeId: string;
+    score: number;
+    correct: number;
+    skipped: number;
+    durationMs: number;
+    accuracy: number;
+    completed?: boolean;
+  },
+  now = Date.now(),
+): string | null {
   const { modeId, score, correct, skipped, durationMs, accuracy } = entry;
   const L = SCORE_LIMITS;
   const parsed = parseModeId(modeId);
@@ -131,7 +179,8 @@ export function leaderboardRejection(entry: {
       if (score < L.speedrunMinMs) return "too fast";
       return null;
     case "daily":
-      if (correct + skipped > DAILY_QUESTION_COUNT) return "bad counts";
+      if (!isDailyOpen(modeId, now)) return "not today's challenge";
+      if (correct + skipped !== DAILY_QUESTION_COUNT) return "bad counts";
       if (score !== durationMs + skipped * DAILY_SKIP_PENALTY_MS)
         return "bad score";
       if (score < L.dailyMinMs) return "too fast";

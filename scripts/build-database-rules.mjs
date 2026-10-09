@@ -22,9 +22,11 @@ const CHAT_MAX_LENGTH = 300;
 const NAME_MAX = 24;
 // Plausibility (mirrors SCORE_LIMITS in src/data/limits.ts).
 const MAX_CORRECT_PER_SECOND = 3;
-const MAX_POINTS_PER_SECOND = MAX_CORRECT_PER_SECOND * 5;
 const MIN_MS_PER_CORRECT = 250;
 const MAX_RUN_MS = 3_600_000; // SCORE_LIMITS.maxDurationMs
+const COUNTDOWN_MS = 3000; // ROOM_COUNTDOWN_MS in useRoom.ts: play begins this long after startedAt
+const CLOCK_SKEW_MS = 1000; // client clock / server-offset error tolerated on run times
+const SPEEDRUN_TARGET = 15; // SPEEDRUN_TARGET (catalog speedruns)
 
 /** Collapses whitespace so rules can be written readably below. */
 const x = (s) => s.replace(/\s+/g, " ").trim();
@@ -39,7 +41,20 @@ const ROOM_POST_FROM_FIELD = "newData.parent().parent().parent()"; // rooms/$r/p
 
 const isHost = (room) => `${room}.child('hostUid').val() === auth.uid`;
 const isMember = (room) => `${room}.child('players').child(auth.uid).exists()`;
-const nameOk = `newData.isString() && newData.val().length >= 1 && newData.val().length <= ${NAME_MAX}`;
+/**
+ * Characters a display name may not contain: C0 controls, DEL, zero-width space,
+ * LRM/RLM marks and bidi embeddings/overrides/isolates (mirrors
+ * INVISIBLE_NAME_CHARS in src/utils/displayNameValidator.ts). RTDB regexes
+ * only match ASCII reliably, so the others are checked with contains().
+ */
+const INVISIBLE_HIGH = [
+  0x7f, 0x200b, 0x200e, 0x200f, 0x202a, 0x202b, 0x202c, 0x202d, 0x202e, 0x2066,
+  0x2067, 0x2068, 0x2069,
+].map((c) => String.fromCharCode(c));
+const nameOk =
+  x(`newData.isString() && newData.val().length >= 1 && newData.val().length <= ${NAME_MAX}
+  && !newData.val().matches(/[${String.fromCharCode(0)}-${String.fromCharCode(0x1f)}]/)
+  && ${INVISIBLE_HIGH.map((c) => `!newData.val().contains('${c}')`).join(" && ")}`);
 
 /** `$slot` (a one-digit string) is a valid seat index for maxPlayers. */
 const slotBelowMax = (() => {
@@ -62,17 +77,42 @@ const everyoneElseGone = (() => {
   return terms.join(" && ");
 })();
 
+/**
+ * Every seated player has finished this round or is disconnected (pre-write,
+ * from rooms/$r/status). Lets a non-host close a round nobody is still
+ * playing (e.g. the host's tab stalled) but never cut a live round short.
+ */
+const everyoneFinished = (() => {
+  const room = ROOM_PRE_FROM_CHILD;
+  const terms = [];
+  for (let i = 0; i < MAX_SLOTS; i++) {
+    const s = `${room}.child('slots').child('${i}')`;
+    const p = `${room}.child('players').child(${s}.val())`;
+    terms.push(
+      `(!${s}.exists() || ${p}.child('disconnected').val() === true || (${p}.child('finished').val() === true && ${p}.child('round').val() === ${room}.child('startedAt').val()))`,
+    );
+  }
+  return terms.join(" && ");
+})();
+
 // Player field helpers (location: rooms/$r/players/$uid/<field>).
 const R = ROOM_POST_FROM_FIELD;
 const inRound = `${R}.child('status').val() !== 'waiting' && newData.parent().child('round').val() === ${R}.child('startedAt').val()`;
 const sameRoundAsBefore = `data.parent().child('round').val() === ${R}.child('startedAt').val()`;
+/** Round results only change while the round is being played. */
+const whilePlaying = `(${R}.child('status').val() === 'playing' || newData.val() === data.val())`;
+/** Ms of play so far (play begins COUNTDOWN_MS after startedAt), plus skew. */
+const playedMs = `now - ${R}.child('startedAt').val() - ${COUNTDOWN_MS} + ${CLOCK_SKEW_MS}`;
 const counter = (perSecond) =>
   x(`newData.isNumber() && newData.val() >= 0 && (
     (${R}.child('status').val() === 'waiting' && newData.val() === 0) ||
-    (${inRound}
-      && newData.val() <= (now - ${R}.child('startedAt').val()) * ${perSecond} / 1000 + ${perSecond}
+    (${inRound} && ${whilePlaying}
+      && (newData.val() === 0
+          || newData.val() <= (now - ${R}.child('startedAt').val() - ${COUNTDOWN_MS}) * ${perSecond} / 1000 + ${perSecond})
       && (!(${sameRoundAsBefore}) || newData.val() >= data.val()))
   )`);
+/** Answers needed to finish a speedrun round (custom target, else 15). */
+const target = `(${R}.child('mode').child('custom').child('targetCount').exists() ? ${R}.child('mode').child('custom').child('targetCount').val() : ${SPEEDRUN_TARGET})`;
 
 const rules = {
   rules: {
@@ -82,7 +122,9 @@ const rules = {
     rooms: {
       // No ".read" here: rooms cannot be listed, only opened by code.
       $roomId: {
-        ".read": "auth != null",
+        // Kicked players lose read access too (the client shows "removed").
+        ".read":
+          "auth != null && !data.child('kicked').child(auth.uid).exists()",
         ".write": x(`auth != null && (
           (!data.exists() && newData.child('hostUid').val() === auth.uid && newData.child('status').val() === 'waiting')
           || (data.exists() && !newData.exists() && data.child('lastActivityAt').val() < now - ${STALE_MS})
@@ -111,7 +153,8 @@ const rules = {
             || (${isMember(ROOM_PRE_FROM_CHILD)} && (
                  (data.val() === 'playing' && newData.val() === 'finished'
                    && ${ROOM_PRE_FROM_CHILD}.child('players').child(auth.uid).child('finished').val() === true
-                   && ${ROOM_PRE_FROM_CHILD}.child('players').child(auth.uid).child('round').val() === ${ROOM_PRE_FROM_CHILD}.child('startedAt').val())
+                   && ${ROOM_PRE_FROM_CHILD}.child('players').child(auth.uid).child('round').val() === ${ROOM_PRE_FROM_CHILD}.child('startedAt').val()
+                   && ${everyoneFinished})
                  || (data.val() === 'finished' && newData.val() === 'waiting')))
           )`),
           ".validate": x(`newData.isString() && (
@@ -261,29 +304,40 @@ const rules = {
             round: {
               ".validate": `newData.val() === ${R}.child('startedAt').val()`,
             },
-            score: { ".validate": counter(MAX_POINTS_PER_SECOND) },
+            // Every room format scores one point per correct answer.
+            score: {
+              ".validate": x(`${counter(MAX_CORRECT_PER_SECOND)}
+                && newData.val() === newData.parent().child('correct').val()`),
+            },
             correct: { ".validate": counter(MAX_CORRECT_PER_SECOND) },
             finished: {
               ".validate": x(
-                `newData.isBoolean() && (newData.val() === false || (${inRound}))`,
+                `newData.isBoolean() && (newData.val() === false || (${inRound} && ${whilePlaying}))`,
               ),
             },
+            // Raw run time of a finished speedrun: the target was reached, no
+            // faster than MIN_MS_PER_CORRECT per answer, within the time played.
             finishMs: {
-              ".validate": x(`newData.isNumber() && ${inRound}
+              ".validate":
+                x(`newData.isNumber() && ${inRound} && ${whilePlaying}
+                && newData.parent().child('correct').val() >= ${target}
                 && newData.val() >= newData.parent().child('correct').val() * ${MIN_MS_PER_CORRECT}
-                && newData.val() <= now - ${R}.child('startedAt').val()`),
+                && newData.val() <= ${playedMs}`),
             },
             // Speedrun skip penalties of a finished run (ranked by finishMs + penaltyMs).
             penaltyMs: {
-              ".validate": x(`newData.isNumber() && ${inRound}
+              ".validate":
+                x(`newData.isNumber() && ${inRound} && ${whilePlaying}
                 && newData.val() >= 0 && newData.val() <= ${MAX_RUN_MS}`),
             },
             // When the current score was reached (sprint/survival tie-break).
             scoreMs: {
-              ".validate": x(`newData.isNumber() && ${inRound}
+              ".validate":
+                x(`newData.isNumber() && ${inRound} && ${whilePlaying}
                 && newData.val() >= 0
-                && newData.val() <= now - ${R}.child('startedAt').val()`),
+                && newData.val() <= ${playedMs}`),
             },
+            // +1 once per round, only for a uid the host named in winners.
             wins: {
               ".validate": x(`newData.isNumber() && (
                 (!data.exists() && newData.val() === 0)
@@ -291,7 +345,9 @@ const rules = {
                 || (newData.val() === data.val() + 1
                     && ${R}.child('status').val() === 'finished'
                     && newData.parent().child('lastWinRound').val() === ${R}.child('startedAt').val()
-                    && data.parent().child('lastWinRound').val() !== ${R}.child('startedAt').val())
+                    && data.parent().child('lastWinRound').val() !== ${R}.child('startedAt').val()
+                    && ${R}.child('winners').child('round').val() === ${R}.child('startedAt').val()
+                    && ${R}.child('winners').child('uids').child($uid).val() === true)
               )`),
             },
             lastWinRound: {
@@ -307,10 +363,31 @@ const rules = {
           },
         },
 
+        // Winners of the finished round, written by the host from the final
+        // standings; a player may only count a win the host recorded.
+        winners: {
+          ".write":
+            x(`auth != null && data.parent().exists() && ${isHost(ROOM_PRE_FROM_CHILD)}
+            && ${ROOM_POST_FROM_CHILD}.child('status').val() === 'finished'`),
+          ".validate": x(`newData.hasChildren(['round'])
+            && newData.child('round').val() === ${ROOM_POST_FROM_CHILD}.child('startedAt').val()`),
+          round: { ".validate": "newData.isNumber()" },
+          uids: {
+            $uid: {
+              ".validate": x(`newData.val() === true
+                && ${ROOM_POST_FROM_GRANDCHILD}.parent().child('players').child($uid).exists()`),
+            },
+          },
+          $other: { ".validate": false },
+        },
+
         chat: {
           ".indexOn": ["timestamp"],
+          // One message per write: the key must be `${uid}_${previous
+          // lastChatAt, or 0}` and lastChatAt moves to `now` in the same write.
           $msgId: {
             ".write": x(`auth != null && !data.exists()
+              && $msgId === auth.uid + '_' + (${ROOM_PRE_FROM_GRANDCHILD}.child('lastChatAt').child(auth.uid).exists() ? ${ROOM_PRE_FROM_GRANDCHILD}.child('lastChatAt').child(auth.uid).val() : 0)
               && newData.child('senderId').val() === auth.uid
               && ${isMember(ROOM_PRE_FROM_GRANDCHILD)}
               && !${ROOM_PRE_FROM_GRANDCHILD}.child('kicked').child(auth.uid).exists()`),
@@ -335,7 +412,10 @@ const rules = {
         lastChatAt: {
           $uid: {
             ".write": `auth != null && $uid === auth.uid && ${isMember(ROOM_PRE_FROM_GRANDCHILD)}`,
-            ".validate": `newData.val() === now && (!data.exists() || now - data.val() >= ${CHAT_MIN_INTERVAL_MS})`,
+            // Only moves together with the message it keys.
+            ".validate":
+              x(`newData.val() === now && (!data.exists() || now - data.val() >= ${CHAT_MIN_INTERVAL_MS})
+              && ${ROOM_POST_FROM_GRANDCHILD}.child('chat').child($uid + '_' + (data.exists() ? data.val() : 0)).exists()`),
           },
         },
 
@@ -366,5 +446,10 @@ const out = path.join(
   "..",
   "database.rules.json",
 );
-writeFileSync(out, JSON.stringify(rules, null, 2) + "\n");
+// Keep invisible characters visible (as \uXXXX escapes) in the generated JSON.
+const json = JSON.stringify(rules, null, 2).replace(
+  /[\u007f\u200b-\u200f\u202a-\u202e\u2066-\u2069]/g,
+  (c) => `\\u${c.charCodeAt(0).toString(16).padStart(4, "0")}`,
+);
+writeFileSync(out, json + "\n");
 console.log(`Wrote ${path.relative(process.cwd(), out)}`);

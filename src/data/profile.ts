@@ -11,9 +11,9 @@ import {
 } from "firebase/firestore";
 import type { User } from "firebase/auth";
 import { firestore } from "@/firebase/firestore";
-import { isRankedModeId, modeIdFromBestsKey } from "./limits";
+import { isDailyClosed, isRankedModeId, modeIdFromBestsKey } from "./limits";
 import { clampDisplayName } from "./names";
-import { entryRef } from "./leaderboard";
+import { dailyLocksCollection, entryRef } from "./leaderboard";
 import { runsCollection, statsRef } from "./runs";
 import type { GameSettings, UserStatsDoc } from "./types";
 import { DEFAULT_GAME_SETTINGS } from "./types";
@@ -84,7 +84,14 @@ export async function propagateDisplayName(
 
 /**
  * Deletes everything the user owns in Firestore: run history, leaderboard
- * entries, stats and profile. Call before deleting the auth user.
+ * entries, daily locks, stats and profile. Call before deleting the auth user.
+ *
+ * Daily locks: rules refuse to delete the lock of a daily that can still be
+ * submitted (deleting it would allow a second ranked attempt), so a lock
+ * from today (or the first minutes after midnight) stays behind. It is an
+ * empty marker with only an `expireAt` timestamp, readable by nobody once the
+ * account is gone, and Firestore's TTL policy deletes it after the day
+ * closes, usually within a day (firestore.indexes.json).
  */
 export async function deleteUserData(uid: string): Promise<void> {
   // Run history, in pages.
@@ -101,6 +108,17 @@ export async function deleteUserData(uid: string): Promise<void> {
   for (let i = 0; i < modeIds.length; i += 400) {
     const batch = writeBatch(firestore);
     modeIds.slice(i, i + 400).forEach((id) => batch.delete(entryRef(id, uid)));
+    await batch.commit();
+  }
+  // Daily locks whose day is over (a minute of margin for clock skew).
+  const locks = await getDocs(dailyLocksCollection(uid));
+  const margin = 60_000;
+  const closed = locks.docs.filter((d) =>
+    isDailyClosed(d.id, Date.now() - margin),
+  );
+  for (let i = 0; i < closed.length; i += 400) {
+    const batch = writeBatch(firestore);
+    closed.slice(i, i + 400).forEach((d) => batch.delete(d.ref));
     await batch.commit();
   }
   await deleteDoc(statsRef(uid));
