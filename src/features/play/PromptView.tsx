@@ -87,9 +87,20 @@ export const PromptView = memo(function PromptView({
       case "number": {
         const showTag = part.base !== 10 || tagDecimal;
         out.push(
-          <span key={i} className="inline-flex flex-col items-center gap-1.5">
-            {showTag && !small && (
-              <BaseTag base={baseTagKey(part.base)} size="sm" aria-hidden />
+          <span
+            key={i}
+            className={cn(
+              "inline-flex items-center",
+              small ? "gap-1.5" : "flex-col gap-1.5",
+            )}
+          >
+            {showTag && (
+              <BaseTag
+                base={baseTagKey(part.base)}
+                size={small ? "xs" : "sm"}
+                variant={small ? "outline" : "soft"}
+                aria-hidden
+              />
             )}
             <Digits
               base={baseTagKey(part.base)}

@@ -81,6 +81,7 @@ const ToastClose = React.forwardRef<
       className,
     )}
     toast-close=""
+    aria-label="Dismiss notification"
     {...props}
   >
     <Cross2Icon className="h-4 w-4" />

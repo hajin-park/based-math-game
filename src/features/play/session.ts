@@ -49,6 +49,31 @@ export interface ResultsState {
   previousBest: BestEntry | null;
 }
 
+const RESULTS_KEY = "bmg.lastResults.v1";
+
+/**
+ * Keep the latest results for this tab, so /results survives a reload or an
+ * in-page hash link (both drop router state). A fresh tab has none and
+ * /results redirects to /play.
+ */
+export function rememberResults(state: ResultsState) {
+  try {
+    sessionStorage.setItem(RESULTS_KEY, JSON.stringify(state));
+  } catch {
+    // Too large or storage disabled: router state still works.
+  }
+}
+
+export function recallResults(): ResultsState | null {
+  try {
+    const raw = sessionStorage.getItem(RESULTS_KEY);
+    const parsed: unknown = raw ? JSON.parse(raw) : null;
+    return isResultsState(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
 export function isResultsState(value: unknown): value is ResultsState {
   const v = value as ResultsState | null;
   return (

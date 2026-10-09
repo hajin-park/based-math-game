@@ -1,5 +1,5 @@
 import { Digits } from "@/components/ui/digits";
-import type { Question } from "@/game";
+import { answerPrefix, type Question } from "@/game";
 import { cn } from "@/lib/utils";
 import { baseTagKey } from "./describe";
 
@@ -25,15 +25,21 @@ export function AnswerValue({
       </span>
     );
   }
+  const prefix = answerPrefix(question);
   return (
-    <Digits
-      base={baseTagKey(question.answerBase)}
-      value={question.answer}
-      prefix
-      size={size}
-      group={question.answer.length > 8}
-      condensed={question.answer.length > 12}
-      className={className}
-    />
+    <span className={cn("inline-flex items-baseline", className)}>
+      {prefix && (
+        <span className="font-mono text-[0.85em] text-muted-foreground">
+          {prefix}
+        </span>
+      )}
+      <Digits
+        base={baseTagKey(question.answerBase)}
+        value={question.answer}
+        size={size}
+        group={question.answer.length > 8}
+        condensed={question.answer.length > 12}
+      />
+    </span>
   );
 }

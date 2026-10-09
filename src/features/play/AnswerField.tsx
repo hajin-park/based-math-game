@@ -165,7 +165,7 @@ export const AnswerField = forwardRef<AnswerFieldHandle, AnswerFieldProps>(
           {prefix && (
             <span
               aria-hidden
-              className="select-none font-mono text-muted-foreground/70"
+              className="select-none font-mono text-muted-foreground"
             >
               {prefix}
             </span>
@@ -173,6 +173,7 @@ export const AnswerField = forwardRef<AnswerFieldHandle, AnswerFieldProps>(
           <input
             ref={inputRef}
             id={id}
+            data-answer-field=""
             aria-label={label}
             aria-describedby={describedBy}
             aria-invalid={invalid || undefined}

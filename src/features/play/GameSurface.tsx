@@ -266,6 +266,7 @@ export function GameSurface({
   const showHint = () => {
     if (!question) return;
     setHintFor(question.id);
+    field.current?.focus();
     const [first] = explainQuestion(question);
     if (first) announce(`Hint: ${first.title}. ${first.note ?? ""}`);
   };

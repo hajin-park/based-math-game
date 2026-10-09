@@ -50,6 +50,7 @@ import {
 import { absoluteUrl, hubLink, runPath } from "@/features/play/links";
 import {
   isResultsState,
+  recallResults,
   runKey,
   saveRunOnce,
   type ResultsState,
@@ -58,8 +59,9 @@ import { cn } from "@/lib/utils";
 
 export default function Results() {
   const location = useLocation();
-  const state: unknown = location.state;
-  if (!isResultsState(state)) return <Navigate to="/play" replace />;
+  const routed: unknown = location.state;
+  const state = isResultsState(routed) ? routed : recallResults();
+  if (!state) return <Navigate to="/play" replace />;
   return <ResultsView key={runKey(state.summary)} {...state} />;
 }
 
@@ -174,7 +176,10 @@ function ResultsView({ summary, custom, previousBest }: ResultsState) {
   if (!mode) return <Navigate to="/play" replace />;
 
   const big = headline(mode, summary);
-  const comparable = mode.format !== "practice" && mode.topicId !== "custom";
+  const comparable =
+    mode.format !== "practice" &&
+    mode.format !== "daily" &&
+    mode.topicId !== "custom";
   const isPB =
     comparable &&
     !!previousBest &&
@@ -272,11 +277,11 @@ function ResultsView({ summary, custom, previousBest }: ResultsState) {
         <Stat
           label="Pace"
           value={(avgMs / 1000).toFixed(1)}
-          unit="s / question"
+          unit="s"
           hint={
             mode.format === "sprint"
-              ? `${(summary.correct / Math.max(1, summary.durationMs / 60_000)).toFixed(0)} per minute`
-              : undefined
+              ? `per question · ${(summary.correct / Math.max(1, summary.durationMs / 60_000)).toFixed(0)} correct a minute`
+              : "per question"
           }
         />
         <Stat
@@ -347,6 +352,12 @@ function PersonalBestLine({
       <p className="text-body text-muted-foreground">
         Practice is never ranked. Skipped questions and their worked solutions
         are below.
+      </p>
+    );
+  if (mode.format === "daily")
+    return (
+      <p className="text-body text-muted-foreground">
+        The same ten for everyone today. A new set starts at 00:00 UTC.
       </p>
     );
   if (mode.topicId === "custom")
@@ -668,7 +679,14 @@ function SlowestList({ outcomes }: { outcomes: QuestionOutcome[] }) {
                 size="sm"
                 className="justify-start"
               />
-              <span className="sr-only">{questionLabel(o.question)}</span>
+              <ArrowRight
+                aria-hidden
+                className="size-3.5 shrink-0 text-muted-foreground"
+              />
+              <AnswerValue question={o.question} size="sm" />
+              <span className="sr-only">
+                {questionLabel(o.question)}. Answer: {spokenAnswer(o.question)}.
+              </span>
             </span>
             <span className="shrink-0 font-mono text-body-sm tabular-nums text-muted-foreground">
               {seconds1(o.elapsedMs)}
@@ -742,7 +760,10 @@ function ReviewList({
                 </summary>
                 <div className="border-t bg-background/40 px-4 py-4 sm:px-5">
                   <p className="mb-4 text-label text-muted-foreground">
-                    {o.question.instruction} · gave up after{" "}
+                    {o.question.instruction} ·{" "}
+                    {o.result === "timeout"
+                      ? "time ran out after"
+                      : "skipped after"}{" "}
                     {seconds1(o.elapsedMs)}
                   </p>
                   <ExplanationSteps question={o.question} />

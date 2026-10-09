@@ -31,7 +31,11 @@ import { RunHeader } from "@/features/play/RunHeader";
 import { decodeCustomConfig } from "@/features/play/links";
 import { formatLine, modeTitle } from "@/features/play/describe";
 import { PauseOverlay } from "@/features/play/PauseOverlay";
-import { setLastMode, type ResultsState } from "@/features/play/session";
+import {
+  rememberResults,
+  setLastMode,
+  type ResultsState,
+} from "@/features/play/session";
 import { cn } from "@/lib/utils";
 
 type Resolved =
@@ -125,6 +129,7 @@ function RunScreen({
         custom,
         previousBest: mode.topicId === "custom" ? null : bestRef.current,
       };
+      rememberResults(state);
       navigate("/results", { replace: true, state });
     },
     [cues, mode, custom, navigate],

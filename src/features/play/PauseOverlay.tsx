@@ -29,6 +29,16 @@ export function PauseOverlay({
       <DialogContent
         hideClose
         className="max-w-sm gap-6 text-center"
+        onCloseAutoFocus={(e) => {
+          // The game surface was hidden while paused; put the caret back in
+          // the answer field once it is visible again.
+          e.preventDefault();
+          requestAnimationFrame(() =>
+            document
+              .querySelector<HTMLInputElement>("[data-answer-field]")
+              ?.focus({ preventScroll: true }),
+          );
+        }}
         onOpenAutoFocus={(e) => {
           e.preventDefault();
           (

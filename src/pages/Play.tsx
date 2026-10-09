@@ -478,7 +478,7 @@ function SurvivalCard({
               Play survival
             </Link>
           </Button>
-          <Button variant="link" onClick={onRules} className="text-body-sm">
+          <Button variant="ghost" onClick={onRules}>
             How it works
           </Button>
         </>

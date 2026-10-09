@@ -116,7 +116,10 @@ export default function Daily() {
               <div className="flex flex-col gap-1.5">
                 <p className="flex flex-wrap items-baseline gap-x-3">
                   <span className="font-mono text-[2.5rem] font-medium leading-none tabular-nums">
-                    {formatMs(first.score)}
+                    {(first.score / 1000).toFixed(2)}
+                    <span className="ml-1 font-sans text-body text-muted-foreground">
+                      s
+                    </span>
                   </span>
                   <span className="text-body-sm text-muted-foreground">
                     <DailyRank dailyId={dailyId} />
@@ -214,6 +217,7 @@ function TopTen({ dailyId }: { dailyId: string }) {
         <div
           className="flex flex-col gap-2"
           aria-busy="true"
+          role="status"
           aria-label="Loading leaderboard"
         >
           {Array.from({ length: 5 }, (_, i) => (
@@ -256,7 +260,7 @@ function TopTen({ dailyId }: { dailyId: string }) {
                 <span className="min-w-0 flex-1 truncate text-body-sm">
                   {e.displayName || "Player"}
                   {mine && (
-                    <span className="ml-2 text-[0.75rem] text-primary">
+                    <span className="ml-2 text-[0.75rem] font-medium text-foreground">
                       you
                     </span>
                   )}
