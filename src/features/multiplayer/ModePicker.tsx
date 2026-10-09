@@ -64,6 +64,7 @@ export function ModePicker({
   const setTiming = (next: CustomTiming) =>
     onChange({
       ...value,
+      // roomModeOf() strips the undefined key before it reaches RTDB.
       custom:
         next === "sprint"
           ? { ...custom, targetCount: undefined, durationMs: 60_000 }
