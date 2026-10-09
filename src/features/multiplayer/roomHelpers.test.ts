@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { codeHalves, isRoomCode, normalizeRoomCode } from "./roomCode";
 import { initials, roomNames } from "./names";
 import { diffRoomEvents, type EventRoom } from "./roomEvents";
+import { roomModeOf } from "./modeChoice";
 
 describe("room codes", () => {
   it("normalises typed and pasted input", () => {
@@ -96,5 +97,28 @@ describe("room events", () => {
 
   it("is quiet on the first snapshot", () => {
     expect(diffRoomEvents(null, base, "me")).toEqual([]);
+  });
+});
+
+describe("roomModeOf (custom)", () => {
+  it("never writes undefined keys (RTDB rejects them)", () => {
+    const mode = roomModeOf({
+      format: "custom",
+      topicId: "bytes-bin",
+      custom: {
+        conversions: [{ from: 2, to: 10, min: 0, max: 15 }],
+        durationMs: undefined,
+        targetCount: 15,
+        kinds: undefined,
+      },
+    });
+    expect(mode.custom).toEqual({
+      conversions: [{ from: 2, to: 10, min: 0, max: 15 }],
+      targetCount: 15,
+    });
+    expect(Object.keys(mode.custom ?? {})).toEqual([
+      "conversions",
+      "targetCount",
+    ]);
   });
 });

@@ -43,10 +43,23 @@ export function pickerValueOf(mode: RoomModeRef | undefined): ModePickerValue {
   return { format: "sprint", topicId: "bytes-bin" };
 }
 
+/**
+ * Realtime Database rejects `undefined` anywhere in a write, and switching a
+ * custom drill between "sprint" and "race" leaves the unused key undefined.
+ */
+function withoutUndefined(config: CustomConfig): CustomConfig {
+  return Object.fromEntries(
+    Object.entries(config).filter(([, v]) => v !== undefined),
+  ) as unknown as CustomConfig;
+}
+
 export function roomModeOf(value: ModePickerValue): RoomModeRef {
   if (value.format === "survival") return { id: SURVIVAL_MODE_ID };
   if (value.format === "custom")
-    return { id: "custom", custom: value.custom ?? DEFAULT_ROOM_CUSTOM };
+    return {
+      id: "custom",
+      custom: withoutUndefined(value.custom ?? DEFAULT_ROOM_CUSTOM),
+    };
   return { id: modeId(value.topicId, value.format) };
 }
 
