@@ -178,6 +178,38 @@ describe("users/{uid}", () => {
         .set({ createdAt: new Date() }, { merge: true }),
     );
   });
+
+  it("pre-rebuild profiles: merges fail, the upgrade rewrite succeeds", async () => {
+    await seed("users/alice", {
+      uid: "alice",
+      displayName: "Alice",
+      email: "alice@example.com",
+      photoURL: null,
+      createdAt: 1776414596093,
+      lastSeen: 1776414596093,
+      gameSettings: { groupedDigits: true },
+    });
+    await assertFails(
+      alice()
+        .doc("users/alice")
+        .set({ settings: { groupedDigits: true } }, { merge: true }),
+    );
+    // What ensureUserProfile writes (upgradeLegacyProfile).
+    await assertSucceeds(
+      alice()
+        .doc("users/alice")
+        .set({
+          displayName: "Alice",
+          createdAt: 1776414596093,
+          settings: { groupedDigits: true },
+        }),
+    );
+    await assertSucceeds(
+      alice()
+        .doc("users/alice")
+        .set({ settings: { groupedDigits: false } }, { merge: true }),
+    );
+  });
 });
 
 describe("users/{uid}/runs", () => {
