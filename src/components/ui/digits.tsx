@@ -40,7 +40,7 @@ export interface DigitsProps
    * oct 3, dec 3, hex 2); a number sets a custom size; `false` disables.
    */
   group?: boolean | number;
-  /** Show the conventional prefix (0b / 0o / 0x), dimmed. */
+  /** Show the conventional prefix (0b / 0o / 0x) in the muted ink. */
   prefix?: boolean;
   /** Show the place value (weight) of each digit underneath it. */
   placeValues?: boolean;
@@ -112,7 +112,9 @@ const Digits = React.forwardRef<HTMLSpanElement, DigitsProps>(
         {...props}
       >
         {prefix && meta.prefix && (
-          <span className="mr-[0.08ch] opacity-45">{meta.prefix}</span>
+          <span className="mr-[0.08ch] font-normal text-muted-foreground">
+            {meta.prefix}
+          </span>
         )}
         <span className="inline-flex items-baseline">
           {groups.map((g, gi) => (

@@ -73,22 +73,7 @@ module.exports = {
         "base-oct": pair("base-oct"),
         "base-dec": pair("base-dec"),
         "base-hex": pair("base-hex"),
-        // Legacy aliases (deprecated — prefer base-bin/oct/dec/hex, warning).
-        "base-binary": pair("base-bin"),
-        "base-octal": pair("base-oct"),
-        "base-decimal": pair("base-dec"),
         trophy: pair("trophy"),
-        critical: pair("destructive"),
-        sidebar: {
-          DEFAULT: withAlpha("card"),
-          foreground: withAlpha("foreground"),
-          primary: withAlpha("primary"),
-          "primary-foreground": withAlpha("primary-foreground"),
-          accent: withAlpha("accent"),
-          "accent-foreground": withAlpha("accent-foreground"),
-          border: withAlpha("border"),
-          ring: withAlpha("ring"),
-        },
       },
       fontFamily: {
         sans: [
@@ -185,47 +170,9 @@ module.exports = {
         "7xl": ["4.5rem", { lineHeight: "1" }],
         "8xl": ["6rem", { lineHeight: "1" }],
         "9xl": ["8rem", { lineHeight: "1" }],
-        // Legacy fluid sizes (deprecated).
-        "fluid-xs": [
-          "clamp(0.7rem, 0.5vw + 0.6rem, 0.75rem)",
-          { lineHeight: "1.5" },
-        ],
-        "fluid-sm": [
-          "clamp(0.8rem, 0.5vw + 0.7rem, 0.875rem)",
-          { lineHeight: "1.55" },
-        ],
-        "fluid-base": [
-          "clamp(0.9rem, 0.5vw + 0.8rem, 1rem)",
-          { lineHeight: "1.6" },
-        ],
-        "fluid-lg": [
-          "clamp(1rem, 0.5vw + 0.9rem, 1.125rem)",
-          { lineHeight: "1.6" },
-        ],
-        "fluid-xl": [
-          "clamp(1.125rem, 0.5vw + 1rem, 1.25rem)",
-          { lineHeight: "1.5" },
-        ],
-        "fluid-2xl": [
-          "clamp(1.25rem, 1vw + 1rem, 1.5rem)",
-          { lineHeight: "1.35" },
-        ],
-        "fluid-3xl": [
-          "clamp(1.5rem, 1.5vw + 1rem, 1.875rem)",
-          { lineHeight: "1.25" },
-        ],
-        "fluid-4xl": [
-          "clamp(1.875rem, 2vw + 1rem, 2.25rem)",
-          { lineHeight: "1.2" },
-        ],
-        "fluid-5xl": [
-          "clamp(2.25rem, 3vw + 1rem, 3rem)",
-          { lineHeight: "1.1" },
-        ],
       },
       letterSpacing: {
         tightest: "-0.03em",
-        academic: "-0.012em", // legacy alias
         body: "0",
         caps: "0.08em",
       },
@@ -241,14 +188,6 @@ module.exports = {
         // Section rhythm
         section: "clamp(4rem, 2.75rem + 4.5vw, 6.5rem)",
         "section-sm": "clamp(2.5rem, 1.75rem + 3vw, 4.5rem)",
-        // Legacy fluid spacing (deprecated)
-        "fluid-xs": "clamp(0.25rem, 0.5vw, 0.5rem)",
-        "fluid-sm": "clamp(0.5rem, 1vw, 1rem)",
-        "fluid-md": "clamp(0.75rem, 1.5vw, 1.5rem)",
-        "fluid-lg": "clamp(1rem, 2vw, 2rem)",
-        "fluid-xl": "clamp(1.5rem, 3vw, 3rem)",
-        "fluid-2xl": "clamp(2rem, 4vw, 4rem)",
-        "fluid-3xl": "clamp(3rem, 6vw, 6rem)",
       },
       maxWidth: {
         content: "65ch",

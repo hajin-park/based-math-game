@@ -1,5 +1,12 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, connectAuthEmulator } from "firebase/auth";
+import {
+  browserLocalPersistence,
+  browserSessionPersistence,
+  connectAuthEmulator,
+  getAuth,
+  indexedDBLocalPersistence,
+  initializeAuth,
+} from "firebase/auth";
 import {
   initializeAppCheck,
   ReCaptchaEnterpriseProvider,
@@ -59,7 +66,24 @@ if (appCheckSiteKey && !useEmulators && typeof window !== "undefined") {
   }
 }
 
-export const auth = getAuth(app);
+// Same persistence as getAuth(), but without a popup/redirect resolver: getAuth
+// would load apis.google.com/js/api.js and the auth iframe on every page
+// view. The resolver is passed only to the Google popup calls (AuthContext).
+function createAuth() {
+  try {
+    return initializeAuth(app, {
+      persistence: [
+        indexedDBLocalPersistence,
+        browserLocalPersistence,
+        browserSessionPersistence,
+      ],
+    });
+  } catch {
+    // Dev hot reload re-runs this module; Auth already exists for this app.
+    return getAuth(app);
+  }
+}
+export const auth = createAuth();
 
 /** Host and ports of the local emulators (dev only). */
 export const emulatorHost = import.meta.env.VITE_EMULATOR_HOST || "127.0.0.1";

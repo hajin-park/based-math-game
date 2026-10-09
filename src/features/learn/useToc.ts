@@ -12,11 +12,20 @@ export function useScrollSpy(ids: readonly string[]): string {
     const update = () => {
       frame = 0;
       const line = window.innerHeight * 0.3;
+      // A section scrolled to by a link/deep link stops at its scroll offset,
+      // which on short landscape phones sits below 30% of the viewport.
+      const pad =
+        parseFloat(
+          getComputedStyle(document.documentElement).scrollPaddingTop,
+        ) || 0;
       let current = ids[0] ?? "";
       for (const id of ids) {
         const el = document.getElementById(id);
         if (!el) continue;
-        if (el.getBoundingClientRect().top - line <= 0) current = id;
+        const stop =
+          pad + (parseFloat(getComputedStyle(el).scrollMarginTop) || 0);
+        if (el.getBoundingClientRect().top <= Math.max(line, stop + 8))
+          current = id;
         else break;
       }
       // At the very bottom the last short sections can never reach the line.

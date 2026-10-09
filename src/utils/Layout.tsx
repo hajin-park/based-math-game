@@ -1,11 +1,15 @@
-import { Suspense } from "react";
+import { lazy, Suspense } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { NavigationBar, Footer } from "@features/ui";
 import ScrollToTop from "./ScrollToTop.jsx";
 import ConnectionStatus from "@/components/ConnectionStatus";
 import RouteFallback from "@/components/RouteFallback";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { Toaster } from "@/components/ui/toaster";
+
+// Toasts only ever follow a user action, so their Radix code loads after
+// first paint; toasts raised before it arrives are kept and shown then.
+const Toaster = lazy(() =>
+  import("@/components/ui/toaster").then((m) => ({ default: m.Toaster })),
+);
 
 export const Layout = () => {
   const location = useLocation();
@@ -21,22 +25,22 @@ export const Layout = () => {
   // Auth no longer blocks rendering: pages render immediately and the
   // components that need a uid wait for `user` (or call ensureUser()).
   return (
-    <TooltipProvider>
-      <div className="flex min-h-dvh w-full flex-col">
-        <a href="#main" className="skip-link">
-          Skip to content
-        </a>
-        <ScrollToTop />
-        <ConnectionStatus />
-        {!immersive && <NavigationBar />}
-        <main id="main" tabIndex={-1} className="flex-auto outline-none">
-          <Suspense fallback={<RouteFallback />}>
-            <Outlet />
-          </Suspense>
-        </main>
-        {!immersive && <Footer />}
+    <div className="flex min-h-dvh w-full flex-col">
+      <a href="#main" className="skip-link">
+        Skip to content
+      </a>
+      <ScrollToTop />
+      <ConnectionStatus />
+      {!immersive && <NavigationBar />}
+      <main id="main" tabIndex={-1} className="flex-auto outline-none">
+        <Suspense fallback={<RouteFallback />}>
+          <Outlet />
+        </Suspense>
+      </main>
+      {!immersive && <Footer />}
+      <Suspense fallback={null}>
         <Toaster />
-      </div>
-    </TooltipProvider>
+      </Suspense>
+    </div>
   );
 };

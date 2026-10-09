@@ -3,6 +3,8 @@
 //
 // - Navigations (HTML): network first. The fresh index.html is copied into the
 //   cache and only served when the network is unavailable.
+// - The few un-hashed files index.html needs before the app boots
+//   (theme bootstrap, icon, manifest): network first, cached copy offline.
 // - /assets/** (hashed, immutable Vite output): cache first. This cache is
 //   kept across deploys (trimmed to MAX_ASSETS) so tabs still running an older
 //   build can lazy-load the chunks they reference after a deploy removed them.
@@ -16,12 +18,22 @@ const PAGES_CACHE = `bmg-pages-${BUILD_VERSION}`;
 const ASSETS_CACHE = "bmg-assets-v1";
 const MAX_ASSETS = 200;
 const OFFLINE_URL = "/index.html";
+const SHELL_FILES = ["/theme-init.js", "/icon.svg", "/manifest.json"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches
       .open(PAGES_CACHE)
-      .then((cache) => cache.add(new Request(OFFLINE_URL, { cache: "reload" })))
+      .then((cache) =>
+        // One by one: a missing shell file must not cost us index.html.
+        Promise.all(
+          [OFFLINE_URL, ...SHELL_FILES].map((url) =>
+            cache
+              .add(new Request(url, { cache: "reload" }))
+              .catch(() => undefined),
+          ),
+        ),
+      )
       .catch(() => undefined)
       .then(() => self.skipWaiting()),
   );
@@ -74,6 +86,21 @@ async function handleNavigation(request) {
   }
 }
 
+async function handleShellFile(request) {
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const cache = await caches.open(PAGES_CACHE);
+      await cache.put(request, response.clone());
+    }
+    return response;
+  } catch (error) {
+    const cached = await caches.match(request, { cacheName: PAGES_CACHE });
+    if (cached) return cached;
+    throw error;
+  }
+}
+
 async function handleAsset(event) {
   const cached = await caches.match(event.request, { cacheName: ASSETS_CACHE });
   if (cached) return cached;
@@ -102,6 +129,10 @@ self.addEventListener("fetch", (event) => {
 
   if (request.mode === "navigate") {
     event.respondWith(handleNavigation(request));
+    return;
+  }
+  if (SHELL_FILES.includes(url.pathname)) {
+    event.respondWith(handleShellFile(request));
     return;
   }
   if (url.pathname.startsWith("/assets/")) {

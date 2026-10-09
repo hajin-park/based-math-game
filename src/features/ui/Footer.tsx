@@ -15,7 +15,7 @@ const SECTIONS = [
   {
     title: "Learn",
     links: [
-      { name: "Tutorials", href: "/learn" },
+      { name: "Learn", href: "/learn" },
       { name: "How to play", href: "/how-to-play" },
       { name: "About", href: "/about" },
     ],

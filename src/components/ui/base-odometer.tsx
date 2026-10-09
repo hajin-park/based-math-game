@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Pause, Play } from "lucide-react";
-import { useReducedMotion } from "framer-motion";
+import { useReducedMotion } from "@/lib/useReducedMotion";
 
 import { cn } from "@/lib/utils";
 import {

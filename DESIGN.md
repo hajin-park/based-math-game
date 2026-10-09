@@ -97,7 +97,6 @@ Rules:
   Solid fills use `bg-base-x text-base-x-foreground`.
 - Get classes from `BASES[key]` in `src/lib/bases.ts` (`text`, `softBg`,
   `border`, `bg`) — do not build class names with template strings.
-- Legacy aliases `base-binary/octal/decimal` still resolve; don't use them.
 
 ### 2.3 Measured contrast (WCAG 2.x, `node scripts/check-contrast.mjs`)
 
@@ -287,10 +286,9 @@ fallback with a 200ms show-delay.
 
 ### Utility classes (`src/index.css`)
 
-`.eyebrow` · `.link` (inline text link) · `.grid-paper` · `.num` (tabular) ·
-`.mono-condensed` · `.optical-display` · `.hairline-t/-b` · `.mask-fade-edges` ·
-`.skip-link` · layout helpers `.fluid-container`, `.safe-vh-full`,
-`.safe-vh-screen`, `.px-fluid`, `.py-fluid` (kept for multiplayer pages).
+`.eyebrow` · `.link` (inline text link) · `.grid-paper` · `.mono-condensed` ·
+`.mask-fade-edges` · `.skip-link` · `.text-balance` / `.text-pretty`. Tabular
+figures: Tailwind `tabular-nums` or a `data-numeric` attribute.
 
 Variants (tailwind plugin): `pointer-coarse:`, `pointer-fine:`, `motion-ok:`.
 Breakpoint `xs` = 400px was added.
@@ -395,28 +393,30 @@ correct → success flash on the input border (180ms); wrong → no penalty anim
 
 ## 8. Migration (deprecated → replacement)
 
-The legacy notebook components and utilities still render — re-skinned on the
-new tokens so nothing breaks — but **page engineers should migrate off them**:
+The legacy notebook layer is **gone**: the components below were deleted from
+`src/components/ui`, the utilities were removed from `src/index.css`, and the
+legacy aliases were removed from `tailwind.config.js`. Every page now uses the
+primitives in this document. If you are porting old code, this is the mapping:
 
-| Deprecated                                                                                                                   | Replace with                                                                                            |
-| ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `PaperCard*` (`ui/paper-card.tsx`, all `variant="folded*"`, `interactive`, `bookmark`)                                       | `Card*`; interactive → `<Link className="… rounded-lg border bg-card hover:border-border-strong">`      |
-| `StickyNote*` (`ui/sticky-note.tsx`)                                                                                         | `Alert` (`info`/`success`/`warning`) or a hairline aside                                                |
-| `NotebookInput`                                                                                                              | `Input` / `<textarea className={inputVariants()}>`                                                      |
-| `SectionHeader`                                                                                                              | `PageHeader` (page top) or `<h2 className="text-headline font-serif">`                                  |
-| `RuledSeparator`                                                                                                             | `Separator`                                                                                             |
-| `ui/academic.ts` barrel                                                                                                      | import each primitive from its own file                                                                 |
-| `.paper-texture`, `.folded-corner*`, `.coffee-stain*`, `.torn-edge-top`, `.page-curl`, `.sketch-border`, `.bookmark-ribbon*` | delete (now no-ops / hairlines)                                                                         |
-| `.highlight-scribble*`, `.ink-underline*`, `.annotation`, `.margin-note`                                                     | delete; use `<em>` accent or `text-muted-foreground`                                                    |
-| `.ruled-lines*`                                                                                                              | only inside long-form textareas, if at all                                                              |
-| `text-fluid-*`, `p-fluid-*`, `tracking-academic`                                                                             | semantic scale (`text-headline`, `text-body`…) and Tailwind spacing                                     |
-| `bg-chart-1 text-white` etc. on buttons                                                                                      | `Button` variants                                                                                       |
-| `text-yellow-600`, `bg-yellow-500/10`, `text-orange-600`, `text-red-*`, `text-gray-*`, `text-white`                          | `text-warning`, `bg-warning/10`, `text-destructive`, `text-muted-foreground`, `text-primary-foreground` |
-| `hsl(var(--background))` (MultiplayerResults charts)                                                                         | `rgb(var(--background))`                                                                                |
-| `navigate()` on `onClick` of cards for navigation                                                                            | `<Link>` (middle-click, a11y)                                                                           |
-| Game-mode `color: "bg-blue-500"` fields                                                                                      | `BASES[toBaseKey(name)].bg`                                                                             |
+| Removed                                                                                                                                                      | Use instead                                                                                             |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
+| `PaperCard*` (`ui/paper-card.tsx`, all `variant="folded*"`, `interactive`, `bookmark`)                                                                       | `Card*`; interactive → `<Link className="… rounded-lg border bg-card hover:border-border-strong">`      |
+| `StickyNote*` (`ui/sticky-note.tsx`)                                                                                                                         | `Alert` (`info`/`success`/`warning`) or a hairline aside                                                |
+| `NotebookInput`                                                                                                                                              | `Input` / `<textarea className={inputVariants()}>`                                                      |
+| `SectionHeader`                                                                                                                                              | `PageHeader` (page top) or `<h2 className="text-headline font-serif">`                                  |
+| `RuledSeparator`                                                                                                                                             | `Separator`                                                                                             |
+| `ui/academic.ts` barrel                                                                                                                                      | import each primitive from its own file                                                                 |
+| `.paper-card`, `.paper-texture`, `.folded-corner*`, `.coffee-stain*`, `.torn-edge-top`, `.page-curl`, `.sketch-border`, `.bookmark-ribbon*`, `.sticky-note*` | nothing (hairline `border bg-card`)                                                                     |
+| `.highlight-scribble*`, `.ink-underline*`, `.link-underline`, `.hover-underline`, `.annotation`, `.margin-note`                                              | `<em>` accent, `.link`, or `text-muted-foreground`                                                      |
+| `.ruled-lines*`, `.ruled-line`                                                                                                                               | `Separator` / `border-b`                                                                                |
+| `.fluid-container`, `.responsive-grid`, `.safe-vh-*`, `.p(x/y)-fluid`, `.content-width`, `.transition-smooth`                                                | `container`, Tailwind grid, `min-h-dvh`, Tailwind spacing, `max-w-prose`, explicit `transition-[…]`     |
+| `text-fluid-*`, `p-fluid-*`, `tracking-academic`, `base-binary/octal/decimal`, `critical`, `sidebar` colours                                                 | semantic scale (`text-headline`, `text-body`…), Tailwind spacing, `base-bin/oct/dec`, `destructive`     |
+| `bg-chart-1 text-white` etc. on buttons                                                                                                                      | `Button` variants                                                                                       |
+| `text-yellow-600`, `bg-yellow-500/10`, `text-orange-600`, `text-red-*`, `text-gray-*`, `text-white`                                                          | `text-warning`, `bg-warning/10`, `text-destructive`, `text-muted-foreground`, `text-primary-foreground` |
+| `hsl(var(--background))`                                                                                                                                     | `rgb(var(--background))`                                                                                |
+| `navigate()` on `onClick` of cards for navigation                                                                                                            | `<Link>` (middle-click, a11y)                                                                           |
+| Game-mode `color: "bg-blue-500"` fields                                                                                                                      | `BASES[toBaseKey(name)].bg`                                                                             |
 
-Pages still using the deprecated set (as of this commit): Usage, Tutorials,
-About, Privacy, Terms, Leaderboard, Stats, Results, SingleplayerMode (+ quiz
-settings feature), Login, Signup, MultiplayerHome, CreateRoom, JoinRoom,
-RoomLobby, MultiplayerGame, MultiplayerResults, Profile\*.
+Raw palette classes are allowed in exactly one place: the white/black washes
+on `Kbd` inside filled buttons and the dark-mode scrim on overlays
+(`dark:bg-black/60`), where the colour is deliberately theme-independent.
