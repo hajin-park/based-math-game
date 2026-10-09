@@ -1,50 +1,16 @@
-# Based Math Game - Robots.txt
 # https://based-math-game.web.app
-# Educational web application for practicing base conversion
-
-# Allow all crawlers
 User-agent: *
 Allow: /
 
-# Disallow authentication pages (no SEO value)
+# Per-session and per-user pages
+Disallow: /play/
+Disallow: /results
+Disallow: /stats
+Disallow: /profile
 Disallow: /login
 Disallow: /signup
+Disallow: /multiplayer/lobby/
+Disallow: /multiplayer/join/
+Disallow: /join/
 
-# Disallow user-specific pages
-Disallow: /profile
-Disallow: /profile/*
-
-# Disallow dynamic multiplayer pages (temporary rooms with dynamic IDs)
-Disallow: /multiplayer/lobby/*
-Disallow: /multiplayer/game/*
-Disallow: /multiplayer/results/*
-
-# Disallow active game and settings pages (user-specific, session-based)
-Disallow: /settings
-Disallow: /quiz
-Disallow: /results
-
-# Explicitly allow important public pages
-Allow: /
-Allow: /singleplayer
-Allow: /multiplayer
-Allow: /multiplayer/create
-Allow: /multiplayer/join
-Allow: /tutorials
-Allow: /how-to-play
-Allow: /leaderboard
-Allow: /stats
-Allow: /about
-Allow: /privacy
-Allow: /terms
-
-# Sitemap location
 Sitemap: https://based-math-game.web.app/sitemap.xml
-
-# Crawl delay (be respectful to servers)
-Crawl-delay: 1
-
-# Additional metadata for crawlers
-# Primary focus: Educational game, base conversion, number systems
-# Target audience: Students, programmers, computer science learners
-
