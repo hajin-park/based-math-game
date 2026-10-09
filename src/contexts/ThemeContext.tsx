@@ -39,24 +39,12 @@ const THEME_COLORS: Record<ResolvedTheme, string> = {
 };
 const DARK_QUERY = "(prefers-color-scheme: dark)";
 
-function getCookie(name: string): string | null {
-  const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
-  return match ? decodeURIComponent(match[1]) : null;
-}
-
-function setCookie(name: string, value: string, days: number) {
-  const expires = new Date(Date.now() + days * 864e5).toUTCString();
-  document.cookie = `${name}=${value};expires=${expires};path=/;SameSite=Lax`;
-}
-
 function isPreference(value: unknown): value is ThemePreference {
   return value === "light" || value === "dark" || value === "system";
 }
 
 function readPreference(): ThemePreference {
   try {
-    const cookie = getCookie(STORAGE_KEY);
-    if (isPreference(cookie)) return cookie;
     const stored = localStorage.getItem(STORAGE_KEY);
     if (isPreference(stored)) return stored;
   } catch {
@@ -118,12 +106,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, theme);
-      const consent = localStorage.getItem("cookieConsent");
-      if (consent && JSON.parse(consent)?.functional) {
-        setCookie(STORAGE_KEY, theme, 365);
-      }
     } catch {
-      // Ignore storage / consent parse errors.
+      // Storage unavailable; the preference lasts for this session only.
     }
   }, [theme]);
 
