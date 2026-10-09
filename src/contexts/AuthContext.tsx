@@ -170,6 +170,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   /** Runs after a guest successfully became a registered user (same uid). */
   const finishUpgrade = useCallback(
     async (upgraded: User) => {
+      // Fresh ID token so security rules see the new sign-in provider
+      // (Firestore writes require a non-anonymous token).
+      await upgraded.getIdToken(true).catch(() => undefined);
       await ensureUserProfile(upgraded).catch((error) =>
         console.error("Error creating user profile:", error),
       );
