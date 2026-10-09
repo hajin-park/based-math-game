@@ -21,7 +21,7 @@ const Play = lazy(() => import("./pages/Play"));
 const PlayRun = lazy(() => import("./pages/PlayRun"));
 const Daily = lazy(() => import("./pages/Daily"));
 const Usage = lazy(() => import("./pages/Usage"));
-const Tutorials = lazy(() => import("./pages/Tutorials"));
+const Learn = lazy(() => import("./pages/Learn"));
 const About = lazy(() => import("./pages/About"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Terms = lazy(() => import("./pages/Terms"));
@@ -123,7 +123,7 @@ const router = createBrowserRouter([
       },
       {
         path: "/learn",
-        element: <Tutorials />,
+        element: <Learn />,
       },
       {
         // Legacy URL: keep old links (and their #anchors) working.
