@@ -28,7 +28,8 @@ export const Layout = () => {
   const isMultiplayerRoom = /^\/multiplayer\/(lobby|game|results)\//.test(
     location.pathname,
   );
-  const isActiveQuiz = location.pathname === "/quiz";
+  // The run screen (/play/:modeId) is immersive; the /play hub is not.
+  const isActiveQuiz = /^\/play\/[^/]+\/?$/.test(location.pathname);
   const immersive = isMultiplayerRoom || isActiveQuiz;
 
   // Auth no longer blocks rendering: pages render immediately and the

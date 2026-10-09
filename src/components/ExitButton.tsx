@@ -1,5 +1,6 @@
 import { X } from "lucide-react";
-import { Button } from "@/components/ui/button";
+
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,43 +12,57 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { cn } from "@/lib/utils";
 
 interface ExitButtonProps {
   onExit: () => void;
+  title?: string;
   message?: string;
+  /** Controlled open state (e.g. to open the dialog with Escape). */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  className?: string;
 }
 
+/**
+ * Exit control for immersive screens: a quiet icon button that asks for
+ * confirmation. "Keep playing" has focus, so Enter or Escape returns to the
+ * game.
+ */
 export default function ExitButton({
   onExit,
-  message = "Exit game and return to menu? Your progress will not be saved.",
+  title = "Leave this run?",
+  message = "This run ends here and is not saved.",
+  open,
+  onOpenChange,
+  className,
 }: ExitButtonProps) {
   return (
-    <AlertDialog>
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogTrigger asChild>
         <Button
           variant="ghost"
           size="icon"
-          className="fixed top-4 left-4 z-50 bg-background/80 backdrop-blur-sm border border-border shadow-sm hover:bg-destructive/10 hover:text-destructive transition-colors"
-          style={{
-            transform: "translate3d(0, 0, 0)",
-            backfaceVisibility: "hidden",
-            WebkitBackfaceVisibility: "hidden",
-          }}
+          className={cn(
+            "text-muted-foreground hover:text-foreground",
+            className,
+          )}
           aria-label="Exit game"
+          aria-keyshortcuts="Escape"
         >
-          <X className="h-5 w-5" />
+          <X aria-hidden className="size-5" />
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Exit Game?</AlertDialogTitle>
+          <AlertDialogTitle>{title}</AlertDialogTitle>
           <AlertDialogDescription>{message}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel autoFocus>Keep playing</AlertDialogCancel>
           <AlertDialogAction
             onClick={onExit}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            className={buttonVariants({ variant: "destructive" })}
           >
             Exit
           </AlertDialogAction>
