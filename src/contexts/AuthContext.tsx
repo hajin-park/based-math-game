@@ -20,6 +20,7 @@ import {
   onAuthStateChanged,
   reauthenticateWithCredential,
   reauthenticateWithPopup,
+  sendPasswordResetEmail,
   signInWithCredential,
   signInWithEmailAndPassword,
   signInWithPopup,
@@ -84,6 +85,11 @@ interface AuthContextType {
    * thrown); Google accounts are re-authenticated with a popup.
    */
   deleteAccount: (options?: { password?: string }) => Promise<void>;
+  /**
+   * Sends Firebase's password-reset email. Resolves even when no account
+   * exists for the address (don't reveal which emails are registered).
+   */
+  sendPasswordReset: (email: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -365,6 +371,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // onAuthStateChanged(null) starts a fresh guest session.
   }, []);
 
+  const sendPasswordReset = useCallback(async (email: string) => {
+    try {
+      await sendPasswordResetEmail(auth, email.trim());
+    } catch (error) {
+      // Unknown addresses look the same as known ones to the caller.
+      if (authCode(error) === "auth/user-not-found") return;
+      throw error;
+    }
+  }, []);
+
   const isGuest = !user || user.isAnonymous;
 
   const value = useMemo<AuthContextType>(
@@ -380,6 +396,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signOut,
       updateDisplayName,
       deleteAccount,
+      sendPasswordReset,
     }),
     // displayName is read from the mutable User object, so include it.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -397,6 +414,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signOut,
       updateDisplayName,
       deleteAccount,
+      sendPasswordReset,
     ],
   );
 

@@ -9,7 +9,6 @@ import {
   QuizResults,
 } from "@/contexts/GameContexts";
 import ConnectionStatus from "@/components/ConnectionStatus";
-import { CookieConsent } from "@/components/CookieConsent";
 import RouteFallback from "@/components/RouteFallback";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
@@ -41,7 +40,6 @@ export const Layout = () => {
         </a>
         <ScrollToTop />
         <ConnectionStatus />
-        <CookieConsent />
         {!immersive && <NavigationBar />}
         <main id="main" tabIndex={-1} className="flex-auto outline-none">
           <ResultContext.Provider value={{ results, setResults }}>

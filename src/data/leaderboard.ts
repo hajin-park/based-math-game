@@ -76,6 +76,13 @@ export async function fetchLeaderboard(
       limitTo(Math.min(Math.max(1, max), LEADERBOARD_MAX_LIMIT)),
     ),
   );
+  // Offline, Firestore answers from the (empty) local cache instead of
+  // failing; don't let that read as "nobody has played this mode".
+  if (snap.empty && snap.metadata.fromCache) {
+    throw Object.assign(new Error("Leaderboard unavailable offline"), {
+      code: "unavailable",
+    });
+  }
   return snap.docs.map((d) => toLeaderboardEntry(d.id, d.data()));
 }
 
