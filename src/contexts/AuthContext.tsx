@@ -155,7 +155,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .then(() => refreshUser())
         .catch((error) => {
           // Offline or Anonymous provider disabled; ensureUser() retries later.
-          console.error("Anonymous sign-in failed:", error);
+          // Being offline (or navigating away mid-request) is expected.
+          const offline =
+            (error as { code?: string })?.code ===
+            "auth/network-request-failed";
+          (offline ? console.warn : console.error)(
+            "Anonymous sign-in failed:",
+            error,
+          );
           setLoading(false);
         });
     });
