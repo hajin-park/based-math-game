@@ -684,13 +684,25 @@ const finishGame = async (
       active.length > 0 &&
       active.every((p) => p.finished && p.round === after.startedAt);
     if (allFinished) {
-      // The host's subscription usually gets there first; losing that race
-      // (status already "finished") is fine.
-      await set(ref(database, `rooms/${roomId}/status`), "finished").catch(
-        (error) => {
-          if (!isPermissionDenied(error)) throw error;
-        },
-      );
+      // The host's subscription normally ends the round. Others only step in
+      // if it hasn't happened shortly after (e.g. the host's tab stalled),
+      // which avoids a denied write racing the host.
+      const end = () =>
+        set(ref(database, `rooms/${roomId}/status`), "finished").catch(
+          (error) => {
+            if (!isPermissionDenied(error)) console.error(error);
+          },
+        );
+      if (after.hostUid === uid) await end();
+      else
+        setTimeout(() => {
+          const latest = latestRaw.get(roomId);
+          if (
+            latest?.status === "playing" &&
+            latest.startedAt === after.startedAt
+          )
+            void end();
+        }, 2000);
     }
   } catch (error) {
     console.error("Error finishing game:", error);
