@@ -1,291 +1,259 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import {
-  PaperCard,
-  PaperCardHeader,
-  PaperCardTitle,
-  PaperCardDescription,
-  PaperCardContent,
-  RuledSeparator,
-  StickyNote,
-  StickyNoteTitle,
-  StickyNoteDescription,
-} from "@/components/ui/academic";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { CloudUpload, Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
-import { NotebookInput } from "@/components/ui/notebook-input";
-import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useAuth } from "@/contexts/AuthContext";
+import { PageHeader } from "@/components/ui/page-header";
 import {
-  UserPlus,
-  Mail,
-  Lock,
-  User,
-  AlertCircle,
-  Info,
-  Sparkles,
-} from "lucide-react";
+  Field,
+  FormError,
+  GoogleButton,
+  OrRule,
+  PasswordField,
+} from "@/components/auth/AuthFields";
+import { useAuth } from "@/contexts/AuthContext";
+import { DEFAULT_GAME_SETTINGS, getLocalRuns } from "@/data";
+import { getLocalSettings } from "@/data/localStore";
+import { saveUserSettings } from "@/data/profile";
+import { auth } from "@/firebase/config";
+import { friendlyAuthError, safeNextPath } from "@/lib/authErrors";
+import {
+  DISPLAY_NAME_MAX,
+  validateDisplayName,
+} from "@/utils/displayNameValidator";
+
+const PASSWORD_MIN = 8;
+type Busy = null | "email" | "google";
+
+/** Guest settings live in localStorage; carry them into the new account. */
+async function carryOverGuestSettings(settings: ReturnType<typeof getLocalSettings>) {
+  const uid = auth.currentUser?.uid;
+  if (!uid || auth.currentUser?.isAnonymous) return;
+  const changed = (
+    Object.keys(DEFAULT_GAME_SETTINGS) as (keyof typeof settings)[]
+  ).some((k) => settings[k] !== DEFAULT_GAME_SETTINGS[k]);
+  if (!changed) return;
+  await saveUserSettings(uid, settings).catch(() => undefined);
+}
 
 export default function Signup() {
   const navigate = useNavigate();
-  const { signUpWithEmail, signInWithGoogle, isGuest } = useAuth();
+  const [params] = useSearchParams();
+  const next = safeNextPath(params.get("next"), "/");
+  const { user, isGuest, loading, signUpWithEmail, signInWithGoogle } =
+    useAuth();
+
+  const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [displayName, setDisplayName] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [busy, setBusy] = useState<Busy>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<{
+    displayName?: string;
+    email?: string;
+    password?: string;
+  }>({});
 
-  const handleEmailSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
+  // Offer the guest's generated name (it's what rooms already show).
+  const guestName = isGuest ? user?.displayName ?? "" : "";
+  useEffect(() => {
+    if (guestName) setDisplayName((cur) => cur || guestName);
+  }, [guestName]);
 
-    try {
-      await signUpWithEmail(email, password, displayName);
-      navigate("/");
-    } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Failed to create account";
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
+  const guestRuns = useMemo(() => (isGuest ? getLocalRuns().length : 0), [isGuest]);
+  const loginHref = `/login${params.get("next") ? `?next=${encodeURIComponent(next)}` : ""}`;
+
+  const fail = (e: unknown) => {
+    const f = friendlyAuthError(e);
+    if (f.silent) return;
+    if (f.field) {
+      setFieldErrors({ [f.field]: f.message });
+      setError(null);
+    } else {
+      setError(f.message);
     }
   };
 
-  const handleGoogleSignup = async () => {
-    setError("");
-    setLoading(true);
+  const onSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    const errs: typeof fieldErrors = {};
+    const name = validateDisplayName(displayName);
+    if (!name.isValid) errs.displayName = name.error;
+    if (!email.trim()) errs.email = "Enter your email address.";
+    else if (!/^\S+@\S+\.\S+$/.test(email.trim()))
+      errs.email = "That doesn’t look like an email address.";
+    if (password.length < PASSWORD_MIN)
+      errs.password = `Use at least ${PASSWORD_MIN} characters.`;
+    setFieldErrors(errs);
+    if (Object.keys(errs).length) {
+      const first = (["displayName", "email", "password"] as const).find(
+        (k) => errs[k],
+      );
+      if (first) document.getElementById(first)?.focus();
+      return;
+    }
+    setBusy("email");
+    const settings = getLocalSettings();
+    try {
+      await signUpWithEmail(email.trim(), password, displayName.trim());
+      await carryOverGuestSettings(settings);
+      navigate(next, { replace: true });
+    } catch (err) {
+      fail(err);
+    } finally {
+      setBusy(null);
+    }
+  };
 
+  const onGoogle = async () => {
+    setError(null);
+    setFieldErrors({});
+    setBusy("google");
+    const settings = getLocalSettings();
     try {
       await signInWithGoogle();
-      navigate("/");
-    } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Failed to sign up with Google";
-      setError(errorMessage);
+      await carryOverGuestSettings(settings);
+      navigate(next, { replace: true });
+    } catch (err) {
+      fail(err);
     } finally {
-      setLoading(false);
+      setBusy(null);
     }
   };
 
+  if (!loading && user && !isGuest && busy === null) {
+    return (
+      <div className="container flex max-w-md flex-col gap-8 py-12 md:py-20">
+        <PageHeader
+          eyebrow="Account"
+          title={
+            <>
+              You already have an <em>account</em>
+            </>
+          }
+          lede={`Signed in as ${user.displayName || user.email}.`}
+          size="sm"
+        />
+        <Button asChild size="lg" className="w-full">
+          <Link to={next === "/" ? "/profile" : next}>Continue</Link>
+        </Button>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-[calc(100vh-8rem)] paper-texture flex items-center">
-      {/* Subtle background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-muted/10 via-background to-background -z-10" />
+    <div className="container flex max-w-md flex-col gap-8 py-12 md:py-20">
+      <PageHeader
+        eyebrow="Account"
+        title={
+          <>
+            Keep your <em>progress</em>
+          </>
+        }
+        lede="Save every run, track your personal bests and get on the leaderboard. Free, and guests can keep playing without one."
+        size="sm"
+      />
 
-      <div className="container mx-auto px-4 py-4">
-        <div className="w-full max-w-md mx-auto space-y-3 animate-in">
-          {/* Header with Academic Styling - Compact */}
-          <div className="text-center space-y-1">
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-success/10 mb-1">
-              <UserPlus className="h-6 w-6 text-success" />
-            </div>
-            <h1 className="text-2xl md:text-3xl font-serif font-bold">
-              <span className="highlight-scribble highlight-scribble-green">
-                {isGuest ? "Save Your Progress" : "Join Us"}
-              </span>
-            </h1>
-            <p className="text-xs text-muted-foreground annotation">
-              {isGuest
-                ? "Convert to permanent account"
-                : "Track stats and compete"}
-            </p>
-          </div>
-
-          {/* Guest Notice - Compact Sticky Note */}
-          {isGuest && (
-            <StickyNote
-              variant="info"
-              size="sm"
-              className="border border-primary/30"
-            >
-              <div className="flex items-start gap-2">
-                <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                <div>
-                  <StickyNoteTitle className="text-primary text-sm">
-                    Guest Account
-                  </StickyNoteTitle>
-                  <StickyNoteDescription className="text-xs">
-                    Sign up to save progress permanently!
-                  </StickyNoteDescription>
-                </div>
-              </div>
-            </StickyNote>
-          )}
-
-          {/* Main Signup Card - Compact */}
-          <PaperCard variant="folded-sm" padding="sm" className="border-2">
-            <PaperCardHeader className="p-4 pb-0">
-              <PaperCardTitle className="text-lg font-serif">
-                Create Account
-              </PaperCardTitle>
-              <PaperCardDescription className="text-xs">
-                Fill in your details below
-              </PaperCardDescription>
-            </PaperCardHeader>
-
-            <form onSubmit={handleEmailSignup}>
-              <PaperCardContent className="space-y-3 p-4">
-                {/* Error Alert */}
-                {error && (
-                  <Alert variant="destructive" className="border py-2">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription className="text-xs">
-                      {error}
-                    </AlertDescription>
-                  </Alert>
-                )}
-
-                {/* Display Name Field */}
-                <div className="space-y-1.5">
-                  <Label
-                    htmlFor="displayName"
-                    className="flex items-center gap-1.5 text-xs font-medium"
-                  >
-                    <User className="h-3.5 w-3.5 text-muted-foreground" />
-                    Display Name
-                  </Label>
-                  <NotebookInput
-                    id="displayName"
-                    type="text"
-                    placeholder="Your name"
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                    required
-                    variant="underline"
-                    className="h-8 text-sm"
-                  />
-                </div>
-
-                {/* Email Field */}
-                <div className="space-y-1.5">
-                  <Label
-                    htmlFor="email"
-                    className="flex items-center gap-1.5 text-xs font-medium"
-                  >
-                    <Mail className="h-3.5 w-3.5 text-muted-foreground" />
-                    Email
-                  </Label>
-                  <NotebookInput
-                    id="email"
-                    type="email"
-                    placeholder="your@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    variant="underline"
-                    className="font-mono h-8 text-sm"
-                  />
-                </div>
-
-                {/* Password Field */}
-                <div className="space-y-1.5">
-                  <Label
-                    htmlFor="password"
-                    className="flex items-center gap-1.5 text-xs font-medium"
-                  >
-                    <Lock className="h-3.5 w-3.5 text-muted-foreground" />
-                    Password
-                  </Label>
-                  <NotebookInput
-                    id="password"
-                    type="password"
-                    placeholder="Min. 6 characters"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    minLength={6}
-                    variant="underline"
-                    className="h-8 text-sm"
-                  />
-                </div>
-
-                {/* Submit Button */}
-                <Button
-                  type="submit"
-                  className="w-full shadow-sm hover:shadow-md transition-all h-9"
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <span className="animate-pulse text-sm">Creating...</span>
-                  ) : (
-                    <>
-                      <Sparkles className="mr-2 h-3.5 w-3.5" />
-                      <span className="text-sm">Create Account</span>
-                    </>
-                  )}
-                </Button>
-
-                {/* Separator */}
-                <RuledSeparator spacing="sm" className="my-2">
-                  <span className="bg-card px-2 text-xs text-muted-foreground">
-                    Or continue with
-                  </span>
-                </RuledSeparator>
-
-                {/* Google Sign Up */}
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full border-2 hover:bg-accent/50 transition-all h-9"
-                  onClick={handleGoogleSignup}
-                  disabled={loading}
-                >
-                  <svg className="mr-2 h-3.5 w-3.5" viewBox="0 0 24 24">
-                    <path
-                      fill="currentColor"
-                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                    />
-                    <path
-                      fill="currentColor"
-                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                    />
-                    <path
-                      fill="currentColor"
-                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                    />
-                    <path
-                      fill="currentColor"
-                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                    />
-                  </svg>
-                  <span className="text-sm">Google</span>
-                </Button>
-              </PaperCardContent>
-            </form>
-          </PaperCard>
-
-          {/* Separator */}
-          <RuledSeparator spacing="sm" />
-
-          {/* Footer Actions - Compact */}
-          <div className="flex items-center gap-2 text-xs text-center justify-center">
-            <span className="text-muted-foreground">
-              Already have an account?
-            </span>
-            <Button
-              variant="link"
-              className="p-0 h-auto text-xs font-semibold text-primary"
-              onClick={() => navigate("/login")}
-            >
-              Sign in
-            </Button>
-            {!isGuest && (
+      {isGuest && (
+        <div className="flex gap-3 rounded-lg border bg-card px-4 py-3">
+          <CloudUpload
+            className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+            aria-hidden
+          />
+          <p className="text-body-sm text-muted-foreground text-pretty">
+            {guestRuns > 0 ? (
               <>
-                <span className="text-muted-foreground">•</span>
-                <Button
-                  variant="link"
-                  className="p-0 h-auto text-xs text-muted-foreground hover:text-foreground"
-                  onClick={() => navigate("/")}
-                >
-                  Continue as Guest
-                </Button>
+                Your{" "}
+                <span className="font-medium text-foreground">
+                  {guestRuns} {guestRuns === 1 ? "run" : "runs"}
+                </span>{" "}
+                on this device will be saved to your account, along with your
+                game settings.
+              </>
+            ) : (
+              <>
+                Your game settings and any room you’re in carry over to your new
+                account.
               </>
             )}
-          </div>
+          </p>
         </div>
+      )}
+
+      <div className="flex flex-col gap-5">
+        <GoogleButton
+          onClick={onGoogle}
+          busy={busy === "google"}
+          disabled={busy !== null}
+        />
+        <OrRule />
+        <form className="flex flex-col gap-5" onSubmit={onSubmit} noValidate>
+          <FormError message={error} />
+          <Field
+            id="displayName"
+            label="Display name"
+            autoComplete="nickname"
+            maxLength={DISPLAY_NAME_MAX}
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+            error={fieldErrors.displayName}
+            help="Shown on leaderboards and in rooms. You can change it later."
+          />
+          <Field
+            id="email"
+            label="Email"
+            type="email"
+            autoComplete="email"
+            inputMode="email"
+            autoCapitalize="none"
+            spellCheck={false}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            error={fieldErrors.email}
+            help="Only used to sign in and reset your password. Never shown."
+          />
+          <PasswordField
+            id="password"
+            label="Password"
+            autoComplete="new-password"
+            minLength={PASSWORD_MIN}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            error={fieldErrors.password}
+            help={`At least ${PASSWORD_MIN} characters.`}
+          />
+          <Button
+            type="submit"
+            size="lg"
+            className="w-full"
+            disabled={busy !== null}
+            aria-busy={busy === "email" || undefined}
+          >
+            {busy === "email" && (
+              <Loader2 className="motion-safe:animate-spin" aria-hidden />
+            )}
+            Create account
+          </Button>
+          <p className="text-[0.8125rem] text-muted-foreground text-pretty">
+            By creating an account you agree to the{" "}
+            <Link className="link" to="/terms">
+              Terms
+            </Link>{" "}
+            and confirm you’ve read the{" "}
+            <Link className="link" to="/privacy">
+              Privacy notice
+            </Link>
+            .
+          </p>
+        </form>
+
+        <p className="text-center text-body-sm text-muted-foreground">
+          Already have an account?{" "}
+          <Link className="link" to={loginHref}>
+            Sign in
+          </Link>
+        </p>
       </div>
     </div>
   );
