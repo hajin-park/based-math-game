@@ -8,7 +8,6 @@
  * `timestamp == now`, and at least CHAT_MIN_INTERVAL_MS between messages
  * (the message and lastChatAt are written in one atomic update).
  */
-import { useState, useCallback } from "react";
 import {
   ref,
   push,
@@ -112,44 +111,4 @@ export function subscribeToChat(
       callback([]);
     },
   );
-}
-
-export function useChat() {
-  const [loading, setLoading] = useState(false);
-
-  const sendMessage = useCallback(async (roomId: string, message: string) => {
-    if (!message.trim()) return;
-    setLoading(true);
-    try {
-      await postMessage(roomId, message, false);
-    } catch (error) {
-      console.error("Error sending message:", error);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  /** Host-only announcement (rules reject isSystem from non-hosts). */
-  const sendSystemMessage = useCallback(
-    async (roomId: string, message: string) => {
-      if (!message.trim()) return;
-      try {
-        await postMessage(roomId, message, true);
-      } catch (error) {
-        console.error("Error sending system message:", error);
-        throw error;
-      }
-    },
-    [],
-  );
-
-  const subscribeToMessages = subscribeToChat;
-
-  return {
-    loading,
-    sendMessage,
-    sendSystemMessage,
-    subscribeToMessages,
-  };
 }

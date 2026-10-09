@@ -171,8 +171,8 @@ export function ResultsView({
 
   return (
     <>
-      <div className="container grid flex-1 gap-10 py-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:py-12">
-        <div className="flex min-w-0 flex-col gap-10 pb-28 lg:pb-0">
+      <div className="container grid flex-1 gap-10 py-8 md:grid-cols-[minmax(0,1fr)_minmax(0,18rem)] md:py-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
+        <div className="flex min-w-0 flex-col gap-10 pb-28 md:pb-0">
           <header className="flex flex-col gap-3">
             <p className="eyebrow">Results · {mode.name}</p>
             <h1 className="font-serif text-display-lg font-medium text-balance [font-variation-settings:'opsz'_72]">
@@ -193,8 +193,8 @@ export function ResultsView({
           </header>
 
           {/* Next step: fixed to the bottom on phones/tablets, under the headline on desktop. */}
-          <div className="fixed inset-x-0 bottom-0 z-20 -mt-4 border-t bg-background/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-sm lg:static lg:border-0 lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
-            <div className="mx-auto flex max-w-3xl flex-col gap-2 lg:mx-0">
+          <div className="fixed inset-x-0 bottom-0 z-20 -mt-4 border-t bg-background/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-sm md:static md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none">
+            <div className="mx-auto flex max-w-3xl flex-col gap-2 md:mx-0">
               {!isHost && (
                 <p className="text-body-sm text-muted-foreground">
                   Waiting for {name(room.hostUid)} to start the next round.
@@ -205,7 +205,7 @@ export function ResultsView({
                   type="button"
                   variant="outline"
                   size="lg"
-                  className="lg:hidden"
+                  className="md:hidden"
                   onClick={() => setChatOpen(true)}
                 >
                   <MessageSquare aria-hidden />
@@ -215,7 +215,7 @@ export function ResultsView({
                   <Button
                     type="button"
                     size="lg"
-                    className="flex-1 lg:flex-none"
+                    className="flex-1 md:flex-none"
                     onClick={playAgain}
                     disabled={busy}
                   >
@@ -227,7 +227,7 @@ export function ResultsView({
                   type="button"
                   variant={isHost ? "ghost" : "outline"}
                   size="lg"
-                  className={cn(!isHost && "flex-1 lg:flex-none")}
+                  className={cn(!isHost && "flex-1 md:flex-none")}
                   onClick={onLeave}
                 >
                   Leave room
@@ -339,7 +339,7 @@ export function ResultsView({
 
         <aside
           aria-labelledby="results-chat"
-          className="sticky top-20 hidden h-[min(40rem,calc(100dvh-7rem))] flex-col overflow-hidden rounded-lg border bg-card lg:flex"
+          className="sticky top-20 hidden h-[min(40rem,calc(100dvh-7rem))] flex-col overflow-hidden rounded-lg border bg-card md:flex"
         >
           <h2
             id="results-chat"

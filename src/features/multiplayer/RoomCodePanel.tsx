@@ -48,7 +48,7 @@ export function RoomCodePanel({ code }: { code: string }) {
         </h2>
         <p
           data-testid="room-code"
-          className="flex select-all items-baseline font-mono text-[clamp(2.25rem,11vw,4.25rem)] font-medium leading-none tracking-[0.12em] text-foreground"
+          className="flex select-all items-baseline font-mono text-[clamp(2.25rem,11vw,4.25rem)] md:text-[clamp(2.5rem,6.5vw,4.25rem)] font-medium leading-none tracking-[0.12em] text-foreground"
         >
           <span>{a}</span>
           <span aria-hidden className="w-[0.45em]" />

@@ -133,8 +133,8 @@ export function LobbyView({
       <h1 className="sr-only">
         Lobby of room {room.id.slice(0, 4)} {room.id.slice(4)}
       </h1>
-      <div className="container grid flex-1 gap-8 py-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,23rem)] lg:gap-10 lg:py-10">
-        <div className="flex min-w-0 flex-col gap-8 pb-36 lg:pb-0">
+      <div className="container grid flex-1 gap-8 py-6 md:grid-cols-[minmax(0,1fr)_minmax(0,18rem)] md:gap-8 md:py-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,23rem)] lg:gap-10">
+        <div className="flex min-w-0 flex-col gap-8 pb-36 md:pb-0">
           <RoomCodePanel code={room.id} />
 
           <section
@@ -201,10 +201,10 @@ export function LobbyView({
             className={cn(
               "fixed inset-x-0 bottom-0 z-20 border-t bg-background/95 backdrop-blur-sm",
               "px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3",
-              "lg:sticky lg:bottom-6 lg:rounded-lg lg:border lg:bg-card/95 lg:p-4 lg:shadow-md",
+              "md:sticky md:bottom-6 md:rounded-lg md:border md:bg-card/95 md:p-4 md:shadow-md",
             )}
           >
-            <div className="mx-auto flex max-w-3xl flex-col gap-3 lg:max-w-none">
+            <div className="mx-auto flex max-w-3xl flex-col gap-3 md:max-w-none">
               <p
                 id="lobby-status"
                 className="text-body-sm text-muted-foreground"
@@ -217,7 +217,7 @@ export function LobbyView({
                   type="button"
                   variant="outline"
                   size="lg"
-                  className="relative lg:hidden"
+                  className="relative md:hidden"
                   onClick={() => setChatOpen(true)}
                   aria-label={unread ? `Chat, ${unread} unread` : "Chat"}
                 >
@@ -236,7 +236,7 @@ export function LobbyView({
                   <Button
                     type="button"
                     size="lg"
-                    className="flex-1 lg:flex-none"
+                    className="flex-1 md:flex-none"
                     onClick={start}
                     disabled={!!blocker || starting}
                     aria-describedby="lobby-status"
@@ -249,7 +249,7 @@ export function LobbyView({
                     type="button"
                     size="lg"
                     variant={me?.ready ? "secondary" : "default"}
-                    className="flex-1 lg:flex-none"
+                    className="flex-1 md:flex-none"
                     aria-pressed={!!me?.ready}
                     onClick={toggleReady}
                   >
@@ -264,7 +264,7 @@ export function LobbyView({
 
         <aside
           aria-labelledby="lobby-chat"
-          className="sticky top-20 hidden h-[min(42rem,calc(100dvh-7rem))] flex-col overflow-hidden rounded-lg border bg-card lg:flex"
+          className="sticky top-20 hidden h-[min(42rem,calc(100dvh-7rem))] flex-col overflow-hidden rounded-lg border bg-card md:flex"
         >
           <h2
             id="lobby-chat"

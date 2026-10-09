@@ -32,7 +32,6 @@
  * start click. `Room.engineMode` is the resolved engine mode (null when the
  * stored mode is not playable in a room).
  */
-import { useCallback, useMemo, useState } from "react";
 import {
   ref,
   get,
@@ -143,7 +142,7 @@ interface RawRoom {
 }
 
 // ---------------------------------------------------------------------------
-// Module state shared by every useRoom() instance.
+// Module state shared by every room subscription and operation.
 
 /** Last raw snapshot seen per room (avoids extra reads on score updates). */
 const latestRaw = new Map<string, RawRoom>();
@@ -392,7 +391,7 @@ function resetOwnNodeUpdates(uid: string, isHost: boolean) {
 
 // ---------------------------------------------------------------------------
 // Room operations. Plain async functions (usable outside React, e.g. in
-// tests); `useRoom()` below exposes them with a `loading` flag.
+// tests); pages call them through `roomApi`.
 
 const createRoom = async (
   gameMode: GameMode | RoomModeRef,
@@ -1019,30 +1018,3 @@ export const roomApi = {
   endRound,
   peekRoom,
 };
-
-export function useRoom() {
-  const [pending, setPending] = useState(0);
-
-  const withLoading = useCallback(
-    <A extends unknown[], R>(fn: (...args: A) => Promise<R>) =>
-      async (...args: A): Promise<R> => {
-        setPending((n) => n + 1);
-        try {
-          return await fn(...args);
-        } finally {
-          setPending((n) => n - 1);
-        }
-      },
-    [],
-  );
-
-  const create = useMemo(() => withLoading(createRoom), [withLoading]);
-  const join = useMemo(() => withLoading(joinRoom), [withLoading]);
-
-  return {
-    ...roomApi,
-    loading: pending > 0,
-    createRoom: create,
-    joinRoom: join,
-  };
-}
