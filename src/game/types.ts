@@ -129,6 +129,8 @@ export interface FormatSpec {
   scoreOrder: "higher-better" | "lower-better";
   /** Unit of the stored score. */
   scoreUnit: "correct" | "ms" | "cleared";
+  /** Speedrun / daily: milliseconds added to the score per skipped question. */
+  skipPenaltyMs?: number;
 }
 
 /** Settings for the user-built custom topic (teachers / targeted drills). */
@@ -189,4 +191,10 @@ export interface RunSummary {
   /** Seed used for the run, so a run can be reproduced. */
   seed: number;
   endedAt: number;
+  /**
+   * True when the run reached its natural end (sprint timer expired, speedrun
+   * target reached, all daily questions answered, survival out of lives, or a
+   * practice session ended). Runs quit early are not leaderboard-eligible.
+   */
+  completed: boolean;
 }
