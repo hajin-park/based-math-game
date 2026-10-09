@@ -43,14 +43,25 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches
       .keys()
-      .then((names) =>
-        Promise.all(
+      .then(async (names) => {
+        await Promise.all(
           names
             .filter((name) => name !== PAGES_CACHE && name !== ASSETS_CACHE)
             .map((name) => caches.delete(name)),
-        ),
-      )
-      .then(() => self.clients.claim()),
+        );
+        await self.clients.claim();
+        // The pre-rebuild worker (caches "based-math-game-*") served pages
+        // cache first, so open tabs may show the old app, or a blank page
+        // whose script no longer exists. Reload them once.
+        if (names.some((name) => name.startsWith("based-math-game-"))) {
+          const windows = await self.clients.matchAll({ type: "window" });
+          await Promise.all(
+            windows.map((client) =>
+              client.navigate(client.url).catch(() => undefined),
+            ),
+          );
+        }
+      }),
   );
 });
 
@@ -105,7 +116,9 @@ async function handleAsset(event) {
   const cached = await caches.match(event.request, { cacheName: ASSETS_CACHE });
   if (cached) return cached;
   const response = await fetch(event.request);
-  if (response.ok && response.type === "basic") {
+  // Hosting answers a missing chunk with index.html (200); never keep that.
+  const type = response.headers.get("content-type") || "";
+  if (response.ok && response.type === "basic" && !type.includes("text/html")) {
     const copy = response.clone();
     event.waitUntil(
       caches
