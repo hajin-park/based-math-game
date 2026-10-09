@@ -82,6 +82,8 @@ export function ModePicker({
           aria-label="Format"
           size="lg"
           fullWidth
+          // Four formats must fit a 320px screen without scrolling.
+          className="max-xs:[&>button]:px-1.5 max-xs:[&>button]:text-label"
           value={value.format}
           onValueChange={(format) => onChange({ ...value, format })}
           options={FORMAT_OPTIONS.map(({ value, label }) => ({ value, label }))}
@@ -140,7 +142,7 @@ export function ModePicker({
                   <p className="eyebrow" aria-hidden>
                     {TIER_LABEL[tier]}
                   </p>
-                  <div className="grid gap-1.5 md:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-1.5 md:grid-cols-2">
                     {topics.map((topic) => {
                       const checked = !survival && value.topicId === topic.id;
                       return (
