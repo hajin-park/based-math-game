@@ -104,7 +104,7 @@
               ".validate": "newData.val() === $uid"
             },
             "displayName": {
-              ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 24 && !newData.val().matches(/[\u0000-\u001f]/) && !newData.val().contains('\u007f') && !newData.val().contains('\u200b') && !newData.val().contains('\u200c') && !newData.val().contains('\u200d') && !newData.val().contains('\u200e') && !newData.val().contains('\u200f') && !newData.val().contains('\u202a') && !newData.val().contains('\u202b') && !newData.val().contains('\u202c') && !newData.val().contains('\u202d') && !newData.val().contains('\u202e') && !newData.val().contains('\u2066') && !newData.val().contains('\u2067') && !newData.val().contains('\u2068') && !newData.val().contains('\u2069')"
+              ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 24 && !newData.val().matches(/[\u0000-\u001f]/) && !newData.val().contains('\u007f') && !newData.val().contains('\u200b') && !newData.val().contains('\u200e') && !newData.val().contains('\u200f') && !newData.val().contains('\u202a') && !newData.val().contains('\u202b') && !newData.val().contains('\u202c') && !newData.val().contains('\u202d') && !newData.val().contains('\u202e') && !newData.val().contains('\u2066') && !newData.val().contains('\u2067') && !newData.val().contains('\u2068') && !newData.val().contains('\u2069')"
             },
             "slot": {
               ".validate": "newData.isString() && newData.val().matches(/^[0-9]$/) && (!data.exists() || newData.val() === data.val())"
@@ -184,7 +184,7 @@
               ".validate": "newData.val() === auth.uid"
             },
             "displayName": {
-              ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 24 && !newData.val().matches(/[\u0000-\u001f]/) && !newData.val().contains('\u007f') && !newData.val().contains('\u200b') && !newData.val().contains('\u200c') && !newData.val().contains('\u200d') && !newData.val().contains('\u200e') && !newData.val().contains('\u200f') && !newData.val().contains('\u202a') && !newData.val().contains('\u202b') && !newData.val().contains('\u202c') && !newData.val().contains('\u202d') && !newData.val().contains('\u202e') && !newData.val().contains('\u2066') && !newData.val().contains('\u2067') && !newData.val().contains('\u2068') && !newData.val().contains('\u2069')"
+              ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 24 && !newData.val().matches(/[\u0000-\u001f]/) && !newData.val().contains('\u007f') && !newData.val().contains('\u200b') && !newData.val().contains('\u200e') && !newData.val().contains('\u200f') && !newData.val().contains('\u202a') && !newData.val().contains('\u202b') && !newData.val().contains('\u202c') && !newData.val().contains('\u202d') && !newData.val().contains('\u202e') && !newData.val().contains('\u2066') && !newData.val().contains('\u2067') && !newData.val().contains('\u2068') && !newData.val().contains('\u2069')"
             },
             "message": {
               ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 300"

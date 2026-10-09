@@ -47,7 +47,7 @@ service cloud.firestore {
     // src/utils/displayNameValidator.ts).
     function validName(n) {
       return n is string && n.size() >= 1 && n.size() <= 24
-        && !n.matches('(?s).*[\\x{0000}-\\x{001F}\\x{007F}\\x{200B}-\\x{200F}\\x{202A}-\\x{202E}\\x{2066}-\\x{2069}].*');
+        && !n.matches('(?s).*[\\x{0000}-\\x{001F}\\x{007F}\\x{200B}\\x{200E}\\x{200F}\\x{202A}-\\x{202E}\\x{2066}-\\x{2069}].*');
     }
 
     // ---- limits ----

@@ -10,13 +10,14 @@
 export const DISPLAY_NAME_MAX = 24;
 
 /**
- * Characters a display name may never contain: C0 controls, DEL, zero-width
- * characters and bidi embeddings/overrides/isolates (they let a name hide or
+ * Characters a display name may never contain: C0 controls, DEL, zero-width space,
+ * LRM/RLM marks and bidi embeddings/overrides/isolates (they let a name hide or
  * reorder text, e.g. to impersonate someone). The security rules reject the
  * same set (firestore.rules validName, scripts/build-database-rules.mjs).
+ * ZWNJ/ZWJ (U+200C/U+200D) stay allowed: Persian and Indic names need them.
  */
 export const INVISIBLE_NAME_CHARS =
-  "\\u0000-\\u001F\\u007F\\u200B-\\u200F\\u202A-\\u202E\\u2066-\\u2069";
+  "\\u0000-\\u001F\\u007F\\u200B\\u200E\\u200F\\u202A-\\u202E\\u2066-\\u2069";
 const INVISIBLE_RE = new RegExp(`[${INVISIBLE_NAME_CHARS}]`);
 const INVISIBLE_GLOBAL_RE = new RegExp(`[${INVISIBLE_NAME_CHARS}]`, "g");
 

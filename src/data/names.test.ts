@@ -14,8 +14,6 @@ const INVISIBLE = [
   "\u001F",
   "\u007F",
   "​",
-  "‌",
-  "‍",
   "‎",
   "‏",
   "‪",
@@ -57,7 +55,7 @@ describe("display names: control, zero-width and bidi characters", () => {
     const root = process.cwd();
     const fsRules = readFileSync(path.join(root, "firestore.rules"), "utf8");
     expect(fsRules).toContain(
-      "\\\\x{0000}-\\\\x{001F}\\\\x{007F}\\\\x{200B}-\\\\x{200F}\\\\x{202A}-\\\\x{202E}\\\\x{2066}-\\\\x{2069}",
+      "\\\\x{0000}-\\\\x{001F}\\\\x{007F}\\\\x{200B}\\\\x{200E}\\\\x{200F}\\\\x{202A}-\\\\x{202E}\\\\x{2066}-\\\\x{2069}",
     );
     const db = JSON.parse(
       readFileSync(path.join(root, "database.rules.json"), "utf8"),
@@ -93,5 +91,16 @@ describe("guest names", () => {
       }
     }
     expect(seen.size).toBeGreaterThanOrEqual(24 * 24);
+  });
+});
+
+describe("joiners used by real names", () => {
+  it("keeps ZWNJ/ZWJ, which Persian and Indic names need", () => {
+    const persian = "می‌رود"; // می‌رود
+    const devanagari = "क्‍ष"; // क्‍ष
+    for (const name of [persian, devanagari]) {
+      expect(hasInvisibleChars(name)).toBe(false);
+      expect(clampDisplayName(name)).toBe(name);
+    }
   });
 });

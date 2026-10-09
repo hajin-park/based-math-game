@@ -42,16 +42,17 @@ const ROOM_POST_FROM_FIELD = "newData.parent().parent().parent()"; // rooms/$r/p
 const isHost = (room) => `${room}.child('hostUid').val() === auth.uid`;
 const isMember = (room) => `${room}.child('players').child(auth.uid).exists()`;
 /**
- * Characters a display name may not contain: C0 controls, DEL, zero-width
- * characters and bidi embeddings/overrides/isolates (mirrors
+ * Characters a display name may not contain: C0 controls, DEL, zero-width space,
+ * LRM/RLM marks and bidi embeddings/overrides/isolates (mirrors
  * INVISIBLE_NAME_CHARS in src/utils/displayNameValidator.ts). RTDB regexes
  * only match ASCII reliably, so the others are checked with contains().
  */
 const INVISIBLE_HIGH = [
-  0x7f, 0x200b, 0x200c, 0x200d, 0x200e, 0x200f, 0x202a, 0x202b, 0x202c,
-  0x202d, 0x202e, 0x2066, 0x2067, 0x2068, 0x2069,
+  0x7f, 0x200b, 0x200e, 0x200f, 0x202a, 0x202b, 0x202c, 0x202d, 0x202e, 0x2066,
+  0x2067, 0x2068, 0x2069,
 ].map((c) => String.fromCharCode(c));
-const nameOk = x(`newData.isString() && newData.val().length >= 1 && newData.val().length <= ${NAME_MAX}
+const nameOk =
+  x(`newData.isString() && newData.val().length >= 1 && newData.val().length <= ${NAME_MAX}
   && !newData.val().matches(/[${String.fromCharCode(0)}-${String.fromCharCode(0x1f)}]/)
   && ${INVISIBLE_HIGH.map((c) => `!newData.val().contains('${c}')`).join(" && ")}`);
 
@@ -122,7 +123,8 @@ const rules = {
       // No ".read" here: rooms cannot be listed, only opened by code.
       $roomId: {
         // Kicked players lose read access too (the client shows "removed").
-        ".read": "auth != null && !data.child('kicked').child(auth.uid).exists()",
+        ".read":
+          "auth != null && !data.child('kicked').child(auth.uid).exists()",
         ".write": x(`auth != null && (
           (!data.exists() && newData.child('hostUid').val() === auth.uid && newData.child('status').val() === 'waiting')
           || (data.exists() && !newData.exists() && data.child('lastActivityAt').val() < now - ${STALE_MS})
@@ -316,19 +318,22 @@ const rules = {
             // Raw run time of a finished speedrun: the target was reached, no
             // faster than MIN_MS_PER_CORRECT per answer, within the time played.
             finishMs: {
-              ".validate": x(`newData.isNumber() && ${inRound} && ${whilePlaying}
+              ".validate":
+                x(`newData.isNumber() && ${inRound} && ${whilePlaying}
                 && newData.parent().child('correct').val() >= ${target}
                 && newData.val() >= newData.parent().child('correct').val() * ${MIN_MS_PER_CORRECT}
                 && newData.val() <= ${playedMs}`),
             },
             // Speedrun skip penalties of a finished run (ranked by finishMs + penaltyMs).
             penaltyMs: {
-              ".validate": x(`newData.isNumber() && ${inRound} && ${whilePlaying}
+              ".validate":
+                x(`newData.isNumber() && ${inRound} && ${whilePlaying}
                 && newData.val() >= 0 && newData.val() <= ${MAX_RUN_MS}`),
             },
             // When the current score was reached (sprint/survival tie-break).
             scoreMs: {
-              ".validate": x(`newData.isNumber() && ${inRound} && ${whilePlaying}
+              ".validate":
+                x(`newData.isNumber() && ${inRound} && ${whilePlaying}
                 && newData.val() >= 0
                 && newData.val() <= ${playedMs}`),
             },
@@ -361,7 +366,8 @@ const rules = {
         // Winners of the finished round, written by the host from the final
         // standings; a player may only count a win the host recorded.
         winners: {
-          ".write": x(`auth != null && data.parent().exists() && ${isHost(ROOM_PRE_FROM_CHILD)}
+          ".write":
+            x(`auth != null && data.parent().exists() && ${isHost(ROOM_PRE_FROM_CHILD)}
             && ${ROOM_POST_FROM_CHILD}.child('status').val() === 'finished'`),
           ".validate": x(`newData.hasChildren(['round'])
             && newData.child('round').val() === ${ROOM_POST_FROM_CHILD}.child('startedAt').val()`),
@@ -407,7 +413,8 @@ const rules = {
           $uid: {
             ".write": `auth != null && $uid === auth.uid && ${isMember(ROOM_PRE_FROM_GRANDCHILD)}`,
             // Only moves together with the message it keys.
-            ".validate": x(`newData.val() === now && (!data.exists() || now - data.val() >= ${CHAT_MIN_INTERVAL_MS})
+            ".validate":
+              x(`newData.val() === now && (!data.exists() || now - data.val() >= ${CHAT_MIN_INTERVAL_MS})
               && ${ROOM_POST_FROM_GRANDCHILD}.child('chat').child($uid + '_' + (data.exists() ? data.val() : 0)).exists()`),
           },
         },
