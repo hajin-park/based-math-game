@@ -485,7 +485,7 @@ export default function Home() {
               </Button>
             </div>
           </div>
-          <div className="relative isolate">
+          <div className="relative isolate mx-auto w-full max-w-md lg:max-w-none">
             <GridPaper fade className="-inset-8 rounded-2xl" />
             <RoomPreview />
           </div>

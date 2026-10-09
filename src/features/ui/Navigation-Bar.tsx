@@ -206,7 +206,7 @@ export default function NavigationBar() {
             <SheetContent side="right" className="gap-0 p-0">
               <SheetHeader className="h-[var(--nav-h)] shrink-0 flex-row items-center gap-0 border-b px-5">
                 <SheetTitle asChild>
-                  <span>
+                  <span className="flex items-center">
                     <Wordmark />
                   </span>
                 </SheetTitle>

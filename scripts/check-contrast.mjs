@@ -46,7 +46,7 @@ export const tokens = {
     primaryFg: "#140D0A",
     success: "#6FC08C",
     warning: "#E2B154",
-    destructive: "#FF8478",
+    destructive: "#F27C86",
     bin: "#87A6FF",
     oct: "#A5C878",
     dec: "#CFC9BC",
