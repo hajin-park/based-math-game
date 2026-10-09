@@ -13,6 +13,7 @@ import type { User } from "firebase/auth";
 import { firestore } from "@/firebase/firestore";
 import { isDailyClosed, isRankedModeId, modeIdFromBestsKey } from "./limits";
 import { clampDisplayName } from "./names";
+import { upgradeLegacyProfile } from "./legacyProfile";
 import { dailyLocksCollection, entryRef } from "./leaderboard";
 import { runsCollection, statsRef } from "./runs";
 import type { GameSettings, UserStatsDoc } from "./types";
@@ -25,12 +26,21 @@ export function profileRef(uid: string) {
 }
 
 
-/** Creates `users/{uid}` for registered users if it does not exist yet. */
+/**
+ * Creates `users/{uid}` for registered users if it does not exist yet, and
+ * rewrites a pre-rebuild profile in the current shape (otherwise the rules
+ * reject every settings or display-name write to it).
+ */
 export async function ensureUserProfile(user: User): Promise<void> {
   if (user.isAnonymous) return;
   const ref = profileRef(user.uid);
   const snap = await getDoc(ref);
-  if (snap.exists()) return;
+  if (snap.exists()) {
+    const upgraded = upgradeLegacyProfile(snap.data(), user.displayName);
+    // No merge: the legacy fields have to go.
+    if (upgraded) await setDoc(ref, upgraded);
+    return;
+  }
   await setDoc(ref, {
     displayName: clampDisplayName(user.displayName),
     createdAt: serverTimestamp(),

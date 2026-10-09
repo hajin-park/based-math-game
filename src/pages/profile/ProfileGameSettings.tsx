@@ -130,7 +130,8 @@ export default function ProfileGameSettings() {
       setStatus(
         `${OPTIONS.find((o) => o.key === key)?.title} ${value ? "on" : "off"}. Saved ${isGuest ? "on this device" : "to your account"}.`,
       );
-    } catch {
+    } catch (e) {
+      console.error("Error saving game settings:", e);
       setError("Couldn’t save that change. Check your connection and try again.");
     }
   };

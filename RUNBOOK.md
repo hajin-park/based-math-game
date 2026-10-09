@@ -44,7 +44,7 @@ Optional check before deploying: `npx firebase-tools emulators:exec --only auth,
 The old data no longer matches the rules or the app (all old modes were replaced). Nothing in it is used by the new release.
 
 - **Realtime Database** (console → Realtime Database → Data): delete the top-level nodes `users`, `cleanup`, `rooms`, `gameModes`, `presence`.
-- **Firestore** (console → Firestore → Data): delete every `leaderboard-*` collection, the `userStats` collection (including `gameHistory` subcollections) and the old `users` documents.
+- **Firestore** (console → Firestore → Data): delete every `leaderboard-*` collection and the `userStats` collection (including `gameHistory` subcollections). The old `users` documents can stay: the app rewrites each one in the new shape on that user's next sign-in, keeping their display name and game settings (`ensureUserProfile`). Deleting them is fine too; they are then recreated with defaults.
 
 CLI alternative (deletes **everything** in both databases):
 
