@@ -76,8 +76,7 @@ export function rankPlayers<P extends StandingInput>(
     if (i === 0 || compareKeys(keyed[i - 1].key, key) !== 0) rank = i + 1;
     const dropout = !p.finished && !!p.disconnected;
     const total = format === "speedrun" ? totalMs(p) : undefined;
-    const hasResult =
-      format === "speedrun" ? total !== undefined : p.score > 0;
+    const hasResult = format === "speedrun" ? total !== undefined : p.score > 0;
     return {
       player: p,
       rank,

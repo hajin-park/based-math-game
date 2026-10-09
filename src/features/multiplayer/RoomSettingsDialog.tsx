@@ -13,11 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "@/components/ui/use-toast";
 import { minSeatsFor, roomApi, type Room } from "@/hooks/useRoom";
 import { ModePicker } from "./ModePicker";
-import {
-  pickerValueOf,
-  roomModeOf,
-  type ModePickerValue,
-} from "./modeChoice";
+import { pickerValueOf, roomModeOf, type ModePickerValue } from "./modeChoice";
 import { SeatStepper } from "./SeatStepper";
 
 /** Host-only: change mode, seats and visual aids between rounds. */

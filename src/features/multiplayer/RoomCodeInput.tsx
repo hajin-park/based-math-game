@@ -115,12 +115,14 @@ function Cell({
             ? "h-14 text-[1.375rem] sm:h-16 sm:text-[1.625rem]"
             : "h-12 text-[1.125rem]",
           char ? "border-border-strong" : "border-input",
-          current &&
-            "border-primary shadow-[0_0_0_3px_rgb(var(--ring)/0.16)]",
+          current && "border-primary shadow-[0_0_0_3px_rgb(var(--ring)/0.16)]",
           invalid && "border-destructive",
         )}
       >
-        {char ?? (caret ? <span className="h-[1.1em] w-px animate-pulse bg-primary motion-reduce:animate-none" /> : null)}
+        {char ??
+          (caret ? (
+            <span className="h-[1.1em] w-px animate-pulse bg-primary motion-reduce:animate-none" />
+          ) : null)}
       </span>
       {gapAfter && (
         <span aria-hidden className="flex items-center justify-center">

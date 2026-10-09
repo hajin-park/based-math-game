@@ -125,8 +125,8 @@ export default function CreateRoom() {
               id={`${aidsId}-help`}
               className="text-[0.8125rem] text-muted-foreground"
             >
-              Allow digit grouping and place-value hints for players who
-              turned them on.
+              Allow digit grouping and place-value hints for players who turned
+              them on.
             </p>
           </div>
           <div className="sm:col-span-2 sm:max-w-sm">
@@ -141,14 +141,17 @@ export default function CreateRoom() {
           </div>
         </div>
 
-        <div className="sticky bottom-0 z-10 -mx-4 flex flex-col gap-2 border-t bg-background/95 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 backdrop-blur-sm sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none">
+        <div className="sticky bottom-0 z-10 -mx-4 flex flex-col gap-2 border-t bg-background/95 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 backdrop-blur-sm sm:bottom-4 sm:mx-0 sm:rounded-lg sm:border sm:bg-card/95 sm:p-4 sm:shadow-md">
           {error && (
             <p role="alert" className="text-body-sm text-destructive">
               {error}
             </p>
           )}
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-body-sm text-muted-foreground" aria-live="polite">
+            <p
+              className="text-body-sm text-muted-foreground"
+              aria-live="polite"
+            >
               <span className="font-medium text-foreground">
                 {modeTitle(mode)}
               </span>{" "}

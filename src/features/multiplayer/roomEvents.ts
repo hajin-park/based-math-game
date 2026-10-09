@@ -50,13 +50,20 @@ export function diffRoomEvents(
   const prevNames = roomNames(Object.values(prev.players));
   const nextNames = roomNames(Object.values(next.players));
   const name = (uid: string) =>
-    uid === myUid ? "You" : (nextNames.get(uid) ?? prevNames.get(uid) ?? "A player");
+    uid === myUid
+      ? "You"
+      : (nextNames.get(uid) ?? prevNames.get(uid) ?? "A player");
 
   for (const [uid, p] of Object.entries(next.players)) {
     const before = prev.players[uid];
     if (!before) {
       if (uid !== myUid)
-        events.push({ kind: "joined", uid, text: `${name(uid)} joined`, important: false });
+        events.push({
+          kind: "joined",
+          uid,
+          text: `${name(uid)} joined`,
+          important: false,
+        });
       continue;
     }
     if (uid === myUid) continue;
@@ -68,7 +75,12 @@ export function diffRoomEvents(
         important: true,
       });
     } else if (before.disconnected && !p.disconnected) {
-      events.push({ kind: "reconnected", uid, text: `${name(uid)} is back`, important: false });
+      events.push({
+        kind: "reconnected",
+        uid,
+        text: `${name(uid)} is back`,
+        important: false,
+      });
     }
     if (before.displayName !== p.displayName) {
       events.push({

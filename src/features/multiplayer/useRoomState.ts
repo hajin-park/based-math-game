@@ -24,7 +24,10 @@ function modeLabel(room: Room): string {
   return room.engineMode?.name ?? "a custom set";
 }
 
-export function useRoomState(roomId: string | undefined, myUid: string | undefined) {
+export function useRoomState(
+  roomId: string | undefined,
+  myUid: string | undefined,
+) {
   const [room, setRoom] = useState<Room | null>(null);
   const [state, setState] = useState<RoomLoadState>("loading");
   const [events, setEvents] = useState<FeedEvent[]>([]);
@@ -73,7 +76,11 @@ export function useRoomState(roomId: string | undefined, myUid: string | undefin
           );
           return false;
         }
-        if (e.kind === "reconnected" || e.kind === "left" || e.kind === "removed") {
+        if (
+          e.kind === "reconnected" ||
+          e.kind === "left" ||
+          e.kind === "removed"
+        ) {
           const pending = pendingDrops.get(e.uid);
           if (pending !== undefined) {
             window.clearTimeout(pending);

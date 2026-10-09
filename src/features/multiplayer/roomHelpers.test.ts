@@ -9,8 +9,12 @@ describe("room codes", () => {
     expect(normalizeRoomCode("K7Q2·9XDM")).toBe("K7Q29XDM");
     expect(normalizeRoomCode("k7q2-9xdm-extra")).toBe("K7Q29XDM");
     expect(normalizeRoomCode("https://x.app/join/k7q29xdm")).toBe("K7Q29XDM");
-    expect(normalizeRoomCode("http://x/multiplayer/lobby/K7Q29XDM")).toBe("K7Q29XDM");
-    expect(normalizeRoomCode("/multiplayer/join?code=ab12cd34")).toBe("AB12CD34");
+    expect(normalizeRoomCode("http://x/multiplayer/lobby/K7Q29XDM")).toBe(
+      "K7Q29XDM",
+    );
+    expect(normalizeRoomCode("/multiplayer/join?code=ab12cd34")).toBe(
+      "AB12CD34",
+    );
     expect(normalizeRoomCode("ab1")).toBe("AB1");
   });
   it("validates and splits", () => {
@@ -83,7 +87,11 @@ describe("room events", () => {
       },
     };
     const texts = diffRoomEvents(base, next, "me").map((e) => e.text);
-    expect(texts).toEqual(["Host lost connection", "Ada is now Ada L", "Ada L is now the host"]);
+    expect(texts).toEqual([
+      "Host lost connection",
+      "Ada is now Ada L",
+      "Ada L is now the host",
+    ]);
   });
 
   it("is quiet on the first snapshot", () => {

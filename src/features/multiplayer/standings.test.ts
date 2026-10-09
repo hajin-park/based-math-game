@@ -16,7 +16,12 @@ describe("speedrun ranking", () => {
       [
         // Dropped after 2 answers: under the old model their "score" of 2
         // looked like a 2 s finish time and won.
-        p("dropout", { score: 2, correct: 2, scoreMs: 2_000, disconnected: true }),
+        p("dropout", {
+          score: 2,
+          correct: 2,
+          scoreMs: 2_000,
+          disconnected: true,
+        }),
         p("slow", { score: 15, correct: 15, finished: true, finishMs: 4_412 }),
         p("fast", { score: 15, correct: 15, finished: true, finishMs: 4_389 }),
       ],
@@ -32,8 +37,19 @@ describe("speedrun ranking", () => {
   it("adds skip penalties to the run time", () => {
     const standings = rankPlayers(
       [
-        p("skipper", { finished: true, finishMs: 20_000, penaltyMs: 10_000, correct: 15, score: 15 }),
-        p("clean", { finished: true, finishMs: 25_000, correct: 15, score: 15 }),
+        p("skipper", {
+          finished: true,
+          finishMs: 20_000,
+          penaltyMs: 10_000,
+          correct: 15,
+          score: 15,
+        }),
+        p("clean", {
+          finished: true,
+          finishMs: 25_000,
+          correct: 15,
+          score: 15,
+        }),
       ],
       "speedrun",
     );
@@ -65,7 +81,13 @@ describe("speedrun ranking", () => {
   it("a finished player who then disconnects keeps their time", () => {
     const standings = rankPlayers(
       [
-        p("gone", { finished: true, finishMs: 9_000, correct: 15, score: 15, disconnected: true }),
+        p("gone", {
+          finished: true,
+          finishMs: 9_000,
+          correct: 15,
+          score: 15,
+          disconnected: true,
+        }),
         p("here", { finished: true, finishMs: 9_500, correct: 15, score: 15 }),
       ],
       "speedrun",
@@ -99,7 +121,10 @@ describe("sprint ranking", () => {
       "sprint",
     );
     expect(standings.map((s) => s.rank)).toEqual([1, 1, 3]);
-    expect(standings.filter((s) => s.winner).map((s) => s.player.uid)).toEqual(["a", "b"]);
+    expect(standings.filter((s) => s.winner).map((s) => s.player.uid)).toEqual([
+      "a",
+      "b",
+    ]);
   });
 
   it("dropouts rank below everyone still in the round", () => {
@@ -122,7 +147,10 @@ describe("sprint ranking", () => {
 
   it("survival ranks like sprint (questions cleared)", () => {
     const standings = rankPlayers(
-      [p("a", { score: 12, scoreMs: 90_000 }), p("b", { score: 17, scoreMs: 120_000 })],
+      [
+        p("a", { score: 12, scoreMs: 90_000 }),
+        p("b", { score: 17, scoreMs: 120_000 }),
+      ],
       "survival",
     );
     expect(order(standings)).toEqual(["b", "a"]);
@@ -132,7 +160,16 @@ describe("sprint ranking", () => {
 describe("ordinal", () => {
   it("formats English ordinals", () => {
     expect([1, 2, 3, 4, 11, 12, 13, 21, 22, 103].map(ordinal)).toEqual([
-      "1st", "2nd", "3rd", "4th", "11th", "12th", "13th", "21st", "22nd", "103rd",
+      "1st",
+      "2nd",
+      "3rd",
+      "4th",
+      "11th",
+      "12th",
+      "13th",
+      "21st",
+      "22nd",
+      "103rd",
     ]);
   });
 });

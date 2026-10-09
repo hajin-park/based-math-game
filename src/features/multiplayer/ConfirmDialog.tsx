@@ -32,7 +32,9 @@ export function ConfirmDialog({
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{request?.title}</AlertDialogTitle>
-          <AlertDialogDescription>{request?.description}</AlertDialogDescription>
+          <AlertDialogDescription>
+            {request?.description}
+          </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
@@ -73,7 +75,9 @@ export function KickedDialog({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogAction onClick={onClose}>Back to multiplayer</AlertDialogAction>
+          <AlertDialogAction onClick={onClose}>
+            Back to multiplayer
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

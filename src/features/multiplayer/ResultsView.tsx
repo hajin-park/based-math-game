@@ -127,7 +127,8 @@ export function ResultsView({
         : `You placed ${ordinal(mine.rank)} of ${standings.length}.`;
 
   const series: ProgressSeries[] = useMemo(() => {
-    const sprintEnd = mode.format === "sprint" ? (mode.spec.durationMs ?? 60_000) : 0;
+    const sprintEnd =
+      mode.format === "sprint" ? (mode.spec.durationMs ?? 60_000) : 0;
     return [...standings]
       .sort((a, b) => (a.player.joinedAt ?? 0) - (b.player.joinedAt ?? 0))
       .map((s) => ({
@@ -138,7 +139,8 @@ export function ResultsView({
         endMs:
           s.player.finished && typeof s.player.finishMs === "number"
             ? s.player.finishMs
-            : sprintEnd || (s.player.progress[s.player.progress.length - 1] ?? 0),
+            : sprintEnd ||
+              (s.player.progress[s.player.progress.length - 1] ?? 0),
       }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [standings, myUid, names, mode]);
@@ -158,7 +160,11 @@ export function ResultsView({
     try {
       await roomApi.resetRoom(room.id);
     } catch {
-      toast({ variant: "destructive", title: "Couldn't reopen the lobby", description: "Try again." });
+      toast({
+        variant: "destructive",
+        title: "Couldn't reopen the lobby",
+        description: "Try again.",
+      });
       setBusy(false);
     }
   };
@@ -230,7 +236,10 @@ export function ResultsView({
             </div>
           </div>
 
-          <section aria-labelledby="standings-title" className="flex flex-col gap-3">
+          <section
+            aria-labelledby="standings-title"
+            className="flex flex-col gap-3"
+          >
             <h2 id="standings-title" className="text-title font-semibold">
               Standings
             </h2>
@@ -249,7 +258,9 @@ export function ResultsView({
                     <span
                       className={cn(
                         "font-mono text-[1.125rem] tabular-nums",
-                        s.rank === 1 && s.winner ? "text-foreground" : "text-muted-foreground",
+                        s.rank === 1 && s.winner
+                          ? "text-foreground"
+                          : "text-muted-foreground",
                       )}
                     >
                       <span className="sr-only">Rank </span>
@@ -276,7 +287,8 @@ export function ResultsView({
                           </span>
                         )}
                         <span>
-                          {s.player.wins} win{s.player.wins === 1 ? "" : "s"} in this room
+                          {s.player.wins} win{s.player.wins === 1 ? "" : "s"} in
+                          this room
                         </span>
                       </span>
                     </span>
@@ -288,7 +300,9 @@ export function ResultsView({
                         {r.unit && <> {r.unit}</>}
                       </span>
                       {r.note && (
-                        <span className="text-[0.75rem] text-muted-foreground">{r.note}</span>
+                        <span className="text-[0.75rem] text-muted-foreground">
+                          {r.note}
+                        </span>
                       )}
                     </span>
                   </li>
@@ -298,14 +312,19 @@ export function ResultsView({
           </section>
 
           {hasProgress && (
-            <section aria-labelledby="progress-title" className="flex flex-col gap-3">
+            <section
+              aria-labelledby="progress-title"
+              className="flex flex-col gap-3"
+            >
               <div className="flex flex-col gap-0.5">
                 <h2 id="progress-title" className="text-title font-semibold">
                   How the round unfolded
                 </h2>
                 <p className="text-body-sm text-muted-foreground">
-                  {mode.format === "survival" ? "Questions cleared" : "Correct answers"} over time.
-                  Hover or tap the chart to compare at any second.
+                  {mode.format === "survival"
+                    ? "Questions cleared"
+                    : "Correct answers"}{" "}
+                  over time. Hover or tap the chart to compare at any second.
                 </p>
               </div>
               <ProgressChart
@@ -322,7 +341,10 @@ export function ResultsView({
           aria-labelledby="results-chat"
           className="sticky top-20 hidden h-[min(40rem,calc(100dvh-7rem))] flex-col overflow-hidden rounded-lg border bg-card lg:flex"
         >
-          <h2 id="results-chat" className="border-b px-4 py-3 text-title-sm font-semibold">
+          <h2
+            id="results-chat"
+            className="border-b px-4 py-3 text-title-sm font-semibold"
+          >
             Chat
           </h2>
           <RoomChat
@@ -336,7 +358,10 @@ export function ResultsView({
         </aside>
       </div>
       <Sheet open={chatOpen} onOpenChange={setChatOpen}>
-        <SheetContent side="bottom" className="flex h-[85dvh] flex-col gap-0 rounded-t-xl p-0">
+        <SheetContent
+          side="bottom"
+          className="flex h-[85dvh] flex-col gap-0 rounded-t-xl p-0"
+        >
           <SheetHeader className="border-b px-4 py-3 text-left">
             <SheetTitle>Chat</SheetTitle>
             <SheetDescription className="sr-only">

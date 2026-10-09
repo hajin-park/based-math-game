@@ -54,7 +54,11 @@ export const Scoreboard = memo(function Scoreboard({
     standings.length,
   );
   const unit =
-    format === "speedrun" ? "correct" : format === "survival" ? "cleared" : "correct";
+    format === "speedrun"
+      ? "correct"
+      : format === "survival"
+        ? "cleared"
+        : "correct";
 
   if (compact) {
     return (
@@ -82,7 +86,9 @@ export const Scoreboard = memo(function Scoreboard({
                   {s.rank}
                 </span>
                 <span className="max-w-[7rem] truncate font-medium">
-                  {you ? "You" : (names.get(s.player.uid) ?? s.player.displayName)}
+                  {you
+                    ? "You"
+                    : (names.get(s.player.uid) ?? s.player.displayName)}
                 </span>
                 <span className="font-mono tabular-nums">
                   {liveValue(s.player, format, target)}
@@ -108,7 +114,10 @@ export const Scoreboard = memo(function Scoreboard({
   }
 
   return (
-    <section aria-labelledby="scoreboard-title" className={cn("flex flex-col gap-3", className)}>
+    <section
+      aria-labelledby="scoreboard-title"
+      className={cn("flex flex-col gap-3", className)}
+    >
       <div className="flex items-baseline justify-between gap-2">
         <h2 id="scoreboard-title" className="eyebrow">
           Live scores

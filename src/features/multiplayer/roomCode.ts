@@ -13,9 +13,10 @@ export function isRoomCode(value: string | undefined | null): value is string {
  */
 export function normalizeRoomCode(raw: string): string {
   const text = raw.trim();
-  const fromLink = /(?:\/join\/|\/lobby\/|[?&]code=)([A-Za-z0-9]{8})(?![A-Za-z0-9])/.exec(
-    text,
-  );
+  const fromLink =
+    /(?:\/join\/|\/lobby\/|[?&]code=)([A-Za-z0-9]{8})(?![A-Za-z0-9])/.exec(
+      text,
+    );
   if (fromLink) return fromLink[1].toUpperCase();
   return text
     .toUpperCase()
@@ -29,11 +30,17 @@ export function codeHalves(code: string): [string, string] {
 }
 
 /** Shareable one-click join link. */
-export function inviteUrl(code: string, origin = window.location.origin): string {
+export function inviteUrl(
+  code: string,
+  origin = window.location.origin,
+): string {
   return `${origin}/join/${code}`;
 }
 
 /** Same link without the protocol, for display ("basedmath.app/join/…"). */
-export function inviteLabel(code: string, origin = window.location.origin): string {
+export function inviteLabel(
+  code: string,
+  origin = window.location.origin,
+): string {
   return inviteUrl(code, origin).replace(/^https?:\/\//, "");
 }

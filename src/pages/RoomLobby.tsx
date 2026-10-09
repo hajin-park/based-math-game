@@ -67,15 +67,20 @@ function RoomPage({ roomId, myUid }: { roomId: string; myUid: string }) {
     [room],
   );
 
-  const leave = useCallback(async () => {
-    leaving.current = true;
-    try {
-      await roomApi.leaveRoom(roomId);
-    } catch {
-      // Already gone or offline: the server marks us disconnected anyway.
-    }
-    navigate(`/multiplayer?reason=left&code=${roomId}`);
-  }, [navigate, roomId]);
+  const leave = useCallback(
+    async (closes = false) => {
+      leaving.current = true;
+      try {
+        await roomApi.leaveRoom(roomId);
+      } catch {
+        // Already gone or offline: the server marks us disconnected anyway.
+      }
+      navigate(
+        `/multiplayer?reason=${closes ? "closed-by-you" : "left"}&code=${roomId}`,
+      );
+    },
+    [navigate, roomId],
+  );
 
   const askLeave = useCallback(() => {
     if (!room) return leave();
@@ -98,7 +103,7 @@ function RoomPage({ roomId, myUid }: { roomId: string; myUid: string }) {
       title: "Leave this room?",
       description,
       confirm: "Leave room",
-      onConfirm: leave,
+      onConfirm: () => leave(present.length === 0),
     });
   }, [room, myUid, names, leave]);
 

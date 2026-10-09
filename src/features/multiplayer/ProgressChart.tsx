@@ -91,7 +91,12 @@ export function ProgressChart({
 
   const height = 220;
   const labelled = colored.length <= 4;
-  const pad = { top: 12, right: labelled && width > 420 ? 96 : 14, bottom: 28, left: 34 };
+  const pad = {
+    top: 12,
+    right: labelled && width > 420 ? 96 : 14,
+    bottom: 28,
+    left: 34,
+  };
   const w = Math.max(0, width - pad.left - pad.right);
   const h = height - pad.top - pad.bottom;
   const top = Math.max(1, yMax);
@@ -116,7 +121,8 @@ export function ProgressChart({
       .map((s) => ({ s, y: y(s.marks.length) }))
       .sort((a, b) => a.y - b.y);
     for (let i = 1; i < placed.length; i++)
-      if (placed[i].y - placed[i - 1].y < 14) placed[i].y = placed[i - 1].y + 14;
+      if (placed[i].y - placed[i - 1].y < 14)
+        placed[i].y = placed[i - 1].y + 14;
     return placed;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [colored, labelled, width, top]);
@@ -146,11 +152,12 @@ export function ProgressChart({
             onPointerDown={(e) => onPointer(e.clientX, e.currentTarget)}
             onPointerLeave={() => setHoverMs(null)}
           >
-            <title id={titleId}>
-              {`Score over time. ${summary}.`}
-            </title>
+            <title id={titleId}>{`Score over time. ${summary}.`}</title>
             {/* Recessive grid and axes */}
-            {Array.from({ length: Math.floor(top / yStep) + 1 }, (_, i) => i * yStep).map((v) => (
+            {Array.from(
+              { length: Math.floor(top / yStep) + 1 },
+              (_, i) => i * yStep,
+            ).map((v) => (
               <g key={`y${v}`}>
                 <line
                   x1={pad.left}
@@ -171,7 +178,10 @@ export function ProgressChart({
                 </text>
               </g>
             ))}
-            {Array.from({ length: Math.floor(total / xStep) + 1 }, (_, i) => i * xStep).map((t) => (
+            {Array.from(
+              { length: Math.floor(total / xStep) + 1 },
+              (_, i) => i * xStep,
+            ).map((t) => (
               <text
                 key={`x${t}`}
                 x={x(t)}
@@ -210,7 +220,8 @@ export function ProgressChart({
                   width <= 420 && "hidden",
                 )}
               >
-                {s.name.length > 12 ? `${s.name.slice(0, 11)}…` : s.name} {s.marks.length}
+                {s.name.length > 12 ? `${s.name.slice(0, 11)}…` : s.name}{" "}
+                {s.marks.length}
               </text>
             ))}
 

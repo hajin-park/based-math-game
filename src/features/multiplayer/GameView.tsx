@@ -96,9 +96,15 @@ export function GameView({
       confirm: "End round",
       destructive: true,
       onConfirm: () =>
-        roomApi.endRound(room.id).catch(() =>
-          toast({ variant: "destructive", title: "Round not ended", description: "Try again." }),
-        ),
+        roomApi
+          .endRound(room.id)
+          .catch(() =>
+            toast({
+              variant: "destructive",
+              title: "Round not ended",
+              description: "Try again.",
+            }),
+          ),
     });
 
   // Phones and tablets: a compact strip right under the timer, so live scores
@@ -123,9 +129,7 @@ export function GameView({
       data-seed={room.seed}
     >
       <GridPaper fade />
-      <h1 className="sr-only">
-        {mode.name}, round in progress
-      </h1>
+      <h1 className="sr-only">{mode.name}, round in progress</h1>
       <div className="container grid flex-1 gap-6 py-4 lg:grid-cols-[minmax(0,1fr)_17rem] lg:gap-10 lg:py-8">
         <div className="flex min-w-0 flex-col gap-4">
           {link === "reconnecting" && (
@@ -284,12 +288,16 @@ function Player({
   // Record when each point was reached, then write (throttled).
   useEffect(() => {
     if (run.correct <= marks.current.length) return;
-    while (marks.current.length < run.correct) marks.current.push(run.elapsedMs);
+    while (marks.current.length < run.correct)
+      marks.current.push(run.elapsedMs);
     correctRef.current = run.correct;
     const since = Date.now() - lastPush.current;
     if (since >= SCORE_PUSH_MS) void push();
     else if (pushTimer.current === undefined)
-      pushTimer.current = window.setTimeout(() => void push(), SCORE_PUSH_MS - since);
+      pushTimer.current = window.setTimeout(
+        () => void push(),
+        SCORE_PUSH_MS - since,
+      );
   }, [run.correct, run.elapsedMs, push]);
 
   // Leaving the game screen (round ended) flushes a pending write.
@@ -336,7 +344,15 @@ function Player({
 
 type Run = ReturnType<typeof useRun>;
 
-function Hud({ run, mode, target }: { run: Run; mode: GameMode; target: number }) {
+function Hud({
+  run,
+  mode,
+  target,
+}: {
+  run: Run;
+  mode: GameMode;
+  target: number;
+}) {
   const announce = useTimeAnnouncements(run.timeLeftMs);
   return (
     <div className="flex flex-col gap-3 rounded-lg border bg-card/90 px-4 py-3 shadow-xs backdrop-blur-[2px]">
@@ -484,7 +500,9 @@ function MyFinish({
         <Check aria-hidden className="size-5" />
       </span>
       <h2 id="my-finish" className="font-serif text-headline font-medium">
-        {mode.format === "speedrun" && !summary.completed ? "Time's up" : "Finished"}
+        {mode.format === "speedrun" && !summary.completed
+          ? "Time's up"
+          : "Finished"}
       </h2>
       <p className="font-mono text-mono-xl tabular-nums">{result}</p>
       {summary.skipped > 0 && mode.format === "speedrun" && (

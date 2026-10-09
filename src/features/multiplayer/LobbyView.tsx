@@ -226,7 +226,7 @@ export function LobbyView({
                   {unread > 0 && (
                     <span
                       aria-hidden
-                      className="ml-0.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 font-mono text-[0.6875rem] text-primary-foreground"
+                      className="ml-0.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-foreground px-1 font-mono text-[0.6875rem] text-background"
                     >
                       {unread > 9 ? "9+" : unread}
                     </span>

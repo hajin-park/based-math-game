@@ -169,12 +169,11 @@ function PlayerRow({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="min-w-48">
-                <DropdownMenuLabel className="truncate">{name}</DropdownMenuLabel>
+                <DropdownMenuLabel className="truncate">
+                  {name}
+                </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onSelect={onMakeHost}
-                  disabled={away}
-                >
+                <DropdownMenuItem onSelect={onMakeHost} disabled={away}>
                   <Crown aria-hidden />
                   Make host
                 </DropdownMenuItem>
@@ -280,7 +279,13 @@ function NameEditor({
           enterKeyHint="done"
           className="h-9 min-w-0 flex-1"
         />
-        <Button type="submit" size="icon-sm" variant="secondary" aria-label="Save name" disabled={saving}>
+        <Button
+          type="submit"
+          size="icon-sm"
+          variant="secondary"
+          aria-label="Save name"
+          disabled={saving}
+        >
           <Check aria-hidden />
         </Button>
         <Button

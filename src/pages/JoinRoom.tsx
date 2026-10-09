@@ -105,7 +105,12 @@ export default function JoinRoom() {
         title={
           room ? (
             <>
-              Join <em>{roomNames(Object.values(room.players)).get(room.hostUid) ?? "the host"}</em>’s room
+              Join{" "}
+              <em>
+                {roomNames(Object.values(room.players)).get(room.hostUid) ??
+                  "the host"}
+              </em>
+              ’s room
             </>
           ) : (
             <>

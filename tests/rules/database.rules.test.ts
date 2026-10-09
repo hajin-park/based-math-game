@@ -327,7 +327,9 @@ describe("player nodes", () => {
     await assertSucceeds(name.set("Ada Lovelace"));
     await assertFails(name.set(""));
     await assertFails(name.set("x".repeat(25)));
-    await assertFails(db("bob").ref(`${R}/players/alice/displayName`).set("Bob"));
+    await assertFails(
+      db("bob").ref(`${R}/players/alice/displayName`).set("Bob"),
+    );
   });
 
   it("wins: +1 once per finished round, only by the player", async () => {
@@ -408,13 +410,11 @@ describe("host controls", () => {
       lastActivityAt: NOW,
     };
     await assertFails(
-      db("bob")
-        .ref(R)
-        .update({
-          "kicked/alice": true,
-          "players/alice": null,
-          "slots/0": null,
-        }),
+      db("bob").ref(R).update({
+        "kicked/alice": true,
+        "players/alice": null,
+        "slots/0": null,
+      }),
     );
     await assertFails(
       db("alice").ref(R).update({ "players/bob": null, "slots/1": null }),

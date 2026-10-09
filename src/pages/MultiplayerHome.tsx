@@ -19,7 +19,10 @@ const REASONS: Record<string, (code: string) => string> = {
   "room-not-found": (c) =>
     `There is no open room with code ${c}. Check the code with your host.`,
   kicked: (c) => `The host removed you from room ${c}.`,
-  left: (c) => `You left room ${c}.`,
+  left: (c) =>
+    `You left room ${c}. The code still works while others are in it.`,
+  "closed-by-you": (c) =>
+    `You were the last one in room ${c}, so it has closed.`,
 };
 
 const STEPS = [
@@ -181,10 +184,7 @@ export default function MultiplayerHome() {
       </div>
 
       <section aria-labelledby="mp-how-title" className="flex flex-col gap-6">
-        <h2
-          id="mp-how-title"
-          className="font-serif text-headline font-medium"
-        >
+        <h2 id="mp-how-title" className="font-serif text-headline font-medium">
           How a class round works
         </h2>
         <ol className="grid border-t md:grid-cols-3 md:divide-x">

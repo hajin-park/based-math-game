@@ -22,9 +22,12 @@ export interface NamedPlayer {
   joinedAt?: number;
 }
 
-export function roomNames(players: readonly NamedPlayer[]): Map<string, string> {
+export function roomNames(
+  players: readonly NamedPlayer[],
+): Map<string, string> {
   const sorted = [...players].sort(
-    (a, b) => (a.joinedAt ?? 0) - (b.joinedAt ?? 0) || a.uid.localeCompare(b.uid),
+    (a, b) =>
+      (a.joinedAt ?? 0) - (b.joinedAt ?? 0) || a.uid.localeCompare(b.uid),
   );
   const seen = new Map<string, number>();
   const out = new Map<string, string>();
@@ -45,6 +48,8 @@ export function initials(name: string): string {
     .split(/[\s_\-.]+/)
     .filter((w) => /[A-Za-z0-9]/.test(w));
   if (words.length === 0) return "?";
-  const letters = words.slice(0, 2).map((w) => w.match(/[A-Za-z0-9]/)?.[0] ?? "");
+  const letters = words
+    .slice(0, 2)
+    .map((w) => w.match(/[A-Za-z0-9]/)?.[0] ?? "");
   return letters.join("").toUpperCase();
 }

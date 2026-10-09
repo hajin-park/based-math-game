@@ -41,7 +41,9 @@ export function isRoomFormat(format: Format): boolean {
 export function isRoomModeId(id: string): boolean {
   if (id === SURVIVAL_MODE_ID) return true;
   const parsed = parseModeId(id);
-  return !!parsed && (parsed.format === "sprint" || parsed.format === "speedrun");
+  return (
+    !!parsed && (parsed.format === "sprint" || parsed.format === "speedrun")
+  );
 }
 
 /** Builds the stored ref for an engine mode (custom configs travel along). */
