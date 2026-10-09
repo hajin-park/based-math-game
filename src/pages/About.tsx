@@ -1,209 +1,233 @@
-import {
-  PaperCard,
-  PaperCardContent,
-  PaperCardHeader,
-  PaperCardTitle,
-  SectionHeader,
-} from "@/components/ui/academic";
-import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
-import {
-  Info,
-  Zap,
-  Users,
-  TrendingUp,
-  Trophy,
-  UserPlus,
-  Code,
-  Heart,
-  ExternalLink,
-} from "lucide-react";
+import * as React from "react";
+import { Link } from "react-router-dom";
+import { ArrowRight, ArrowUpRight, Github } from "lucide-react";
+
+import { FORMAT_IDS } from "@/game";
+import { Button } from "@/components/ui/button";
+import { BaseOdometer } from "@/components/ui/base-odometer";
+import { GridPaper } from "@/components/ui/grid-paper";
+import { PageHeader } from "@/components/ui/page-header";
+import { FACTS } from "@/features/learn/howto";
+
+const REPO = "https://github.com/hajin-park/based-math-game";
+
+function External({
+  href,
+  children,
+}: {
+  href: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="link inline-flex items-baseline gap-0.5"
+    >
+      {children}
+      <ArrowUpRight aria-hidden className="size-3.5 self-center" />
+      <span className="sr-only"> (opens in a new tab)</span>
+    </a>
+  );
+}
+
+const FACT_ROWS: { title: string; body: React.ReactNode }[] = [
+  {
+    title: "What it is",
+    body: (
+      <>
+        A free web game for converting numbers between binary, octal, decimal
+        and hexadecimal, plus the skills built on them: powers of two, two’s
+        complement, bitwise operations, binary addition, hex colours and ASCII.{" "}
+        {FACTS.topics} topics, {FORMAT_IDS.length} formats (sprint, speedrun,
+        survival, a daily challenge and untimed practice), short{" "}
+        <Link to="/learn" className="link">
+          lessons
+        </Link>{" "}
+        and multiplayer rooms.
+      </>
+    ),
+  },
+  {
+    title: "Who it’s for",
+    body: "Students in intro programming, computer organisation and digital logic courses; instructors who want a five-minute warm-up; anyone who reads hex dumps, subnet masks or file permissions.",
+  },
+  {
+    title: "Where the idea came from",
+    body: (
+      <>
+        The format, a fast, keyboard-only drill against the clock, comes from
+        the <External href="https://arithmetic.zetamac.com">zetamac</External>{" "}
+        arithmetic game, applied to number bases.
+      </>
+    ),
+  },
+  {
+    title: "Who built it",
+    body: (
+      <>
+        Built and maintained by{" "}
+        <External href="https://github.com/hajin-park">Hajin Park</External>.
+      </>
+    ),
+  },
+  {
+    title: "Open source",
+    body: (
+      <>
+        The code is on <External href={REPO}>GitHub</External> under the{" "}
+        <External href={`${REPO}/blob/main/LICENSE`}>GPL-3.0 license</External>.
+        You can read, run, change and share it, as long as derived versions stay
+        under the same license.
+      </>
+    ),
+  },
+  {
+    title: "Built with",
+    body: "React, TypeScript and Vite, styled with Tailwind CSS; Firebase for sign-in, multiplayer rooms and leaderboards.",
+  },
+];
 
 export default function About() {
+  React.useEffect(() => {
+    const prev = document.title;
+    document.title = "About · Based Math Game";
+    return () => {
+      document.title = prev;
+    };
+  }, []);
+
   return (
-    <div className="container mx-auto px-2 py-4 max-w-5xl">
-      <SectionHeader
-        icon={Info}
-        title="About Based Math Game"
-        description="Learn base conversion through interactive practice and competitive gameplay"
-        className="mb-6"
-      />
+    <div className="overflow-x-clip">
+      <section className="relative isolate border-b">
+        <GridPaper fade className="opacity-80" />
+        <div className="container grid items-center gap-10 py-10 md:py-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:gap-16">
+          <PageHeader
+            eyebrow="About"
+            size="lg"
+            title={
+              <>
+                A small, open-source <em>drill</em> for number bases.
+              </>
+            }
+            lede="Based Math Game is practice for reading numbers the way computers write them: quick, timed, and free."
+          />
+          <BaseOdometer
+            defaultValue={0x2a}
+            size="sm"
+            header={false}
+            bases={["bin", "hex", "dec"]}
+            className="hidden lg:block"
+          />
+        </div>
+      </section>
 
-      <div className="space-y-3">
-        <PaperCard variant="folded-sm" padding="sm">
-          <PaperCardHeader>
-            <PaperCardTitle className="flex items-center gap-2 text-base">
-              <Info className="h-4 w-4 text-primary" />
-              Our Mission
-            </PaperCardTitle>
-          </PaperCardHeader>
-          <PaperCardContent className="space-y-2 text-sm leading-relaxed">
-            <p>
-              Based Math Game is designed to help students, programmers, and
-              anyone interested in computer science master the fundamental skill
-              of converting between different number bases (Binary, Octal,
-              Decimal, and Hexadecimal).
-            </p>
-            <Separator />
-            <p>
-              Through timed quizzes and interactive tutorials, we make learning
-              base conversion engaging and effective. Whether you're preparing
-              for exams, improving your programming skills, or just curious
-              about how computers represent numbers, we're here to help.
-            </p>
-          </PaperCardContent>
-        </PaperCard>
-
-        <PaperCard variant="folded-sm" padding="sm">
-          <PaperCardHeader>
-            <PaperCardTitle className="flex items-center gap-2 text-base">
-              <Zap className="h-4 w-4 text-primary" />
-              Features
-            </PaperCardTitle>
-          </PaperCardHeader>
-          <PaperCardContent>
-            <div className="grid gap-2 md:grid-cols-2">
-              <div className="flex items-start gap-2 p-2 rounded border bg-card">
-                <div className="p-1.5 rounded bg-primary/10">
-                  <Code className="h-3.5 w-3.5 text-primary" />
-                </div>
-                <div className="space-y-1">
-                  <p className="font-semibold text-sm">Interactive Tutorials</p>
-                  <p className="text-sm text-muted-foreground">
-                    Learn each number base with clear explanations and examples
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-2 p-2 rounded border bg-card">
-                <div className="p-1.5 rounded bg-primary/10">
-                  <Zap className="h-3.5 w-3.5 text-primary" />
-                </div>
-                <div className="space-y-1">
-                  <p className="font-semibold text-sm">Timed Quizzes</p>
-                  <p className="text-sm text-muted-foreground">
-                    Practice with official game modes or create custom
-                    challenges
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-2 p-2 rounded border bg-card">
-                <div className="p-1.5 rounded bg-primary/10">
-                  <Users className="h-3.5 w-3.5 text-primary" />
-                </div>
-                <div className="space-y-1">
-                  <p className="font-semibold text-sm">Multiplayer Mode</p>
-                  <p className="text-sm text-muted-foreground">
-                    Compete with friends in real-time conversion challenges
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-2 p-2 rounded border bg-card">
-                <div className="p-1.5 rounded bg-primary/10">
-                  <TrendingUp className="h-3.5 w-3.5 text-primary" />
-                </div>
-                <div className="space-y-1">
-                  <p className="font-semibold text-sm">Progress Tracking</p>
-                  <p className="text-sm text-muted-foreground">
-                    Monitor your improvement with detailed statistics and game
-                    history
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-2 p-2 rounded border bg-card">
-                <div className="p-1.5 rounded bg-primary/10">
-                  <Trophy className="h-3.5 w-3.5 text-primary" />
-                </div>
-                <div className="space-y-1">
-                  <p className="font-semibold text-sm">Global Leaderboards</p>
-                  <p className="text-sm text-muted-foreground">
-                    See how you rank against players worldwide
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-2 p-2 rounded border bg-card">
-                <div className="p-1.5 rounded bg-primary/10">
-                  <UserPlus className="h-3.5 w-3.5 text-primary" />
-                </div>
-                <div className="space-y-1">
-                  <p className="font-semibold text-sm">Guest Mode</p>
-                  <p className="text-sm text-muted-foreground">
-                    Try the game without creating an account
-                  </p>
-                </div>
-              </div>
+      <section
+        aria-labelledby="about-facts"
+        className="container py-section-sm"
+      >
+        <h2 id="about-facts" className="sr-only">
+          About the project
+        </h2>
+        <dl className="grid max-w-4xl border-t">
+          {FACT_ROWS.map((row) => (
+            <div
+              key={row.title}
+              className="grid gap-2 border-b py-6 md:grid-cols-[13rem_minmax(0,1fr)] md:gap-10"
+            >
+              <dt className="text-title-sm font-semibold">{row.title}</dt>
+              <dd className="max-w-prose text-body text-muted-foreground text-pretty [&_.link]:text-foreground">
+                {row.body}
+              </dd>
             </div>
-          </PaperCardContent>
-        </PaperCard>
+          ))}
+        </dl>
+      </section>
 
-        <PaperCard variant="folded-sm" padding="sm">
-          <PaperCardHeader>
-            <PaperCardTitle className="flex items-center gap-2 text-base">
-              <Code className="h-4 w-4 text-primary" />
-              Technology
-            </PaperCardTitle>
-          </PaperCardHeader>
-          <PaperCardContent className="space-y-2">
-            <p className="text-sm leading-relaxed">
-              Built with modern web technologies including React, TypeScript,
-              and Firebase, Based Math Game provides a fast, responsive, and
-              reliable learning experience across all devices.
+      <section
+        aria-labelledby="contribute-title"
+        className="border-y bg-card/60"
+      >
+        <div className="container grid gap-10 py-section-sm md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:gap-16">
+          <div className="flex flex-col gap-3">
+            <p className="eyebrow">Contribute</p>
+            <h2
+              id="contribute-title"
+              className="text-headline font-serif font-medium text-balance [font-variation-settings:'opsz'_60]"
+            >
+              Found a bug, or a wrong answer?
+            </h2>
+            <p className="max-w-prose text-body text-muted-foreground text-pretty">
+              Open an issue on GitHub with the question you saw, the answer you
+              expected and a screenshot if you can. Pull requests are welcome
+              too; the question engine is plain TypeScript with unit tests.
             </p>
-            <Separator />
-            <div className="flex items-center gap-1 flex-wrap">
-              <Badge variant="secondary" className="text-xs h-4">
-                React 19
-              </Badge>
-              <Badge variant="secondary" className="text-xs h-4">
-                TypeScript
-              </Badge>
-              <Badge variant="secondary" className="text-xs h-4">
-                Firebase
-              </Badge>
-              <Badge variant="secondary" className="text-xs h-4">
-                Tailwind CSS
-              </Badge>
-              <Badge variant="secondary" className="text-xs h-4">
-                shadcn/ui
-              </Badge>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              This project is open source and available on GitHub under the
-              GPL-3.0 license.
-            </p>
-          </PaperCardContent>
-        </PaperCard>
+          </div>
+          <ol className="flex flex-col border-t md:self-end">
+            {[
+              {
+                n: "01",
+                label: "Report an issue",
+                href: `${REPO}/issues`,
+              },
+              {
+                n: "10",
+                label: "Read the source",
+                href: REPO,
+              },
+              {
+                n: "11",
+                label: "Open a pull request",
+                href: `${REPO}/pulls`,
+              },
+            ].map((item) => (
+              <li key={item.n} className="border-b">
+                <a
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex min-h-14 items-center gap-4 py-3 text-body transition-colors duration-fast hover:text-primary"
+                >
+                  <span
+                    aria-hidden
+                    className="font-mono text-[0.8125rem] text-base-bin"
+                  >
+                    {item.n}
+                  </span>
+                  <span className="flex-1">{item.label}</span>
+                  <ArrowUpRight
+                    aria-hidden
+                    className="size-4 text-muted-foreground transition-transform duration-fast group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary"
+                  />
+                  <span className="sr-only"> (opens in a new tab)</span>
+                </a>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
 
-        <PaperCard variant="folded-sm" padding="sm">
-          <PaperCardHeader>
-            <PaperCardTitle className="flex items-center gap-2 text-base">
-              <Heart className="h-4 w-4 text-primary" />
-              Inspiration
-            </PaperCardTitle>
-          </PaperCardHeader>
-          <PaperCardContent className="space-y-2">
-            <p className="text-sm leading-relaxed">
-              This project was inspired by{" "}
-              <a
-                href="https://arithmetic.zetamac.com"
-                className="text-primary hover:underline font-semibold inline-flex items-center gap-1"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                zetamac
-                <ExternalLink className="h-2.5 w-2.5" />
-              </a>
-              , a popular arithmetic practice tool. We adapted the concept to
-              focus specifically on base conversion, a crucial skill for
-              computer science students and professionals.
-            </p>
-          </PaperCardContent>
-        </PaperCard>
-      </div>
+      <section className="container flex flex-col items-start gap-5 py-section-sm sm:flex-row sm:items-center sm:justify-between">
+        <p className="max-w-lede text-body-lg text-muted-foreground">
+          No account needed to play. Your first sprint takes a minute.
+        </p>
+        <div className="flex flex-col gap-3 xs:flex-row">
+          <Button asChild size="lg">
+            <Link to="/play">
+              Start playing
+              <ArrowRight aria-hidden />
+            </Link>
+          </Button>
+          <Button asChild size="lg" variant="outline">
+            <a href={REPO} target="_blank" rel="noopener noreferrer">
+              <Github aria-hidden />
+              View source
+              <span className="sr-only"> (opens in a new tab)</span>
+            </a>
+          </Button>
+        </div>
+      </section>
     </div>
   );
 }
