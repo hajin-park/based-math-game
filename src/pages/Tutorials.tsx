@@ -703,9 +703,9 @@ export default function Learn() {
             <Work
               label="Read a pattern"
               lines={[
-                "1111 1110  =  −128 + 64 + 32 + 16 + 8 + 4 + 2  =  −2",
-                "1011 0110  =  −128 + 32 + 16 + 4 + 2           =  −74",
-                "0100 1010  =  64 + 8 + 2 (sign bit 0)          =  74",
+                "1111 1110 = −128 + 64 + 32 + 16 + 8 + 4 + 2 = −2",
+                "1011 0110 = −128 + 32 + 16 + 4 + 2 = −74",
+                "0100 1010 = 64 + 8 + 2 = 74   (sign bit 0)",
               ]}
             />
             <H3>Negate: invert every bit, then add one</H3>
