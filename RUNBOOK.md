@@ -35,7 +35,7 @@ npm ci
 npx firebase-tools deploy --only database,firestore --project based-math-game
 ```
 
-This deploys `database.rules.json`, `firestore.rules` and `firestore.indexes.json`. Index builds take a few minutes; the leaderboard and history may show a loading error until the console shows them as **Enabled** (Firestore → Indexes).
+This deploys `database.rules.json`, `firestore.rules` and `firestore.indexes.json` (composite indexes plus a TTL policy on `dailyLocks.expireAt`, which removes each day's one-attempt lock after the day closes). Index builds take a few minutes; the leaderboard and history may show a loading error until the console shows them as **Enabled** (Firestore → Indexes).
 
 Optional check before deploying: `npx firebase-tools emulators:exec --only auth,database,firestore --project demo-based-math "npm run test:rules"` (needs Java 21).
 
@@ -108,7 +108,13 @@ GitHub → Settings → Branches → add a protection rule for `main`:
 
 Dependabot PRs can't reach repository secrets, so their "Deploy to Firebase Hosting on PR" job fails; that is expected. Rely on the CI check for those.
 
-## 11. If something goes wrong
+## 11. Known limits (accepted for this release)
+
+- There is no backend code (no Cloud Functions), so multiplayer results are computed by the clients and checked by security rules for plausibility only (at most 3 answers per second, at least 250 ms each). The room host is trusted to end rounds and name winners.
+- Rooms that everyone simply closes stay in the database until someone reopens them after 6 idle hours, when they are deleted. A scheduled clean-up would need a Cloud Function on Blaze; the data in a room is display names, scores and chat.
+- Anyone signed in who knows a room's 8-character code can read that room (that is how joining works); rooms can't be listed.
+
+## 12. If something goes wrong
 
 - **Roll back Hosting:** Firebase console → Hosting → release history → **Rollback**, or `npx firebase-tools hosting:rollback --project based-math-game`.
 - **Rules:** redeploy from the previous commit with `git checkout <sha> -- database.rules.json firestore.rules && npx firebase-tools deploy --only database,firestore --project based-math-game`.
