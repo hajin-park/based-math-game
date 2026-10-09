@@ -403,11 +403,8 @@ export default function RoomLobby() {
     ) {
       // Target reached, calculate elapsed time and update score
       if (roomId && room.startedAt) {
-        const elapsedTime = Math.floor((Date.now() - room.startedAt) / 1000);
-        // Update score to elapsed time for speedrun modes
-        updatePlayerScore(roomId, elapsedTime).then(() => {
-          finishGame(roomId);
-        });
+        // Record the finish time; the room reports it as the speedrun score
+        finishGame(roomId, { finishMs: Date.now() - room.startedAt });
       }
     }
   }, [

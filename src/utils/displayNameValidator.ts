@@ -60,7 +60,7 @@ export function validateDisplayName(displayName: string): ValidationResult {
     };
   }
 
-  // Check length (min 2, max 30 characters)
+  // Check length (min 2, max 24 characters; security rules enforce <= 24)
   const trimmed = displayName.trim();
   if (trimmed.length < 2) {
     return {
@@ -69,10 +69,10 @@ export function validateDisplayName(displayName: string): ValidationResult {
     };
   }
 
-  if (trimmed.length > 30) {
+  if (trimmed.length > 24) {
     return {
       isValid: false,
-      error: "Display name must be 30 characters or less",
+      error: "Display name must be 24 characters or less",
     };
   }
 

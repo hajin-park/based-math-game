@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { MessageCircle, Send } from "lucide-react";
-import { useChat, ChatMessage } from "@/hooks/useChat";
+import { useChat, ChatMessage, CHAT_MAX_LENGTH } from "@/hooks/useChat";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface ChatBoxProps {
@@ -202,7 +202,7 @@ export default function ChatBox({
             onKeyDown={handleKeyDown}
             placeholder={compact ? "Message..." : "Type a message..."}
             className={`flex-1 ${compact ? "h-7 text-xs" : ""}`}
-            maxLength={500}
+            maxLength={CHAT_MAX_LENGTH}
             disabled={loading}
           />
           <Button

@@ -199,10 +199,10 @@ export default function MultiplayerGame() {
         }
       }
 
-      // Shuffle questions based on startedAt to get different questions each game
-      // Use startedAt as seed so all players get same shuffled order
+      // Shuffle questions with the round's shared seed so every player
+      // gets the same order (startedAt is local-clock and differs per client)
       if (updatedRoom.startedAt) {
-        const seed = updatedRoom.startedAt;
+        const seed = updatedRoom.seed ?? updatedRoom.serverStartedAt ?? 0;
         const questions = [...updatedRoom.gameMode.questions];
 
         // Seeded shuffle using Fisher-Yates with LCG random
@@ -292,11 +292,8 @@ export default function MultiplayerGame() {
     ) {
       // Target reached, calculate elapsed time and update score
       if (roomId && room.startedAt) {
-        const elapsedTime = Math.floor((Date.now() - room.startedAt) / 1000);
-        // Update score to elapsed time for speedrun modes
-        updatePlayerScore(roomId, elapsedTime).then(() => {
-          finishGame(roomId);
-        });
+        // Record the finish time; the room reports it as the speedrun score
+        finishGame(roomId, { finishMs: Date.now() - room.startedAt });
       }
     }
   }, [

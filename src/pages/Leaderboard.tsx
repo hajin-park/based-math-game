@@ -1,13 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import {
-  collection,
-  getDocs,
-  query,
-  orderBy,
-  doc,
-  getDoc,
-} from "firebase/firestore";
-import { firestore } from "@/firebase/config";
+  fetchLeaderboard as fetchTopEntries,
+  fetchRank,
+  LEADERBOARD_MAX_LIMIT,
+} from "@/data/leaderboard";
 import {
   PaperCard,
   PaperCardContent,
@@ -73,58 +69,17 @@ export default function Leaderboard() {
       if (!user || isGuest) return;
 
       try {
-        const gameMode = getGameModeById(gameModeId);
-        const isSpeedrun = isSpeedrunMode(gameMode);
-
-        // Get user's score
-        const userDocRef = doc(
-          firestore,
-          `leaderboard-${gameModeId}`,
-          user.uid,
+        const mine = await fetchRank(gameModeId, user.uid);
+        setUserRank(
+          mine
+            ? {
+                rank: mine.rank,
+                score: mine.entry.score,
+                totalPlayers: mine.total,
+                accuracy: mine.entry.accuracy,
+              }
+            : null,
         );
-        const userDoc = await getDoc(userDocRef);
-
-        if (!userDoc.exists()) {
-          setUserRank(null);
-          return;
-        }
-
-        const userData = userDoc.data();
-        const userScore = userData.score as number;
-        const userAccuracy = userData.accuracy as number | undefined;
-
-        // Get all leaderboard entries
-        const leaderboardRef = collection(
-          firestore,
-          `leaderboard-${gameModeId}`,
-        );
-        const leaderboardQuery = query(
-          leaderboardRef,
-          orderBy("score", isSpeedrun ? "asc" : "desc"),
-        );
-
-        const snapshot = await getDocs(leaderboardQuery);
-
-        // Filter out guest users and count rank
-        const validEntries = snapshot.docs.filter((doc) => {
-          const data = doc.data();
-          const isGuestUid = doc.id.startsWith("guest_");
-          const isGuestMarked = data.isGuest === true;
-          return !isGuestUid && !isGuestMarked;
-        });
-
-        const rank = validEntries.findIndex((doc) => doc.id === user.uid) + 1;
-
-        if (rank > 0) {
-          setUserRank({
-            rank,
-            score: userScore,
-            totalPlayers: validEntries.length,
-            accuracy: userAccuracy,
-          });
-        } else {
-          setUserRank(null);
-        }
       } catch (error) {
         console.error("Error fetching user rank:", error);
         setUserRank(null);
@@ -137,55 +92,24 @@ export default function Leaderboard() {
     async (gameModeId: string, page: number = 1) => {
       setLoading(true);
       try {
-        const gameMode = getGameModeById(gameModeId);
-        const isSpeedrun = isSpeedrunMode(gameMode);
+        // Top 100 entries of `leaderboards/{modeId}/entries`, best first.
+        // Legacy mode ids are not ranked in the new schema and return [].
+        const allEntries: LeaderboardEntry[] = (
+          await fetchTopEntries(gameModeId, LEADERBOARD_MAX_LIMIT)
+        ).map((e) => ({
+          uid: e.uid,
+          displayName: e.displayName,
+          score: e.score,
+          timestamp: e.updatedAt,
+          accuracy: e.accuracy,
+        }));
 
-        // Use flat collection structure: leaderboard-{gameModeId}
-        const leaderboardRef = collection(
-          firestore,
-          `leaderboard-${gameModeId}`,
-        );
-
-        // First, get all entries to calculate total count and support pagination
-        // For speedrun: order by score ascending (lower is better)
-        // For timed: order by score descending (higher is better)
-        const allEntriesQuery = query(
-          leaderboardRef,
-          orderBy("score", isSpeedrun ? "asc" : "desc"),
-        );
-
-        const snapshot = await getDocs(allEntriesQuery);
-
-        // Filter out guest users
-        const allEntries: LeaderboardEntry[] = snapshot.docs
-          .filter((doc) => {
-            const data = doc.data();
-            const isGuestUid = doc.id.startsWith("guest_");
-            const isGuestMarked = data.isGuest === true;
-            return !isGuestUid && !isGuestMarked;
-          })
-          .map((doc) => {
-            const data = doc.data();
-            return {
-              uid: doc.id,
-              displayName: data.displayName as string,
-              score: data.score as number,
-              timestamp: data.timestamp as number,
-              accuracy: data.accuracy as number | undefined,
-            };
-          });
-
-        // Set total entries count
         setTotalEntries(allEntries.length);
 
-        // Paginate the results
         const startIndex = (page - 1) * ENTRIES_PER_PAGE;
         const endIndex = startIndex + ENTRIES_PER_PAGE;
-        const paginatedEntries = allEntries.slice(startIndex, endIndex);
+        setLeaderboard(allEntries.slice(startIndex, endIndex));
 
-        setLeaderboard(paginatedEntries);
-
-        // Fetch user's rank if authenticated and not a guest
         if (user && !isGuest) {
           await fetchUserRank(gameModeId);
         } else {

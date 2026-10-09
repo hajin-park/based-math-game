@@ -70,11 +70,27 @@ export default function ProfileSettings() {
   const handleDeleteAccount = async () => {
     setDeleting(true);
     try {
-      await deleteAccount();
+      try {
+        await deleteAccount();
+      } catch (error) {
+        // Email/password accounts must confirm their password when the last
+        // sign-in is not recent (Google accounts get a popup instead).
+        if ((error as { code?: string })?.code !== "auth/requires-recent-login")
+          throw error;
+        const password = window.prompt(
+          "Please enter your password to confirm account deletion:",
+        );
+        if (!password) return;
+        await deleteAccount({ password });
+      }
       navigate("/");
     } catch (error) {
       console.error("Failed to delete account:", error);
-      alert("Failed to delete account. Please try again or contact support.");
+      alert(
+        error instanceof Error && error.message
+          ? error.message
+          : "Failed to delete account. Please try again or contact support.",
+      );
     } finally {
       setDeleting(false);
     }

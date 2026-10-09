@@ -8,7 +8,6 @@ import {
   QuizSettings,
   QuizResults,
 } from "@/contexts/GameContexts";
-import { useAuth } from "@/contexts/AuthContext";
 import ConnectionStatus from "@/components/ConnectionStatus";
 import { CookieConsent } from "@/components/CookieConsent";
 
@@ -20,7 +19,6 @@ export const Layout = () => {
   const [results, setResults] = useState<QuizResults>({
     score: 0,
   });
-  const { loading } = useAuth();
   const location = useLocation();
 
   // Check if current route is a multiplayer room page (lobby, game, or results)
@@ -34,14 +32,8 @@ export const Layout = () => {
   // Hide nav/footer for multiplayer rooms and active quiz
   const hideNavAndFooter = isMultiplayerRoom || isActiveQuiz;
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
+  // Auth no longer blocks rendering: pages render immediately and the
+  // components that need a uid wait for `user` (or call ensureUser()).
   return (
     <main className="flex flex-col w-full h-screen">
       <ScrollToTop />

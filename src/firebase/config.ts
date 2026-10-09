@@ -2,6 +2,10 @@ import { initializeApp } from "firebase/app";
 import { getAuth, connectAuthEmulator } from "firebase/auth";
 import { getDatabase, connectDatabaseEmulator } from "firebase/database";
 import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
+import {
+  initializeAppCheck,
+  ReCaptchaEnterpriseProvider,
+} from "firebase/app-check";
 
 // Firebase configuration from environment variables
 const firebaseConfig = {
@@ -17,18 +21,65 @@ const firebaseConfig = {
 // Initialize Firebase
 export const app = initializeApp(firebaseConfig);
 
+const useEmulators =
+  import.meta.env.DEV && import.meta.env.VITE_USE_FIREBASE_EMULATORS === "true";
+
+/**
+ * Optional App Check (reCAPTCHA Enterprise).
+ *
+ * Enabled only when VITE_APPCHECK_SITE_KEY is set, so local development and
+ * forks without a key keep working. It is initialized before any other
+ * Firebase service is created so the very first Auth/RTDB/Firestore request
+ * already carries a token.
+ * Set VITE_APPCHECK_DEBUG_TOKEN (or "true" to have one generated and printed to
+ * the console) to register a debug token for local testing against a project
+ * that enforces App Check.
+ */
+const appCheckSiteKey = import.meta.env.VITE_APPCHECK_SITE_KEY as
+  | string
+  | undefined;
+if (appCheckSiteKey && !useEmulators && typeof window !== "undefined") {
+  const debugToken = import.meta.env.VITE_APPCHECK_DEBUG_TOKEN as
+    | string
+    | undefined;
+  if (debugToken) {
+    (
+      self as unknown as { FIREBASE_APPCHECK_DEBUG_TOKEN?: string | boolean }
+    ).FIREBASE_APPCHECK_DEBUG_TOKEN = debugToken === "true" ? true : debugToken;
+  }
+  try {
+    initializeAppCheck(app, {
+      provider: new ReCaptchaEnterpriseProvider(appCheckSiteKey),
+      isTokenAutoRefreshEnabled: true,
+    });
+  } catch (error) {
+    console.error("App Check failed to initialize:", error);
+  }
+}
+
 // Initialize Firebase services
 export const auth = getAuth(app);
 export const database = getDatabase(app); // Realtime Database for ephemeral data
 export const firestore = getFirestore(app); // Firestore for persistent data
 
 // Connect to emulators in development
-if (
-  import.meta.env.DEV &&
-  import.meta.env.VITE_USE_FIREBASE_EMULATORS === "true"
-) {
-  connectAuthEmulator(auth, "http://127.0.0.1:9099", { disableWarnings: true });
-  connectDatabaseEmulator(database, "127.0.0.1", 9000);
-  connectFirestoreEmulator(firestore, "127.0.0.1", 8080);
-  console.log("🔧 Connected to Firebase Emulators (Auth, RTDB, Firestore)");
+if (useEmulators) {
+  const env = import.meta.env;
+  const host = env.VITE_EMULATOR_HOST || "127.0.0.1";
+  connectAuthEmulator(
+    auth,
+    `http://${host}:${env.VITE_EMULATOR_AUTH_PORT || 9099}`,
+    { disableWarnings: true },
+  );
+  connectDatabaseEmulator(
+    database,
+    host,
+    Number(env.VITE_EMULATOR_DATABASE_PORT || 9000),
+  );
+  connectFirestoreEmulator(
+    firestore,
+    host,
+    Number(env.VITE_EMULATOR_FIRESTORE_PORT || 8080),
+  );
+  console.log("Connected to Firebase Emulators (Auth, RTDB, Firestore)");
 }
