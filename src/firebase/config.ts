@@ -27,8 +27,22 @@ if (
   import.meta.env.DEV &&
   import.meta.env.VITE_USE_FIREBASE_EMULATORS === "true"
 ) {
-  connectAuthEmulator(auth, "http://127.0.0.1:9099", { disableWarnings: true });
-  connectDatabaseEmulator(database, "127.0.0.1", 9000);
-  connectFirestoreEmulator(firestore, "127.0.0.1", 8080);
+  const env = import.meta.env;
+  const host = env.VITE_EMULATOR_HOST || "127.0.0.1";
+  connectAuthEmulator(
+    auth,
+    `http://${host}:${env.VITE_EMULATOR_AUTH_PORT || 9099}`,
+    { disableWarnings: true },
+  );
+  connectDatabaseEmulator(
+    database,
+    host,
+    Number(env.VITE_EMULATOR_DATABASE_PORT || 9000),
+  );
+  connectFirestoreEmulator(
+    firestore,
+    host,
+    Number(env.VITE_EMULATOR_FIRESTORE_PORT || 8080),
+  );
   console.log("🔧 Connected to Firebase Emulators (Auth, RTDB, Firestore)");
 }
