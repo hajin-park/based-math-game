@@ -92,6 +92,12 @@ export function useRunHistory(options: RunHistoryOptions = {}) {
     getDocs(query(runsCollection(uid), ...constraints))
       .then((snap) => {
         if (cancelled) return;
+        // Offline with nothing cached: an error, not "no runs yet".
+        if (snap.empty && snap.metadata.fromCache) {
+          throw Object.assign(new Error("Run history unavailable offline"), {
+            code: "unavailable",
+          });
+        }
         setRuns(
           snap.docs.map((d) => ({
             id: d.id,

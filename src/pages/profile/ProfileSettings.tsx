@@ -279,38 +279,38 @@ function DeleteDialog({
             </DialogDescription>
           </DialogHeader>
 
-          <ul className="flex flex-col gap-2 text-body-sm">
+          <ul className="list-disc space-y-1.5 pl-5 text-body-sm marker:text-muted-foreground">
             {isGuest ? (
               <>
                 <li>
-                  · {localRuns} {localRuns === 1 ? "run" : "runs"} and your game
+                  {localRuns} {localRuns === 1 ? "run" : "runs"} and your game
                   settings stored in this browser
                 </li>
-                <li>· Your anonymous guest ID and guest name</li>
-                <li>· Your online status record used by multiplayer</li>
+                <li>Your anonymous guest ID and guest name</li>
+                <li>Your online status record used by multiplayer</li>
               </>
             ) : (
               <>
                 <li>
-                  · Your profile: display name and game settings
+                  Your profile: display name and game settings
                 </li>
                 <li>
-                  · Your run history and stats ({stats.gamesPlayed}{" "}
+                  Your run history, stats and personal bests ({stats.gamesPlayed}{" "}
                   {stats.gamesPlayed === 1 ? "run" : "runs"})
                 </li>
                 <li>
-                  · Your leaderboard entries ({rankedModes}{" "}
+                  Your leaderboard entries ({rankedModes}{" "}
                   {rankedModes === 1 ? "mode" : "modes"})
                 </li>
                 <li>
-                  · Your sign-in account
+                  Your sign-in account
                   {user?.email ? (
                     <>
                       {" "}(<span className="font-medium">{user.email}</span>)
                     </>
                   ) : null}
                 </li>
-                <li>· Settings and guest data stored in this browser</li>
+                <li>Settings and guest data stored in this browser</li>
               </>
             )}
           </ul>
@@ -381,8 +381,8 @@ export default function ProfileSettings() {
     <div className="flex flex-col">
       <Section
         id="name-title"
-        title="Display name"
-        description="The name other players see."
+        title="Profile"
+        description="How you appear to other players."
       >
         <DisplayNameForm />
       </Section>
@@ -461,7 +461,11 @@ export default function ProfileSettings() {
           )}
         </p>
         <div>
-          <Button variant="destructive" onClick={() => setDeleteOpen(true)}>
+          <Button
+            variant="outline"
+            className="border-destructive/40 text-destructive hover:border-destructive hover:bg-destructive/[0.06]"
+            onClick={() => setDeleteOpen(true)}
+          >
             {isGuest ? "Clear guest data…" : "Delete account…"}
           </Button>
         </div>
