@@ -65,6 +65,6 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    include: ["react", "react-dom", "@radix-ui/react-collapsible"],
+    include: ["react", "react-dom"],
   },
 });

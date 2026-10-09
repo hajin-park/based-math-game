@@ -1,29 +1,16 @@
-import { Suspense, useState } from "react";
+import { Suspense } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { NavigationBar, Footer } from "@features/ui";
 import ScrollToTop from "./ScrollToTop.jsx";
-import {
-  QuizContext,
-  ResultContext,
-  QuizSettings,
-  QuizResults,
-} from "@/contexts/GameContexts";
 import ConnectionStatus from "@/components/ConnectionStatus";
 import RouteFallback from "@/components/RouteFallback";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
 
 export const Layout = () => {
-  const [settings, setSettings] = useState<QuizSettings>({
-    questions: [],
-    duration: 60,
-  });
-  const [results, setResults] = useState<QuizResults>({
-    score: 0,
-  });
   const location = useLocation();
 
-  // Immersive routes: multiplayer room pages and the active quiz hide chrome.
+  // Immersive routes: multiplayer room pages and the run screen hide chrome.
   const isMultiplayerRoom = /^\/multiplayer\/(lobby|game|results)\//.test(
     location.pathname,
   );
@@ -43,13 +30,9 @@ export const Layout = () => {
         <ConnectionStatus />
         {!immersive && <NavigationBar />}
         <main id="main" tabIndex={-1} className="flex-auto outline-none">
-          <ResultContext.Provider value={{ results, setResults }}>
-            <QuizContext.Provider value={{ settings, setSettings }}>
-              <Suspense fallback={<RouteFallback />}>
-                <Outlet />
-              </Suspense>
-            </QuizContext.Provider>
-          </ResultContext.Provider>
+          <Suspense fallback={<RouteFallback />}>
+            <Outlet />
+          </Suspense>
         </main>
         {!immersive && <Footer />}
         <Toaster />
