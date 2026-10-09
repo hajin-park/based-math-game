@@ -280,8 +280,8 @@ const SECTIONS: LegalSection[] = [
           and personal bests, all your leaderboard entries, your online-status
           record and your sign-in account, and clears the game data in that
           browser. If you played today’s daily challenge, an empty marker
-          that you used today’s ranked attempt is removed automatically within
-          two days. For your security we may ask for your password, or ask
+          that you used today’s ranked attempt is removed automatically after
+          the day ends, usually within a day. For your security we may ask for your password, or ask
           Google to confirm it’s you, first.
         </p>
         <p>

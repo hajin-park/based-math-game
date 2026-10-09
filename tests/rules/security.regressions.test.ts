@@ -410,7 +410,7 @@ describe("M1 daily leaderboard (Firestore)", () => {
   });
   const lockData = (date: string) => ({
     expireAt: firebase.firestore.Timestamp.fromMillis(
-      Date.parse(`${date}T00:00:00Z`) + 2 * DAY,
+      Date.parse(`${date}T00:00:00Z`) + DAY + 10 * 60_000,
     ),
   });
   const submit = (date: string, extra: Record<string, unknown> = {}) => {

@@ -127,7 +127,7 @@ describe("daily window (UTC day + grace)", () => {
     expect(dailyStartMs("daily:0000-99-99")).toBeNull();
     expect(dailyStartMs("daily:today")).toBeNull();
     expect(dailyStartMs("survival")).toBeNull();
-    expect(dailyLockExpiresMs(id)).toBe(start + 2 * DAY);
+    expect(dailyLockExpiresMs(id)).toBe(start + DAY + RULES_LIMITS.dailyGraceMs);
   });
 
   it("is open from UTC midnight until the grace period after the next", () => {

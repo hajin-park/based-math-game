@@ -699,7 +699,11 @@ const updatePlayerScore = async (
   } catch (error) {
     state.lastScore = previous.lastScore;
     state.written = previous.written;
-    console.error("Error updating score:", error);
+    // Results freeze when the round ends (rules): a write that lost the race
+    // with the host ending the round is expected, not an error.
+    const ended = latestRaw.get(roomId)?.status !== "playing";
+    if (!(ended && isPermissionDenied(error)))
+      console.error("Error updating score:", error);
   }
 };
 

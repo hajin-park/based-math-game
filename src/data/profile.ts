@@ -90,8 +90,8 @@ export async function propagateDisplayName(
  * submitted (deleting it would allow a second ranked attempt), so a lock
  * from today (or the first minutes after midnight) stays behind. It is an
  * empty marker with only an `expireAt` timestamp, readable by nobody once the
- * account is gone, and Firestore's TTL policy deletes it within about two
- * days (firestore.indexes.json).
+ * account is gone, and Firestore's TTL policy deletes it after the day
+ * closes, usually within a day (firestore.indexes.json).
  */
 export async function deleteUserData(uid: string): Promise<void> {
   // Run history, in pages.

@@ -97,10 +97,13 @@ export function isDailyClosed(modeId: string, now = Date.now()): boolean {
   return start !== null && now >= start + DAY_MS + RULES_LIMITS.dailyGraceMs;
 }
 
-/** TTL of a daily lock document: two days after its day starts. */
+/**
+ * TTL of a daily lock document: the moment its day closes for submissions
+ * (Firestore deletes it some time after; never before).
+ */
 export function dailyLockExpiresMs(modeId: string): number | null {
   const start = dailyStartMs(modeId);
-  return start === null ? null : start + 2 * DAY_MS;
+  return start === null ? null : start + DAY_MS + RULES_LIMITS.dailyGraceMs;
 }
 
 /** Leaderboard ordering for a mode id (speedrun/daily: lower is better). */

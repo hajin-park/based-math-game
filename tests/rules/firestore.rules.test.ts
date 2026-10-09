@@ -96,10 +96,10 @@ const dayKey = (days = 0) =>
 const TODAY = dayKey();
 const lockRef = (db: firebase.firestore.Firestore, uid: string, date: string) =>
   db.doc(`users/${uid}/dailyLocks/daily:${date}`);
-/** The lock document src/data/leaderboard.ts writes (TTL two days after the day starts). */
+/** The lock document src/data/leaderboard.ts writes (TTL when the day closes: +1 day +10 min). */
 const lockData = (date: string) => ({
   expireAt: firebase.firestore.Timestamp.fromMillis(
-    Date.parse(`${date}T00:00:00Z`) + 2 * DAY,
+    Date.parse(`${date}T00:00:00Z`) + DAY + 10 * 60_000,
   ),
 });
 /** Claims the day's ranked attempt: lock + entry in one batch. */

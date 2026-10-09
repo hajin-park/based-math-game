@@ -125,7 +125,10 @@ export function subscribeToChat(
       callback(messages);
     },
     (error) => {
-      console.error("Chat subscription error:", error);
+      // Permission is only refused to players removed from the room; the
+      // room view explains that, so it is not an error worth logging.
+      if (!isPermissionDenied(error))
+        console.error("Chat subscription error:", error);
       callback([]);
     },
   );

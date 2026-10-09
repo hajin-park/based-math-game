@@ -121,13 +121,14 @@ service cloud.firestore {
       // exists. The lock cannot be deleted while that day's entry could
       // still be created (so deleting the entry never allows a second try);
       // afterwards the owner may delete it (account deletion), and the TTL
-      // policy on expireAt (firestore.indexes.json) removes it anyway.
+      // policy on expireAt (= the moment the day closes; firestore.indexes.json)
+      // removes it anyway, typically within a day.
       match /dailyLocks/{modeId} {
         allow read: if isOwner(uid);
         allow create: if isOwner(uid) && isRegistered()
           && isDaily(modeId) && isRankedMode(modeId) && dailyOpen(modeId)
           && request.resource.data.keys().hasOnly(['expireAt'])
-          && request.resource.data.expireAt == dailyStart(modeId) + duration.value(2, 'd');
+          && request.resource.data.expireAt == dailyStart(modeId) + duration.value(1, 'd') + dailyGrace();
         allow delete: if isOwner(uid)
           && (!isRankedMode(modeId) || !isDaily(modeId) || dailyClosed(modeId));
       }
