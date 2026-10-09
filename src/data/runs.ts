@@ -8,7 +8,7 @@ import {
 import type { User } from "firebase/auth";
 import { auth } from "@/firebase/app";
 import { firestore } from "@/firebase/firestore";
-import { isRankedModeId } from "./limits";
+import { isDailyModeId, isRankedModeId } from "./limits";
 import { submitLeaderboardEntry } from "./leaderboard";
 import {
   addLocalRun,
@@ -118,10 +118,12 @@ export async function importLocalRuns(user: User): Promise<number> {
     clearLocalRuns();
 
     // Best ranked run per mode -> leaderboard (improvement checked inside).
+    // A daily counts its first attempt only (one ranked try per day).
     const bestPerMode = new Map<string, RunRecord>();
     for (const r of oldestFirst) {
       if (!isRankedModeId(r.modeId)) continue;
       const cur = bestPerMode.get(r.modeId);
+      if (cur && isDailyModeId(r.modeId)) continue;
       if (!cur || isImprovement(orderForRun(r), r.score, cur.score)) {
         bestPerMode.set(r.modeId, r);
       }

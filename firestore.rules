@@ -4,6 +4,7 @@ rules_version = '2';
 //   users/{uid}                          profile + settings      (owner; registered accounts write)
 //   users/{uid}/runs/{runId}             run history             (owner; create-only, no updates)
 //   userStats/{uid}                      aggregates + bests      (owner; registered accounts write)
+//   users/{uid}/dailyLocks/{modeId}      one ranked daily try    (owner; create-only, see below)
 //   leaderboards/{modeId}/entries/{uid}  best ranked result      (public read; owner write if improved)
 //
 // Guests are Firebase anonymous users. They keep runs/settings in localStorage
@@ -41,8 +42,12 @@ service cloud.firestore {
       return v is int && v >= lo && v <= hi;
     }
 
+    // 1..24 characters, none of them invisible: C0 controls, DEL, zero-width
+    // characters, bidi embeddings/overrides/isolates (INVISIBLE_NAME_CHARS in
+    // src/utils/displayNameValidator.ts).
     function validName(n) {
-      return n is string && n.size() >= 1 && n.size() <= 24;
+      return n is string && n.size() >= 1 && n.size() <= 24
+        && !n.matches('(?s).*[\\x{0000}-\\x{001F}\\x{007F}\\x{200B}-\\x{200F}\\x{202A}-\\x{202E}\\x{2066}-\\x{2069}].*');
     }
 
     // ---- limits ----
@@ -109,6 +114,23 @@ service cloud.firestore {
         allow create: if isOwner(uid) && isRegistered()
           && validRun(request.resource.data);
       }
+
+      // ---- daily locks ----
+      // One ranked daily attempt: a daily leaderboard entry can only be
+      // created in the same batch as this lock, and only while no lock
+      // exists. The lock cannot be deleted while that day's entry could
+      // still be created (so deleting the entry never allows a second try);
+      // afterwards the owner may delete it (account deletion), and the TTL
+      // policy on expireAt (firestore.indexes.json) removes it anyway.
+      match /dailyLocks/{modeId} {
+        allow read: if isOwner(uid);
+        allow create: if isOwner(uid) && isRegistered()
+          && isDaily(modeId) && isRankedMode(modeId) && dailyOpen(modeId)
+          && request.resource.data.keys().hasOnly(['expireAt'])
+          && request.resource.data.expireAt == dailyStart(modeId) + duration.value(2, 'd');
+        allow delete: if isOwner(uid)
+          && (!isRankedMode(modeId) || !isDaily(modeId) || dailyClosed(modeId));
+      }
     }
 
     // ---- aggregates ----
@@ -142,6 +164,29 @@ service cloud.firestore {
       return modeId.matches('^daily:.*');
     }
 
+    // Daily challenges are per UTC day; a run finished just after midnight
+    // may still be saved for 10 minutes (DAILY_GRACE_MS in src/data/limits.ts).
+    // Callers check isRankedMode(modeId) && isDaily(modeId) first.
+    function dailyStart(modeId) {
+      let p = modeId.split(':')[1].split('-');
+      return timestamp.date(int(p[0]), int(p[1]), int(p[2]));
+    }
+
+    function dailyGrace() { return duration.value(10, 'm'); }
+
+    function dailyOpen(modeId) {
+      return request.time >= dailyStart(modeId)
+        && request.time < dailyStart(modeId) + duration.value(1, 'd') + dailyGrace();
+    }
+
+    function dailyClosed(modeId) {
+      return request.time >= dailyStart(modeId) + duration.value(1, 'd') + dailyGrace();
+    }
+
+    function dailyLock(modeId) {
+      return /databases/$(database)/documents/users/$(request.auth.uid)/dailyLocks/$(modeId);
+    }
+
     function isSpeedrun(modeId) {
       return modeId.matches('.*:speedrun$');
     }
@@ -168,7 +213,8 @@ service cloud.firestore {
                  && d.score == d.durationMs + d.skipped * speedrunSkipMs()
                  && d.score >= speedrunMinMs())
           : isDaily(modeId)
-              ? (d.correct + d.skipped <= dailyQuestions()
+              ? (d.correct + d.skipped == dailyQuestions()
+                 && dailyOpen(modeId)
                  && d.score == d.durationMs + d.skipped * dailySkipMs()
                  && d.score >= dailyMinMs())
           // survival
@@ -208,7 +254,10 @@ service cloud.firestore {
       // player's rank is computed from a bounded "who is ahead" query).
       allow list: if request.query.limit <= 100;
       allow create: if isOwner(uid) && isRegistered() && isRankedMode(modeId)
-        && validEntry(modeId, uid, request.resource.data);
+        && validEntry(modeId, uid, request.resource.data)
+        // Daily: one ranked attempt, claimed by creating the lock in this batch.
+        && (!isDaily(modeId)
+            || (!exists(dailyLock(modeId)) && existsAfter(dailyLock(modeId))));
       allow update: if isOwner(uid) && isRegistered() && isRankedMode(modeId)
         && (nameOnlyUpdate()
             || (!isDaily(modeId)   // daily: one ranked attempt per day

@@ -17,6 +17,10 @@ import {
   RULES_LIMITS,
   SCORE_LIMITS,
   bestsKey,
+  dailyLockExpiresMs,
+  dailyStartMs,
+  isDailyClosed,
+  isDailyOpen,
   leaderboardRejection,
   modeIdFromBestsKey,
   scoreOrderFor,
@@ -94,10 +98,51 @@ describe("rules stay in sync with the engine limits", () => {
 
   it("database.rules.json multiplayer bounds", () => {
     const perSecond = SCORE_LIMITS.maxCorrectPerSecond;
-    const points = perSecond * RULES_LIMITS.maxPointsPerCorrect;
-    expect(dbRules).toContain(`* ${perSecond} / 1000 + ${perSecond}`);
-    expect(dbRules).toContain(`* ${points} / 1000 + ${points}`);
+    // Counters are bounded by play time (the 3 s countdown excluded).
+    expect(dbRules).toContain(
+      `- 3000) * ${perSecond} / 1000 + ${perSecond}`,
+    );
+    // One point per correct answer in every room format.
+    expect(dbRules).toContain(
+      "newData.val() === newData.parent().child('correct').val()",
+    );
     expect(dbRules).toContain(`* ${SCORE_LIMITS.minMsPerCorrect}`);
+    expect(dbRules).toContain(`: ${SPEEDRUN_TARGET})`);
+  });
+
+  it("daily grace period matches firestore.rules", () => {
+    const minutes = RULES_LIMITS.dailyGraceMs / 60_000;
+    expect(firestoreRules).toContain(`duration.value(${minutes}, 'm')`);
+  });
+});
+
+describe("daily window (UTC day + grace)", () => {
+  const id = "daily:2026-10-09";
+  const start = Date.UTC(2026, 9, 9);
+  const DAY = 24 * 60 * 60 * 1000;
+
+  it("parses only real dates", () => {
+    expect(dailyStartMs(id)).toBe(start);
+    expect(dailyStartMs("daily:2026-02-31")).toBeNull();
+    expect(dailyStartMs("daily:0000-99-99")).toBeNull();
+    expect(dailyStartMs("daily:today")).toBeNull();
+    expect(dailyStartMs("survival")).toBeNull();
+    expect(dailyLockExpiresMs(id)).toBe(start + 2 * DAY);
+  });
+
+  it("is open from UTC midnight until the grace period after the next", () => {
+    expect(isDailyOpen(id, start - 1)).toBe(false);
+    expect(isDailyOpen(id, start)).toBe(true);
+    expect(isDailyOpen(id, start + DAY + RULES_LIMITS.dailyGraceMs - 1)).toBe(
+      true,
+    );
+    expect(isDailyOpen(id, start + DAY + RULES_LIMITS.dailyGraceMs)).toBe(
+      false,
+    );
+    expect(isDailyClosed(id, start + DAY)).toBe(false);
+    expect(isDailyClosed(id, start + DAY + RULES_LIMITS.dailyGraceMs)).toBe(
+      true,
+    );
   });
 });
 
@@ -133,6 +178,46 @@ describe("leaderboardRejection mirrors the rules", () => {
         durationMs: 90_000,
       }),
     ).toBeNull();
+    expect(
+      leaderboardRejection(
+        {
+          ...base,
+          modeId: "daily:2026-10-09",
+          score: 40_000,
+          correct: 8,
+          skipped: 2,
+          durationMs: 20_000,
+        },
+        Date.UTC(2026, 9, 9, 12),
+      ),
+    ).toBeNull();
+  });
+
+  it("daily: all ten questions, today's challenge only", () => {
+    const daily = {
+      ...base,
+      modeId: "daily:2026-10-09",
+      score: 20_000,
+      correct: 10,
+      durationMs: 20_000,
+    };
+    const noon = Date.UTC(2026, 9, 9, 12);
+    expect(leaderboardRejection(daily, noon)).toBeNull();
+    // Just after midnight: still counts (grace).
+    expect(leaderboardRejection(daily, Date.UTC(2026, 9, 10, 0, 5))).toBeNull();
+    expect(
+      leaderboardRejection(daily, Date.UTC(2026, 9, 10, 0, 11)),
+    ).not.toBeNull();
+    expect(leaderboardRejection(daily, Date.UTC(2026, 9, 8, 23))).not.toBeNull();
+    expect(
+      leaderboardRejection(
+        { ...daily, correct: 0, durationMs: 2_500, score: 2_500 },
+        noon,
+      ),
+    ).not.toBeNull();
+    expect(
+      leaderboardRejection({ ...daily, correct: 9 }, noon),
+    ).not.toBeNull();
   });
 
   it("rejects incomplete, unranked and implausible results", () => {

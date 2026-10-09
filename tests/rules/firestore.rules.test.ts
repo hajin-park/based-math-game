@@ -89,6 +89,32 @@ function run(overrides: Record<string, unknown> = {}) {
 const lb = (db: firebase.firestore.Firestore, modeId: string, uid: string) =>
   db.doc(`leaderboards/${modeId}/entries/${uid}`);
 
+const DAY = 24 * 60 * 60 * 1000;
+/** UTC date key `days` from today (the daily challenge is per UTC day). */
+const dayKey = (days = 0) =>
+  new Date(Date.now() + days * DAY).toISOString().slice(0, 10);
+const TODAY = dayKey();
+const lockRef = (db: firebase.firestore.Firestore, uid: string, date: string) =>
+  db.doc(`users/${uid}/dailyLocks/daily:${date}`);
+/** The lock document src/data/leaderboard.ts writes (TTL two days after the day starts). */
+const lockData = (date: string) => ({
+  expireAt: firebase.firestore.Timestamp.fromMillis(
+    Date.parse(`${date}T00:00:00Z`) + 2 * DAY,
+  ),
+});
+/** Claims the day's ranked attempt: lock + entry in one batch. */
+function claimDaily(
+  db: firebase.firestore.Firestore,
+  uid: string,
+  date: string,
+  entry: Record<string, unknown>,
+) {
+  const batch = db.batch();
+  batch.set(lockRef(db, uid, date), lockData(date));
+  batch.set(lb(db, `daily:${date}`, uid), entry);
+  return batch.commit();
+}
+
 async function seed(path: string, data: Record<string, unknown>) {
   await env.withSecurityRulesDisabled(async (ctx) => {
     await ctx.firestore().doc(path).set(data);
@@ -363,26 +389,77 @@ describe("leaderboards/{modeId}/entries/{uid}", () => {
     );
   });
 
-  it("daily: create-only, but the name can be updated", async () => {
-    const ref = () => lb(alice(), "daily:2026-10-09", "alice");
-    await assertSucceeds(ref().set(dailyEntry("alice")));
+  it("daily: one ranked attempt (entry + lock in one batch), name can be updated", async () => {
+    const ref = () => lb(alice(), `daily:${TODAY}`, "alice");
+    // Without claiming the day's lock in the same batch: denied.
+    await assertFails(ref().set(dailyEntry("alice")));
+    await assertSucceeds(claimDaily(alice(), "alice", TODAY, dailyEntry("alice")));
     await assertFails(
       ref().set(dailyEntry("alice", { score: 15_000, durationMs: 15_000 })),
     );
     await assertSucceeds(ref().update({ displayName: "Alicia" }));
     await assertFails(ref().update({ displayName: "Alicia", score: 1 }));
+    // Deleting the entry does not give a second attempt.
+    await assertSucceeds(ref().delete());
+    const better = dailyEntry("alice", { score: 15_000, durationMs: 15_000 });
+    await assertFails(ref().set(better));
+    await assertFails(claimDaily(alice(), "alice", TODAY, better));
+    await assertFails(lockRef(alice(), "alice", TODAY).delete());
+  });
+
+  it("daily: all ten questions, today's challenge only", async () => {
+    const submit = (date: string, overrides: Record<string, unknown>) =>
+      claimDaily(alice(), "alice", date, dailyEntry("alice", overrides));
+    await assertFails(submit(TODAY, { skipped: 1, score: 20_000 })); // missing penalty
+    await assertFails(submit(TODAY, { correct: 10, skipped: 1, score: 30_000 })); // 11 questions
+    await assertFails(submit(TODAY, { correct: 9, skipped: 0, score: 20_000 })); // 9 answered
     await assertFails(
-      lb(alice(), "daily:2026-10-10", "alice").set(
-        dailyEntry("alice", { skipped: 1, score: 20_000 }), // missing penalty
-      ),
-    );
-    await assertFails(
-      lb(alice(), "daily:2026-10-10", "alice").set(
-        dailyEntry("alice", { correct: 10, skipped: 1, score: 30_000 }), // 11 questions
-      ),
-    );
+      submit(TODAY, { correct: 0, skipped: 0, durationMs: 2_500, score: 2_500 }),
+    ); // none answered
+    await assertFails(submit(dayKey(-2), {})); // a past day
+    await assertFails(submit(dayKey(1), {})); // tomorrow
     await assertFails(
       lb(alice(), "daily:today", "alice").set(dailyEntry("alice")),
+    );
+    await assertSucceeds(
+      submit(TODAY, { correct: 8, skipped: 2, score: 40_000 }), // 20 s + 2 × 10 s
+    );
+  });
+
+  it("daily locks: owner-only, exact shape, deletable once the day is over", async () => {
+    await assertFails(lockRef(bob(), "alice", TODAY).set(lockData(TODAY)));
+    await assertFails(lockRef(guest(), "guest1", TODAY).set(lockData(TODAY)));
+    await assertFails(
+      lockRef(alice(), "alice", TODAY).set({ ...lockData(TODAY), extra: 1 }),
+    );
+    await assertFails(
+      lockRef(alice(), "alice", TODAY).set({
+        expireAt: firebase.firestore.Timestamp.fromMillis(Date.now()),
+      }),
+    );
+    await assertFails(lockRef(alice(), "alice", dayKey(-2)).set(lockData(dayKey(-2))));
+    await assertSucceeds(lockRef(alice(), "alice", TODAY).set(lockData(TODAY)));
+    await assertSucceeds(lockRef(alice(), "alice", TODAY).get());
+    await assertFails(lockRef(bob(), "alice", TODAY).get());
+    await assertFails(lockRef(alice(), "alice", TODAY).set(lockData(TODAY))); // no updates
+    await assertFails(lockRef(alice(), "alice", TODAY).delete());
+    // A finished day's lock can go (account deletion).
+    await seed(`users/alice/dailyLocks/daily:${dayKey(-3)}`, lockData(dayKey(-3)));
+    await assertFails(lockRef(bob(), "alice", dayKey(-3)).delete());
+    await assertSucceeds(lockRef(alice(), "alice", dayKey(-3)).delete());
+  });
+
+  it("leaderboard names reject control, zero-width and bidi characters", async () => {
+    const survival = (displayName: string) =>
+      lb(alice(), "survival", "alice").set(
+        sprintEntry("alice", { displayName, score: 5, correct: 5, durationMs: 5_000 }),
+      );
+    for (const bad of ["\u202Eadmin", "ad\u200Bmin", "a\u0000", "a\nb", "x\u2066y", "x\u007Fy"]) {
+      await assertFails(survival(bad));
+    }
+    await assertSucceeds(survival("Zoë 李 Ñandú"));
+    await assertFails(
+      alice().doc("users/alice").set({ displayName: "\u202Eadmin", createdAt: ts() }),
     );
   });
 

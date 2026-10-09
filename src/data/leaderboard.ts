@@ -10,18 +10,20 @@ import {
   setDoc,
   Timestamp,
   where,
+  writeBatch,
   type DocumentData,
 } from "firebase/firestore";
 import type { User } from "firebase/auth";
 import { firestore } from "@/firebase/firestore";
 import {
+  dailyLockExpiresMs,
   isDailyModeId,
   isImprovement,
   isRankedModeId,
   leaderboardRejection,
-  RULES_LIMITS,
   scoreOrderFor,
 } from "./limits";
+import { clampDisplayName } from "./names";
 import type {
   LeaderboardEntry,
   LeaderboardWriteResult,
@@ -33,6 +35,19 @@ export const LEADERBOARD_MAX_LIMIT = 100;
 
 export function entryRef(modeId: string, uid: string) {
   return doc(firestore, "leaderboards", modeId, "entries", uid);
+}
+
+/**
+ * `users/{uid}/dailyLocks/{modeId}`: claims the one ranked attempt at a
+ * daily. Rules only accept a daily entry created in the same batch as this
+ * lock, and only while it does not exist yet.
+ */
+export function dailyLockRef(uid: string, modeId: string) {
+  return doc(firestore, "users", uid, "dailyLocks", modeId);
+}
+
+export function dailyLocksCollection(uid: string) {
+  return collection(firestore, "users", uid, "dailyLocks");
 }
 
 export function entriesCollection(modeId: string) {
@@ -126,7 +141,8 @@ function isPermissionDenied(error: unknown): boolean {
 /**
  * Upserts the user's leaderboard entry if the run is ranked, the user is a
  * registered (non-anonymous) account and the score improves on their entry.
- * Daily entries are create-only (one ranked attempt per day).
+ * Daily entries are create-only: one ranked attempt per day, claimed by
+ * writing the day's lock in the same batch (see dailyLockRef).
  */
 export async function submitLeaderboardEntry(
   user: User,
@@ -137,29 +153,42 @@ export async function submitLeaderboardEntry(
   if (leaderboardRejection(run)) return "rejected";
 
   const ref = entryRef(run.modeId, user.uid);
+  const entry = {
+    uid: user.uid,
+    displayName: clampDisplayName(user.displayName),
+    score: run.score,
+    correct: run.correct,
+    skipped: run.skipped,
+    durationMs: run.durationMs,
+    accuracy: run.accuracy,
+    completed: true,
+    updatedAt: serverTimestamp(),
+  };
   try {
+    if (isDailyModeId(run.modeId)) {
+      const lock = dailyLockRef(user.uid, run.modeId);
+      const [lockSnap, existing] = await Promise.all([
+        getDoc(lock),
+        getDoc(ref),
+      ]);
+      // Today's ranked attempt was already used (even if its entry is gone).
+      if (lockSnap.exists() || existing.exists()) return "not-improved";
+      const batch = writeBatch(firestore);
+      batch.set(lock, {
+        expireAt: Timestamp.fromMillis(dailyLockExpiresMs(run.modeId) ?? 0),
+      });
+      batch.set(ref, entry);
+      await batch.commit();
+      return "updated";
+    }
     const existing = await getDoc(ref);
     if (existing.exists()) {
-      if (isDailyModeId(run.modeId)) return "not-improved";
       const prevScore = Number(existing.data().score);
       if (!isImprovement(scoreOrderFor(run.modeId), run.score, prevScore)) {
         return "not-improved";
       }
     }
-    await setDoc(ref, {
-      uid: user.uid,
-      displayName: (user.displayName || "Player").slice(
-        0,
-        RULES_LIMITS.displayNameMax,
-      ),
-      score: run.score,
-      correct: run.correct,
-      skipped: run.skipped,
-      durationMs: run.durationMs,
-      accuracy: run.accuracy,
-      completed: true,
-      updatedAt: serverTimestamp(),
-    });
+    await setDoc(ref, entry);
     return "updated";
   } catch (error) {
     if (isPermissionDenied(error)) return "rejected";

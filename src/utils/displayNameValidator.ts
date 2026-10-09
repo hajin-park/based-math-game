@@ -9,6 +9,26 @@
 
 export const DISPLAY_NAME_MAX = 24;
 
+/**
+ * Characters a display name may never contain: C0 controls, DEL, zero-width
+ * characters and bidi embeddings/overrides/isolates (they let a name hide or
+ * reorder text, e.g. to impersonate someone). The security rules reject the
+ * same set (firestore.rules validName, scripts/build-database-rules.mjs).
+ */
+export const INVISIBLE_NAME_CHARS =
+  "\\u0000-\\u001F\\u007F\\u200B-\\u200F\\u202A-\\u202E\\u2066-\\u2069";
+const INVISIBLE_RE = new RegExp(`[${INVISIBLE_NAME_CHARS}]`);
+const INVISIBLE_GLOBAL_RE = new RegExp(`[${INVISIBLE_NAME_CHARS}]`, "g");
+
+export function hasInvisibleChars(name: string): boolean {
+  return INVISIBLE_RE.test(name);
+}
+
+/** Removes the characters above (used before writing any name). */
+export function stripInvisibleChars(name: string): string {
+  return name.replace(INVISIBLE_GLOBAL_RE, "");
+}
+
 /** Blocked anywhere in the name (no common innocent words contain these). */
 const BLOCKED_SUBSTRINGS = [
   "nigger",
@@ -73,11 +93,7 @@ export function validateDisplayName(displayName: string): ValidationResult {
     };
   }
   // Control characters and zero-width/bidi tricks.
-  const hasControl = [...trimmed].some((c) => {
-    const n = c.charCodeAt(0);
-    return n < 32 || n === 127;
-  });
-  if (hasControl || /[\u200b-\u200f\u202a-\u202e\u2066-\u2069]/.test(trimmed)) {
+  if (hasInvisibleChars(trimmed)) {
     return {
       isValid: false,
       error: "Display name contains characters we can’t show.",

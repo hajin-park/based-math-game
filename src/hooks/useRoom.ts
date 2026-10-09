@@ -13,7 +13,10 @@
  *   startedAt, seed  written by the host when a round starts; startedAt is the
  *                    server time of the click, play begins COUNTDOWN later
  *   slots/{0..9}     uid holding each seat (bounds the room to maxPlayers)
- *   kicked/{uid}     true for players the host removed (cannot rejoin)
+ *   kicked/{uid}     true for players the host removed (cannot rejoin, and
+ *                    can no longer read the room)
+ *   winners          { round, uids/{uid}: true } the host records when a round
+ *                    ends; a player may only count a win listed here
  *   players/{uid}    { uid, displayName, slot, joinedAt, ready, score, correct,
  *                      finished, finishMs?, penaltyMs?, scoreMs?, round?, wins,
  *                      lastWinRound?, scoreHistory?, disconnected?,
@@ -50,6 +53,7 @@ import { RoomModeRef, resolveRoomMode, toRoomMode } from "@/lib/roomMode";
 import { serverNow, serverToLocal } from "@/lib/serverTime";
 import { setPresence } from "@/lib/presence";
 import { clampDisplayName } from "@/data/profile";
+import { rankPlayers } from "@/features/multiplayer/standings";
 
 export type { RoomModeRef } from "@/lib/roomMode";
 
@@ -140,6 +144,8 @@ interface RawRoom {
   players?: Record<string, RawPlayer | null>;
   slots?: Record<string, string | null> | Array<string | null>;
   kicked?: Record<string, boolean>;
+  lastChatAt?: Record<string, number>;
+  winners?: { round?: number; uids?: Record<string, boolean> };
 }
 
 // ---------------------------------------------------------------------------
@@ -319,8 +325,59 @@ export function normalizeRoom(
   };
 }
 
+/**
+ * What a removed player sees. Kicked players lose read access to the room, so
+ * their listener fails with permission-denied instead of receiving the kick;
+ * this rebuilds the room they last saw (or a stub) with them marked kicked,
+ * which the pages already handle ("You were removed from this room").
+ */
+function kickedView(roomId: string, uid: string, last: RawRoom | null): Room {
+  const base: RawRoom = last ?? {
+    hostUid: "",
+    status: "waiting",
+    mode: { id: "custom" },
+    maxPlayers: 2,
+    createdAt: 0,
+    lastActivityAt: 0,
+  };
+  return normalizeRoom(
+    roomId,
+    { ...base, kicked: { ...(base.kicked ?? {}), [uid]: true } },
+    uid,
+  );
+}
+
 /** Rooms with a live subscription: their latest snapshot is authoritative. */
 const liveRooms = new Map<string, number>();
+
+/**
+ * Key for the caller's next chat message. Rules accept exactly one message
+ * per write, keyed `${uid}_${previous lastChatAt, or 0}`. With a live room
+ * subscription the snapshot is current (a get() on a listened path can make
+ * the SDK drop listener events); otherwise read the stamp.
+ */
+export async function chatKeyFor(roomId: string, uid: string): Promise<string> {
+  let stamp: unknown;
+  if ((liveRooms.get(roomId) ?? 0) > 0 && latestRaw.has(roomId)) {
+    stamp = latestRaw.get(roomId)?.lastChatAt?.[uid];
+  } else {
+    stamp = (await get(ref(database, `rooms/${roomId}/lastChatAt/${uid}`))).val();
+  }
+  return `${uid}_${typeof stamp === "number" ? stamp : 0}`;
+}
+
+/**
+ * Winners of the round in `raw` (status "finished"), from the same standings
+ * every client shows. The host records them; players may only count a win
+ * the host recorded.
+ */
+function roundWinners(roomId: string, raw: RawRoom): string[] {
+  const room = normalizeRoom(roomId, raw, undefined);
+  if (!room.engineMode) return [];
+  return rankPlayers(Object.values(room.players), room.engineMode.format)
+    .filter((s) => s.winner)
+    .map((s) => s.player.uid);
+}
 
 async function readRoom(roomId: string): Promise<RawRoom | null> {
   // With a live listener the local cache is already current (including our
@@ -443,7 +500,16 @@ const joinRoom = async (roomId: string) => {
   try {
     const user = await ensureSignedIn();
     for (let attempt = 0; attempt < 4; attempt++) {
-      const raw = await readRoom(roomId);
+      let raw: RawRoom | null;
+      try {
+        raw = await readRoom(roomId);
+      } catch (error) {
+        // Kicked players cannot read the room any more.
+        if (isPermissionDenied(error)) {
+          throw new Error("You have been removed from this room");
+        }
+        throw error;
+      }
       if (!raw || (await removeIfStale(roomId, raw))) {
         throw new Error("Room not found");
       }
@@ -740,6 +806,14 @@ const incrementWins = async (roomId: string, winnerId: string) => {
     const me = raw?.players?.[uid];
     if (!raw || !me || raw.status !== "finished") return;
     if (me.lastWinRound === raw.startedAt) return; // already counted
+    // Only a win the host recorded counts; once it is recorded the room
+    // subscription credits it (this call is then a no-op).
+    if (
+      raw.winners?.round !== raw.startedAt ||
+      raw.winners?.uids?.[uid] !== true
+    ) {
+      return;
+    }
     await update(roomRef(roomId), {
       [`players/${uid}/wins`]: (me.wins ?? 0) + 1,
       [`players/${uid}/lastWinRound`]: raw.startedAt,
@@ -858,8 +932,15 @@ const endRound = async (roomId: string) => {
 
 /** One-off read of a room (join page preview). Null when it is gone. */
 const peekRoom = async (roomId: string): Promise<Room | null> => {
-  await ensureSignedIn();
-  const raw = await readRoom(roomId);
+  const user = await ensureSignedIn();
+  let raw: RawRoom | null;
+  try {
+    raw = await readRoom(roomId);
+  } catch (error) {
+    // Only removed players are refused: show them as such.
+    if (isPermissionDenied(error)) return kickedView(roomId, user.uid, null);
+    throw error;
+  }
   if (!raw || isStale(raw) || entries(raw.players).length === 0) return null;
   return normalizeRoom(roomId, raw, auth.currentUser?.uid);
 };
@@ -881,6 +962,8 @@ const subscribeToRoom = (
   let finishing = false;
   let resetting = false;
   let restoring = false;
+  let recordingWinners = false;
+  let crediting = false;
   let connected = false;
   let lastRaw: RawRoom | null = null;
 
@@ -972,6 +1055,44 @@ const subscribeToRoom = (
           }
         }
 
+        // Round over: the host records the winners (a new host does it if
+        // the old one left first), then each winner counts their own win.
+        if (
+          raw.status === "finished" &&
+          typeof raw.startedAt === "number" &&
+          raw.winners?.round !== raw.startedAt &&
+          raw.hostUid === uid &&
+          !recordingWinners
+        ) {
+          recordingWinners = true;
+          const uids = Object.fromEntries(
+            roundWinners(roomId, raw).map((w) => [w, true]),
+          );
+          update(rRef, { winners: { round: raw.startedAt, uids } })
+            .catch((e) => console.error("Error recording winners:", e))
+            .finally(() => {
+              recordingWinners = false;
+            });
+        }
+        if (
+          raw.status === "finished" &&
+          typeof raw.startedAt === "number" &&
+          raw.winners?.round === raw.startedAt &&
+          raw.winners.uids?.[uid] === true &&
+          me.lastWinRound !== raw.startedAt &&
+          !crediting
+        ) {
+          crediting = true;
+          update(rRef, {
+            [`players/${uid}/wins`]: (me.wins ?? 0) + 1,
+            [`players/${uid}/lastWinRound`]: raw.startedAt,
+          })
+            .catch((e) => console.error("Error counting the win:", e))
+            .finally(() => {
+              crediting = false;
+            });
+        }
+
         // Back in the lobby: clear my previous round's data.
         if (
           !resetting &&
@@ -989,6 +1110,15 @@ const subscribeToRoom = (
       }
     },
     (error) => {
+      const uid = auth.currentUser?.uid;
+      if (uid && isPermissionDenied(error)) {
+        // Read access is only refused to players the host removed.
+        const kicked = kickedView(roomId, uid, lastRaw);
+        lastRaw = { ...(lastRaw ?? ({} as RawRoom)), kicked: kicked.kicked };
+        latestRaw.delete(roomId);
+        callback(kicked);
+        return;
+      }
       console.error("Room subscription error:", error);
       callback(null);
     },

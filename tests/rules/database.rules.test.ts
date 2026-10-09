@@ -99,6 +99,14 @@ describe("reading", () => {
     await assertFails(db("alice").ref("rooms").get());
     await assertFails(db("alice").ref("/").get());
   });
+
+  it("kicked players can no longer read the room or its chat", async () => {
+    await seed(R, room({ kicked: { eve: true } }));
+    await assertFails(db("eve").ref(R).get());
+    await assertFails(db("eve").ref(`${R}/chat`).get());
+    await assertFails(db("eve").ref(`${R}/players`).get());
+    await assertSucceeds(db("bob").ref(R).get());
+  });
 });
 
 describe("creating rooms", () => {
@@ -325,6 +333,7 @@ describe("player nodes", () => {
     await seed(R, room());
     const name = db("bob").ref(`${R}/players/bob/displayName`);
     await assertSucceeds(name.set("Ada Lovelace"));
+    await assertSucceeds(name.set("Zoë 李 Ñandú"));
     await assertFails(name.set(""));
     await assertFails(name.set("x".repeat(25)));
     await assertFails(
@@ -332,13 +341,56 @@ describe("player nodes", () => {
     );
   });
 
-  it("wins: +1 once per finished round, only by the player", async () => {
+  it("wins: +1 once per finished round, only for a winner the host named", async () => {
     const startedAt = await seedPlaying(60_000, { status: "finished" });
     const me = db("bob").ref(`${R}/players/bob`);
+    // No winners recorded for this round yet.
+    await assertFails(me.update({ wins: 1, lastWinRound: startedAt }));
+    // Only the host records winners, for the current round, once it is over.
+    await assertFails(
+      db("bob").ref(`${R}/winners`).set({ round: startedAt, uids: { bob: true } }),
+    );
+    await assertFails(
+      db("alice")
+        .ref(`${R}/winners`)
+        .set({ round: startedAt - 1, uids: { bob: true } }),
+    );
+    await assertFails(
+      db("alice")
+        .ref(`${R}/winners`)
+        .set({ round: startedAt, uids: { stranger: true } }),
+    );
+    await assertSucceeds(
+      db("alice").ref(`${R}/winners`).set({ round: startedAt, uids: { bob: true } }),
+    );
     await assertFails(me.update({ wins: 5, lastWinRound: startedAt }));
     await assertSucceeds(me.update({ wins: 1, lastWinRound: startedAt }));
     await assertFails(me.update({ wins: 2, lastWinRound: startedAt }));
     await assertFails(db("alice").ref(`${R}/players/bob/wins`).set(2));
+    // Alice was not named.
+    await assertFails(
+      db("alice")
+        .ref(`${R}/players/alice`)
+        .update({ wins: 1, lastWinRound: startedAt }),
+    );
+  });
+
+  it("winners cannot be recorded while a round is still being played", async () => {
+    const startedAt = await seedPlaying(30_000);
+    await assertFails(
+      db("alice")
+        .ref(`${R}/winners`)
+        .set({ round: startedAt, uids: { alice: true } }),
+    );
+    // ...but may be written together with ending the round.
+    await assertSucceeds(
+      db("alice")
+        .ref(R)
+        .update({
+          status: "finished",
+          winners: { round: startedAt, uids: { alice: true } },
+        }),
+    );
   });
 
   it("presence of a disconnected flag via onDisconnect-style update", async () => {
@@ -462,11 +514,15 @@ describe("host controls", () => {
     );
   });
 
-  it("round end: host, or a member who finished; lobby return by any member", async () => {
+  it("round end: host, or a member once everyone seated finished; lobby return by any member", async () => {
     const startedAt = await seedPlaying();
     await assertFails(db("bob").ref(`${R}/status`).set("finished"));
     await seed(`${R}/players/bob/round`, startedAt);
     await seed(`${R}/players/bob/finished`, true);
+    // Alice (the host) is still playing: bob cannot end the round for her.
+    await assertFails(db("bob").ref(`${R}/status`).set("finished"));
+    await seed(`${R}/players/alice/round`, startedAt);
+    await seed(`${R}/players/alice/finished`, true);
     await assertSucceeds(db("bob").ref(`${R}/status`).set("finished"));
     await assertSucceeds(db("bob").ref(`${R}/status`).set("waiting"));
     await assertFails(db("bob").ref(`${R}/status`).set("playing"));
@@ -525,15 +581,19 @@ describe("chat", () => {
     isSystem: false,
     ...extra,
   });
-  const send = (
+  /** The only key a sender may use next: `${uid}_${lastChatAt or 0}`. */
+  const nextKey = async (uid: string) =>
+    `${uid}_${((await read(`${R}/lastChatAt/${uid}`)) as number | null) ?? 0}`;
+  // `_label` only names the call site; the key is always the next valid one.
+  const send = async (
     uid: string,
-    key: string,
+    _label: string,
     extra: Record<string, unknown> = {},
   ) =>
     db(uid)
       .ref(R)
       .update({
-        [`chat/${key}`]: msg(uid, extra),
+        [`chat/${await nextKey(uid)}`]: msg(uid, extra),
         [`lastChatAt/${uid}`]: NOW,
         lastActivityAt: NOW,
       });
@@ -550,13 +610,13 @@ describe("chat", () => {
     await assertFails(
       db("bob")
         .ref(R)
-        .update({ "chat/m1": msg("alice"), "lastChatAt/bob": NOW }),
+        .update({ "chat/bob_0": msg("alice"), "lastChatAt/bob": NOW }),
     );
     await assertFails(send("bob", "m2", { message: "" }));
     await assertFails(send("bob", "m3", { message: "x".repeat(301) }));
     await assertFails(send("bob", "m4", { timestamp: Date.now() - 60_000 }));
     await assertFails(send("bob", "m5", { isSystem: true })); // only the host
-    await assertFails(db("bob").ref(`${R}/chat/m6`).set(msg("bob"))); // no rate-limit stamp
+    await assertFails(db("bob").ref(`${R}/chat/bob_0`).set(msg("bob"))); // no rate-limit stamp
     await assertSucceeds(send("alice", "m7", { isSystem: true }));
   });
 
@@ -571,7 +631,7 @@ describe("chat", () => {
   it("messages cannot be edited and kicked players cannot chat", async () => {
     await seed(R, room());
     await assertSucceeds(send("bob", "m1"));
-    await assertFails(db("bob").ref(`${R}/chat/m1/message`).set("edited"));
+    await assertFails(db("bob").ref(`${R}/chat/bob_0/message`).set("edited"));
     await seed(`${R}/players/bob`, null);
     await seed(`${R}/kicked/bob`, true);
     await seed(`${R}/lastChatAt/bob`, Date.now() - 5_000);
