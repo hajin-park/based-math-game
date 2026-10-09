@@ -73,12 +73,15 @@ export interface GameSettings {
   groupedDigits: boolean;
   indexValueHints: boolean;
   countdownStart: boolean;
+  /** Short synthesized sound cues (correct, skip, time warning). */
+  soundEffects: boolean;
 }
 
 export const DEFAULT_GAME_SETTINGS: GameSettings = {
   groupedDigits: false,
   indexValueHints: false,
   countdownStart: true,
+  soundEffects: false,
 };
 
 export type LeaderboardWriteResult =
