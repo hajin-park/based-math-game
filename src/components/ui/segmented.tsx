@@ -1,5 +1,7 @@
 import * as React from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { m } from "framer-motion";
+
+import { useReducedMotion } from "@/lib/useReducedMotion";
 
 import { cn } from "@/lib/utils";
 
@@ -135,7 +137,7 @@ function Segmented<T extends string = string>({
             )}
           >
             {selected && (
-              <motion.span
+              <m.span
                 layoutId={reduce ? undefined : layoutId}
                 aria-hidden
                 className="absolute inset-0 rounded-md bg-card shadow-[0_0_0_1px_rgb(var(--border)),0_1px_2px_rgb(var(--shadow)/0.08)]"

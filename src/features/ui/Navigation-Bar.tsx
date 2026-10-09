@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
-import { motion, useReducedMotion } from "framer-motion";
+import { m } from "framer-motion";
+import { useReducedMotion } from "@/lib/useReducedMotion";
 import { ArrowRight, Menu, Monitor, Moon, Sun } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -155,7 +156,7 @@ export default function NavigationBar() {
                 >
                   {item.name}
                   {active && (
-                    <motion.span
+                    <m.span
                       layoutId={reduce ? undefined : "nav-active"}
                       aria-hidden
                       className="absolute inset-x-3 -bottom-[calc((var(--nav-h)-2.25rem)/2+1px)] h-0.5 rounded-full bg-primary"

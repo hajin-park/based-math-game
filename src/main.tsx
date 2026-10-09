@@ -15,6 +15,7 @@ import LegacyRedirect from "./components/LegacyRedirect";
 import Home from "./pages/Home";
 import "./index.css";
 import { registerServiceWorker } from "@/lib/serviceWorker";
+import { MotionProvider } from "@/lib/motion";
 
 // Every other route is code-split; Layout wraps <Outlet /> in <Suspense>.
 const Play = lazy(() => import("./pages/Play"));
@@ -183,7 +184,9 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <ErrorBoundary>
       <ThemeProvider>
         <AuthProvider>
-          <RouterProvider router={router} />
+          <MotionProvider>
+            <RouterProvider router={router} />
+          </MotionProvider>
         </AuthProvider>
       </ThemeProvider>
     </ErrorBoundary>
