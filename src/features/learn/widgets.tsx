@@ -1218,7 +1218,13 @@ export function AsciiWidget() {
           )}
         </p>
       )}
-      <div className="overflow-x-auto rounded-md border">
+      {/* Scrolls sideways on phones: focusable so keyboard users can too. */}
+      <div
+        className="overflow-x-auto rounded-md border"
+        tabIndex={0}
+        role="region"
+        aria-label="ASCII table"
+      >
         <table className="w-full min-w-[34rem] border-collapse font-mono text-[0.8125rem]">
           <caption className="sr-only">
             Printable ASCII: the row is the high hex digit, the column the low

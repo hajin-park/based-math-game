@@ -1,5 +1,6 @@
 import { memo, useEffect, useRef, useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { m } from "framer-motion";
+import { useReducedMotion } from "@/lib/useReducedMotion";
 import { Check, WifiOff } from "lucide-react";
 
 import type { Format } from "@/game";
@@ -72,7 +73,7 @@ export const Scoreboard = memo(function Scoreboard({
           {standings.map((s) => {
             const you = s.player.uid === myUid;
             return (
-              <motion.li
+              <m.li
                 key={s.player.uid}
                 layout={reduce ? false : "position"}
                 transition={{ type: "spring", stiffness: 500, damping: 40 }}
@@ -105,7 +106,7 @@ export const Scoreboard = memo(function Scoreboard({
                     <span className="sr-only">disconnected</span>
                   </>
                 )}
-              </motion.li>
+              </m.li>
             );
           })}
         </ol>
@@ -129,7 +130,7 @@ export const Scoreboard = memo(function Scoreboard({
           const you = s.player.uid === myUid;
           const name = names.get(s.player.uid) ?? s.player.displayName;
           return (
-            <motion.li
+            <m.li
               key={s.player.uid}
               layout={reduce ? false : "position"}
               transition={{ type: "spring", stiffness: 500, damping: 40 }}
@@ -166,7 +167,7 @@ export const Scoreboard = memo(function Scoreboard({
               <span className="font-mono text-[0.9375rem] tabular-nums">
                 {liveValue(s.player, format, target)}
               </span>
-            </motion.li>
+            </m.li>
           );
         })}
       </ol>

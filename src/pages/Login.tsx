@@ -1,4 +1,5 @@
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { warmUpGoogleSignIn } from "@/lib/googleAuth";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Loader2, MailCheck } from "lucide-react";
 
@@ -19,11 +20,20 @@ type Mode = "signin" | "reset";
 type Busy = null | "email" | "google" | "reset";
 
 export default function Login() {
+  // Google sign-in opens a popup; load its helper before the click.
+  useEffect(warmUpGoogleSignIn, []);
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const next = safeNextPath(params.get("next"), "/");
-  const { user, isGuest, loading, signInWithEmail, signInWithGoogle, signOut, sendPasswordReset } =
-    useAuth();
+  const {
+    user,
+    isGuest,
+    loading,
+    signInWithEmail,
+    signInWithGoogle,
+    signOut,
+    sendPasswordReset,
+  } = useAuth();
 
   const [mode, setMode] = useState<Mode>(
     params.get("reset") === "1" ? "reset" : "signin",
@@ -38,7 +48,10 @@ export default function Login() {
   }>({});
   const [resetSentTo, setResetSentTo] = useState<string | null>(null);
 
-  const guestRuns = useMemo(() => (isGuest ? getLocalRuns().length : 0), [isGuest]);
+  const guestRuns = useMemo(
+    () => (isGuest ? getLocalRuns().length : 0),
+    [isGuest],
+  );
   const signupHref = `/signup${params.get("next") ? `?next=${encodeURIComponent(next)}` : ""}`;
 
   const fail = (e: unknown) => {
@@ -199,7 +212,12 @@ export default function Login() {
               error={fieldErrors.email}
               autoFocus
             />
-            <Button type="submit" size="lg" className="w-full" disabled={busy !== null}>
+            <Button
+              type="submit"
+              size="lg"
+              className="w-full"
+              disabled={busy !== null}
+            >
               {busy === "reset" && (
                 <Loader2 className="motion-safe:animate-spin" aria-hidden />
               )}
@@ -237,7 +255,11 @@ export default function Login() {
       />
 
       <div className="flex flex-col gap-5">
-        <GoogleButton onClick={onGoogle} busy={busy === "google"} disabled={busy !== null} />
+        <GoogleButton
+          onClick={onGoogle}
+          busy={busy === "google"}
+          disabled={busy !== null}
+        />
         <OrRule />
         <form className="flex flex-col gap-5" onSubmit={onSignIn} noValidate>
           <FormError message={error} />

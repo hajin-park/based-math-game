@@ -16,6 +16,7 @@ import {
   deleteUser,
   getAdditionalUserInfo,
   linkWithCredential,
+  browserPopupRedirectResolver,
   linkWithPopup,
   onAuthStateChanged,
   reauthenticateWithCredential,
@@ -155,7 +156,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .then(() => refreshUser())
         .catch((error) => {
           // Offline or Anonymous provider disabled; ensureUser() retries later.
-          console.error("Anonymous sign-in failed:", error);
+          // Being offline (or navigating away mid-request) is expected.
+          const offline =
+            (error as { code?: string })?.code ===
+            "auth/network-request-failed";
+          (offline ? console.warn : console.error)(
+            "Anonymous sign-in failed:",
+            error,
+          );
           setLoading(false);
         });
     });
@@ -251,7 +259,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (current?.isAnonymous) {
       try {
-        const result = await linkWithPopup(current, provider);
+        const result = await linkWithPopup(
+          current,
+          provider,
+          browserPopupRedirectResolver,
+        );
         // Keep the guest's friendly name; never use the Google photo.
         await updateProfile(result.user, {
           displayName: clampDisplayName(
@@ -276,7 +288,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (credential) {
           await signInWithCredential(auth, credential);
         } else {
-          await signInWithPopup(auth, provider);
+          await signInWithPopup(auth, provider, browserPopupRedirectResolver);
         }
         clearLocalRuns();
         refreshUser();
@@ -284,7 +296,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    const result = await signInWithPopup(auth, provider);
+    const result = await signInWithPopup(
+      auth,
+      provider,
+      browserPopupRedirectResolver,
+    );
     if (getAdditionalUserInfo(result)?.isNewUser) {
       await updateProfile(result.user, {
         displayName: generateGuestName(),
@@ -334,7 +350,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!recent) {
         const providers = current.providerData.map((p) => p.providerId);
         if (providers.includes("google.com")) {
-          await reauthenticateWithPopup(current, new GoogleAuthProvider());
+          await reauthenticateWithPopup(
+            current,
+            new GoogleAuthProvider(),
+            browserPopupRedirectResolver,
+          );
         } else if (options?.password && current.email) {
           await reauthenticateWithCredential(
             current,

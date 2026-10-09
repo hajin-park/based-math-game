@@ -15,13 +15,14 @@ import LegacyRedirect from "./components/LegacyRedirect";
 import Home from "./pages/Home";
 import "./index.css";
 import { registerServiceWorker } from "@/lib/serviceWorker";
+import { MotionProvider } from "@/lib/motion";
 
 // Every other route is code-split; Layout wraps <Outlet /> in <Suspense>.
 const Play = lazy(() => import("./pages/Play"));
 const PlayRun = lazy(() => import("./pages/PlayRun"));
 const Daily = lazy(() => import("./pages/Daily"));
 const Usage = lazy(() => import("./pages/Usage"));
-const Tutorials = lazy(() => import("./pages/Tutorials"));
+const Learn = lazy(() => import("./pages/Learn"));
 const About = lazy(() => import("./pages/About"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Terms = lazy(() => import("./pages/Terms"));
@@ -123,7 +124,7 @@ const router = createBrowserRouter([
       },
       {
         path: "/learn",
-        element: <Tutorials />,
+        element: <Learn />,
       },
       {
         // Legacy URL: keep old links (and their #anchors) working.
@@ -183,7 +184,9 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <ErrorBoundary>
       <ThemeProvider>
         <AuthProvider>
-          <RouterProvider router={router} />
+          <MotionProvider>
+            <RouterProvider router={router} />
+          </MotionProvider>
         </AuthProvider>
       </ThemeProvider>
     </ErrorBoundary>
