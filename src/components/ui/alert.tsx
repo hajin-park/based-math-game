@@ -4,18 +4,18 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const alertVariants = cva(
-  "relative w-full rounded-sm border px-4 py-3 text-sm shadow-sm [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-foreground [&>svg~*]:pl-7",
+  "relative w-full rounded-lg border px-4 py-3 text-body-sm [&>svg+div]:translate-y-[-2px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-[0.9rem] [&>svg]:size-4 [&>svg]:text-foreground [&>svg~*]:pl-7",
   {
     variants: {
       variant: {
-        default: "bg-background text-foreground",
+        default: "bg-card text-foreground",
         destructive:
-          "border-destructive/50 text-destructive [&>svg]:text-destructive",
-        info: "bg-accent/10 border-primary/30 text-foreground [&>svg]:text-primary",
+          "border-destructive/25 bg-destructive/[0.06] text-foreground [&>svg]:text-destructive",
+        info: "border-info/25 bg-info/[0.06] text-foreground [&>svg]:text-info",
         success:
-          "bg-success/10 border-success/30 text-foreground [&>svg]:text-success",
+          "border-success/25 bg-success/[0.06] text-foreground [&>svg]:text-success",
         warning:
-          "bg-warning/10 border-warning/30 text-foreground [&>svg]:text-warning",
+          "border-warning/25 bg-warning/[0.07] text-foreground [&>svg]:text-warning",
       },
     },
     defaultVariants: {
@@ -44,7 +44,7 @@ const AlertTitle = React.forwardRef<
   <h5
     ref={ref}
     className={cn(
-      "mb-1 font-serif font-semibold leading-none tracking-academic",
+      "mb-1 font-sans text-[0.9375rem] font-semibold leading-snug",
       className,
     )}
     {...props}
@@ -58,7 +58,10 @@ const AlertDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("text-sm [&_p]:leading-relaxed", className)}
+    className={cn(
+      "text-body-sm text-muted-foreground [&_p]:leading-relaxed",
+      className,
+    )}
     {...props}
   />
 ));

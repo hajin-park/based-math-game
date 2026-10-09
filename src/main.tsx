@@ -1,4 +1,4 @@
-import React from "react";
+import React, { lazy } from "react";
 import ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { Layout } from "./utils/Layout";
@@ -6,31 +6,36 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import ErrorBoundary from "./components/ErrorBoundary";
 import Error from "./pages/Error";
+// Home is the landing page: keep it in the entry chunk for first paint.
 import Home from "./pages/Home";
-import SingleplayerMode from "./pages/SingleplayerMode";
-import Usage from "./pages/Usage";
-import Tutorials from "./pages/Tutorials";
-import About from "./pages/About";
-import Privacy from "./pages/Privacy";
-import Terms from "./pages/Terms";
-import Settings from "./pages/Settings";
-import Quiz from "./pages/Quiz";
-import Results from "./pages/Results";
-import Leaderboard from "./pages/Leaderboard";
-import Stats from "./pages/Stats";
-import ProfileLayout from "./pages/profile/ProfileLayout";
-import ProfileOverview from "./pages/profile/ProfileOverview";
-import ProfileSettings from "./pages/profile/ProfileSettings";
-import ProfileGameSettings from "./pages/profile/ProfileGameSettings";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
-import MultiplayerHome from "./pages/MultiplayerHome";
-import CreateRoom from "./pages/CreateRoom";
-import JoinRoom from "./pages/JoinRoom";
-import RoomLobby from "./pages/RoomLobby";
-import MultiplayerGame from "./pages/MultiplayerGame";
-import MultiplayerResults from "./pages/MultiplayerResults";
 import "./index.css";
+
+// Every other route is code-split; Layout wraps <Outlet /> in <Suspense>.
+const SingleplayerMode = lazy(() => import("./pages/SingleplayerMode"));
+const Usage = lazy(() => import("./pages/Usage"));
+const Tutorials = lazy(() => import("./pages/Tutorials"));
+const About = lazy(() => import("./pages/About"));
+const Privacy = lazy(() => import("./pages/Privacy"));
+const Terms = lazy(() => import("./pages/Terms"));
+const Settings = lazy(() => import("./pages/Settings"));
+const Quiz = lazy(() => import("./pages/Quiz"));
+const Results = lazy(() => import("./pages/Results"));
+const Leaderboard = lazy(() => import("./pages/Leaderboard"));
+const Stats = lazy(() => import("./pages/Stats"));
+const ProfileLayout = lazy(() => import("./pages/profile/ProfileLayout"));
+const ProfileOverview = lazy(() => import("./pages/profile/ProfileOverview"));
+const ProfileSettings = lazy(() => import("./pages/profile/ProfileSettings"));
+const ProfileGameSettings = lazy(
+  () => import("./pages/profile/ProfileGameSettings"),
+);
+const Login = lazy(() => import("./pages/Login"));
+const Signup = lazy(() => import("./pages/Signup"));
+const MultiplayerHome = lazy(() => import("./pages/MultiplayerHome"));
+const CreateRoom = lazy(() => import("./pages/CreateRoom"));
+const JoinRoom = lazy(() => import("./pages/JoinRoom"));
+const RoomLobby = lazy(() => import("./pages/RoomLobby"));
+const MultiplayerGame = lazy(() => import("./pages/MultiplayerGame"));
+const MultiplayerResults = lazy(() => import("./pages/MultiplayerResults"));
 
 const router = createBrowserRouter([
   {
@@ -41,6 +46,10 @@ const router = createBrowserRouter([
       {
         path: "/",
         element: <Home />,
+      },
+      {
+        path: "/play",
+        element: <SingleplayerMode />,
       },
       {
         path: "/singleplayer",
@@ -95,6 +104,10 @@ const router = createBrowserRouter([
       {
         path: "/how-to-play",
         element: <Usage />,
+      },
+      {
+        path: "/learn",
+        element: <Tutorials />,
       },
       {
         path: "/tutorials",

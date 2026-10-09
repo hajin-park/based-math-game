@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { NavigationBar, Footer } from "@features/ui";
 import ScrollToTop from "./ScrollToTop.jsx";
@@ -11,6 +11,8 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import ConnectionStatus from "@/components/ConnectionStatus";
 import { CookieConsent } from "@/components/CookieConsent";
+import RouteFallback from "@/components/RouteFallback";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 export const Layout = () => {
   const [settings, setSettings] = useState<QuizSettings>({
@@ -23,47 +25,38 @@ export const Layout = () => {
   const { loading } = useAuth();
   const location = useLocation();
 
-  // Check if current route is a multiplayer room page (lobby, game, or results)
+  // Immersive routes: multiplayer room pages and the active quiz hide chrome.
   const isMultiplayerRoom = /^\/multiplayer\/(lobby|game|results)\//.test(
     location.pathname,
   );
-
-  // Check if current route is the active quiz page (singleplayer game)
   const isActiveQuiz = location.pathname === "/quiz";
-
-  // Hide nav/footer for multiplayer rooms and active quiz
-  const hideNavAndFooter = isMultiplayerRoom || isActiveQuiz;
+  const immersive = isMultiplayerRoom || isActiveQuiz;
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <RouteFallback fullScreen />;
   }
 
   return (
-    <main className="flex flex-col w-full h-screen">
-      <ScrollToTop />
-      <ConnectionStatus />
-      <CookieConsent />
-      {!hideNavAndFooter && (
-        <div className="flex-none">
-          <NavigationBar />
-        </div>
-      )}
-      <div className="flex-auto">
-        <ResultContext.Provider value={{ results, setResults }}>
-          <QuizContext.Provider value={{ settings, setSettings }}>
-            <Outlet />
-          </QuizContext.Provider>
-        </ResultContext.Provider>
+    <TooltipProvider>
+      <div className="flex min-h-dvh w-full flex-col">
+        <a href="#main" className="skip-link">
+          Skip to content
+        </a>
+        <ScrollToTop />
+        <ConnectionStatus />
+        <CookieConsent />
+        {!immersive && <NavigationBar />}
+        <main id="main" tabIndex={-1} className="flex-auto outline-none">
+          <ResultContext.Provider value={{ results, setResults }}>
+            <QuizContext.Provider value={{ settings, setSettings }}>
+              <Suspense fallback={<RouteFallback />}>
+                <Outlet />
+              </Suspense>
+            </QuizContext.Provider>
+          </ResultContext.Provider>
+        </main>
+        {!immersive && <Footer />}
       </div>
-      {!hideNavAndFooter && (
-        <div className="flex-none">
-          <Footer />
-        </div>
-      )}
-    </main>
+    </TooltipProvider>
   );
 };

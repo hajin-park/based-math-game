@@ -42,52 +42,51 @@ export default function ProfileDropdown() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="rounded-full focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
-          <Avatar className="h-9 w-9 cursor-pointer">
+        <button
+          type="button"
+          aria-label="Account menu"
+          className="inline-flex size-10 items-center justify-center rounded-full transition-opacity duration-fast hover:opacity-85"
+        >
+          <Avatar className="size-8 cursor-pointer">
             <AvatarImage
               src={getUserPhotoURL()}
               alt={user?.displayName || "User"}
             />
-            <AvatarFallback className="bg-primary text-primary-foreground">
-              {getInitials(user?.displayName)}
-            </AvatarFallback>
+            <AvatarFallback>{getInitials(user?.displayName)}</AvatarFallback>
           </Avatar>
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56 paper-texture border-2">
-        <DropdownMenuLabel className="pb-2">
-          <div className="flex flex-col space-y-1">
-            <p className="text-sm font-serif font-semibold leading-none tracking-academic">
+      <DropdownMenuContent align="end" className="w-60">
+        <DropdownMenuLabel className="px-2.5 pb-2 pt-2">
+          <div className="flex flex-col gap-1">
+            <p className="truncate text-[0.875rem] font-semibold text-foreground">
               {user?.displayName || "User"}
             </p>
             {user && "email" in user && user.email && (
-              <p className="text-xs leading-none text-muted-foreground">
+              <p className="truncate text-[0.75rem] font-normal text-muted-foreground">
                 {user.email}
               </p>
             )}
           </div>
         </DropdownMenuLabel>
-        <DropdownMenuSeparator className="bg-border/50" />
+        <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={() => navigate("/profile")}
-          className="cursor-pointer hover:bg-primary/10 focus:bg-primary/10 transition-colors"
+          className="cursor-pointer"
         >
-          <User className="mr-2 h-4 w-4" />
-          <span>View Profile</span>
+          <User />
+          <span>Profile</span>
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => navigate("/profile/settings")}
-          className="cursor-pointer hover:bg-primary/10 focus:bg-primary/10 transition-colors"
+          className="cursor-pointer"
         >
-          <Settings className="mr-2 h-4 w-4" />
+          <Settings />
           <span>Settings</span>
         </DropdownMenuItem>
-        <DropdownMenuSeparator className="bg-border/50" />
-        <DropdownMenuItem
-          onClick={handleSignOut}
-          className="cursor-pointer text-destructive focus:text-destructive hover:bg-destructive/10 focus:bg-destructive/10 transition-colors"
-        >
-          <LogOut className="mr-2 h-4 w-4" />
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
+          <LogOut />
           <span>Sign Out</span>
         </DropdownMenuItem>
       </DropdownMenuContent>

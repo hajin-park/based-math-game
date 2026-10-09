@@ -75,25 +75,29 @@ export function CookieConsent() {
   if (!showBanner) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 p-4 animate-in slide-in-from-bottom">
-      <Card className="max-w-4xl mx-auto border-2 shadow-2xl bg-background/95 backdrop-blur">
-        <CardContent className="p-6">
-          <div className="flex items-start gap-4">
-            <Cookie className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
-            <div className="flex-1 space-y-4">
+    <div
+      role="region"
+      aria-label="Cookie preferences"
+      className="fixed inset-x-0 bottom-0 z-50 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] animate-in fade-in-0 slide-in-from-bottom-2 sm:inset-x-auto sm:left-4 sm:bottom-4 sm:p-0"
+    >
+      <Card className="mx-auto max-w-md bg-popover shadow-xl">
+        <CardContent className="p-4 sm:p-5">
+          <div className="flex items-start gap-3">
+            <Cookie
+              aria-hidden
+              className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+            />
+            <div className="flex-1 space-y-3">
               <div>
-                <h3 className="text-lg font-semibold mb-2">
-                  Cookie Preferences
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  We use cookies to enhance your experience. Necessary cookies
-                  are required for the site to function. You can choose to
-                  enable optional cookies for additional features.
+                <h3 className="mb-1 text-[0.9375rem] font-semibold">Cookies</h3>
+                <p className="text-body-sm text-muted-foreground">
+                  Necessary cookies keep you signed in. Optional ones remember
+                  your theme and help us improve the game.
                 </p>
               </div>
 
               {showDetails && (
-                <div className="space-y-3 pt-2 border-t">
+                <div className="space-y-3 border-t pt-3">
                   <div className="flex items-start gap-3">
                     <input
                       type="checkbox"
@@ -158,14 +162,14 @@ export function CookieConsent() {
                 {!showDetails ? (
                   <>
                     <Button onClick={acceptAll} size="sm">
-                      Accept All
+                      Accept all
                     </Button>
                     <Button
                       onClick={acceptNecessary}
                       variant="outline"
                       size="sm"
                     >
-                      Necessary Only
+                      Necessary only
                     </Button>
                     <Button
                       onClick={() => setShowDetails(true)}
@@ -178,10 +182,10 @@ export function CookieConsent() {
                 ) : (
                   <>
                     <Button onClick={saveCustom} size="sm">
-                      Save Preferences
+                      Save preferences
                     </Button>
                     <Button onClick={acceptAll} variant="outline" size="sm">
-                      Accept All
+                      Accept all
                     </Button>
                     <Button
                       onClick={() => setShowDetails(false)}
@@ -196,8 +200,9 @@ export function CookieConsent() {
             </div>
             <Button
               variant="ghost"
-              size="icon"
-              className="flex-shrink-0"
+              size="icon-sm"
+              className="-mr-1.5 -mt-1.5 shrink-0"
+              aria-label="Dismiss"
               onClick={() => setShowBanner(false)}
             >
               <X className="h-4 w-4" />
