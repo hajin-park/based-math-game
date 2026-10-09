@@ -17,6 +17,9 @@ export interface FeedEvent extends RoomEvent {
 
 export type RoomLoadState = "loading" | "ready" | "missing";
 
+/** A connection drop shorter than this is not announced. */
+const DROP_GRACE_MS = 5000;
+
 function modeLabel(room: Room): string {
   return room.engineMode?.name ?? "a custom set";
 }
@@ -34,6 +37,19 @@ export function useRoomState(roomId: string | undefined, myUid: string | undefin
     setRoom(null);
     setState("loading");
     setEvents([]);
+    // "Lost connection" is only worth saying if it lasts: a reload or a
+    // short blip produces a lost/back pair that is dropped silently.
+    const pendingDrops = new Map<string, number>();
+    const add = (list: RoomEvent[]) => {
+      if (!list.length) return;
+      const at = serverNow();
+      setEvents((prev) =>
+        [
+          ...prev,
+          ...list.map((e) => ({ ...e, id: `sys-${++seq.current}`, at })),
+        ].slice(-60),
+      );
+    };
     const unsubscribe = roomApi.subscribeToRoom(roomId, (next) => {
       const prev = prevRef.current;
       prevRef.current = next;
@@ -46,20 +62,35 @@ export function useRoomState(roomId: string | undefined, myUid: string | undefin
         prev && { ...prev, modeName: modeLabel(prev) },
         { ...next, modeName: modeLabel(next) },
         myUid,
-      );
-      if (fresh.length) {
-        const at = serverNow();
-        setEvents((list) =>
-          [
-            ...list,
-            ...fresh.map((e) => ({ ...e, id: `sys-${++seq.current}`, at })),
-          ].slice(-60),
-        );
-      }
+      ).filter((e) => {
+        if (e.kind === "disconnected") {
+          pendingDrops.set(
+            e.uid,
+            window.setTimeout(() => {
+              pendingDrops.delete(e.uid);
+              add([e]);
+            }, DROP_GRACE_MS),
+          );
+          return false;
+        }
+        if (e.kind === "reconnected" || e.kind === "left" || e.kind === "removed") {
+          const pending = pendingDrops.get(e.uid);
+          if (pending !== undefined) {
+            window.clearTimeout(pending);
+            pendingDrops.delete(e.uid);
+            return e.kind !== "reconnected";
+          }
+        }
+        return true;
+      });
+      add(fresh);
       setRoom(next);
       setState("ready");
     });
-    return unsubscribe;
+    return () => {
+      pendingDrops.forEach((t) => window.clearTimeout(t));
+      unsubscribe();
+    };
   }, [roomId, myUid]);
 
   return { room, state, events };

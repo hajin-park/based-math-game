@@ -44,7 +44,7 @@ function resultText(
     note: s.dropout
       ? "Left the round"
       : p.score > 0 && typeof p.scoreMs === "number"
-        ? `last at ${formatMs(p.scoreMs)}`
+        ? `last point at ${formatMs(p.scoreMs)}`
         : undefined,
   };
 }

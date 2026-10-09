@@ -63,14 +63,18 @@ export default function JoinRoom() {
   }, [code, complete]);
 
   const room = preview.state === "ready" ? preview.room : null;
-  const member = !!(room && user && room.players[user.uid]);
+  const mine = room && user ? room.players[user.uid] : undefined;
+  const kicked = !!mine?.kicked;
+  const member = !!mine && !kicked;
   const nameProblem = nameTouched ? nameError(name) : null;
   const shown = complete ? codeHalves(code).join(" ") : "";
   const codeMessage =
     error ??
     (preview.state === "missing"
       ? `There is no open room with code ${shown}. Check the code with your host.`
-      : null);
+      : kicked
+        ? "The host removed you from this room, so you can't rejoin it."
+        : null);
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -163,7 +167,9 @@ export default function JoinRoom() {
           type="submit"
           size="lg"
           className="w-full"
-          disabled={pending || !complete || preview.state === "missing"}
+          disabled={
+            pending || !complete || preview.state === "missing" || kicked
+          }
         >
           {pending ? "Joining…" : member ? "Back to the room" : "Join room"}
           {!pending && <ArrowRight aria-hidden />}
