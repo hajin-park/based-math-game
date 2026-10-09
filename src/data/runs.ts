@@ -9,7 +9,12 @@ import type { User } from "firebase/auth";
 import { auth, firestore } from "@/firebase/config";
 import { isRankedModeId } from "./limits";
 import { submitLeaderboardEntry } from "./leaderboard";
-import { addLocalRun, clearLocalRuns, getLocalRuns } from "./localStore";
+import {
+  addLocalRun,
+  clearLocalRuns,
+  computeLocalStats,
+  getLocalRuns,
+} from "./localStore";
 import { applyRunToStats, emptyStats, orderForRun, sanitizeRun } from "./stats";
 import { isImprovement } from "./limits";
 import type {
@@ -54,20 +59,14 @@ export async function saveRun(
   const user = auth.currentUser;
 
   if (!user || user.isAnonymous) {
-    const before = getLocalRuns();
-    const prevBest = before
-      .filter((r) => r.modeId === run.modeId)
-      .map((r) => r.score);
-    const order = orderForRun(run);
-    const best = prevBest.length
-      ? prevBest.reduce((a, b) => (isImprovement(order, b, a) ? b : a))
-      : undefined;
+    const before = computeLocalStats(getLocalRuns());
+    const { personalBest } = applyRunToStats(before, run);
     const id = newLocalId();
     addLocalRun({ ...run, id });
     return {
       storedIn: "local",
       runId: id,
-      personalBest: isImprovement(order, run.score, best),
+      personalBest,
       leaderboard: "skipped",
     };
   }

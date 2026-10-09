@@ -185,8 +185,7 @@ export function useLeaderboard(
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [me, setMe] = useState<{
     entry: LeaderboardEntry;
-    rank: number;
-    total: number;
+    rank: number | null;
   } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);

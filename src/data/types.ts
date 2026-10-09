@@ -1,21 +1,14 @@
 /**
  * Data-layer types (Firestore documents and hook results).
  *
- * `RunSummaryInput` is the structural subset of `RunSummary` from
- * `src/game/types.ts` that the data layer needs. It is declared here (instead
- * of importing the engine module) so the data layer has no compile-time
- * dependency on the engine; any `RunSummary` is assignable to it.
+ * `RunSummaryInput` is the subset of the engine's `RunSummary` that gets
+ * persisted; any `RunSummary` can be passed where it is expected.
  */
+import type { Format } from "@/game";
 
-/** Mirrors `Format` in src/game/types.ts. */
-export type RunFormat =
-  | "sprint"
-  | "speedrun"
-  | "survival"
-  | "daily"
-  | "practice";
+export type RunFormat = Format;
 
-/** Mirrors the fields of `CustomConfig` in src/game/types.ts. */
+/** Structural form of the engine's `CustomConfig` (stored in rooms). */
 export interface CustomConfigLike {
   conversions: Array<{ from: number; to: number; min: number; max: number }>;
   kinds?: string[];
@@ -35,6 +28,8 @@ export interface RunSummaryInput {
   accuracy: number;
   typingAccuracy: number;
   endedAt: number;
+  /** False when the run was quit early (never leaderboard-eligible). */
+  completed?: boolean;
 }
 
 /** `users/{uid}/runs/{runId}` (and guest localStorage entries). */
@@ -66,6 +61,7 @@ export interface LeaderboardEntry {
   displayName: string;
   score: number;
   correct: number;
+  skipped: number;
   durationMs: number;
   accuracy: number;
   /** ms since epoch (server time of the last improvement). */

@@ -1,40 +1,39 @@
 /**
- * Score plausibility limits and ranked-mode helpers.
+ * Score plausibility limits and ranked-mode helpers for the data layer.
  *
- * IMPORTANT: these values are mirrored in `firestore.rules` (leaderboards,
- * runs) and `database.rules.json` (multiplayer player nodes). The security
- * rules are the source of truth; if you change a number here you MUST change
- * the rules too (and the rules tests in tests/rules), otherwise legitimate
- * writes will be rejected or the client will submit scores the server refuses.
+ * IMPORTANT: the numbers here are mirrored in `firestore.rules` (leaderboards,
+ * runs) and `database.rules.json` / scripts/build-database-rules.mjs
+ * (multiplayer player nodes). The security rules are what is enforced; if you
+ * change a limit here or in the engine (src/game/scoring.ts, formats.ts) you
+ * MUST update the rules too. src/data/limits.test.ts fails when they drift.
  */
+import {
+  DAILY_QUESTION_COUNT,
+  DAILY_SKIP_PENALTY_MS,
+  SCORE_LIMITS,
+  SPEEDRUN_SKIP_PENALTY_MS,
+  SPEEDRUN_TARGET,
+  SPRINT_DURATION_MS,
+  getFormat,
+  isRankedModeId,
+  parseModeId,
+} from "@/game";
 
-export const SCORE_LIMITS = {
-  /** Max correct answers per second of play (rules: correct <= durationMs * 3 / 1000). */
-  MAX_CORRECT_PER_SECOND: 3,
-  /** Minimum milliseconds per correct answer in lower-is-better formats. */
-  MIN_MS_PER_CORRECT: 250,
-  /** Sprint runs must last SPRINT_DURATION_MS +/- SPRINT_TOLERANCE_MS to be ranked. */
-  SPRINT_DURATION_MS: 60_000,
-  SPRINT_TOLERANCE_MS: 2_000,
-  /**
-   * Speedrun / daily entries must have at least this many correct answers.
-   * Catalog target counts must be >= this value. (Rules cannot know each mode's
-   * exact target; if every mode shares one target, tighten the rule to equality.)
-   */
-  MIN_RANKED_TARGET: 10,
-  /** Upper bound on any run duration (6 hours). */
-  MAX_RUN_DURATION_MS: 6 * 60 * 60 * 1000,
-  /** Upper bound on correct answers in a single run. */
-  MAX_CORRECT: 10_000,
-  /** Upper bound on score values (ms for speedruns, counts otherwise). */
-  MAX_SCORE: 6 * 60 * 60 * 1000,
-  /** Leaderboard display names: 1..24 characters (rules enforce the same). */
-  DISPLAY_NAME_MAX: 24,
-  /** Multiplayer: max points per correct answer (score <= correct * 5). */
-  MAX_POINTS_PER_CORRECT: 5,
+export { SCORE_LIMITS, isRankedModeId };
+
+/** Extra limits that only exist in the backend rules. */
+export const RULES_LIMITS = {
+  /** Ranked sprints must last SPRINT_DURATION_MS +/- this. */
+  sprintToleranceMs: 2_000,
+  /** Leaderboard / room display names: 1..24 characters. */
+  displayNameMax: 24,
+  /** Upper bound on correct/skipped counts in a stored run. */
+  maxCorrect: 10_000,
+  /** Multiplayer: max points per correct answer (score <= 15/s). */
+  maxPointsPerCorrect: 5,
 } as const;
 
-/** Topics that have ranked catalog modes (`custom` is never ranked). */
+/** Topics with ranked `${topic}:sprint|speedrun` modes. */
 export const RANKED_TOPICS = [
   "nibbles",
   "powers",
@@ -49,35 +48,24 @@ export const RANKED_TOPICS = [
   "mixed",
 ] as const;
 
-/** Formats that can be ranked via `${topic}:${format}` ids. */
-export const RANKED_FORMATS = ["sprint", "speedrun", "survival"] as const;
-
 /**
- * Ranked mode ids. Must match `isRankedMode()` in firestore.rules:
- *   `${topic}:(sprint|speedrun|survival)` or `daily:YYYY-MM-DD`.
+ * Mirror of `isRankedMode()` in firestore.rules. The engine's
+ * `isRankedModeId` is the source of truth; a unit test checks they agree.
  */
 export const RANKED_MODE_RE = new RegExp(
-  `^((${RANKED_TOPICS.join("|")}):(${RANKED_FORMATS.join("|")})|daily:[0-9]{4}-[0-9]{2}-[0-9]{2})$`,
+  `^((${RANKED_TOPICS.join("|")}):(sprint|speedrun)|survival|daily:[0-9]{4}-[0-9]{2}-[0-9]{2})$`,
 );
 
 export type ScoreOrder = "higher-better" | "lower-better";
-
-export function isRankedModeId(modeId: string): boolean {
-  return RANKED_MODE_RE.test(modeId);
-}
 
 export function isDailyModeId(modeId: string): boolean {
   return modeId.startsWith("daily:");
 }
 
-/**
- * Leaderboard ordering for a mode id: `:speedrun` and `daily:` are
- * lower-is-better (time in ms), everything else higher-is-better.
- */
+/** Leaderboard ordering for a mode id (speedrun/daily: lower is better). */
 export function scoreOrderFor(modeId: string): ScoreOrder {
-  return modeId.endsWith(":speedrun") || isDailyModeId(modeId)
-    ? "lower-better"
-    : "higher-better";
+  const parsed = parseModeId(modeId);
+  return parsed ? getFormat(parsed.format).scoreOrder : "higher-better";
 }
 
 /** True when `candidate` beats `previous` under the given ordering. */
@@ -103,38 +91,55 @@ export function modeIdFromBestsKey(key: string): string {
 }
 
 /**
- * Client-side mirror of the leaderboard plausibility checks in firestore.rules.
- * Returns null when the entry would be accepted, or a reason string.
+ * Client-side mirror of `validEntry()` in firestore.rules. Returns null when
+ * the leaderboard write would be accepted, otherwise the reason.
  */
 export function leaderboardRejection(entry: {
   modeId: string;
   score: number;
   correct: number;
+  skipped: number;
   durationMs: number;
   accuracy: number;
+  completed?: boolean;
 }): string | null {
-  const { modeId, score, correct, durationMs, accuracy } = entry;
-  if (!isRankedModeId(modeId)) return "mode is not ranked";
-  if (![score, correct, durationMs, accuracy].every(Number.isFinite))
-    return "non-numeric value";
-  if (correct < 0 || correct > SCORE_LIMITS.MAX_CORRECT) return "bad correct";
-  if (durationMs <= 0 || durationMs > SCORE_LIMITS.MAX_RUN_DURATION_MS)
-    return "bad duration";
-  if (score < 0 || score > SCORE_LIMITS.MAX_SCORE) return "bad score";
+  const { modeId, score, correct, skipped, durationMs, accuracy } = entry;
+  const L = SCORE_LIMITS;
+  const parsed = parseModeId(modeId);
+  if (!parsed || !isRankedModeId(modeId)) return "mode is not ranked";
+  if (entry.completed !== true) return "run not completed";
+  const nums = [score, correct, skipped, durationMs, accuracy];
+  if (!nums.every(Number.isFinite)) return "non-numeric value";
+  if (correct < 0 || skipped < 0 || correct > RULES_LIMITS.maxCorrect)
+    return "bad counts";
+  if (durationMs <= 0 || durationMs > L.maxDurationMs) return "bad duration";
   if (accuracy < 0 || accuracy > 1) return "bad accuracy";
-  if (correct * 1000 > durationMs * SCORE_LIMITS.MAX_CORRECT_PER_SECOND)
+  if (correct * 1000 > durationMs * L.maxCorrectPerSecond + 1000)
     return "too many correct answers per second";
-  if (scoreOrderFor(modeId) === "lower-better") {
-    if (correct < SCORE_LIMITS.MIN_RANKED_TARGET) return "target not reached";
-    if (durationMs < SCORE_LIMITS.MIN_MS_PER_CORRECT * correct)
-      return "too fast";
-    if (score !== durationMs) return "score must equal duration";
-  } else {
-    if (score > correct) return "score exceeds correct answers";
-    if (modeId.endsWith(":sprint")) {
-      const d = Math.abs(durationMs - SCORE_LIMITS.SPRINT_DURATION_MS);
-      if (d > SCORE_LIMITS.SPRINT_TOLERANCE_MS) return "bad sprint duration";
+  if (durationMs < correct * L.minMsPerCorrect) return "answers too fast";
+  switch (parsed.format) {
+    case "sprint": {
+      if (score !== correct || score > L.sprintMaxCorrect) return "bad score";
+      const off = Math.abs(durationMs - SPRINT_DURATION_MS);
+      if (off > RULES_LIMITS.sprintToleranceMs) return "bad sprint duration";
+      return null;
     }
+    case "speedrun":
+      if (correct !== SPEEDRUN_TARGET) return "target not reached";
+      if (score !== durationMs + skipped * SPEEDRUN_SKIP_PENALTY_MS)
+        return "bad score";
+      if (score < L.speedrunMinMs) return "too fast";
+      return null;
+    case "daily":
+      if (correct + skipped > DAILY_QUESTION_COUNT) return "bad counts";
+      if (score !== durationMs + skipped * DAILY_SKIP_PENALTY_MS)
+        return "bad score";
+      if (score < L.dailyMinMs) return "too fast";
+      return null;
+    case "survival":
+      if (score !== correct || score > L.survivalMaxCleared) return "bad score";
+      return null;
+    default:
+      return "mode is not ranked";
   }
-  return null;
 }

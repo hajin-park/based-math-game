@@ -11,7 +11,7 @@ import {
 } from "firebase/firestore";
 import type { User } from "firebase/auth";
 import { firestore } from "@/firebase/config";
-import { isRankedModeId, modeIdFromBestsKey, SCORE_LIMITS } from "./limits";
+import { isRankedModeId, modeIdFromBestsKey, RULES_LIMITS } from "./limits";
 import { entryRef } from "./leaderboard";
 import { runsCollection, statsRef } from "./runs";
 import type { GameSettings, UserStatsDoc } from "./types";
@@ -23,7 +23,7 @@ export function profileRef(uid: string) {
 
 export function clampDisplayName(name: string | null | undefined): string {
   const trimmed = (name || "").trim();
-  return (trimmed || "Player").slice(0, SCORE_LIMITS.DISPLAY_NAME_MAX);
+  return (trimmed || "Player").slice(0, RULES_LIMITS.displayNameMax);
 }
 
 /** Creates `users/{uid}` for registered users if it does not exist yet. */

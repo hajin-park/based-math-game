@@ -42,11 +42,10 @@ export function applyRunToStats(
 ): { stats: UserStatsDoc; personalBest: boolean } {
   const key = bestsKey(run.modeId);
   const prevBest = prev.bests?.[key];
-  const personalBest = isImprovement(
-    orderForRun(run),
-    run.score,
-    prevBest?.score,
-  );
+  // Runs quit early never count as personal bests.
+  const personalBest =
+    run.completed !== false &&
+    isImprovement(orderForRun(run), run.score, prevBest?.score);
   const stats: UserStatsDoc = {
     gamesPlayed: (prev.gamesPlayed || 0) + 1,
     totalCorrect: (prev.totalCorrect || 0) + run.correct,
@@ -75,5 +74,6 @@ export function sanitizeRun(summary: RunSummaryInput): RunSummaryInput {
     accuracy: unit(summary.accuracy),
     typingAccuracy: unit(summary.typingAccuracy),
     endedAt: int(summary.endedAt) || Date.now(),
+    completed: summary.completed !== false,
   };
 }

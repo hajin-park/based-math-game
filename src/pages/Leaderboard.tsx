@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   fetchLeaderboard as fetchTopEntries,
   fetchRank,
@@ -63,6 +63,7 @@ export default function Leaderboard() {
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalEntries, setTotalEntries] = useState(0);
+  const totalEntriesRef = useRef(0);
 
   const fetchUserRank = useCallback(
     async (gameModeId: string) => {
@@ -71,11 +72,11 @@ export default function Leaderboard() {
       try {
         const mine = await fetchRank(gameModeId, user.uid);
         setUserRank(
-          mine
+          mine && mine.rank !== null
             ? {
                 rank: mine.rank,
                 score: mine.entry.score,
-                totalPlayers: mine.total,
+                totalPlayers: totalEntriesRef.current,
                 accuracy: mine.entry.accuracy,
               }
             : null,
@@ -105,6 +106,7 @@ export default function Leaderboard() {
         }));
 
         setTotalEntries(allEntries.length);
+        totalEntriesRef.current = allEntries.length;
 
         const startIndex = (page - 1) * ENTRIES_PER_PAGE;
         const endIndex = startIndex + ENTRIES_PER_PAGE;

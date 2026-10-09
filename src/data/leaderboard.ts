@@ -1,7 +1,6 @@
 import {
   collection,
   doc,
-  getCountFromServer,
   getDoc,
   getDocs,
   limit as limitTo,
@@ -20,7 +19,7 @@ import {
   isImprovement,
   isRankedModeId,
   leaderboardRejection,
-  SCORE_LIMITS,
+  RULES_LIMITS,
   scoreOrderFor,
 } from "./limits";
 import type {
@@ -55,6 +54,7 @@ export function toLeaderboardEntry(
     displayName: String(data.displayName ?? ""),
     score: Number(data.score ?? 0),
     correct: Number(data.correct ?? 0),
+    skipped: Number(data.skipped ?? 0),
     durationMs: Number(data.durationMs ?? 0),
     accuracy: Number(data.accuracy ?? 0),
     updatedAt: toMillis(data.updatedAt),
@@ -80,29 +80,30 @@ export async function fetchLeaderboard(
 }
 
 /**
- * The user's own entry and 1-based rank (players with a strictly better
- * score + 1), plus the number of ranked players.
+ * The user's own entry and 1-based rank (players with a strictly better score
+ * + 1). Rules cap list queries at 100 documents, so `rank` is null when more
+ * than 100 players are ahead (show it as "100+").
  */
 export async function fetchRank(
   modeId: string,
   uid: string,
-): Promise<{ entry: LeaderboardEntry; rank: number; total: number } | null> {
+): Promise<{ entry: LeaderboardEntry; rank: number | null } | null> {
   if (!isRankedModeId(modeId)) return null;
   const snap = await getDoc(entryRef(modeId, uid));
   if (!snap.exists()) return null;
   const entry = toLeaderboardEntry(snap.id, snap.data());
-  const better =
-    scoreOrderFor(modeId) === "lower-better"
-      ? where("score", "<", entry.score)
-      : where("score", ">", entry.score);
-  const [betterCount, total] = await Promise.all([
-    getCountFromServer(query(entriesCollection(modeId), better)),
-    getCountFromServer(entriesCollection(modeId)),
-  ]);
+  const lower = scoreOrderFor(modeId) === "lower-better";
+  const ahead = await getDocs(
+    query(
+      entriesCollection(modeId),
+      where("score", lower ? "<" : ">", entry.score),
+      orderBy("score", lower ? "asc" : "desc"),
+      limitTo(LEADERBOARD_MAX_LIMIT),
+    ),
+  );
   return {
     entry,
-    rank: betterCount.data().count + 1,
-    total: total.data().count,
+    rank: ahead.size < LEADERBOARD_MAX_LIMIT ? ahead.size + 1 : null,
   };
 }
 
@@ -142,12 +143,14 @@ export async function submitLeaderboardEntry(
       uid: user.uid,
       displayName: (user.displayName || "Player").slice(
         0,
-        SCORE_LIMITS.DISPLAY_NAME_MAX,
+        RULES_LIMITS.displayNameMax,
       ),
       score: run.score,
       correct: run.correct,
+      skipped: run.skipped,
       durationMs: run.durationMs,
       accuracy: run.accuracy,
+      completed: true,
       updatedAt: serverTimestamp(),
     });
     return "updated";
