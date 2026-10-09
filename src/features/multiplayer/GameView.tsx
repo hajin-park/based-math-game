@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { Check, Flag, WifiOff } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -66,6 +73,21 @@ export function GameView({
   const target = mode.spec.targetCount ?? SPEEDRUN_TARGET;
   const isHost = room.hostUid === myUid;
 
+  // Sprint rounds have a hard deadline: the host closes the round shortly
+  // after it, even if someone's tab went quiet without disconnecting.
+  const deadline =
+    mode.format === "sprint" && room.startedAt
+      ? room.startedAt + (mode.spec.durationMs ?? 60_000) + 5000
+      : null;
+  useEffect(() => {
+    if (!isHost || deadline === null) return;
+    const t = window.setTimeout(
+      () => void roomApi.endRound(room.id).catch(() => undefined),
+      Math.max(0, deadline - Date.now()),
+    );
+    return () => window.clearTimeout(t);
+  }, [isHost, deadline, room.id]);
+
   const endRound = () =>
     confirm({
       title: "End the round now?",
@@ -78,6 +100,20 @@ export function GameView({
           toast({ variant: "destructive", title: "Round not ended", description: "Try again." }),
         ),
     });
+
+  // Phones and tablets: a compact strip right under the timer, so live scores
+  // stay above the on-screen keyboard.
+  const strip = (
+    <Scoreboard
+      players={players}
+      myUid={myUid}
+      names={names}
+      format={mode.format}
+      target={target}
+      compact
+      className="lg:hidden"
+    />
+  );
 
   return (
     <div
@@ -102,19 +138,19 @@ export function GameView({
             </p>
           )}
           {spectating ? (
-            <Spectator room={room} myUid={myUid} />
+            <>
+              <Spectator room={room} myUid={myUid} />
+              {strip}
+            </>
           ) : (
-            <Player room={room} mode={mode} myUid={myUid} target={target} />
+            <Player
+              room={room}
+              mode={mode}
+              myUid={myUid}
+              target={target}
+              scoreboard={strip}
+            />
           )}
-          <Scoreboard
-            players={players}
-            myUid={myUid}
-            names={names}
-            format={mode.format}
-            target={target}
-            compact
-            className="lg:hidden"
-          />
           {isHost && (
             <div className="flex justify-center pt-2">
               <Button
@@ -152,11 +188,13 @@ function Player({
   mode,
   myUid,
   target,
+  scoreboard,
 }: {
   room: Room;
   mode: GameMode;
   myUid: string;
   target: number;
+  scoreboard: ReactNode;
 }) {
   const { settings } = useGameSettings();
   const seed = room.seed ?? 0;
@@ -183,6 +221,15 @@ function Player({
     async (summary: RunSummary) => {
       setResult(summary);
       correctRef.current = summary.correct;
+      // Exact progression from the outcomes (the last mark may not have been
+      // recorded by the effect yet when the run ends on that answer).
+      let t = 0;
+      const exact: number[] = [];
+      for (const o of summary.outcomes) {
+        t += o.elapsedMs;
+        if (o.result === "correct") exact.push(t);
+      }
+      if (exact.length >= marks.current.length) marks.current = exact;
       try {
         await push();
         if (mode.format === "speedrun") {
@@ -253,11 +300,24 @@ function Player({
     [push],
   );
 
-  if (result) return <MyFinish room={room} myUid={myUid} summary={result} />;
+  if (result)
+    return (
+      <>
+        <MyFinish room={room} myUid={myUid} summary={result} />
+        {scoreboard}
+      </>
+    );
 
   return (
-    <div className="flex flex-col gap-6" data-index={run.index} data-run={run.status}>
-      <Hud run={run} mode={mode} target={target} />
+    <div
+      className="flex flex-col gap-4 sm:gap-6"
+      data-index={run.index}
+      data-run={run.status}
+    >
+      <div className="flex flex-col gap-3">
+        <Hud run={run} mode={mode} target={target} />
+        {scoreboard}
+      </div>
       <div className="relative flex min-h-[18rem] flex-col items-center justify-center">
         {run.status === "ready" ? (
           <CountdownPanel startAt={startAt} />
@@ -445,6 +505,13 @@ function MyFinish({
 function Spectator({ room, myUid }: { room: Room; myUid: string }) {
   const me = room.players[myUid];
   const left = waitingFor(room);
+  // Not playing on: count as done so the round can end without us (a
+  // speedrun without a time ranks by progress, like any unfinished run).
+  const done = !!me?.finished;
+  const [finishedBefore] = useState(done);
+  useEffect(() => {
+    if (!done) void roomApi.finishGame(room.id).catch(() => undefined);
+  }, [done, room.id]);
   return (
     <section
       aria-labelledby="spectating"
@@ -452,10 +519,10 @@ function Spectator({ room, myUid }: { room: Room; myUid: string }) {
     >
       <p className="eyebrow">This round</p>
       <h2 id="spectating" className="font-serif text-headline font-medium">
-        {me?.finished ? "You've finished" : "You left mid-round"}
+        {finishedBefore ? "You've finished" : "You left mid-round"}
       </h2>
       <p className="max-w-sm text-body-sm text-muted-foreground">
-        {me?.finished
+        {finishedBefore
           ? "Your result is in."
           : `Your progress so far is kept: ${me?.correct ?? 0} correct. You'll play the next round from the start.`}{" "}
         {left > 0

@@ -201,7 +201,7 @@ export function LobbyView({
             className={cn(
               "fixed inset-x-0 bottom-0 z-20 border-t bg-background/95 backdrop-blur-sm",
               "px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3",
-              "lg:static lg:rounded-lg lg:border lg:bg-card lg:p-4 lg:backdrop-blur-none",
+              "lg:sticky lg:bottom-6 lg:rounded-lg lg:border lg:bg-card/95 lg:p-4 lg:shadow-md",
             )}
           >
             <div className="mx-auto flex max-w-3xl flex-col gap-3 lg:max-w-none">

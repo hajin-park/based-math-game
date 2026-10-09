@@ -23,7 +23,7 @@ import type { FeedEvent } from "./useRoomState";
 function resultText(
   s: Standing<RoomPlayer>,
   mode: GameMode,
-): { main: string; note?: string } {
+): { main: string; unit?: string; note?: string } {
   const p = s.player;
   if (mode.format === "speedrun") {
     const target = mode.spec.targetCount ?? SPEEDRUN_TARGET;
@@ -34,18 +34,38 @@ function resultText(
       };
     return {
       main: `${p.correct}/${target}`,
+      unit: "correct",
       note: s.dropout ? "Left the round" : "Did not finish",
     };
   }
-  const unit = mode.format === "survival" ? "cleared" : "correct";
   return {
-    main: `${p.score} ${unit}`,
+    main: String(p.score),
+    unit: mode.format === "survival" ? "cleared" : "correct",
     note: s.dropout
       ? "Left the round"
       : p.score > 0 && typeof p.scoreMs === "number"
         ? `last at ${formatMs(p.scoreMs)}`
         : undefined,
   };
+}
+
+/** "3 correct ahead of Ada." / "0.42 s ahead of Ada." */
+function winMargin(
+  me: Standing<RoomPlayer>,
+  next: Standing<RoomPlayer>,
+  mode: GameMode,
+  nextName: string,
+): string {
+  if (mode.format === "speedrun") {
+    if (me.totalMs !== undefined && next.totalMs !== undefined)
+      return `${formatMs(next.totalMs - me.totalMs)} ahead of ${nextName}.`;
+    return `The only one to reach ${mode.spec.targetCount ?? SPEEDRUN_TARGET}.`;
+  }
+  const diff = me.player.score - next.player.score;
+  const unit = mode.format === "survival" ? "cleared" : "correct";
+  return diff > 0
+    ? `${diff} ${unit} ahead of ${nextName}.`
+    : `Level with ${nextName}, but you got there first.`;
 }
 
 export function ResultsView({
@@ -97,11 +117,14 @@ export function ResultsView({
       : winners.length > 1
         ? `${winners.map((w) => name(w.player.uid)).join(" and ")} tied`
         : `${name(winners[0].player.uid)} wins`;
-  const lede = mine
-    ? mine.dropout
+  const runnerUp = standings.find((s) => s.rank > 1);
+  const lede = !mine
+    ? undefined
+    : mine.dropout
       ? "You left before finishing, so this round doesn't count for you."
-      : `You placed ${ordinal(mine.rank)} of ${standings.length}.`
-    : undefined;
+      : mine.winner && runnerUp && winners.length === 1
+        ? winMargin(mine, runnerUp, mode, name(runnerUp.player.uid))
+        : `You placed ${ordinal(mine.rank)} of ${standings.length}.`;
 
   const series: ProgressSeries[] = useMemo(() => {
     const sprintEnd = mode.format === "sprint" ? (mode.spec.durationMs ?? 60_000) : 0;
@@ -163,6 +186,50 @@ export function ResultsView({
             )}
           </header>
 
+          {/* Next step: fixed to the bottom on phones/tablets, under the headline on desktop. */}
+          <div className="fixed inset-x-0 bottom-0 z-20 -mt-4 border-t bg-background/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-sm lg:static lg:border-0 lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
+            <div className="mx-auto flex max-w-3xl flex-col gap-2 lg:mx-0">
+              {!isHost && (
+                <p className="text-body-sm text-muted-foreground">
+                  Waiting for {name(room.hostUid)} to start the next round.
+                </p>
+              )}
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="lg"
+                  className="lg:hidden"
+                  onClick={() => setChatOpen(true)}
+                >
+                  <MessageSquare aria-hidden />
+                  Chat
+                </Button>
+                {isHost && (
+                  <Button
+                    type="button"
+                    size="lg"
+                    className="flex-1 lg:flex-none"
+                    onClick={playAgain}
+                    disabled={busy}
+                  >
+                    <RotateCcw aria-hidden />
+                    Play again
+                  </Button>
+                )}
+                <Button
+                  type="button"
+                  variant={isHost ? "ghost" : "outline"}
+                  size="lg"
+                  className={cn(!isHost && "flex-1 lg:flex-none")}
+                  onClick={onLeave}
+                >
+                  Leave room
+                </Button>
+              </div>
+            </div>
+          </div>
+
           <section aria-labelledby="standings-title" className="flex flex-col gap-3">
             <h2 id="standings-title" className="text-title font-semibold">
               Standings
@@ -214,7 +281,12 @@ export function ResultsView({
                       </span>
                     </span>
                     <span className="flex flex-col items-end gap-0.5 text-right">
-                      <span className="font-mono text-[1rem] tabular-nums">{r.main}</span>
+                      <span className="text-[0.8125rem] text-muted-foreground">
+                        <span className="font-mono text-[1.0625rem] tabular-nums text-foreground">
+                          {r.main}
+                        </span>
+                        {r.unit && <> {r.unit}</>}
+                      </span>
                       {r.note && (
                         <span className="text-[0.75rem] text-muted-foreground">{r.note}</span>
                       )}
@@ -227,9 +299,15 @@ export function ResultsView({
 
           {hasProgress && (
             <section aria-labelledby="progress-title" className="flex flex-col gap-3">
-              <h2 id="progress-title" className="text-title font-semibold">
-                How the round unfolded
-              </h2>
+              <div className="flex flex-col gap-0.5">
+                <h2 id="progress-title" className="text-title font-semibold">
+                  How the round unfolded
+                </h2>
+                <p className="text-body-sm text-muted-foreground">
+                  {mode.format === "survival" ? "Questions cleared" : "Correct answers"} over time.
+                  Hover or tap the chart to compare at any second.
+                </p>
+              </div>
               <ProgressChart
                 series={series}
                 yMax={yMax}
@@ -238,49 +316,6 @@ export function ResultsView({
               />
             </section>
           )}
-
-          <div className="fixed inset-x-0 bottom-0 z-20 border-t bg-background/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-sm lg:static lg:border-0 lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
-            <div className="mx-auto flex max-w-3xl flex-col gap-2 lg:mx-0">
-              {!isHost && (
-                <p className="text-body-sm text-muted-foreground">
-                  Waiting for {name(room.hostUid)} to start the next round.
-                </p>
-              )}
-              <div className="flex items-center gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="lg"
-                  className="lg:hidden"
-                  onClick={() => setChatOpen(true)}
-                >
-                  <MessageSquare aria-hidden />
-                  Chat
-                </Button>
-                {isHost && (
-                  <Button
-                    type="button"
-                    size="lg"
-                    className="flex-1 lg:flex-none"
-                    onClick={playAgain}
-                    disabled={busy}
-                  >
-                    <RotateCcw aria-hidden />
-                    Play again
-                  </Button>
-                )}
-                <Button
-                  type="button"
-                  variant={isHost ? "ghost" : "outline"}
-                  size="lg"
-                  className={cn(!isHost && "flex-1 lg:flex-none")}
-                  onClick={onLeave}
-                >
-                  Leave room
-                </Button>
-              </div>
-            </div>
-          </div>
         </div>
 
         <aside

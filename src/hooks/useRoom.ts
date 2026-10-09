@@ -176,11 +176,25 @@ function isStale(raw: RawRoom): boolean {
   );
 }
 
+/**
+ * Codes are read aloud and copied off projectors, so the alphabet leaves out
+ * look-alikes (0/O, 1/I/L). Rejection sampling keeps every character
+ * equally likely.
+ */
+export const ROOM_CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+
 function randomRoomCode(): string {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  const bytes = new Uint8Array(8);
-  crypto.getRandomValues(bytes);
-  return Array.from(bytes, (b) => chars[b % chars.length]).join("");
+  const chars = ROOM_CODE_ALPHABET;
+  const limit = 256 - (256 % chars.length);
+  let code = "";
+  while (code.length < 8) {
+    const bytes = new Uint8Array(16);
+    crypto.getRandomValues(bytes);
+    for (const b of bytes) {
+      if (b < limit && code.length < 8) code += chars[b % chars.length];
+    }
+  }
+  return code;
 }
 
 function randomSeed(): number {
@@ -586,20 +600,25 @@ const updatePlayerScore = async (
     };
     scoreState.set(roomId, state);
   }
-  // Scores are monotonic within a round (the rules reject decreases).
-  if (value <= state.lastScore) return;
+  const upTo = Math.min(marks.length, MAX_HISTORY);
+  // Scores are monotonic within a round (the rules reject decreases); late
+  // progress marks for the current score are still written.
+  const raises = value > state.lastScore;
+  if (!raises && upTo <= state.written) return;
 
   const updates: Record<string, unknown> = {
     [`players/${uid}/round`]: round,
-    [`players/${uid}/score`]: value,
-    [`players/${uid}/correct`]: Math.max(0, Math.floor(correct)),
     lastActivityAt: serverTimestamp(),
   };
+  if (raises) {
+    updates[`players/${uid}/score`] = value;
+    updates[`players/${uid}/correct`] = Math.max(0, Math.floor(correct));
+  }
+  // When the current score was reached (written once its mark is known).
   const reachedAt = marks[value - 1];
-  if (typeof reachedAt === "number") {
+  if (typeof reachedAt === "number" && (raises || value > state.written)) {
     updates[`players/${uid}/scoreMs`] = Math.max(0, Math.round(reachedAt));
   }
-  const upTo = Math.min(marks.length, MAX_HISTORY);
   for (let i = state.written; i < upTo; i++) {
     updates[`players/${uid}/scoreHistory/${i + 1}`] = Math.max(
       0,
@@ -607,7 +626,7 @@ const updatePlayerScore = async (
     );
   }
   const previous = { lastScore: state.lastScore, written: state.written };
-  state.lastScore = value;
+  state.lastScore = Math.max(state.lastScore, value);
   state.written = Math.max(state.written, upTo);
   try {
     await update(roomRef(roomId), updates);

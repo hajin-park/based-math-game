@@ -133,10 +133,11 @@ export function RoomChat({
                 key={item.id}
                 className="text-center text-[0.8125rem] text-muted-foreground"
               >
-                <span className="font-mono text-[0.6875rem]">
+                {item.event.text}
+                <span className="text-[0.75rem] tabular-nums">
+                  {" · "}
                   {timeFormat.format(item.at)}
-                </span>{" "}
-                · {item.event.text}
+                </span>
               </p>
             ) : (
               <ChatLine
@@ -213,7 +214,7 @@ function ChatLine({
           {name}
         </span>
         {mine && <YouTag className="h-4 px-1 text-[0.625rem]" />}
-        <span className="font-mono text-[0.6875rem]">
+        <span className="tabular-nums">
           {Number.isFinite(message.timestamp)
             ? timeFormat.format(message.timestamp)
             : ""}

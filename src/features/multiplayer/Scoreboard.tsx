@@ -59,7 +59,12 @@ export const Scoreboard = memo(function Scoreboard({
   if (compact) {
     return (
       <section aria-label="Live scores" className={className}>
-        <ol className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1 [scrollbar-width:none]">
+        {/* Focusable so keyboard users can scroll a long strip. */}
+        <ol
+          tabIndex={0}
+          aria-label="Players by rank"
+          className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1 [scrollbar-width:none]"
+        >
           {standings.map((s) => {
             const you = s.player.uid === myUid;
             return (
@@ -70,7 +75,7 @@ export const Scoreboard = memo(function Scoreboard({
                 className={cn(
                   "flex shrink-0 items-center gap-2 rounded-md border bg-card px-2.5 py-1.5 text-[0.8125rem]",
                   you && "border-primary/40 bg-primary/[0.05]",
-                  s.dropout && "opacity-60",
+                  s.dropout && "text-muted-foreground",
                 )}
               >
                 <span className="font-mono text-[0.6875rem] text-muted-foreground">
@@ -122,7 +127,7 @@ export const Scoreboard = memo(function Scoreboard({
               className={cn(
                 "flex min-h-11 items-center gap-3 rounded-md px-3 py-2",
                 you ? "bg-primary/[0.06]" : "bg-card/70",
-                s.dropout && "opacity-60",
+                s.dropout && "text-muted-foreground",
               )}
             >
               <span className="w-5 font-mono text-[0.75rem] text-muted-foreground">
