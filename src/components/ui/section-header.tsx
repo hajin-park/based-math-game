@@ -3,7 +3,9 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 import { LucideIcon } from "lucide-react";
 
-const sectionHeaderVariants = cva("flex flex-col gap-2", {
+/** @deprecated Use <PageHeader> (page tops) or a plain h2.text-headline. */
+
+const sectionHeaderVariants = cva("flex flex-col gap-2.5", {
   variants: {
     align: {
       left: "items-start text-left",
@@ -11,9 +13,9 @@ const sectionHeaderVariants = cva("flex flex-col gap-2", {
       right: "items-end text-right",
     },
     spacing: {
-      default: "mb-4",
-      sm: "mb-3",
-      lg: "mb-5",
+      default: "mb-6",
+      sm: "mb-4",
+      lg: "mb-8",
       none: "mb-0",
     },
   },
@@ -24,14 +26,14 @@ const sectionHeaderVariants = cva("flex flex-col gap-2", {
 });
 
 const titleVariants = cva(
-  "font-serif font-semibold tracking-academic leading-tight",
+  "font-serif font-medium tracking-[-0.015em] text-foreground text-balance",
   {
     variants: {
       size: {
-        sm: "text-xl md:text-2xl",
-        default: "text-2xl md:text-3xl",
-        lg: "text-3xl md:text-4xl",
-        xl: "text-4xl md:text-5xl",
+        sm: "text-[1.375rem] leading-tight md:text-[1.625rem]",
+        default: "text-headline",
+        lg: "text-display-lg",
+        xl: "text-display-xl",
       },
       underline: {
         none: "",
@@ -80,7 +82,7 @@ const SectionHeader = React.forwardRef<HTMLDivElement, SectionHeaderProps>(
       >
         <div className="flex items-center gap-3">
           {Icon && (
-            <Icon className="h-6 w-6 md:h-8 md:w-8 text-primary flex-shrink-0" />
+            <Icon className="size-5 shrink-0 text-muted-foreground md:size-6" />
           )}
           <h2
             className={cn(
@@ -91,7 +93,7 @@ const SectionHeader = React.forwardRef<HTMLDivElement, SectionHeaderProps>(
           </h2>
         </div>
         {description && (
-          <p className="text-sm md:text-base text-muted-foreground max-w-prose">
+          <p className="max-w-prose text-body text-muted-foreground text-pretty">
             {description}
           </p>
         )}

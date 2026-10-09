@@ -2,22 +2,28 @@ import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
+/**
+ * @deprecated Use <Card> (src/components/ui/card.tsx). Kept so legacy pages
+ * render in the new visual language; see DESIGN.md → Migration.
+ */
+
 const paperCardVariants = cva(
-  "rounded-sm border bg-card text-card-foreground shadow-sm paper-texture",
+  "relative rounded-lg border bg-card text-card-foreground shadow-xs",
   {
     variants: {
       variant: {
         default: "",
-        folded: "folded-corner",
-        "folded-sm": "folded-corner folded-corner-sm",
-        "folded-lg": "folded-corner folded-corner-lg",
+        folded: "",
+        "folded-sm": "",
+        "folded-lg": "",
         bookmark: "bookmark-ribbon",
-        interactive: "page-curl cursor-pointer",
+        interactive:
+          "page-curl cursor-pointer hover:border-border-strong hover:shadow-md",
       },
       padding: {
-        default: "p-4",
-        sm: "p-3",
-        lg: "p-5",
+        default: "p-5",
+        sm: "p-4",
+        lg: "p-6",
         none: "p-0",
       },
     },
@@ -50,7 +56,7 @@ const PaperCardHeader = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("flex flex-col space-y-1.5 p-6", className)}
+    className={cn("flex flex-col gap-1.5 p-5", className)}
     {...props}
   />
 ));
@@ -63,7 +69,7 @@ const PaperCardTitle = React.forwardRef<
   <h3
     ref={ref}
     className={cn(
-      "font-serif font-semibold leading-none tracking-academic",
+      "font-sans text-title font-semibold text-foreground",
       className,
     )}
     {...props}
@@ -77,7 +83,7 @@ const PaperCardDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn("text-sm text-muted-foreground", className)}
+    className={cn("text-body-sm text-muted-foreground", className)}
     {...props}
   />
 ));
@@ -87,7 +93,7 @@ const PaperCardContent = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("p-6 pt-0", className)} {...props} />
+  <div ref={ref} className={cn("p-5 pt-0", className)} {...props} />
 ));
 PaperCardContent.displayName = "PaperCardContent";
 
@@ -97,7 +103,7 @@ const PaperCardFooter = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("flex items-center p-6 pt-0", className)}
+    className={cn("flex items-center gap-2 p-5 pt-0", className)}
     {...props}
   />
 ));

@@ -1,270 +1,304 @@
-import { useState, useEffect } from "react";
-import { NavLink } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useState } from "react";
+import { Link, NavLink, useLocation } from "react-router-dom";
+import { motion, useReducedMotion } from "framer-motion";
+import { ArrowRight, Menu, Monitor, Moon, Sun } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Separator } from "@/components/ui/separator";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Segmented } from "@/components/ui/segmented";
+import { Wordmark } from "@/components/ui/logo";
 import { useAuth } from "@/contexts/AuthContext";
-import { useTheme } from "@/contexts/ThemeContext";
+import { useTheme, type ThemePreference } from "@/contexts/ThemeContext";
 import ProfileDropdown from "@/components/ProfileDropdown";
-import { Menu, Binary, Moon, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export default function NavigationBar() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-  const [scrollDirection, setScrollDirection] = useState<"up" | "down">("up");
-  const [lastScrollY, setLastScrollY] = useState(0);
-  const { isGuest } = useAuth();
-  const { theme, toggleTheme } = useTheme();
+const PRIMARY_LINKS = [
+  {
+    name: "Play",
+    href: "/play",
+    match: ["/play", "/singleplayer", "/quiz", "/results"],
+  },
+  { name: "Multiplayer", href: "/multiplayer", match: ["/multiplayer"] },
+  {
+    name: "Learn",
+    href: "/learn",
+    match: ["/learn", "/tutorials", "/how-to-play"],
+  },
+  { name: "Leaderboard", href: "/leaderboard", match: ["/leaderboard"] },
+];
 
-  const navigation = [
-    { name: "Home", href: "/" },
-    { name: "Play", href: "/singleplayer" },
-    { name: "Multiplayer", href: "/multiplayer" },
-    { name: "Leaderboard", href: "/leaderboard" },
-    { name: "Stats", href: "/stats" },
-    { name: "How to Play", href: "/how-to-play" },
-    { name: "Tutorials", href: "/tutorials" },
-  ];
+const SECONDARY_LINKS = [
+  { name: "Stats", href: "/stats" },
+  { name: "How to play", href: "/how-to-play" },
+  { name: "About", href: "/about" },
+];
+
+const THEME_OPTIONS: {
+  value: ThemePreference;
+  label: string;
+  icon: typeof Sun;
+}[] = [
+  { value: "light", label: "Light", icon: Sun },
+  { value: "dark", label: "Dark", icon: Moon },
+  { value: "system", label: "System", icon: Monitor },
+];
+
+function useIsActive() {
+  const { pathname } = useLocation();
+  return (match: string[]) =>
+    match.some((m) => pathname === m || pathname.startsWith(`${m}/`));
+}
+
+function ThemeMenu() {
+  const { theme, resolvedTheme, setTheme } = useTheme();
+  const Icon = resolvedTheme === "dark" ? Moon : Sun;
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label={`Theme: ${theme}. Change theme`}
+          className="text-muted-foreground hover:text-foreground"
+        >
+          <Icon />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="min-w-[10rem]">
+        <DropdownMenuLabel>Appearance</DropdownMenuLabel>
+        <DropdownMenuRadioGroup
+          value={theme}
+          onValueChange={(v) => setTheme(v as ThemePreference)}
+        >
+          {THEME_OPTIONS.map(({ value, label, icon: ItemIcon }) => (
+            <DropdownMenuRadioItem key={value} value={value}>
+              <ItemIcon />
+              {label}
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+export default function NavigationBar() {
+  const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const { isGuest } = useAuth();
+  const { theme, setTheme } = useTheme();
+  const isActive = useIsActive();
+  const reduce = useReducedMotion();
+  const { pathname } = useLocation();
 
   useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
+    const onScroll = () => setScrolled(window.scrollY > 4);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
-      // Determine if scrolled past threshold
-      setScrolled(currentScrollY > 10);
-
-      // Determine scroll direction
-      if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        // Scrolling down and past threshold
-        setScrollDirection("down");
-      } else if (currentScrollY < lastScrollY) {
-        // Scrolling up - immediately show nav
-        setScrollDirection("up");
-      }
-
-      setLastScrollY(currentScrollY);
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [lastScrollY]);
+  // Close the sheet on navigation.
+  useEffect(() => setOpen(false), [pathname]);
 
   return (
-    <div className="sticky top-0 z-50 w-full">
-      <motion.nav
-        initial={false}
-        animate={{
-          y: scrollDirection === "down" && scrolled ? -100 : 0,
-        }}
-        transition={{
-          duration: 0.25,
-          ease: [0.4, 0, 0.2, 1],
-        }}
-        className={cn(
-          "w-full border-b transition-all duration-300",
-          scrolled && scrollDirection === "down"
-            ? "bg-background/40 backdrop-blur-md border-border/30"
-            : "bg-background/95 backdrop-blur-lg border-border/50",
-          scrolled && "shadow-sm",
-          // Academic paper-like styling
-          "paper-texture",
-        )}
+    <header
+      className={cn(
+        "sticky top-0 z-40 w-full border-b transition-[background-color,border-color] duration-base",
+        scrolled
+          ? "border-border bg-background/85 backdrop-blur-md backdrop-saturate-150"
+          : "border-transparent bg-background",
+      )}
+    >
+      <nav
+        aria-label="Main"
+        className="container flex h-[var(--nav-h)] items-center gap-6"
       >
-        <div className="container flex h-16 items-center justify-between px-4">
-          {/* Logo */}
-          <div className="flex items-center gap-2">
-            <NavLink
-              to="/"
-              className="flex items-center gap-2 font-bold text-lg hover:opacity-80 transition-opacity"
-            >
-              <Binary className="h-5 w-5 text-primary" />
-              <span className="gradient-text hidden sm:inline">
-                Based Math Game
-              </span>
-              <span className="gradient-text sm:hidden">BMG</span>
-            </NavLink>
-          </div>
+        <Link
+          to="/"
+          aria-label="Based Math Game — home"
+          className="-ml-1 flex items-center rounded-md px-1 py-1"
+        >
+          <Wordmark />
+        </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden lg:flex lg:items-center lg:gap-1">
-            {navigation.map((item) => (
-              <NavLink
-                key={item.name}
-                to={item.href}
-                className={({ isActive }) =>
-                  cn(
-                    "relative px-3 py-2 text-sm font-medium transition-colors rounded-md",
-                    isActive
-                      ? "text-primary"
-                      : "text-muted-foreground hover:text-foreground hover:bg-accent/50",
-                  )
-                }
-              >
-                {({ isActive }) => (
-                  <>
-                    {item.name}
-                    {isActive && (
-                      <motion.div
-                        layoutId="activeNav"
-                        className="absolute inset-x-1 -bottom-px h-0.5 bg-primary"
-                        transition={{
-                          type: "spring",
-                          stiffness: 380,
-                          damping: 30,
-                        }}
-                      />
-                    )}
-                  </>
-                )}
-              </NavLink>
-            ))}
-          </div>
+        {/* Desktop links */}
+        <ul className="hidden items-center gap-1 lg:flex">
+          {PRIMARY_LINKS.map((item) => {
+            const active = isActive(item.match);
+            return (
+              <li key={item.href}>
+                <NavLink
+                  to={item.href}
+                  aria-current={active ? "page" : undefined}
+                  className={cn(
+                    "relative inline-flex h-9 items-center rounded-md px-3 text-[0.875rem] font-medium transition-colors duration-fast",
+                    active
+                      ? "text-foreground"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {item.name}
+                  {active && (
+                    <motion.span
+                      layoutId={reduce ? undefined : "nav-active"}
+                      aria-hidden
+                      className="absolute inset-x-3 -bottom-[calc((var(--nav-h)-2.25rem)/2+1px)] h-0.5 rounded-full bg-primary"
+                      transition={{
+                        type: "spring",
+                        stiffness: 500,
+                        damping: 40,
+                      }}
+                    />
+                  )}
+                </NavLink>
+              </li>
+            );
+          })}
+        </ul>
 
-          {/* Desktop Auth & Theme Toggle */}
-          <div className="hidden lg:flex lg:items-center lg:gap-3">
-            {/* Theme Toggle */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleTheme}
-              aria-label={
-                theme === "light"
-                  ? "Switch to dark mode"
-                  : "Switch to light mode"
-              }
-            >
-              <AnimatePresence mode="wait">
-                {theme === "light" ? (
-                  <motion.div
-                    key="moon"
-                    initial={{ y: -10, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    exit={{ y: 10, opacity: 0 }}
-                    transition={{ duration: 0.15 }}
-                  >
-                    <Moon className="h-5 w-5" />
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="sun"
-                    initial={{ y: -10, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    exit={{ y: 10, opacity: 0 }}
-                    transition={{ duration: 0.15 }}
-                  >
-                    <Sun className="h-5 w-5" />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </Button>
-
+        <div className="ml-auto flex items-center gap-1.5">
+          <div className="hidden items-center gap-1 lg:flex">
+            <ThemeMenu />
             {isGuest ? (
-              <Button asChild size="sm">
-                <NavLink to="/signup">Sign Up</NavLink>
+              <Button asChild variant="ghost" size="sm" className="h-9 px-3">
+                <Link to="/login">Sign in</Link>
               </Button>
             ) : (
               <ProfileDropdown />
             )}
           </div>
 
-          {/* Mobile Menu */}
-          <div className="flex lg:hidden">
-            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="lg:hidden">
-                  <Menu className="h-5 w-5" />
-                  <span className="sr-only">Open menu</span>
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-[300px] sm:w-[400px]">
-                <SheetHeader>
-                  <SheetTitle className="text-left flex items-center gap-2">
-                    <Binary className="h-5 w-5 text-primary" />
-                    <span className="gradient-text">Based Math Game</span>
-                  </SheetTitle>
-                </SheetHeader>
-                <div className="mt-6 flex flex-col gap-4">
-                  {/* Navigation Links */}
-                  <nav className="flex flex-col gap-2">
-                    {navigation.map((item) => (
+          <Button asChild size="sm" className="h-9 gap-1.5 pl-3.5 pr-3">
+            <Link to="/play">
+              Play
+              <ArrowRight aria-hidden />
+            </Link>
+          </Button>
+
+          {/* Mobile menu */}
+          <Sheet open={open} onOpenChange={setOpen}>
+            <SheetTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="-mr-2 lg:hidden"
+                aria-label="Open menu"
+              >
+                <Menu />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="gap-0 p-0">
+              <SheetHeader className="h-[var(--nav-h)] shrink-0 flex-row items-center gap-0 border-b px-5">
+                <SheetTitle asChild>
+                  <span className="flex items-center">
+                    <Wordmark />
+                  </span>
+                </SheetTitle>
+                <SheetDescription className="sr-only">
+                  Site navigation
+                </SheetDescription>
+              </SheetHeader>
+
+              <nav
+                aria-label="Mobile"
+                className="flex flex-col overflow-y-auto"
+              >
+                <ul className="flex flex-col px-3 py-3">
+                  {PRIMARY_LINKS.map((item) => {
+                    const active = isActive(item.match);
+                    return (
+                      <li key={item.href}>
+                        <NavLink
+                          to={item.href}
+                          aria-current={active ? "page" : undefined}
+                          className={cn(
+                            "flex min-h-12 items-center justify-between rounded-md px-3 font-serif text-[1.375rem] tracking-[-0.01em] transition-colors duration-fast hover:bg-accent",
+                            active ? "text-foreground" : "text-foreground/80",
+                          )}
+                        >
+                          {item.name}
+                          {active && (
+                            <span
+                              aria-hidden
+                              className="size-1.5 rounded-full bg-primary"
+                            />
+                          )}
+                        </NavLink>
+                      </li>
+                    );
+                  })}
+                </ul>
+
+                <ul className="flex flex-col border-t px-3 py-3">
+                  {SECONDARY_LINKS.map((item) => (
+                    <li key={item.href}>
                       <NavLink
-                        key={item.name}
                         to={item.href}
-                        className={({ isActive }) =>
-                          cn(
-                            "flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                            "hover:bg-accent",
-                            isActive
-                              ? "bg-accent text-accent-foreground"
-                              : "text-muted-foreground hover:text-foreground",
-                          )
-                        }
-                        onClick={() => setMobileMenuOpen(false)}
+                        className="flex min-h-11 items-center rounded-md px-3 text-[0.9375rem] text-muted-foreground transition-colors duration-fast hover:bg-accent hover:text-foreground"
                       >
                         {item.name}
                       </NavLink>
-                    ))}
-                  </nav>
+                    </li>
+                  ))}
+                </ul>
 
-                  <Separator />
-
-                  {/* Theme Toggle */}
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start"
-                    onClick={toggleTheme}
-                  >
-                    {theme === "light" ? (
-                      <>
-                        <Moon className="mr-2 h-4 w-4" />
-                        <span>Dark Mode</span>
-                      </>
-                    ) : (
-                      <>
-                        <Sun className="mr-2 h-4 w-4" />
-                        <span>Light Mode</span>
-                      </>
-                    )}
-                  </Button>
-
-                  <Separator />
-
-                  {/* Auth Section */}
-                  <div className="flex flex-col gap-2">
-                    {isGuest ? (
-                      <Button asChild className="w-full">
-                        <NavLink
-                          to="/signup"
-                          onClick={() => setMobileMenuOpen(false)}
-                        >
-                          Sign Up
-                        </NavLink>
-                      </Button>
-                    ) : (
-                      <Button asChild variant="outline" className="w-full">
-                        <NavLink
-                          to="/profile"
-                          onClick={() => setMobileMenuOpen(false)}
-                        >
-                          Profile
-                        </NavLink>
-                      </Button>
-                    )}
-                  </div>
+                <div className="flex flex-col gap-3 border-t px-6 py-5">
+                  <p className="eyebrow">Appearance</p>
+                  <Segmented
+                    aria-label="Theme"
+                    id="mobile-theme"
+                    fullWidth
+                    value={theme}
+                    onValueChange={setTheme}
+                    options={THEME_OPTIONS.map(({ value, label, icon: I }) => ({
+                      value,
+                      label,
+                      icon: <I aria-hidden />,
+                    }))}
+                  />
                 </div>
-              </SheetContent>
-            </Sheet>
-          </div>
+              </nav>
+
+              <div className="mt-auto flex flex-col gap-2 border-t px-6 py-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+                {isGuest ? (
+                  <>
+                    <Button asChild variant="outline" size="lg">
+                      <Link to="/login">Sign in</Link>
+                    </Button>
+                    <p className="text-center text-[0.8125rem] text-muted-foreground">
+                      No account needed to play.{" "}
+                      <Link to="/signup" className="link">
+                        Create one
+                      </Link>{" "}
+                      to keep your stats.
+                    </p>
+                  </>
+                ) : (
+                  <Button asChild variant="outline" size="lg">
+                    <Link to="/profile">Your profile</Link>
+                  </Button>
+                )}
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
-      </motion.nav>
-    </div>
+      </nav>
+    </header>
   );
 }

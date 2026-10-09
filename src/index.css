@@ -1,5 +1,11 @@
-/* Import Academic Fonts */
-@import url("https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap");
+/*
+ * Based Math Game — "Engineer's Notebook" design system.
+ * Tokens live here as RGB channel triplets (consumed by tailwind.config.js as
+ * rgb(var(--token) / <alpha-value>)). To use a token in raw CSS or inline
+ * styles write rgb(var(--primary)) or rgb(var(--primary) / 0.2).
+ * Contrast is validated by scripts/check-contrast.mjs. See DESIGN.md.
+ */
+@import "./styles/fonts.css";
 
 @tailwind base;
 @tailwind components;
@@ -7,824 +13,620 @@
 
 @layer base {
   :root {
-    /* Academic Textbook/Notes/Papers Theme - Light Mode (OKLCH) */
-    /* Inspired by: Paper, ink, highlighters, and scholarly materials */
+    color-scheme: light;
 
-    /* Border Radius - Minimal, paper-like corners */
-    --radius: 0.125rem; /* 2px - very subtle, almost sharp */
+    /* Paper, ink, hairlines */
+    --background: 243 240 232; /* #F3F0E8 paper */
+    --foreground: 26 25 23; /* #1A1917 ink */
+    --card: 251 250 246; /* #FBFAF6 raised sheet */
+    --card-foreground: 26 25 23;
+    --popover: 252 251 248; /* #FCFBF8 */
+    --popover-foreground: 26 25 23;
+    --sunken: 234 230 219; /* #EAE6DB wells, code, table headers */
+    --border: 226 221 208; /* #E2DDD0 hairline */
+    --border-strong: 207 200 184; /* #CFC8B8 dividers that must read */
+    --input: 201 194 177; /* #C9C2B1 control outline */
 
-    /* Base Colors - Warm paper and deep ink */
-    --background: oklch(0.98 0.005 85); /* Warm off-white, like aged paper */
-    --foreground: oklch(0.15 0.01 265); /* Deep ink black */
+    /* Red pen */
+    --primary: 194 59 27; /* #C23B1B — 5.34:1 with white, 4.69:1 on paper */
+    --primary-hover: 169 50 22; /* #A93216 */
+    --primary-foreground: 255 255 255;
+    --ring: 194 59 27;
 
-    /* Card Colors - Slightly elevated paper */
-    --card: oklch(0.99 0.003 85); /* Bright paper white */
-    --card-foreground: oklch(0.15 0.01 265); /* Deep ink black */
+    --secondary: 234 230 219; /* #EAE6DB */
+    --secondary-foreground: 26 25 23;
+    --muted: 234 230 219;
+    --muted-foreground: 107 103 94; /* #6B675E — 4.95:1 on paper */
+    --accent: 236 232 222; /* #ECE8DE hover wash */
+    --accent-foreground: 26 25 23;
 
-    /* Popover Colors */
-    --popover: oklch(0.99 0.003 85); /* Bright paper white */
-    --popover-foreground: oklch(0.15 0.01 265); /* Deep ink black */
+    /* Status */
+    --success: 46 107 71; /* #2E6B47 */
+    --success-foreground: 255 255 255;
+    --warning: 138 90 11; /* #8A5A0B */
+    --warning-foreground: 255 255 255;
+    --destructive: 163 38 31; /* #A3261F */
+    --destructive-foreground: 255 255 255;
+    --info: 43 84 196;
+    --info-foreground: 255 255 255;
+    --trophy: 154 106 18; /* #9A6A12 */
+    --trophy-foreground: 255 255 255;
+    --highlight: 240 205 96; /* marker yellow, use at /30–/45 */
 
-    /* Primary - Academic blue (like blue ink) */
-    --primary: oklch(0.35 0.08 250); /* Deep academic blue */
-    --primary-foreground: oklch(0.99 0.003 85); /* Paper white */
+    /* Number bases — identity colours */
+    --base-bin: 43 84 196; /* #2B54C4 cobalt */
+    --base-bin-foreground: 255 255 255;
+    --base-oct: 76 112 36; /* #4C7024 moss */
+    --base-oct-foreground: 255 255 255;
+    --base-dec: 74 70 63; /* #4A463F graphite */
+    --base-dec-foreground: 255 255 255;
+    --base-hex: 138 59 135; /* #8A3B87 plum */
+    --base-hex-foreground: 255 255 255;
 
-    /* Secondary - Subtle gray (like pencil marks) */
-    --secondary: oklch(0.92 0.005 265); /* Light graphite */
-    --secondary-foreground: oklch(0.2 0.01 265); /* Dark gray */
+    /* Charts (categorical, in order) */
+    --chart-1: 194 59 27;
+    --chart-2: 43 84 196;
+    --chart-3: 76 112 36;
+    --chart-4: 138 59 135;
+    --chart-5: 176 122 30;
 
-    /* Muted - Light cream (like notebook margins) */
-    --muted: oklch(0.95 0.008 85); /* Cream/beige */
-    --muted-foreground: oklch(0.45 0.02 265); /* Medium gray */
+    /* Texture & elevation */
+    --grid: 26 25 23;
+    --grid-minor: 0.045;
+    --grid-major: 0.085;
+    --shadow: 48 40 24;
 
-    /* Accent - Highlighter yellow */
-    --accent: oklch(0.85 0.12 95); /* Soft yellow highlighter */
-    --accent-foreground: oklch(0.2 0.01 265); /* Dark text on highlight */
-
-    /* Destructive - Red ink */
-    --destructive: oklch(0.5 0.2 25); /* Red correction pen */
-    --destructive-foreground: oklch(0.99 0.003 85); /* Paper white */
-
-    /* Success - Green checkmark */
-    --success: oklch(0.55 0.15 150); /* Academic green */
-    --success-foreground: oklch(0.99 0.003 85); /* Paper white */
-
-    /* Warning - Orange highlighter */
-    --warning: oklch(0.75 0.15 75); /* Warm orange */
-    --warning-foreground: oklch(0.2 0.01 265); /* Dark text */
-
-    /* Info - Blue note */
-    --info: oklch(0.55 0.12 240); /* Information blue */
-    --info-foreground: oklch(0.99 0.003 85); /* Paper white */
-
-    /* Borders & Inputs - Subtle graphite */
-    --border: oklch(0.85 0.005 265); /* Light graphite line */
-    --input: oklch(0.85 0.005 265); /* Light graphite line */
-    --ring: oklch(0.35 0.08 250); /* Primary blue for focus */
-
-    /* Sidebar - Margin area */
-    --sidebar: oklch(0.96 0.008 85); /* Slightly darker than background */
-    --sidebar-foreground: oklch(0.15 0.01 265); /* Deep ink black */
-    --sidebar-primary: oklch(0.35 0.08 250); /* Academic blue */
-    --sidebar-primary-foreground: oklch(0.99 0.003 85); /* Paper white */
-    --sidebar-accent: oklch(0.92 0.005 265); /* Light graphite */
-    --sidebar-accent-foreground: oklch(0.2 0.01 265); /* Dark gray */
-    --sidebar-border: oklch(0.85 0.005 265); /* Light graphite line */
-    --sidebar-ring: oklch(0.35 0.08 250); /* Primary blue */
-
-    /* Chart Colors - Academic palette */
-    --chart-1: oklch(0.35 0.08 250); /* Academic blue */
-    --chart-2: oklch(0.55 0.15 150); /* Academic green */
-    --chart-3: oklch(0.5 0.2 25); /* Academic red */
-    --chart-4: oklch(0.75 0.15 75); /* Warm orange */
-    --chart-5: oklch(0.45 0.12 280); /* Purple */
-
-    /* Trophy/Achievement Colors - Gold/amber for awards */
-    --trophy: oklch(0.65 0.15 85); /* Rich gold */
-    --trophy-foreground: oklch(0.99 0.003 85); /* Paper white */
-
-    /* Critical State - For urgent warnings and time-sensitive alerts */
-    --critical: oklch(0.5 0.2 25); /* Red correction pen */
-    --critical-foreground: oklch(0.99 0.003 85); /* Paper white */
-
-    /* Base Number System Colors - For educational context */
-    --base-binary: oklch(0.35 0.08 250); /* Academic blue (matches primary) */
-    --base-binary-foreground: oklch(0.99 0.003 85); /* Paper white */
-    --base-octal: oklch(0.75 0.15 75); /* Warm orange (matches warning) */
-    --base-octal-foreground: oklch(0.2 0.01 265); /* Dark text */
-    --base-decimal: oklch(0.55 0.15 150); /* Academic green (matches success) */
-    --base-decimal-foreground: oklch(0.99 0.003 85); /* Paper white */
-    --base-hex: oklch(0.45 0.12 280); /* Purple */
-    --base-hex-foreground: oklch(0.99 0.003 85); /* Paper white */
+    --radius: 8px;
+    --nav-h: 3.5rem;
+    --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+    --dur-fast: 120ms;
+    --dur-base: 180ms;
+    --dur-slow: 240ms;
   }
 
   .dark {
-    /* Academic Textbook/Notes/Papers Theme - Dark Mode (OKLCH) */
-    /* Inspired by: Chalkboard, night reading, reduced eye strain */
+    color-scheme: dark;
 
-    /* Base Colors - Deep charcoal and soft white */
-    --background: oklch(0.18 0.01 265); /* Deep charcoal */
-    --foreground: oklch(0.95 0.005 85); /* Soft white (reduced eye strain) */
+    --background: 18 17 15; /* #12110F graphite night */
+    --foreground: 237 233 223; /* #EDE9DF */
+    --card: 27 26 23; /* #1B1A17 */
+    --card-foreground: 237 233 223;
+    --popover: 32 31 27; /* #201F1B */
+    --popover-foreground: 237 233 223;
+    --sunken: 13 12 11; /* #0D0C0B */
+    --border: 44 42 37; /* #2C2A25 */
+    --border-strong: 64 61 54; /* #403D36 */
+    --input: 66 63 55; /* #423F37 */
 
-    /* Card Colors - Slightly elevated surface */
-    --card: oklch(0.22 0.01 265); /* Lighter charcoal */
-    --card-foreground: oklch(0.95 0.005 85); /* Soft white */
+    --primary: 255 106 61; /* #FF6A3D */
+    --primary-hover: 255 132 92; /* #FF845C */
+    --primary-foreground: 20 13 10; /* #140D0A — 6.76:1 on primary */
+    --ring: 255 106 61;
 
-    /* Popover Colors */
-    --popover: oklch(0.22 0.01 265); /* Lighter charcoal */
-    --popover-foreground: oklch(0.95 0.005 85); /* Soft white */
+    --secondary: 38 36 31; /* #26241F */
+    --secondary-foreground: 237 233 223;
+    --muted: 35 34 30; /* #23221E */
+    --muted-foreground: 157 152 140; /* #9D988C */
+    --accent: 38 36 31;
+    --accent-foreground: 237 233 223;
 
-    /* Primary - Chalk blue */
-    --primary: oklch(0.65 0.08 250); /* Bright chalk blue */
-    --primary-foreground: oklch(0.18 0.01 265); /* Deep charcoal */
+    --success: 111 192 140; /* #6FC08C */
+    --success-foreground: 13 22 16;
+    --warning: 226 177 84; /* #E2B154 */
+    --warning-foreground: 26 19 6;
+    --destructive: 242 124 134; /* #F27C86 */
+    --destructive-foreground: 26 10 12;
+    --info: 135 166 255;
+    --info-foreground: 10 14 30;
+    --trophy: 226 177 84;
+    --trophy-foreground: 26 19 6;
+    --highlight: 226 177 84;
 
-    /* Secondary - Medium gray */
-    --secondary: oklch(0.3 0.01 265); /* Dark gray */
-    --secondary-foreground: oklch(0.9 0.005 85); /* Light gray */
+    --base-bin: 135 166 255; /* #87A6FF */
+    --base-bin-foreground: 10 14 30;
+    --base-oct: 165 200 120; /* #A5C878 */
+    --base-oct-foreground: 14 20 8;
+    --base-dec: 207 201 188; /* #CFC9BC */
+    --base-dec-foreground: 18 17 15;
+    --base-hex: 222 156 219; /* #DE9CDB */
+    --base-hex-foreground: 28 12 27;
 
-    /* Muted - Darker gray */
-    --muted: oklch(0.28 0.01 265); /* Muted dark gray */
-    --muted-foreground: oklch(0.65 0.02 265); /* Medium light gray */
+    --chart-1: 255 106 61;
+    --chart-2: 135 166 255;
+    --chart-3: 165 200 120;
+    --chart-4: 222 156 219;
+    --chart-5: 226 177 84;
 
-    /* Accent - Soft amber (warm reading light) */
-    --accent: oklch(0.75 0.1 75); /* Warm amber */
-    --accent-foreground: oklch(0.18 0.01 265); /* Deep charcoal */
-
-    /* Destructive - Soft red */
-    --destructive: oklch(0.6 0.18 25); /* Muted red */
-    --destructive-foreground: oklch(0.95 0.005 85); /* Soft white */
-
-    /* Success - Soft green */
-    --success: oklch(0.65 0.12 150); /* Muted green */
-    --success-foreground: oklch(0.18 0.01 265); /* Deep charcoal */
-
-    /* Warning - Soft orange */
-    --warning: oklch(0.7 0.12 75); /* Muted orange */
-    --warning-foreground: oklch(0.18 0.01 265); /* Deep charcoal */
-
-    /* Info - Soft blue */
-    --info: oklch(0.6 0.1 240); /* Muted blue */
-    --info-foreground: oklch(0.95 0.005 85); /* Soft white */
-
-    /* Borders & Inputs - Subtle gray */
-    --border: oklch(0.3 0.01 265); /* Subtle gray line */
-    --input: oklch(0.3 0.01 265); /* Subtle gray line */
-    --ring: oklch(0.65 0.08 250); /* Chalk blue for focus */
-
-    /* Sidebar - Slightly darker area */
-    --sidebar: oklch(0.2 0.01 265); /* Darker charcoal */
-    --sidebar-foreground: oklch(0.95 0.005 85); /* Soft white */
-    --sidebar-primary: oklch(0.65 0.08 250); /* Chalk blue */
-    --sidebar-primary-foreground: oklch(0.18 0.01 265); /* Deep charcoal */
-    --sidebar-accent: oklch(0.3 0.01 265); /* Dark gray */
-    --sidebar-accent-foreground: oklch(0.9 0.005 85); /* Light gray */
-    --sidebar-border: oklch(0.3 0.01 265); /* Subtle gray line */
-    --sidebar-ring: oklch(0.65 0.08 250); /* Chalk blue */
-
-    /* Chart Colors - Muted academic palette */
-    --chart-1: oklch(0.65 0.08 250); /* Chalk blue */
-    --chart-2: oklch(0.65 0.12 150); /* Muted green */
-    --chart-3: oklch(0.6 0.18 25); /* Muted red */
-    --chart-4: oklch(0.7 0.12 75); /* Muted orange */
-    --chart-5: oklch(0.6 0.1 280); /* Muted purple */
-
-    /* Trophy/Achievement Colors - Muted gold/amber for awards (chalkboard aesthetic) */
-    --trophy: oklch(0.75 0.12 85); /* Muted gold/amber */
-    --trophy-foreground: oklch(0.18 0.01 265); /* Deep charcoal */
-
-    /* Critical State - For urgent warnings and time-sensitive alerts (softer for night reading) */
-    --critical: oklch(0.65 0.15 25); /* Muted red (softer than light mode) */
-    --critical-foreground: oklch(0.95 0.005 85); /* Soft white */
-
-    /* Base Number System Colors - For educational context (muted chalkboard colors) */
-    --base-binary: oklch(0.65 0.08 250); /* Chalk blue (matches primary) */
-    --base-binary-foreground: oklch(0.18 0.01 265); /* Deep charcoal */
-    --base-octal: oklch(0.7 0.12 75); /* Muted orange (matches warning) */
-    --base-octal-foreground: oklch(0.18 0.01 265); /* Deep charcoal */
-    --base-decimal: oklch(0.65 0.12 150); /* Muted green (matches success) */
-    --base-decimal-foreground: oklch(0.18 0.01 265); /* Deep charcoal */
-    --base-hex: oklch(0.6 0.1 280); /* Muted purple */
-    --base-hex-foreground: oklch(0.18 0.01 265); /* Deep charcoal */
+    --grid: 237 233 223;
+    --grid-minor: 0.035;
+    --grid-major: 0.07;
+    --shadow: 0 0 0;
   }
-}
 
-@layer base {
   * {
     @apply border-border;
   }
 
-  body {
-    @apply bg-background text-foreground antialiased;
-    font-family:
-      "Inter",
-      -apple-system,
-      BlinkMacSystemFont,
-      "Segoe UI",
-      sans-serif;
-    font-feature-settings:
-      "rlig" 1,
-      "calt" 1;
-    line-height: 1.7; /* Academic line-height for readability */
-    letter-spacing: 0.01em; /* Subtle letter-spacing */
-  }
-
-  /*
-   * SPACING SCALE - Professional Design System
-   * Base unit: 4px (0.25rem)
-   *
-   * Scale:
-   * 1  = 4px   (0.25rem) - Minimal gaps, tight spacing
-   * 2  = 8px   (0.5rem)  - Compact element spacing
-   * 3  = 12px  (0.75rem) - Standard element spacing
-   * 4  = 16px  (1rem)    - Comfortable spacing, default component padding
-   * 5  = 20px  (1.25rem) - Relaxed spacing
-   * 6  = 24px  (1.5rem)  - Section spacing
-   * 8  = 32px  (2rem)    - Large section spacing
-   * 12 = 48px  (3rem)    - Major section breaks
-   * 16 = 64px  (4rem)    - Page-level spacing
-   *
-   * Guidelines:
-   * - Use spacing primarily at LAYOUT level (containers, sections)
-   * - Keep component internal padding minimal (p-3 to p-4)
-   * - Vary spacing based on visual hierarchy
-   * - Maintain adequate touch targets (44x44px minimum)
-   */
-
-  /* Smooth scrolling */
   html {
-    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+    background-color: rgb(var(--background));
+    scroll-padding-top: calc(var(--nav-h) + 1rem);
   }
 
-  /* Focus visible for accessibility - academic style */
-  *:focus-visible {
-    @apply outline-none ring-2 ring-ring ring-offset-1 ring-offset-background;
+  @media (pointer: fine) {
+    html {
+      overscroll-behavior-y: none;
+    }
   }
 
-  /* Typography - Academic hierarchy */
+  body {
+    @apply bg-background font-sans text-body text-foreground antialiased;
+    font-feature-settings:
+      "kern" 1,
+      "liga" 1,
+      "calt" 1;
+    font-optical-sizing: auto;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Headings: serif for h1/h2 (editorial), grotesk for h3+ (UI). */
   h1,
-  h2,
+  h2 {
+    @apply font-serif font-medium text-balance;
+    letter-spacing: -0.015em;
+    line-height: 1.12;
+  }
   h3,
   h4,
   h5,
   h6 {
-    font-family: "Crimson Pro", "Crimson Text", Georgia, serif;
-    @apply font-semibold;
-    letter-spacing: -0.02em; /* Tighter for headings */
-    line-height: 1.3; /* Tighter line-height for headings */
+    @apply font-sans font-semibold text-balance;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
   }
-
   h1 {
     @apply text-4xl md:text-5xl;
   }
-
   h2 {
     @apply text-3xl md:text-4xl;
   }
-
   h3 {
-    @apply text-2xl md:text-3xl;
+    @apply text-xl;
   }
-
   h4 {
-    @apply text-xl md:text-2xl;
+    @apply text-lg;
   }
-
-  h5 {
-    @apply text-lg md:text-xl;
-  }
-
+  h5,
   h6 {
-    @apply text-base md:text-lg;
+    @apply text-base;
   }
 
-  /* Code and numbers - monospace */
+  p {
+    text-wrap: pretty;
+  }
+
   code,
   kbd,
   samp,
   pre {
-    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    @apply font-mono;
+    font-size: 0.9em;
   }
 
-  /* Tabular numbers for consistent width */
-  .tabular-nums {
+  /* Numbers: tabular everywhere a figure can change. */
+  .tabular-nums,
+  table,
+  [data-numeric] {
     font-variant-numeric: tabular-nums;
   }
 
-  /* Academic paragraph spacing */
-  p {
-    margin-bottom: 1em;
+  /* Focus — 2px red-pen outline, offset. One rule for the whole app. */
+  :focus {
+    outline: none;
+  }
+  :focus-visible {
+    outline: 2px solid rgb(var(--ring));
+    outline-offset: 2px;
+  }
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible,
+  [role="combobox"]:focus-visible {
+    outline-offset: 1px;
   }
 
-  p:last-child {
-    margin-bottom: 0;
+  ::selection {
+    background-color: rgb(var(--primary) / 0.18);
+    color: rgb(var(--foreground));
+  }
+
+  /* Quiet, thin scrollbars */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(var(--border-strong)) transparent;
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: rgb(var(--border-strong));
+    border: 3px solid transparent;
+    border-radius: 999px;
+    background-clip: content-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: rgb(var(--muted-foreground) / 0.6);
+  }
+
+  button,
+  [role="button"],
+  a {
+    touch-action: manipulation;
+  }
+
+  img,
+  svg,
+  video {
+    max-width: 100%;
+  }
+
+  [hidden] {
+    display: none !important;
+  }
+}
+
+@layer components {
+  /* Mono uppercase overline above titles. */
+  .eyebrow {
+    @apply font-mono text-eyebrow uppercase text-muted-foreground;
+    font-weight: 500;
+  }
+
+  /* Serif italic emphasis inside headlines. */
+  .ital {
+    @apply font-serif italic;
+    font-weight: inherit;
+  }
+
+  /* Plain-text link with a quiet underline that inks on hover. */
+  .link {
+    @apply font-medium text-foreground underline decoration-border-strong decoration-1 underline-offset-[0.22em];
+    transition:
+      text-decoration-color var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+  }
+  .link:hover {
+    @apply text-primary decoration-primary;
+  }
+
+  /* Graph-paper field: 8px minor / 40px major grid. Hero + game surfaces only. */
+  .grid-paper {
+    --cell: 8px;
+    --major: calc(var(--cell) * 5);
+    background-color: transparent;
+    background-image:
+      linear-gradient(
+        rgb(var(--grid) / var(--grid-major)) 1px,
+        transparent 1px
+      ),
+      linear-gradient(
+        90deg,
+        rgb(var(--grid) / var(--grid-major)) 1px,
+        transparent 1px
+      ),
+      linear-gradient(
+        rgb(var(--grid) / var(--grid-minor)) 1px,
+        transparent 1px
+      ),
+      linear-gradient(
+        90deg,
+        rgb(var(--grid) / var(--grid-minor)) 1px,
+        transparent 1px
+      );
+    background-size:
+      var(--major) var(--major),
+      var(--major) var(--major),
+      var(--cell) var(--cell),
+      var(--cell) var(--cell);
+    background-position: -1px -1px;
+  }
+
+  /* Skip link — visible only on keyboard focus. */
+  .skip-link {
+    @apply fixed left-3 top-3 z-[100] -translate-y-24 rounded-md bg-foreground px-3 py-2 text-label font-medium text-background;
+    transition: transform var(--dur-base) var(--ease-out);
+  }
+  .skip-link:focus-visible {
+    @apply translate-y-0;
   }
 }
 
 @layer utilities {
-  /* Academic Paper Utilities - Minimal, purposeful styling */
-
-  /* Paper-like card - flat with subtle border */
-  .paper-card {
-    @apply bg-card border border-border shadow-sm;
+  .text-balance {
+    text-wrap: balance;
   }
-
-  /* Ruled line separator - like notebook paper */
-  .ruled-line {
-    @apply border-b border-border;
+  .text-pretty {
+    text-wrap: pretty;
   }
-
-  /* Margin note style - like textbook margins */
-  .margin-note {
-    @apply text-sm text-muted-foreground italic;
+  .num {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
   }
-
-  /* Underline link - academic hyperlink style */
-  .link-underline {
-    @apply underline decoration-1 underline-offset-2 hover:decoration-2 transition-all duration-150;
+  .optical-display {
+    font-variation-settings: "opsz" 72;
   }
-
-  /* Academic content width - optimal readability */
-  .content-width {
-    max-width: 65ch; /* Academic standard for readability */
+  .mono-condensed {
+    font-stretch: 82%;
   }
-
-  /* Minimal animations - only for functional feedback */
-  .animate-in {
-    animation: animate-in 0.2s ease-out;
+  .hairline-t {
+    box-shadow: inset 0 1px 0 rgb(var(--border));
   }
-
-  @keyframes animate-in {
-    from {
-      opacity: 0;
-      transform: translateY(4px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+  .hairline-b {
+    box-shadow: inset 0 -1px 0 rgb(var(--border));
   }
-
-  /* Fade in - subtle entrance */
-  .fade-in {
-    animation: fade-in 0.2s ease-out;
-  }
-
-  @keyframes fade-in {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
-
-  /* Smooth transitions - minimal duration */
-  .transition-smooth {
-    @apply transition-all duration-150 ease-in-out;
-  }
-
-  /* Hover underline - for interactive text */
-  .hover-underline {
-    @apply hover:underline hover:decoration-1 hover:underline-offset-2 transition-all duration-150;
-  }
-
-  /* Focus ring - academic style */
-  .focus-academic {
-    @apply focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1;
-  }
-
-  /* Text selection - highlighter effect */
-  ::selection {
-    background-color: var(--accent);
-    color: var(--accent-foreground);
-  }
-
-  ::-moz-selection {
-    background-color: var(--accent);
-    color: var(--accent-foreground);
-  }
-
-  /* Respect reduced motion preferences */
-  @media (prefers-reduced-motion: reduce) {
-    .animate-in,
-    .fade-in {
-      animation: none !important;
-      transition: none !important;
-    }
-  }
-
-  /* ========================================================================
-     ACADEMIC VISUAL ENHANCEMENTS
-     ======================================================================== */
-
-  /* Paper Texture Overlay */
-  .paper-texture {
-    position: relative;
-  }
-
-  .paper-texture::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
-    opacity: 0.5;
-    pointer-events: none;
-    border-radius: inherit;
-  }
-
-  .dark .paper-texture::before {
-    opacity: 0.3; /* Lighter texture in dark mode */
-  }
-
-  /* Folded Corner Effect */
-  .folded-corner {
-    position: relative;
-  }
-
-  .folded-corner::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 0;
-    height: 0;
-    border-style: solid;
-    border-width: 0 16px 16px 0;
-    border-color: transparent oklch(0.85 0.005 265) transparent transparent;
-    filter: drop-shadow(-1px 1px 1px rgba(0, 0, 0, 0.1));
-  }
-
-  .dark .folded-corner::after {
-    border-color: transparent oklch(0.3 0.01 265) transparent transparent;
-    filter: drop-shadow(-1px 1px 2px rgba(0, 0, 0, 0.3));
-  }
-
-  .folded-corner-sm::after {
-    border-width: 0 12px 12px 0;
-  }
-
-  .folded-corner-lg::after {
-    border-width: 0 20px 20px 0;
-  }
-
-  /* Ruled Lines (Notebook Paper) */
-  .ruled-lines {
-    background-image: repeating-linear-gradient(
-      transparent,
-      transparent 1.5rem,
-      var(--border) 1.5rem,
-      var(--border) calc(1.5rem + 1px)
+  .mask-fade-edges {
+    -webkit-mask-image: radial-gradient(
+      ellipse 75% 70% at 50% 45%,
+      #000 40%,
+      transparent 100%
+    );
+    mask-image: radial-gradient(
+      ellipse 75% 70% at 50% 45%,
+      #000 40%,
+      transparent 100%
     );
   }
 
-  .ruled-lines-tight {
-    background-image: repeating-linear-gradient(
-      transparent,
-      transparent 1.25rem,
-      var(--border) 1.25rem,
-      var(--border) calc(1.25rem + 1px)
-    );
-  }
-
-  /* Ruled lines with margin (like composition notebook) */
-  .ruled-lines-margin {
-    background-image:
-      repeating-linear-gradient(
-        transparent,
-        transparent 1.5rem,
-        var(--border) 1.5rem,
-        var(--border) calc(1.5rem + 1px)
-      ),
-      linear-gradient(
-        to right,
-        transparent 3rem,
-        oklch(68.69% 0.15391 13.513) 3rem,
-        oklch(68.69% 0.15391 13.513) calc(3rem + 2px),
-        transparent calc(3rem + 2px),
-        transparent 3.25rem,
-        oklch(68.69% 0.15391 13.513) 3.25rem,
-        oklch(68.69% 0.15391 13.513) calc(3.25rem + 2px),
-        transparent calc(3.25rem + 2px)
-      );
-  }
-
-  .dark .ruled-lines-margin {
-    background-image:
-      repeating-linear-gradient(
-        transparent,
-        transparent 1.5rem,
-        var(--border) 1.5rem,
-        var(--border) calc(1.5rem + 1px)
-      ),
-      linear-gradient(
-        to right,
-        transparent 3rem,
-        oklch(85.93% 0.00662 16.474) 3rem,
-        oklch(80.139% 0.01705 17.222) calc(3rem + 2px),
-        transparent calc(3rem + 2px),
-        transparent 3.25rem,
-        oklch(76.665% 0.01726 17.259) 3.25rem,
-        oklch(80.852% 0.01816 17.257) calc(3.25rem + 2px),
-        transparent calc(3.25rem + 2px)
-      );
-  }
-
-  /* Ink Underline Effect */
-  .ink-underline {
-    position: relative;
-    display: inline-block;
-  }
-
-  .ink-underline::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    bottom: -2px;
-    width: 100%;
-    height: 2px;
-    background: var(--primary);
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.3s ease-out;
-  }
-
-  .ink-underline:hover::after,
-  .ink-underline.active::after {
-    transform: scaleX(1);
-  }
-
-  /* Ink underline - always visible variant */
-  .ink-underline-visible::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    bottom: -2px;
-    width: 100%;
-    height: 2px;
-    background: var(--primary);
-  }
-
-  /* Highlighter Scribble Effect */
-  .highlight-scribble {
-    position: relative;
-    display: inline-block;
-  }
-
-  .highlight-scribble::after {
-    content: "";
-    position: absolute;
-    left: -2px;
-    right: -2px;
-    bottom: -2px;
-    height: 12px;
-    background-image: url("data:image/svg+xml,%3Csvg width='100%25' height='12' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M 0 8 Q 2 6, 4 7 T 8 8 T 12 7 T 16 8 T 20 7 T 24 8 T 28 7 T 32 8 T 36 7 T 40 8 T 44 7 T 48 8 T 52 7 T 56 8 T 60 7 T 64 8 T 68 7 T 72 8 T 76 7 T 80 8 T 84 7 T 88 8 T 92 7 T 96 8 T 100 7' stroke='%23fbbf24' stroke-width='3' fill='none' opacity='0.4' stroke-linecap='round'/%3E%3C/svg%3E");
-    background-size: 100% 100%;
-    background-repeat: repeat-x;
-    z-index: -1;
-    pointer-events: none;
-  }
-
-  .highlight-scribble-green::after {
-    background-image: url("data:image/svg+xml,%3Csvg width='100%25' height='12' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M 0 8 Q 2 6, 4 7 T 8 8 T 12 7 T 16 8 T 20 7 T 24 8 T 28 7 T 32 8 T 36 7 T 40 8 T 44 7 T 48 8 T 52 7 T 56 8 T 60 7 T 64 8 T 68 7 T 72 8 T 76 7 T 80 8 T 84 7 T 88 8 T 92 7 T 96 8 T 100 7' stroke='%2322c55e' stroke-width='3' fill='none' opacity='0.3' stroke-linecap='round'/%3E%3C/svg%3E");
-  }
-
-  .highlight-scribble-orange::after {
-    background-image: url("data:image/svg+xml,%3Csvg width='100%25' height='12' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M 0 8 Q 2 6, 4 7 T 8 8 T 12 7 T 16 8 T 20 7 T 24 8 T 28 7 T 32 8 T 36 7 T 40 8 T 44 7 T 48 8 T 52 7 T 56 8 T 60 7 T 64 8 T 68 7 T 72 8 T 76 7 T 80 8 T 84 7 T 88 8 T 92 7 T 96 8 T 100 7' stroke='%23f97316' stroke-width='3' fill='none' opacity='0.4' stroke-linecap='round'/%3E%3C/svg%3E");
-  }
-
-  /* Dark mode highlighter scribbles - muted chalk colors */
-  .dark .highlight-scribble::after {
-    background-image: url("data:image/svg+xml,%3Csvg width='100%25' height='12' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M 0 8 Q 2 6, 4 7 T 8 8 T 12 7 T 16 8 T 20 7 T 24 8 T 28 7 T 32 8 T 36 7 T 40 8 T 44 7 T 48 8 T 52 7 T 56 8 T 60 7 T 64 8 T 68 7 T 72 8 T 76 7 T 80 8 T 84 7 T 88 8 T 92 7 T 96 8 T 100 7' stroke='%23d4a574' stroke-width='3' fill='none' opacity='0.3' stroke-linecap='round'/%3E%3C/svg%3E");
-  }
-
-  .dark .highlight-scribble-green::after {
-    background-image: url("data:image/svg+xml,%3Csvg width='100%25' height='12' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M 0 8 Q 2 6, 4 7 T 8 8 T 12 7 T 16 8 T 20 7 T 24 8 T 28 7 T 32 8 T 36 7 T 40 8 T 44 7 T 48 8 T 52 7 T 56 8 T 60 7 T 64 8 T 68 7 T 72 8 T 76 7 T 80 8 T 84 7 T 88 8 T 92 7 T 96 8 T 100 7' stroke='%2388b888' stroke-width='3' fill='none' opacity='0.25' stroke-linecap='round'/%3E%3C/svg%3E");
-  }
-
-  .dark .highlight-scribble-orange::after {
-    background-image: url("data:image/svg+xml,%3Csvg width='100%25' height='12' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M 0 8 Q 2 6, 4 7 T 8 8 T 12 7 T 16 8 T 20 7 T 24 8 T 28 7 T 32 8 T 36 7 T 40 8 T 44 7 T 48 8 T 52 7 T 56 8 T 60 7 T 64 8 T 68 7 T 72 8 T 76 7 T 80 8 T 84 7 T 88 8 T 92 7 T 96 8 T 100 7' stroke='%23d4a574' stroke-width='3' fill='none' opacity='0.3' stroke-linecap='round'/%3E%3C/svg%3E");
-  }
-
-  /* Sticky Note Callout */
-  .sticky-note {
-    @apply relative p-4 shadow-md;
-    background: oklch(0.92 0.08 95); /* Yellow */
-    transform: rotate(-0.5deg);
-    transition: transform 0.2s ease-out;
-  }
-
-  .sticky-note:hover {
-    transform: rotate(0deg) translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-  }
-
-  .dark .sticky-note:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-  }
-
-  .sticky-note-pink {
-    background: oklch(0.9 0.08 15); /* Pink */
-  }
-
-  .sticky-note-blue {
-    background: oklch(0.88 0.06 240); /* Blue */
-  }
-
-  .sticky-note-green {
-    background: oklch(0.9 0.08 150); /* Green */
-  }
-
-  .dark .sticky-note {
-    background: oklch(0.3 0.05 95); /* Muted chalkboard yellow */
-    color: oklch(0.95 0.005 85);
-  }
-
-  .dark .sticky-note-pink {
-    background: oklch(0.3 0.05 15); /* Muted chalkboard pink */
-  }
-
-  .dark .sticky-note-blue {
-    background: oklch(0.3 0.05 240); /* Muted chalkboard blue */
-  }
-
-  .dark .sticky-note-green {
-    background: oklch(0.3 0.05 150); /* Muted chalkboard green */
-  }
-
-  /* Pencil Sketch Border */
-  .sketch-border {
-    position: relative;
-    border: 2px solid var(--border);
-    border-radius: 0.125rem;
-  }
-
-  .sketch-border::before {
-    content: "";
-    position: absolute;
-    inset: -2px;
-    border: 2px dashed var(--border);
-    border-radius: 0.125rem;
-    opacity: 0.3;
-  }
-
-  /* Page Curl Effect */
-  .page-curl {
-    transition:
-      transform 0.2s ease-out,
-      box-shadow 0.2s ease-out;
-  }
-
-  .page-curl:hover {
-    transform: perspective(1000px) rotateY(2deg);
-    box-shadow: -2px 2px 8px rgba(0, 0, 0, 0.1);
-  }
-
-  .dark .page-curl:hover {
-    box-shadow: -2px 2px 8px rgba(0, 0, 0, 0.3);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .page-curl:hover {
-      transform: none;
-    }
-  }
-
-  /* Bookmark Ribbon */
-  .bookmark-ribbon {
-    position: relative;
-  }
-
-  .bookmark-ribbon::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    right: 1rem;
-    width: 2rem;
-    height: 3rem;
-    background: var(--primary);
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 85%, 0 100%);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  }
-
-  .dark .bookmark-ribbon::before {
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
-  }
-
-  /* Bookmark ribbon variants */
-  .bookmark-ribbon-accent::before {
-    background: var(--accent);
-  }
-
-  .bookmark-ribbon-success::before {
-    background: var(--success);
-  }
-
-  .bookmark-ribbon-destructive::before {
-    background: var(--destructive);
-  }
-
-  /* Torn Paper Edge Effect */
-  .torn-edge-top {
-    position: relative;
-  }
-
-  .torn-edge-top::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 8px;
-    background-image: url("data:image/svg+xml,%3Csvg width='100' height='8' viewBox='0 0 100 8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 4 Q 5 0, 10 4 T 20 4 T 30 4 T 40 4 T 50 4 T 60 4 T 70 4 T 80 4 T 90 4 T 100 4 L 100 8 L 0 8 Z' fill='%23ffffff'/%3E%3C/svg%3E");
-    background-size: 100px 8px;
-    background-repeat: repeat-x;
-  }
-
-  .dark .torn-edge-top::before {
-    background-image: url("data:image/svg+xml,%3Csvg width='100' height='8' viewBox='0 0 100 8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 4 Q 5 0, 10 4 T 20 4 T 30 4 T 40 4 T 50 4 T 60 4 T 70 4 T 80 4 T 90 4 T 100 4 L 100 8 L 0 8 Z' fill='%232e2e2e'/%3E%3C/svg%3E");
-  }
-
-  /* Academic Focus Ring */
-  .focus-ring-academic {
-    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1;
-  }
-
-  /* Handwritten Annotation Style */
-  .annotation {
-    @apply text-sm italic text-muted-foreground;
-    font-family: "Crimson Pro", Georgia, serif;
-    transform: rotate(-1deg);
-  }
-
-  /* Coffee Stain Ring (decorative accent) */
-  .coffee-stain {
-    position: relative;
-  }
-
-  .coffee-stain::after {
-    content: "";
-    position: absolute;
-    width: 3rem;
-    height: 3rem;
-    border-radius: 50%;
-    border: 2px solid oklch(0.6 0.08 75);
-    opacity: 0.15;
-    pointer-events: none;
-  }
-
-  .coffee-stain-top-right::after {
-    top: 0.5rem;
-    right: 0.5rem;
-  }
-
-  .coffee-stain-bottom-left::after {
-    bottom: 0.5rem;
-    left: 0.5rem;
-  }
-
-  .dark .coffee-stain::after {
-    border-color: oklch(0.5 0.08 75);
-    opacity: 0.1;
-  }
-
-  /* Responsive Layout Utilities */
-  /* Fluid container that adapts to viewport */
+  /* ---------------- Layout helpers (kept; used by multiplayer pages) ------- */
   .fluid-container {
     width: 100%;
-    max-width: min(100%, 1400px);
-    margin-left: auto;
-    margin-right: auto;
-    padding-left: clamp(0.5rem, 2vw, 2rem);
-    padding-right: clamp(0.5rem, 2vw, 2rem);
+    max-width: min(100%, 1240px);
+    margin-inline: auto;
+    padding-inline: clamp(1rem, 3vw, 2rem);
   }
-
-  /* Responsive grid that auto-fits columns */
   .responsive-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
     gap: clamp(0.75rem, 2vw, 1.5rem);
   }
-
-  /* Fluid height that respects viewport */
   .fluid-height {
     min-height: 0;
     height: auto;
   }
-
-  /* Safe viewport height (accounts for mobile browser chrome) */
   .safe-vh-full {
     min-height: 100vh;
-    min-height: 100dvh; /* Dynamic viewport height for mobile */
+    min-height: 100dvh;
   }
-
   .safe-vh-screen {
     height: 100vh;
-    height: 100dvh; /* Dynamic viewport height for mobile */
+    height: 100dvh;
   }
-
-  /* Prevent layout overflow */
   .no-overflow {
     overflow: hidden;
     max-width: 100%;
   }
-
-  /* Responsive flex gap */
   .flex-gap-fluid {
     gap: clamp(0.5rem, 1.5vw, 1.5rem);
   }
-
-  /* Responsive padding */
   .p-fluid {
     padding: clamp(0.75rem, 2vw, 1.5rem);
   }
-
   .px-fluid {
-    padding-left: clamp(0.75rem, 2vw, 1.5rem);
-    padding-right: clamp(0.75rem, 2vw, 1.5rem);
+    padding-left: clamp(1rem, 2vw, 1.5rem);
+    padding-right: clamp(1rem, 2vw, 1.5rem);
   }
-
   .py-fluid {
     padding-top: clamp(0.75rem, 2vw, 1.5rem);
     padding-bottom: clamp(0.75rem, 2vw, 1.5rem);
+  }
+  .content-width {
+    max-width: 65ch;
+  }
+
+  /* ---------------- DEPRECATED legacy notebook utilities -------------------
+   * Re-implemented on the new tokens so existing pages inherit the new look.
+   * Do not use in new code; see DESIGN.md "Migration".
+   * ----------------------------------------------------------------------- */
+  .paper-card {
+    @apply rounded-lg border bg-card shadow-xs;
+  }
+  .paper-texture,
+  .folded-corner,
+  .bookmark-ribbon,
+  .ink-underline,
+  .ink-underline-visible,
+  .highlight-scribble,
+  .coffee-stain,
+  .torn-edge-top {
+    position: relative;
+  }
+  .ruled-line {
+    @apply border-b border-border;
+  }
+  .margin-note {
+    @apply text-sm text-muted-foreground;
+  }
+  .link-underline {
+    @apply underline decoration-border-strong decoration-1 underline-offset-[0.22em];
+    transition:
+      text-decoration-color var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+  }
+  .link-underline:hover {
+    @apply decoration-current;
+  }
+  .hover-underline:hover {
+    @apply underline decoration-1 underline-offset-[0.22em];
+  }
+  .transition-smooth {
+    transition-property:
+      color, background-color, border-color, box-shadow, opacity, transform;
+    transition-duration: var(--dur-base);
+    transition-timing-function: var(--ease-out);
+  }
+  .ruled-lines,
+  .ruled-lines-tight {
+    --rule: 1.5rem;
+    background-image: repeating-linear-gradient(
+      transparent 0,
+      transparent calc(var(--rule) - 1px),
+      rgb(var(--border)) calc(var(--rule) - 1px),
+      rgb(var(--border)) var(--rule)
+    );
+  }
+  .ruled-lines-tight {
+    --rule: 1.25rem;
+  }
+  .ruled-lines-margin {
+    background-image:
+      linear-gradient(
+        to right,
+        transparent 2.5rem,
+        rgb(var(--primary) / 0.35) 2.5rem,
+        rgb(var(--primary) / 0.35) calc(2.5rem + 1px),
+        transparent calc(2.5rem + 1px)
+      ),
+      repeating-linear-gradient(
+        transparent 0,
+        transparent calc(1.5rem - 1px),
+        rgb(var(--border)) calc(1.5rem - 1px),
+        rgb(var(--border)) 1.5rem
+      );
+  }
+  .ink-underline::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -2px;
+    height: 1px;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--dur-base) var(--ease-out);
+  }
+  .ink-underline:hover::after,
+  .ink-underline.active::after {
+    transform: scaleX(1);
+  }
+  .ink-underline-visible {
+    padding-bottom: 0.35rem;
+  }
+  .ink-underline-visible::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 1.25rem;
+    height: 2px;
+    border-radius: 1px;
+    background: rgb(var(--primary));
+  }
+  [class*="text-center"] > .ink-underline-visible::after,
+  .ink-underline-visible.text-center::after {
+    left: calc(50% - 0.625rem);
+  }
+  .highlight-scribble {
+    background-image: linear-gradient(
+      transparent 58%,
+      rgb(var(--highlight) / 0.4) 58%,
+      rgb(var(--highlight) / 0.4) 92%,
+      transparent 92%
+    );
+    padding-inline: 0.08em;
+    margin-inline: -0.08em;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+  }
+  .highlight-scribble-green {
+    --highlight: var(--success);
+  }
+  .highlight-scribble-orange {
+    --highlight: var(--primary);
+  }
+  .highlight-scribble-green,
+  .highlight-scribble-orange {
+    background-image: linear-gradient(
+      transparent 58%,
+      rgb(var(--highlight) / 0.18) 58%,
+      rgb(var(--highlight) / 0.18) 92%,
+      transparent 92%
+    );
+  }
+  .sticky-note {
+    --note: var(--warning);
+    @apply relative rounded-lg border p-4;
+    background-color: rgb(var(--note) / 0.06);
+    border-color: rgb(var(--note) / 0.22);
+    box-shadow: inset 2px 0 0 rgb(var(--note) / 0.75);
+  }
+  .sticky-note-blue {
+    --note: var(--info);
+  }
+  .sticky-note-green {
+    --note: var(--success);
+  }
+  .sticky-note-pink {
+    --note: var(--primary);
+  }
+  .sketch-border {
+    @apply border border-border;
+  }
+  .page-curl {
+    transition:
+      border-color var(--dur-base) var(--ease-out),
+      box-shadow var(--dur-base) var(--ease-out),
+      transform var(--dur-base) var(--ease-out);
+  }
+  .page-curl:hover {
+    @apply border-border-strong shadow-md;
+  }
+  .bookmark-ribbon::before {
+    content: "";
+    position: absolute;
+    top: -1px;
+    right: 1.25rem;
+    width: 0.625rem;
+    height: 1.25rem;
+    background: rgb(var(--primary));
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 78%, 0 100%);
+  }
+  .bookmark-ribbon-accent::before {
+    background: rgb(var(--highlight));
+  }
+  .bookmark-ribbon-success::before {
+    background: rgb(var(--success));
+  }
+  .bookmark-ribbon-destructive::before {
+    background: rgb(var(--destructive));
+  }
+  .annotation {
+    @apply font-serif italic text-muted-foreground;
+  }
+}
+
+/* No colour cross-fades while the theme palette swaps. */
+.theme-switching *,
+.theme-switching *::before,
+.theme-switching *::after {
+  transition: none !important;
+}
+
+/* Motion off when the user asks for it. Components additionally branch on
+ * useReducedMotion() for JS-driven (framer-motion) animation. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

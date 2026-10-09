@@ -2,6 +2,8 @@ import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
+/** @deprecated Use <Separator>. */
+
 const ruledSeparatorVariants = cva("shrink-0 bg-border", {
   variants: {
     orientation: {
@@ -11,12 +13,12 @@ const ruledSeparatorVariants = cva("shrink-0 bg-border", {
     variant: {
       default: "",
       double: "relative",
-      dashed: "border-dashed",
+      dashed: "h-0 border-t border-dashed border-border-strong bg-transparent",
     },
     spacing: {
-      default: "my-4",
+      default: "my-5",
       sm: "my-3",
-      lg: "my-6",
+      lg: "my-8",
       none: "my-0",
     },
   },

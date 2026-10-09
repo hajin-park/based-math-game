@@ -2,22 +2,65 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
-    <meta name="theme-color" content="#000000" />
+    <title>Based Math Game — base conversion drills</title>
     <meta
       name="description"
-      content="A React-based quiz game for practicing base conversion (Binary, Octal, Decimal, Hexadecimal)"
+      content="Timed drills for converting numbers between binary, octal, decimal and hexadecimal. Play solo, or run a live room for your class. No sign-up needed to play."
     />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="mobile-web-app-title" content="Based Math Game" />
+    <meta
+      name="theme-color"
+      content="#F3F0E8"
+      media="(prefers-color-scheme: light)"
+    />
+    <meta
+      name="theme-color"
+      content="#12110F"
+      media="(prefers-color-scheme: dark)"
+    />
+    <meta name="color-scheme" content="light dark" />
+    <!--
+      Theme bootstrap: runs before first paint so there is no flash of the
+      wrong theme. Mirrors src/contexts/ThemeContext.tsx (keys: localStorage
+      "theme" / cookie "theme"; values light | dark | system).
+    -->
+    <script>
+      (function () {
+        try {
+          var m = document.cookie.match(/(?:^|; )theme=(light|dark|system)/);
+          var pref = (m && m[1]) || localStorage.getItem("theme") || "system";
+          var dark =
+            pref === "dark" ||
+            (pref !== "light" &&
+              window.matchMedia("(prefers-color-scheme: dark)").matches);
+          var root = document.documentElement;
+          root.classList.add(dark ? "dark" : "light");
+          root.style.colorScheme = dark ? "dark" : "light";
+          if (pref !== "system") {
+            var metas = document.querySelectorAll('meta[name="theme-color"]');
+            for (var i = 0; i < metas.length; i++) {
+              metas[i].setAttribute("content", dark ? "#12110F" : "#F3F0E8");
+            }
+          }
+        } catch (e) {}
+      })();
+    </script>
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="/icons/favicon-32.png"
+    />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.json" />
-    <link rel="apple-touch-icon" href="/icon.svg" />
-    <title>Based Math Game</title>
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Based Math" />
   </head>
   <body>
     <div id="root"></div>

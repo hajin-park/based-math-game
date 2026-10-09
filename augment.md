@@ -70,17 +70,15 @@ This document provides a concise, fact-based overview of the codebase to help AI
 
 ## Design system and UI components
 
-- Tailwind (tailwind.config.js)
-  - darkMode: "class"
-  - Colors map to CSS variables: background, foreground, primary, secondary, destructive, muted, accent, popover, card, sidebar, chart, trophy, critical, base-\* (binary/octal/decimal/hex)
-  - Typography families: Inter (sans), Crimson Pro (serif), JetBrains Mono (mono)
-  - Minimal border radius (via --radius) and compact letter-spacing presets
-  - Animations via tailwindcss-animate and custom keyframes
-  - **Fluid Typography**: clamp()-based font sizes (fluid-xs through fluid-5xl) for responsive text scaling
-  - **Fluid Spacing**: clamp()-based spacing utilities (fluid-xs through fluid-3xl) for responsive padding/margins
-- shadcn/ui is configured in components.json (style: "new-york", css: src/index.css)
-- Academic-themed UI components (src/components/ui/academic.ts)
-  - PaperCard, StickyNote, NotebookInput, SectionHeader, RuledSeparator (re-exports)
+**See DESIGN.md (repo root) — it is the source of truth.** Summary:
+
+- Concept "engineer's notebook": warm paper, hairlines, red-pen vermilion primary, base identity colours (BIN cobalt, OCT moss, DEC graphite, HEX plum)
+- Tokens are RGB channel CSS variables in src/index.css (light + `.dark`), consumed as `rgb(var(--x) / <alpha-value>)` in tailwind.config.js; contrast checked by `node scripts/check-contrast.mjs`
+- Fonts self-hosted via @fontsource-variable: Newsreader (serif display), Schibsted Grotesk (UI sans), Martian Mono (numerals); declared in src/styles/fonts.css, critical files preloaded by the `preload-fonts` plugin in vite.config.ts
+- Theme: light / dark / system (src/contexts/ThemeContext.tsx) with a no-FOUC bootstrap script in index.html
+- New primitives: Digits, BaseTag, Kbd, Stat, Segmented, Meter, PageHeader, EmptyState, GridPaper, BaseOdometer, Dialog, Logo (src/components/ui/); base metadata in src/lib/bases.ts
+- Deprecated (still rendering, migrate off): PaperCard, StickyNote, NotebookInput, SectionHeader, RuledSeparator, ui/academic.ts and the legacy notebook utility classes
+- Routes are React.lazy (Home eager); `/play` aliases SingleplayerMode, `/learn` aliases Tutorials
 
 ## Responsive design patterns (src/index.css)
 

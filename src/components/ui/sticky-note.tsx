@@ -2,7 +2,12 @@ import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
-const stickyNoteVariants = cva("sticky-note rounded-sm", {
+/**
+ * @deprecated Use <Callout> styling via <Alert> or a bordered note. Kept for
+ * legacy pages; renders as a quiet margin note (no rotation, no yellow pad).
+ */
+
+const stickyNoteVariants = cva("sticky-note", {
   variants: {
     variant: {
       default: "", // Yellow
@@ -46,7 +51,7 @@ const StickyNoteTitle = React.forwardRef<
   <h5
     ref={ref}
     className={cn(
-      "mb-2 font-serif font-semibold leading-none tracking-academic",
+      "mb-1.5 font-sans text-[0.9375rem] font-semibold leading-snug text-foreground",
       className,
     )}
     {...props}
@@ -60,7 +65,10 @@ const StickyNoteDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("text-sm [&_p]:leading-relaxed", className)}
+    className={cn(
+      "text-body-sm text-muted-foreground [&_p]:leading-relaxed",
+      className,
+    )}
     {...props}
   />
 ));

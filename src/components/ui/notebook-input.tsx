@@ -1,20 +1,26 @@
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
+import { inputVariants } from "@/components/ui/input";
+
+/** @deprecated Use <Input> / a <textarea> with inputVariants. */
 
 const notebookInputVariants = cva(
-  "flex w-full bg-transparent px-3 py-1 text-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50",
+  "flex w-full text-base sm:text-[0.9375rem] placeholder:text-muted-foreground/80 disabled:cursor-not-allowed disabled:opacity-50",
   {
     variants: {
       variant: {
-        default:
-          "h-9 rounded-sm border border-input shadow-sm focus-visible:ring-1 focus-visible:ring-ring",
+        default: inputVariants(),
         underline:
-          "h-9 border-0 border-b-2 border-border rounded-none focus-visible:border-primary",
-        ruled:
-          "h-auto min-h-[6rem] rounded-sm border border-input shadow-sm ruled-lines p-3 focus-visible:ring-1 focus-visible:ring-ring",
-        "ruled-margin":
-          "h-auto min-h-[6rem] rounded-sm border border-input shadow-sm ruled-lines-margin p-3 pl-12 focus-visible:ring-1 focus-visible:ring-ring",
+          "h-10 rounded-none border-0 border-b border-input bg-transparent px-0.5 transition-colors duration-fast hover:border-border-strong focus-visible:border-primary focus-visible:outline-none focus-visible:shadow-[0_1px_0_rgb(var(--primary))]",
+        ruled: cn(
+          inputVariants(),
+          "ruled-lines h-auto min-h-[6rem] px-3 py-0 leading-[1.5rem] [background-attachment:local]",
+        ),
+        "ruled-margin": cn(
+          inputVariants(),
+          "ruled-lines-margin h-auto min-h-[6rem] py-0 pl-12 pr-3 leading-[1.5rem] [background-attachment:local]",
+        ),
       },
     },
     defaultVariants: {
