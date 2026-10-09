@@ -13,7 +13,12 @@ import {
 } from "@/components/ui/dialog";
 import { Field, FormError, PasswordField } from "@/components/auth/AuthFields";
 import { useAuth } from "@/contexts/AuthContext";
-import { getLocalRuns, modeIdFromBestsKey, isRankedModeId, useUserStats } from "@/data";
+import {
+  getLocalRuns,
+  modeIdFromBestsKey,
+  isRankedModeId,
+  useUserStats,
+} from "@/data";
 import { friendlyAuthError } from "@/lib/authErrors";
 import {
   DISPLAY_NAME_MAX,
@@ -42,12 +47,18 @@ function Section({
       <div className="flex flex-col gap-1.5">
         <h2
           id={id}
-          className={tone === "danger" ? "text-title font-semibold text-destructive" : "text-title font-semibold"}
+          className={
+            tone === "danger"
+              ? "text-title font-semibold text-destructive"
+              : "text-title font-semibold"
+          }
         >
           {title}
         </h2>
         {description && (
-          <p className="text-body-sm text-muted-foreground text-pretty">{description}</p>
+          <p className="text-body-sm text-muted-foreground text-pretty">
+            {description}
+          </p>
         )}
       </div>
       <div className="flex min-w-0 max-w-lg flex-col gap-4">{children}</div>
@@ -112,7 +123,10 @@ function DisplayNameForm() {
           {busy && <Loader2 className="motion-safe:animate-spin" aria-hidden />}
           Save name
         </Button>
-        <p role="status" className="flex items-center gap-1.5 text-[0.8125rem] text-success">
+        <p
+          role="status"
+          className="flex items-center gap-1.5 text-[0.8125rem] text-success"
+        >
           {saved && (
             <>
               <Check className="size-4" aria-hidden /> Saved
@@ -137,8 +151,8 @@ function PasswordSection() {
   if (!hasPassword) {
     return (
       <p className="text-body-sm text-muted-foreground">
-        You sign in with Google, so there’s no separate password here. Manage
-        it in your Google account.
+        You sign in with Google, so there’s no separate password here. Manage it
+        in your Google account.
       </p>
     );
   }
@@ -202,7 +216,9 @@ function DeleteDialog({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const isGoogle = user?.providerData.some((p) => p.providerId === "google.com");
+  const isGoogle = user?.providerData.some(
+    (p) => p.providerId === "google.com",
+  );
   const localRuns = useMemo(() => (open ? getLocalRuns().length : 0), [open]);
   const rankedModes = useMemo(
     () =>
@@ -214,7 +230,9 @@ function DeleteDialog({
 
   // Email accounts that signed in more than a few minutes ago must confirm
   // their password (Firebase requires a recent sign-in to delete a user).
-  const hasPassword = user?.providerData.some((p) => p.providerId === "password");
+  const hasPassword = user?.providerData.some(
+    (p) => p.providerId === "password",
+  );
   useEffect(() => {
     if (!open) {
       setConfirm("");
@@ -229,7 +247,8 @@ function DeleteDialog({
   }, [open, user, isGuest, isGoogle, hasPassword]);
 
   const word = isGuest ? "RESET" : "DELETE";
-  const ready = confirm.trim().toUpperCase() === word && (!needPassword || password);
+  const ready =
+    confirm.trim().toUpperCase() === word && (!needPassword || password);
 
   const onDelete = async (e: FormEvent) => {
     e.preventDefault();
@@ -256,7 +275,10 @@ function DeleteDialog({
             ? f.message
             : "For your security, enter your password to confirm.",
         );
-      } else if (f.code === "auth/wrong-password" || f.code === "auth/invalid-credential") {
+      } else if (
+        f.code === "auth/wrong-password" ||
+        f.code === "auth/invalid-credential"
+      ) {
         setError("That password isn’t right.");
       } else {
         setError(f.message);
@@ -291,12 +313,11 @@ function DeleteDialog({
               </>
             ) : (
               <>
+                <li>Your profile: display name and game settings</li>
                 <li>
-                  Your profile: display name and game settings
-                </li>
-                <li>
-                  Your run history, stats and personal bests ({stats.gamesPlayed}{" "}
-                  {stats.gamesPlayed === 1 ? "run" : "runs"})
+                  Your run history, stats and personal bests (
+                  {stats.gamesPlayed} {stats.gamesPlayed === 1 ? "run" : "runs"}
+                  )
                 </li>
                 <li>
                   Your leaderboard entries ({rankedModes}{" "}
@@ -306,7 +327,8 @@ function DeleteDialog({
                   Your sign-in account
                   {user?.email ? (
                     <>
-                      {" "}(<span className="font-medium">{user.email}</span>)
+                      {" "}
+                      (<span className="font-medium">{user.email}</span>)
                     </>
                   ) : null}
                 </li>
@@ -315,8 +337,11 @@ function DeleteDialog({
             )}
           </ul>
           <p className="text-[0.8125rem] text-muted-foreground text-pretty">
-            Multiplayer rooms and their chat are temporary and are deleted
-            when everyone leaves or after 6 hours without activity.
+            Multiplayer rooms and their chat are temporary: a room is deleted
+            when its last player leaves, and a room idle for 6 hours closes to
+            new players and can then be cleaned up.
+            {!isGuest &&
+              " If you played today’s daily challenge, a marker that your one ranked attempt is used (no score, no name) stays until the day closes, then expires."}
           </p>
 
           <Field
@@ -357,8 +382,14 @@ function DeleteDialog({
             >
               Cancel
             </Button>
-            <Button type="submit" variant="destructive" disabled={!ready || busy}>
-              {busy && <Loader2 className="motion-safe:animate-spin" aria-hidden />}
+            <Button
+              type="submit"
+              variant="destructive"
+              disabled={!ready || busy}
+            >
+              {busy && (
+                <Loader2 className="motion-safe:animate-spin" aria-hidden />
+              )}
               {isGuest ? "Clear guest data" : "Delete account"}
             </Button>
           </DialogFooter>
@@ -394,9 +425,8 @@ export default function ProfileSettings() {
           description="Guests play with an anonymous ID stored in this browser."
         >
           <p className="text-body-sm text-muted-foreground text-pretty">
-            Create an account to keep your runs and settings on every device
-            and appear on the leaderboard. Your guest runs move over
-            automatically.
+            Create an account to keep your runs and settings on every device and
+            appear on the leaderboard. Your guest runs move over automatically.
           </p>
           <div className="flex flex-wrap gap-2">
             <Button asChild>
