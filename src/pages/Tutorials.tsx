@@ -81,7 +81,7 @@ function Work({ lines, label }: { lines: React.ReactNode[]; label?: string }) {
   return (
     <div className="max-w-prose overflow-x-auto rounded-md bg-sunken px-4 py-3">
       {label && <p className="eyebrow mb-2">{label}</p>}
-      <div className="flex flex-col gap-1 whitespace-pre font-mono text-[0.875rem] leading-relaxed">
+      <div className="flex flex-col gap-1 whitespace-pre-wrap font-mono text-[0.8125rem] sm:whitespace-pre sm:text-[0.875rem] leading-relaxed">
         {lines.map((l, i) => (
           <span key={i}>{l}</span>
         ))}

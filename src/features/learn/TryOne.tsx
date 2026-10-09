@@ -285,6 +285,11 @@ export function TryOne({
                     </p>
                     {step.work && step.work.length > 0 && (
                       <pre
+                        tabIndex={
+                          Math.max(...step.work.map((l) => l.length)) > 36
+                            ? 0
+                            : undefined
+                        }
                         className={cn(
                           "overflow-x-auto rounded-md bg-sunken px-3 py-2.5 font-mono text-[0.8125rem] leading-relaxed text-foreground",
                           step.title === "Answer" && "text-base",

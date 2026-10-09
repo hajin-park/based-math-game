@@ -23,7 +23,7 @@ export function PlaceValueDigits({
         <span
           key={i}
           aria-hidden
-          className="flex w-8 flex-col items-center gap-1.5"
+          className="flex w-7 flex-col items-center gap-1.5 sm:w-8"
         >
           <span className="text-[1.375rem] font-medium leading-none">{d}</span>
           <span className="text-[0.625rem] leading-none text-muted-foreground">
