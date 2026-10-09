@@ -6,6 +6,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import ErrorBoundary from "./components/ErrorBoundary";
 import Error from "./pages/Error";
+import LegacyRedirect from "./components/LegacyRedirect";
 // Home is the landing page: keep it in the entry chunk for first paint.
 import Home from "./pages/Home";
 import "./index.css";
@@ -111,8 +112,9 @@ const router = createBrowserRouter([
         element: <Tutorials />,
       },
       {
+        // Legacy URL: keep old links (and their #anchors) working.
         path: "/tutorials",
-        element: <Tutorials />,
+        element: <LegacyRedirect to="/learn" />,
       },
       {
         path: "/about",
