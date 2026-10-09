@@ -1,124 +1,110 @@
-// Service Worker for offline support and caching
-// Cache version is automatically updated during build
-const CACHE_VERSION = "__BUILD_TIMESTAMP__";
-const CACHE_NAME = `based-math-game-${CACHE_VERSION}`;
-const ASSETS_TO_CACHE = ["/", "/index.html", "/manifest.json"];
+// Service worker: offline fallback + fast repeat loads, without ever pinning
+// users to a stale build.
+//
+// - Navigations (HTML): network first. The fresh index.html is copied into the
+//   cache and only served when the network is unavailable.
+// - /assets/** (hashed, immutable Vite output): cache first. This cache is
+//   kept across deploys (trimmed to MAX_ASSETS) so tabs still running an older
+//   build can lazy-load the chunks they reference after a deploy removed them.
+// - Everything else, including all Firebase / Google API traffic and other
+//   origins: not intercepted.
+//
+// BUILD_VERSION is replaced at build time by scripts/update-sw-version.js so
+// every deploy installs a new worker.
+const BUILD_VERSION = "__BUILD_TIMESTAMP__";
+const PAGES_CACHE = `bmg-pages-${BUILD_VERSION}`;
+const ASSETS_CACHE = "bmg-assets-v1";
+const MAX_ASSETS = 200;
+const OFFLINE_URL = "/index.html";
 
-// Install event - cache assets
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE).catch((err) => {
-        console.log("Cache addAll error:", err);
-      });
-    }),
+    caches
+      .open(PAGES_CACHE)
+      .then((cache) => cache.add(new Request(OFFLINE_URL, { cache: "reload" })))
+      .catch(() => undefined)
+      .then(() => self.skipWaiting()),
   );
-  self.skipWaiting();
 });
 
-// Activate event - clean up old caches
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
-        }),
-      );
-    }),
+    caches
+      .keys()
+      .then((names) =>
+        Promise.all(
+          names
+            .filter((name) => name !== PAGES_CACHE && name !== ASSETS_CACHE)
+            .map((name) => caches.delete(name)),
+        ),
+      )
+      .then(() => self.clients.claim()),
   );
-  self.clients.claim();
 });
 
-// Fetch event - use network-first strategy for JS/CSS, cache-first for others
+async function trimAssets() {
+  const cache = await caches.open(ASSETS_CACHE);
+  const keys = await cache.keys();
+  // Cache keys are returned in insertion order: drop the oldest.
+  await Promise.all(
+    keys
+      .slice(0, Math.max(0, keys.length - MAX_ASSETS))
+      .map((k) => cache.delete(k)),
+  );
+}
+
+async function handleNavigation(request) {
+  try {
+    const response = await fetch(request);
+    const type = response.headers.get("content-type") || "";
+    if (response.ok && type.includes("text/html")) {
+      const cache = await caches.open(PAGES_CACHE);
+      await cache.put(OFFLINE_URL, response.clone());
+    }
+    return response;
+  } catch {
+    const cached = await caches.match(OFFLINE_URL);
+    return (
+      cached ||
+      new Response("You are offline.", {
+        status: 503,
+        headers: { "Content-Type": "text/plain; charset=utf-8" },
+      })
+    );
+  }
+}
+
+async function handleAsset(event) {
+  const cached = await caches.match(event.request, { cacheName: ASSETS_CACHE });
+  if (cached) return cached;
+  const response = await fetch(event.request);
+  if (response.ok && response.type === "basic") {
+    const copy = response.clone();
+    event.waitUntil(
+      caches
+        .open(ASSETS_CACHE)
+        .then((cache) => cache.put(event.request, copy))
+        .then(trimAssets)
+        .catch(() => undefined),
+    );
+  }
+  return response;
+}
+
 self.addEventListener("fetch", (event) => {
-  // Skip non-GET requests
-  if (event.request.method !== "GET") {
+  const { request } = event;
+  if (request.method !== "GET") return;
+  const url = new URL(request.url);
+  // Only same-origin requests; Firebase/Google APIs go straight to the network.
+  if (url.origin !== self.location.origin) return;
+  // Firebase Hosting reserved URLs (e.g. /__/auth/handler) are never cached.
+  if (url.pathname.startsWith("/__/")) return;
+
+  if (request.mode === "navigate") {
+    event.respondWith(handleNavigation(request));
     return;
   }
-
-  // Skip Firebase and external API requests (they need real-time data)
-  const url = new URL(event.request.url);
-  if (
-    url.hostname.includes("firebaseio.com") ||
-    url.hostname.includes("googleapis.com") ||
-    url.hostname.includes("firebaseapp.com") ||
-    url.hostname.includes("cloudfunctions.net")
-  ) {
-    return;
-  }
-
-  // Network-first strategy for JS, CSS, and HTML files (always get latest)
-  const isAppAsset =
-    event.request.url.endsWith(".js") ||
-    event.request.url.endsWith(".mjs") ||
-    event.request.url.endsWith(".css") ||
-    event.request.url.endsWith(".html") ||
-    event.request.url.includes("/assets/");
-
-  if (isAppAsset) {
-    // Network-first: Try network, fallback to cache
-    event.respondWith(
-      fetch(event.request)
-        .then((response) => {
-          // Don't cache non-successful responses
-          if (
-            !response ||
-            response.status !== 200 ||
-            response.type === "error"
-          ) {
-            return response;
-          }
-
-          // Clone and cache the response
-          const responseToCache = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
-
-          return response;
-        })
-        .catch(() => {
-          // Network failed, try cache
-          return caches.match(event.request).then((cachedResponse) => {
-            return cachedResponse || caches.match("/index.html");
-          });
-        }),
-    );
-  } else {
-    // Cache-first strategy for static assets (images, fonts, etc.)
-    event.respondWith(
-      caches.match(event.request).then((response) => {
-        if (response) {
-          return response;
-        }
-
-        return fetch(event.request)
-          .then((response) => {
-            // Don't cache non-successful responses
-            if (
-              !response ||
-              response.status !== 200 ||
-              response.type === "error"
-            ) {
-              return response;
-            }
-
-            // Clone and cache the response
-            const responseToCache = response.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, responseToCache);
-            });
-
-            return response;
-          })
-          .catch(() => {
-            // Return offline page or cached response
-            return caches.match("/index.html");
-          });
-      }),
-    );
+  if (url.pathname.startsWith("/assets/")) {
+    event.respondWith(handleAsset(event));
   }
 });

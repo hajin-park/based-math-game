@@ -1,17 +1,21 @@
 import { readFileSync, writeFileSync } from "fs";
 import { join } from "path";
 
-// Get the build timestamp
-const buildTimestamp = Date.now();
-
-// Read the service worker file from dist
+// Stamps dist/sw.js with a unique build version so every deploy installs a
+// new service worker (which drops the previous build's cached index.html).
+const buildVersion = `${Date.now()}`;
 const swPath = join(process.cwd(), "dist", "sw.js");
-let swContent = readFileSync(swPath, "utf8");
+const swContent = readFileSync(swPath, "utf8");
 
-// Replace the placeholder with the actual build timestamp
-swContent = swContent.replace("__BUILD_TIMESTAMP__", buildTimestamp);
+if (!swContent.includes("__BUILD_TIMESTAMP__")) {
+  console.error("dist/sw.js has no __BUILD_TIMESTAMP__ placeholder");
+  process.exit(1);
+}
 
-// Write the updated content back
-writeFileSync(swPath, swContent, "utf8");
+writeFileSync(
+  swPath,
+  swContent.replaceAll("__BUILD_TIMESTAMP__", buildVersion),
+  "utf8",
+);
 
-console.log(`✅ Service Worker cache version updated to: ${buildTimestamp}`);
+console.log(`Service worker version set to ${buildVersion}`);
