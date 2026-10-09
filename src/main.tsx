@@ -1,6 +1,10 @@
 import React, { lazy } from "react";
 import ReactDOM from "react-dom/client";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import {
+  createBrowserRouter,
+  Navigate,
+  RouterProvider,
+} from "react-router-dom";
 import { Layout } from "./utils/Layout";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -13,14 +17,14 @@ import "./index.css";
 import { registerServiceWorker } from "@/lib/serviceWorker";
 
 // Every other route is code-split; Layout wraps <Outlet /> in <Suspense>.
-const SingleplayerMode = lazy(() => import("./pages/SingleplayerMode"));
+const Play = lazy(() => import("./pages/Play"));
+const PlayRun = lazy(() => import("./pages/PlayRun"));
+const Daily = lazy(() => import("./pages/Daily"));
 const Usage = lazy(() => import("./pages/Usage"));
 const Tutorials = lazy(() => import("./pages/Tutorials"));
 const About = lazy(() => import("./pages/About"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Terms = lazy(() => import("./pages/Terms"));
-const Settings = lazy(() => import("./pages/Settings"));
-const Quiz = lazy(() => import("./pages/Quiz"));
 const Results = lazy(() => import("./pages/Results"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const Stats = lazy(() => import("./pages/Stats"));
@@ -51,23 +55,32 @@ const router = createBrowserRouter([
       },
       {
         path: "/play",
-        element: <SingleplayerMode />,
+        element: <Play />,
       },
       {
-        path: "/singleplayer",
-        element: <SingleplayerMode />,
+        path: "/play/:modeId",
+        element: <PlayRun />,
       },
       {
-        path: "/settings",
-        element: <Settings />,
-      },
-      {
-        path: "/quiz",
-        element: <Quiz />,
+        path: "/daily",
+        element: <Daily />,
       },
       {
         path: "/results",
         element: <Results />,
+      },
+      // Old single-player URLs.
+      {
+        path: "/singleplayer",
+        element: <LegacyRedirect to="/play" />,
+      },
+      {
+        path: "/quiz",
+        element: <LegacyRedirect to="/play" />,
+      },
+      {
+        path: "/settings",
+        element: <Navigate to="/play?panel=settings" replace />,
       },
       {
         path: "/leaderboard",

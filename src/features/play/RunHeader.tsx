@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { Heart } from "lucide-react";
+import { Heart, Pause } from "lucide-react";
 
-import ExitButton from "@/components/ExitButton";
 import { Button } from "@/components/ui/button";
 import { Meter } from "@/components/ui/meter";
 import type { BestEntry } from "@/data";
@@ -14,9 +13,8 @@ import type { SoundCues } from "./sound";
 interface RunHeaderProps {
   run: RunHandle;
   previousBest: BestEntry | null;
-  exitOpen: boolean;
-  onExitOpenChange: (open: boolean) => void;
-  onExit: () => void;
+  /** Open the pause overlay (also bound to Escape by the run screen). */
+  onPause: () => void;
   cues: SoundCues;
 }
 
@@ -31,9 +29,7 @@ const SPRINT_MARKS = [30_000, 10_000, 5_000];
 export function RunHeader({
   run,
   previousBest,
-  exitOpen,
-  onExitOpenChange,
-  onExit,
+  onPause,
   cues,
 }: RunHeaderProps) {
   const { mode } = run;
@@ -246,17 +242,17 @@ export function RunHeader({
   return (
     <header className="border-b bg-background/90">
       <div className="container flex h-14 items-center gap-2 sm:gap-3 [@media(max-height:480px)]:h-12">
-        <ExitButton
-          open={exitOpen}
-          onOpenChange={onExitOpenChange}
-          onExit={onExit}
-          className="-ml-2"
-          message={
-            mode.format === "practice"
-              ? "Your practice so far is not saved."
-              : "This run ends here and is not saved or ranked."
-          }
-        />
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onPause}
+          disabled={!running}
+          aria-label="Pause"
+          aria-keyshortcuts="Escape"
+          className="-ml-2 shrink-0 text-muted-foreground hover:text-foreground"
+        >
+          <Pause aria-hidden className="size-5" />
+        </Button>
         <div className="flex min-w-0 flex-1 flex-col">
           <h1 className="truncate text-label font-semibold text-foreground">
             {modeTitle(mode)}

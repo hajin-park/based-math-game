@@ -30,7 +30,9 @@ import { GameSurface, useSoundCues } from "@/features/play/GameSurface";
 import { RunHeader } from "@/features/play/RunHeader";
 import { decodeCustomConfig } from "@/features/play/links";
 import { formatLine, modeTitle } from "@/features/play/describe";
+import { PauseOverlay } from "@/features/play/PauseOverlay";
 import { setLastMode, type ResultsState } from "@/features/play/session";
+import { cn } from "@/lib/utils";
 
 type Resolved =
   | { ok: true; mode: GameMode; custom?: CustomConfig }
@@ -105,7 +107,7 @@ function RunScreen({
   const { best } = usePersonalBest(mode.id);
   const [seed] = useState(randomSeed);
   const [phase, setPhase] = useState<Phase>("loading");
-  const [exitOpen, setExitOpen] = useState(false);
+  const [paused, setPaused] = useState(false);
   const cues = useSoundCues(settings.soundEffects);
 
   const bestRef = useRef(best);
@@ -128,7 +130,8 @@ function RunScreen({
     [cues, mode, custom, navigate],
   );
 
-  const run = useRun({ mode, seed, onFinish });
+  const run = useRun({ mode, seed, onFinish, paused });
+  const running = run.status === "running";
 
   // Settings decide whether to count down. Guests resolve immediately.
   useEffect(() => {
@@ -141,17 +144,26 @@ function RunScreen({
     if (phase === "playing") start();
   }, [phase, start]);
 
-  // Escape opens the exit dialog (Radix closes it again on Escape).
+  // Escape pauses (the overlay's own Escape resumes). Leaving the tab pauses
+  // too, so a notification never costs a life.
   useEffect(() => {
+    if (!running) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape" || e.defaultPrevented || exitOpen) return;
+      if (e.key !== "Escape" || e.defaultPrevented || paused) return;
       if (document.querySelector("[role=alertdialog],[role=dialog]")) return;
       e.preventDefault();
-      setExitOpen(true);
+      setPaused(true);
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") setPaused(true);
     };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [exitOpen]);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [running, paused]);
 
   const exit = useCallback(() => {
     navigate(
@@ -171,9 +183,7 @@ function RunScreen({
       <RunHeader
         run={run}
         previousBest={best}
-        exitOpen={exitOpen}
-        onExitOpenChange={setExitOpen}
-        onExit={exit}
+        onPause={() => setPaused(true)}
         cues={cues}
       />
       <section
@@ -181,7 +191,10 @@ function RunScreen({
         className="relative isolate flex flex-1 flex-col items-center px-4 pb-10 pt-8 sm:justify-center sm:pb-16 sm:pt-10 [@media(max-height:480px)]:justify-start [@media(max-height:480px)]:pt-3"
       >
         <GridPaper fade className="opacity-70" />
-        <div className="w-full max-w-2xl">
+        <div
+          className={cn("w-full max-w-2xl", paused && "invisible")}
+          aria-hidden={paused || undefined}
+        >
           <GameSurface run={run} settings={settings} />
         </div>
         <p className="mt-8 hidden items-center gap-4 text-[0.75rem] text-muted-foreground pointer-fine:flex [@media(max-height:480px)]:hidden">
@@ -190,12 +203,18 @@ function RunScreen({
           </span>
           <span aria-hidden>·</span>
           <span>
-            <kbd className="font-mono">Esc</kbd> exit
+            <kbd className="font-mono">Esc</kbd> pause
           </span>
           <span aria-hidden>·</span>
           <span>Answers submit themselves</span>
         </p>
       </section>
+      <PauseOverlay
+        open={paused && running}
+        practice={mode.format === "practice"}
+        onResume={() => setPaused(false)}
+        onLeave={exit}
+      />
       {phase === "countdown" && (
         <Countdown
           skippable

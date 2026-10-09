@@ -19,12 +19,13 @@ import {
   useState,
 } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, BookOpen, SkipForward } from "lucide-react";
+import { ArrowRight, BookOpen, Lightbulb, SkipForward } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
 import type { GameSettings } from "@/data";
 import {
+  explainQuestion,
   getTopic,
   isAcceptableKeystroke,
   useRun,
@@ -112,6 +113,7 @@ export function GameSurface({
   const cues = useSoundCues(sound ?? settings.soundEffects);
   const [announcement, setAnnouncement] = useState({ text: "", n: 0 });
   const [invalid, setInvalid] = useState(false);
+  const [hintFor, setHintFor] = useState<string | null>(null);
   const lastRejectAt = useRef(0);
 
   const question = run.question;
@@ -260,6 +262,13 @@ export function GameSurface({
   }, [run, running, question, onSkip]);
 
   const streak = trailingStreak(run.outcomes);
+  const hintOpen = practice && !!question && hintFor === question.id;
+  const showHint = () => {
+    if (!question) return;
+    setHintFor(question.id);
+    const [first] = explainQuestion(question);
+    if (first) announce(`Hint: ${first.title}. ${first.note ?? ""}`);
+  };
 
   return (
     <div
@@ -329,10 +338,28 @@ export function GameSurface({
             <div aria-hidden className="h-[5.5rem] w-full max-w-md sm:h-24" />
           )}
 
-          <FlashReveal reveal={practice ? null : run.reveal} />
+          {practice ? (
+            hintOpen && question && <HintPanel question={question} />
+          ) : (
+            <FlashReveal reveal={run.reveal} />
+          )}
 
           <div className="flex min-h-11 w-full max-w-md items-center justify-between gap-3">
-            <Streak count={streak} />
+            {practice ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={showHint}
+                disabled={!running || !question || hintOpen}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <Lightbulb aria-hidden />
+                Hint
+              </Button>
+            ) : (
+              <Streak count={streak} />
+            )}
             {showSkip && (
               <Button
                 type="button"
@@ -402,6 +429,24 @@ const Streak = memo(function Streak({ count }: { count: number }) {
     </span>
   );
 });
+
+function HintPanel({ question }: { question: Question }) {
+  const [first] = explainQuestion(question);
+  if (!first) return null;
+  return (
+    <div className="w-full max-w-md rounded-lg border border-dashed border-border-strong bg-card/80 px-4 py-3 motion-safe:animate-in motion-safe:fade-in-0">
+      <p className="flex items-center gap-1.5 text-label font-medium text-foreground">
+        <Lightbulb aria-hidden className="size-4 text-muted-foreground" />
+        {first.title}
+      </p>
+      {first.note && (
+        <p className="mt-1.5 text-body-sm text-muted-foreground">
+          {first.note}
+        </p>
+      )}
+    </div>
+  );
+}
 
 function FlashReveal({ reveal }: { reveal: RunReveal | null }) {
   return (

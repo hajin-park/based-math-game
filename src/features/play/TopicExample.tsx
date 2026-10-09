@@ -16,7 +16,10 @@ const Op = ({ children }: { children: ReactNode }) => (
 );
 
 /** One worked example per topic, typeset with Digits (mirrors Topic.example). */
-const EXAMPLES: Record<Exclude<TopicId, "custom">, { node: ReactNode; label: string }> = {
+const EXAMPLES: Record<
+  Exclude<TopicId, "custom">,
+  { node: ReactNode; label: string }
+> = {
   nibbles: {
     label: "1011 in binary is B in hex",
     node: (
