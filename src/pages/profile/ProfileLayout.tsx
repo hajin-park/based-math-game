@@ -65,7 +65,7 @@ export default function ProfileLayout() {
         </div>
 
         <nav aria-label="Profile sections" className="-mb-px overflow-x-auto">
-          <ul className="flex gap-1">
+          <ul className="flex xs:gap-1">
             {SECTIONS.map((s) => (
               <li key={s.to}>
                 <NavLink
@@ -73,7 +73,7 @@ export default function ProfileLayout() {
                   end={s.end}
                   className={({ isActive }) =>
                     cn(
-                      "inline-flex h-11 items-center whitespace-nowrap border-b-2 px-3 text-[0.9375rem] transition-colors duration-fast",
+                      "inline-flex h-11 items-center whitespace-nowrap border-b-2 px-2 text-[0.875rem] transition-colors duration-fast xs:px-3 xs:text-[0.9375rem]",
                       isActive
                         ? "border-primary font-medium text-foreground"
                         : "border-transparent text-muted-foreground hover:text-foreground",
