@@ -2,10 +2,10 @@ import { type ClassValue, clsx } from "clsx";
 import { extendTailwindMerge } from "tailwind-merge";
 
 /**
- * tailwind-merge only knows Tailwind's default font sizes. Without this, our
- * semantic sizes (`text-label`, `text-body-sm`, …) are mistaken for colours,
- * so `cn("text-label", "text-primary-foreground")` silently drops one of them
- * (e.g. small primary buttons lost their white text).
+ * tailwind-merge only knows Tailwind's default font sizes, so it treated our
+ * semantic sizes (`text-mono-xl`, `text-label`…) as colours and dropped them
+ * whenever a colour class followed (e.g. `<Digits>` lost its size). Register
+ * them as font sizes.
  */
 const twMerge = extendTailwindMerge({
   extend: {
@@ -29,6 +29,15 @@ const twMerge = extendTailwindMerge({
             "mono-lg",
             "mono-xl",
             "mono-2xl",
+            "fluid-xs",
+            "fluid-sm",
+            "fluid-base",
+            "fluid-lg",
+            "fluid-xl",
+            "fluid-2xl",
+            "fluid-3xl",
+            "fluid-4xl",
+            "fluid-5xl",
           ],
         },
       ],
