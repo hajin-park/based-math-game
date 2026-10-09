@@ -31,7 +31,7 @@ const PRIMARY_LINKS = [
   {
     name: "Play",
     href: "/play",
-    match: ["/play", "/singleplayer", "/quiz", "/results"],
+    match: ["/play", "/daily", "/results"],
   },
   { name: "Multiplayer", href: "/multiplayer", match: ["/multiplayer"] },
   {
