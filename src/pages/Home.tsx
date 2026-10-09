@@ -9,7 +9,15 @@ import { BaseTag } from "@/components/ui/base-tag";
 import { Digits } from "@/components/ui/digits";
 import { GridPaper } from "@/components/ui/grid-paper";
 import { Meter } from "@/components/ui/meter";
-import { OFFICIAL_GAME_MODES } from "@/types/gameMode";
+import {
+  FORMAT_IDS,
+  SPEEDRUN_TARGET,
+  SPRINT_DURATION_MS,
+  TOPICS,
+  listRankedModes,
+  topicsInTier,
+  type Tier,
+} from "@/game";
 import { cn } from "@/lib/utils";
 
 /* -------------------------------------------------------------------------- */
@@ -19,8 +27,8 @@ import { cn } from "@/lib/utils";
 const STEPS = [
   {
     n: "01",
-    title: "Pick a drill",
-    body: "Choose the bases, a number range and a 15, 30 or 60-second clock — or start from one of the official modes.",
+    title: "Pick a topic and a format",
+    body: `From nibbles to two’s complement, then a ${SPRINT_DURATION_MS / 1000}-second sprint, a race to ${SPEEDRUN_TARGET}, survival, the daily, or untimed practice.`,
   },
   {
     n: "10",
@@ -35,29 +43,29 @@ const STEPS = [
 ];
 
 type Track = {
+  tier: Tier;
   label: string;
   level: string;
-  topics: string[];
   sample: ReactNode;
 };
 
 const TRACKS: Track[] = [
   {
+    tier: "foundations",
     label: "Foundations",
     level: "T0",
-    topics: ["Nibbles", "Powers of two", "Place value"],
     sample: <Digits base="bin" value="1010" size="sm" placeValues />,
   },
   {
+    tier: "core",
     label: "Core",
     level: "T1",
-    topics: ["Bytes", "Hex bytes", "Octal"],
     sample: <Digits base="hex" value="FF" size="sm" prefix />,
   },
   {
+    tier: "advanced",
     label: "Advanced",
     level: "T2",
-    topics: ["16-bit words", "Two’s complement", "Bitwise operations"],
     sample: (
       <span className="inline-flex items-baseline gap-2">
         <Digits base="bin" value="11111110" size="sm" group condensed />
@@ -68,9 +76,9 @@ const TRACKS: Track[] = [
     ),
   },
   {
+    tier: "applied",
     label: "Applied",
     level: "T3",
-    topics: ["Binary addition", "Colors in hex", "ASCII"],
     sample: (
       <span className="inline-flex items-center gap-2">
         <span
@@ -195,7 +203,7 @@ function RoomPreview() {
         ))}
       </ol>
       <figcaption className="border-t px-5 py-3 text-[0.75rem] text-muted-foreground">
-        4 of 10 seats · Binary ↔ Decimal, 0–255 · 60 s
+        4 of 10 seats · Binary Bytes · Sprint · 60 s
       </figcaption>
     </figure>
   );
@@ -207,7 +215,8 @@ function RoomPreview() {
 
 export default function Home() {
   const navigate = useNavigate();
-  const modeCount = OFFICIAL_GAME_MODES.length;
+  const rankedModeCount = listRankedModes().length;
+  const topicCount = TOPICS.filter((t) => t.id !== "custom").length;
 
   // Keyboard-first: Enter anywhere on the page (outside a control) starts.
   useEffect(() => {
@@ -317,10 +326,10 @@ export default function Home() {
       <section aria-label="At a glance" className="border-b bg-card/60">
         <dl className="container grid grid-cols-2 divide-border md:grid-cols-4 md:divide-x">
           {[
-            { k: "Official modes", v: String(modeCount) },
-            { k: "Bases drilled", v: "4" },
+            { k: "Topics", v: String(topicCount) },
+            { k: "Formats", v: String(FORMAT_IDS.length) },
+            { k: "Ranked modes", v: String(rankedModeCount) },
             { k: "Players per room", v: "10" },
-            { k: "Sign-ups required", v: "0" },
           ].map((s, i) => (
             <div
               key={s.k}
@@ -422,14 +431,19 @@ export default function Home() {
                 <h3 className="font-serif text-[1.625rem] font-medium leading-none tracking-[-0.015em]">
                   {track.label}
                 </h3>
-                <ul className="flex flex-col gap-2 text-body-sm text-muted-foreground">
-                  {track.topics.map((t) => (
-                    <li key={t} className="flex items-center gap-2.5">
-                      <span
-                        aria-hidden
-                        className="h-px w-3 shrink-0 bg-border-strong"
-                      />
-                      {t}
+                <ul className="flex flex-col gap-0.5 text-body-sm text-muted-foreground">
+                  {topicsInTier(track.tier).map((t) => (
+                    <li key={t.id}>
+                      <Link
+                        to={`/learn#${t.learnAnchor}`}
+                        className="-mx-1 flex min-h-8 items-center gap-2.5 rounded-sm px-1 transition-colors duration-fast hover:text-foreground pointer-coarse:min-h-11"
+                      >
+                        <span
+                          aria-hidden
+                          className="h-px w-3 shrink-0 bg-border-strong"
+                        />
+                        {t.name}
+                      </Link>
                     </li>
                   ))}
                 </ul>

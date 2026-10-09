@@ -39,7 +39,7 @@ export function placeValueSteps(digits: string, base: Base): ExplanationStep[] {
             ["weight", ...weights.map(String)],
             ["bit", ...[...ds]],
           ]),
-          note: "Each bit is worth twice the bit to its right, starting from 1.",
+          note: "Each place is worth twice the place to its right, starting from 1.",
         },
         { title: "Add the weights of the 1 bits", work: [sum] },
       ];
@@ -67,7 +67,7 @@ export function placeValueSteps(digits: string, base: Base): ExplanationStep[] {
     {
       title: "Write the place value of each digit",
       work: alignColumns(rows),
-      note: `Each ${BASES[base].name.toLowerCase()} digit is worth ${base} times the digit to its right.`,
+      note: `Each ${BASES[base].name.toLowerCase()} place is worth ${base} times the place to its right.`,
     },
     {
       title: "Multiply and add",
