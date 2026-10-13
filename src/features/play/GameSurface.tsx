@@ -41,7 +41,7 @@ import { AnswerField, type AnswerFieldHandle } from "./AnswerField";
 import { AnswerValue } from "./AnswerValue";
 import { ExplanationSteps } from "./ExplanationSteps";
 import { PromptView } from "./PromptView";
-import { exerciseInstruction, PEN_DRAW_KEYFRAMES } from "./RunExercise";
+import { exerciseInstruction } from "./RunExercise";
 import { questionLabel, spokenAnswer } from "./describe";
 import { useSoundCues } from "./sound";
 
@@ -471,13 +471,7 @@ const Streak = memo(function Streak({ count }: { count: number }) {
 /** Margin mark of the last exercise: a red-pen tick or cross, drawn once. */
 function LedgerMark({ outcome, n }: { outcome: Outcome | null; n: number }) {
   return (
-    <span
-      aria-hidden
-      className={cn(
-        "flex min-h-10 items-center justify-end",
-        PEN_DRAW_KEYFRAMES,
-      )}
-    >
+    <span aria-hidden className="flex min-h-10 items-center justify-end">
       {outcome &&
         (outcome.result === "correct" ? (
           <PenTick key={n} className="size-6" />

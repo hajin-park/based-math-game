@@ -44,15 +44,6 @@ export function answerLabel(word: string): string {
 }
 
 /**
- * Pen marks (`pen-mark.tsx`) draw with the `pen-draw` keyframes, which
- * Tailwind only emits when an `animate-pen-draw` utility is in use; without
- * them a mark stays undrawn (invisible). Put this class on an element that
- * wraps marks: the marks' own inline animation still wins, so it is a no-op
- * apart from making sure the keyframes ship.
- */
-export const PEN_DRAW_KEYFRAMES = "[&_path]:animate-pen-draw";
-
-/**
  * PenCircle and PenUnderline stretch their SVG to the content
  * (preserveAspectRatio="none") and draw with pathLength=1 under
  * `vector-effect: non-scaling-stroke`. Chrome measures the dash in screen

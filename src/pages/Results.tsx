@@ -60,7 +60,6 @@ import {
 import { absoluteUrl, hubLink, runPath } from "@/features/play/links";
 import {
   exerciseInstruction,
-  PEN_DRAW_KEYFRAMES,
   PEN_STROKE_SCALES,
 } from "@/features/play/RunExercise";
 import {
@@ -235,7 +234,6 @@ function ResultsView({ summary, custom, previousBest }: ResultsState) {
         className={cn(
           "paper-sheet rounded-sm px-5 pb-10 pt-5 sm:px-10 sm:pt-7 lg:px-14 lg:pb-14",
           !reduce && "animate-sheet-in",
-          PEN_DRAW_KEYFRAMES,
         )}
       >
         {/* Running head: the drill on the left, the date on the right. */}
