@@ -58,7 +58,12 @@ function SectionTitle({
 
 export default function Stats() {
   const { isGuest, loading: authLoading } = useAuth();
-  const { stats, loading: statsLoading, error: statsError } = useUserStats();
+  const {
+    stats,
+    loading: statsLoading,
+    error: statsError,
+    refresh: refreshStats,
+  } = useUserStats();
   const {
     runs,
     loading: runsLoading,
@@ -127,7 +132,13 @@ export default function Stats() {
           title="Couldn’t load your stats"
           description="Check your connection, then try again."
           action={
-            <Button variant="outline" onClick={refresh}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                refresh();
+                refreshStats();
+              }}
+            >
               Try again
             </Button>
           }
