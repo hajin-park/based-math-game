@@ -649,7 +649,7 @@ function ShareButton({ summary }: { summary: RunSummary }) {
 function DailyStrip({ summary }: { summary: RunSummary }) {
   return (
     <section aria-labelledby="daily-strip" className="flex flex-col gap-3">
-      <h2 id="daily-strip" className="smallcaps rule-double pb-1.5">
+      <h2 id="daily-strip" className="font-serif text-title-sm font-bold">
         Your ten
       </h2>
       <ol className="grid grid-cols-5 gap-x-1 gap-y-2">
@@ -766,7 +766,7 @@ function SlowestList({ outcomes }: { outcomes: QuestionOutcome[] }) {
             <span className="font-mono text-mono-sm tabular-nums text-primary">
               {n}.
             </span>
-            <span className="min-w-0 truncate">
+            <span className="min-w-0 overflow-hidden whitespace-nowrap [mask-image:linear-gradient(to_right,#000_80%,transparent)]">
               <span className="sr-only">
                 {questionLabel(o.question)}. Answer: {spokenAnswer(o.question)}.
               </span>
