@@ -15,7 +15,7 @@
     if (pref !== "system") {
       var metas = document.querySelectorAll('meta[name="theme-color"]');
       for (var i = 0; i < metas.length; i++) {
-        metas[i].setAttribute("content", dark ? "#12110F" : "#F3F0E8");
+        metas[i].setAttribute("content", dark ? "#1D2824" : "#F6F1E6");
       }
     }
   } catch (e) {}

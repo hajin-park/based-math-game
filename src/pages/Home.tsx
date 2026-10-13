@@ -13,6 +13,7 @@ import { Kbd } from "@/components/ui/kbd";
 import { PenTick } from "@/components/ui/pen-mark";
 import ProfileDropdown from "@/components/ProfileDropdown";
 import { useAuth } from "@/contexts/AuthContext";
+import { syncThemeColor } from "@/contexts/ThemeContext";
 import { SiteMenu, ThemeMenu } from "@/features/ui/Navigation-Bar";
 import { useDailyAttempts } from "@/features/play/useDailyAttempts";
 import { useStartTarget } from "@/features/play/useStartTarget";
@@ -121,6 +122,17 @@ export default function Home() {
   }, [navigate, opening, reduce, start.path]);
 
   useEffect(() => () => window.clearTimeout(openTimer.current), []);
+
+  // The browser chrome takes the cover's blue while the cover is showing.
+  useEffect(() => {
+    const root = document.documentElement;
+    root.dataset.surface = "cover";
+    syncThemeColor();
+    return () => {
+      delete root.dataset.surface;
+      syncThemeColor();
+    };
+  }, []);
 
   // Keyboard-first: Enter anywhere on the cover (outside a control) plays.
   useEffect(() => {
