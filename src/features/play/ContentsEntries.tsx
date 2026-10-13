@@ -12,13 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
 import { PenTick } from "@/components/ui/pen-mark";
 import type { BestEntry } from "@/data";
-import {
-  dailyNumber,
-  getMode,
-  modeId,
-  type Tier,
-  type Topic,
-} from "@/game";
+import { dailyNumber, getMode, modeId, type Tier, type Topic } from "@/game";
 import { ModeRank } from "@/features/play/DailyStatus";
 import { TopicExample } from "@/features/play/TopicExample";
 import { runPath } from "@/features/play/links";

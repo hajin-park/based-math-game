@@ -16,7 +16,11 @@ import { PageHeader } from "@/components/ui/page-header";
 import { toast } from "@/components/ui/use-toast";
 import { bestsKey, useUserStats, type BestEntry } from "@/data";
 import { TIERS, isTopicId, modeId, topicsInTier } from "@/game";
-import { Appendix, Chapter, FrontMatter } from "@/features/play/ContentsEntries";
+import {
+  Appendix,
+  Chapter,
+  FrontMatter,
+} from "@/features/play/ContentsEntries";
 import { ContentsPanel, type Panel } from "@/features/play/ContentsPanel";
 import { type ChapterTopicId } from "@/features/play/ContentsShared";
 import {
@@ -126,7 +130,10 @@ export default function Play() {
           title="Contents"
           lede={`${TOPIC_COUNT} topics in ${TIERS.length} chapters. Each plays as a 60-second sprint, a race to 15 correct, or untimed practice.`}
           actions={
-            <Button variant="outline" onClick={() => open({ kind: "settings" })}>
+            <Button
+              variant="outline"
+              onClick={() => open({ kind: "settings" })}
+            >
               <SlidersHorizontal aria-hidden />
               Game settings
             </Button>
@@ -162,12 +169,7 @@ export default function Play() {
         onBuild={() => open({ kind: "custom", config: DEFAULT_CUSTOM_CONFIG })}
       />
 
-      <ContentsPanel
-        panel={panel}
-        onClose={close}
-        onOpen={open}
-        best={best}
-      />
+      <ContentsPanel panel={panel} onClose={close} onOpen={open} best={best} />
     </div>
   );
 }

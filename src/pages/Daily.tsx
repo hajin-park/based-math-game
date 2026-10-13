@@ -156,9 +156,7 @@ export default function Daily() {
                 className={cn(!played && "justify-between xs:min-w-[16rem]")}
               >
                 <Link to={playPath}>
-                  {played
-                    ? "Replay (unranked)"
-                    : `Start sheet No. ${sheetNo}`}
+                  {played ? "Replay (unranked)" : `Start sheet No. ${sheetNo}`}
                   {!played && (
                     <Kbd
                       size="sm"
