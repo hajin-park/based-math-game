@@ -38,9 +38,23 @@ function niceMax(v: number): number {
   return 10 * exp;
 }
 
-/** The PenCircle stroke, reused small around a plotted point. */
-const CIRCLE_D =
-  "M64 9C35 6.5 9.5 17 7.6 39.5 5.8 61 33 73.5 63 72.5 92 71.6 114.5 58 112.6 37 110.9 18.4 86 7.3 58.6 8.9 46 9.7 37.4 12.6 31 16.8";
+/**
+ * A small red-pen loop around a plotted point, in pixel space: two tilted
+ * arcs that overshoot where they started, like a quick circle by hand.
+ */
+function penLoop(cx: number, cy: number, rx = 10, ry = 7.5): string {
+  const f = (n: number) => n.toFixed(1);
+  const k = 0.55;
+  const p = (dx: number, dy: number) => `${f(cx + dx)},${f(cy + dy)}`;
+  // Counter-clockwise from just left of the top, round past the start.
+  return [
+    `M${p(-2, -ry)}`,
+    `C${p(-2 - rx * k, -ry)} ${p(-rx, -ry * k)} ${p(-rx, 0.4)}`,
+    `C${p(-rx, ry * k)} ${p(-rx * k, ry + 0.5)} ${p(0.5, ry + 0.5)}`,
+    `C${p(rx * k, ry + 0.5)} ${p(rx + 0.6, ry * k)} ${p(rx + 0.6, -0.6)}`,
+    `C${p(rx + 0.6, -ry * k)} ${p(rx * k - 1, -ry - 1.4)} ${p(-5.5, -ry - 0.6)}`,
+  ].join(" ");
+}
 
 /**
  * A single-series plot on graph paper: hairline axes, typewriter ticks, an
@@ -273,10 +287,8 @@ export function TrendChart({
               {bests.map((i, n) => (
                 <path
                   key={`best-${i}`}
-                  d={CIRCLE_D}
+                  d={penLoop(x(i), y(points[i].value))}
                   pathLength={1}
-                  transform={`translate(${x(i) - 9} ${y(points[i].value) - 7}) scale(${18 / 120} ${14 / 80})`}
-                  vectorEffect="non-scaling-stroke"
                   strokeWidth={1.6}
                   className="animate-pen-draw fill-none stroke-pen [stroke-dasharray:1] [stroke-linecap:round]"
                   style={

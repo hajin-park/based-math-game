@@ -189,10 +189,13 @@ export default function Stats() {
   const name = isGuest
     ? "Guest"
     : user?.displayName || (authLoading ? "" : "Player");
-  const period =
-    runs.length > 0
-      ? `${formatDate(runs[runs.length - 1].endedAt)} – ${formatDate(runs[0].endedAt)}`
-      : "—";
+  const first = runs.length ? formatDate(runs[runs.length - 1].endedAt) : "";
+  const latest = runs.length ? formatDate(runs[0].endedAt) : "";
+  const period = !runs.length
+    ? "—"
+    : first === latest
+      ? first
+      : `${first} – ${latest}`;
 
   const guestNote = !authLoading && isGuest && (
     <div role="note">
@@ -627,7 +630,7 @@ function Remarks({ remark }: { remark: Remark | null }) {
       ) : (
         <p className="font-serif text-body italic text-muted-foreground text-pretty">
           None yet. Remarks compare your topics once you’ve played at least
-          two of them {REMARK_MIN_RUNS} times or more.
+          two of them twice or more.
         </p>
       )}
     </div>

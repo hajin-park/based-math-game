@@ -48,7 +48,7 @@ function Section({
       className={cn(
         "grid gap-4 py-8 md:grid-cols-[minmax(0,15rem)_minmax(0,1fr)] md:gap-12",
         tone === "danger"
-          ? "mt-6 border-t-[3px] border-double border-pen/70 pt-7"
+          ? "mt-6 border-t-[3px] border-double border-t-pen pt-7"
           : "border-b border-foreground/15 first:pt-0",
       )}
     >
