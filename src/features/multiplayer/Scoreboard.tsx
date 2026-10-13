@@ -1,7 +1,8 @@
 import { memo, useEffect, useRef, useState } from "react";
 import { m } from "framer-motion";
 import { useReducedMotion } from "@/lib/useReducedMotion";
-import { Check, WifiOff } from "lucide-react";
+import { WifiOff } from "lucide-react";
+import { PenTick } from "@/components/ui/pen-mark";
 
 import type { Format } from "@/game";
 import type { RoomPlayer } from "@/hooks/useRoom";
@@ -64,11 +65,11 @@ export const Scoreboard = memo(function Scoreboard({
   if (compact) {
     return (
       <section aria-label="Live scores" className={className}>
-        {/* Focusable so keyboard users can scroll a long strip. */}
+        {/* One ruled line of the class standings; focusable so keyboard users can scroll it. */}
         <ol
           tabIndex={0}
           aria-label="Players by rank"
-          className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1 [scrollbar-width:none]"
+          className="-mx-4 flex overflow-x-auto border-y border-foreground/20 px-4 [scrollbar-width:none]"
         >
           {standings.map((s) => {
             const you = s.player.uid === myUid;
@@ -78,15 +79,15 @@ export const Scoreboard = memo(function Scoreboard({
                 layout={reduce ? false : "position"}
                 transition={{ type: "spring", stiffness: 500, damping: 40 }}
                 className={cn(
-                  "flex shrink-0 items-center gap-2 rounded-md border bg-card px-2.5 py-1.5 text-[0.8125rem]",
-                  you && "border-primary/40 bg-primary/[0.05]",
+                  "flex min-h-10 shrink-0 items-baseline gap-2 border-r border-foreground/15 px-3 py-2 text-[0.875rem] first:pl-1 last:border-r-0",
+                  you && "bg-tint",
                   s.dropout && "text-muted-foreground",
                 )}
               >
-                <span className="font-mono text-[0.6875rem] text-muted-foreground">
+                <span className="font-mono text-[0.75rem] text-primary">
                   {s.rank}
                 </span>
-                <span className="max-w-[7rem] truncate font-medium">
+                <span className="max-w-[7rem] truncate font-serif font-bold">
                   {you
                     ? "You"
                     : (names.get(s.player.uid) ?? s.player.displayName)}
@@ -96,13 +97,16 @@ export const Scoreboard = memo(function Scoreboard({
                 </span>
                 {s.player.finished && (
                   <>
-                    <Check aria-hidden className="size-3.5 text-success" />
+                    <PenTick animate={false} className="size-4 self-center" />
                     <span className="sr-only">finished</span>
                   </>
                 )}
                 {s.dropout && (
                   <>
-                    <WifiOff aria-hidden className="size-3.5 text-warning" />
+                    <WifiOff
+                      aria-hidden
+                      className="size-3.5 self-center text-warning"
+                    />
                     <span className="sr-only">disconnected</span>
                   </>
                 )}
@@ -117,15 +121,20 @@ export const Scoreboard = memo(function Scoreboard({
   return (
     <section
       aria-labelledby="scoreboard-title"
-      className={cn("flex flex-col gap-3", className)}
+      className={cn("flex flex-col gap-2", className)}
     >
-      <div className="flex items-baseline justify-between gap-2">
-        <h2 id="scoreboard-title" className="eyebrow">
-          Live scores
+      <div className="rule-double flex items-baseline justify-between gap-2 pb-1.5">
+        <h2
+          id="scoreboard-title"
+          className="smallcaps text-[1rem] text-foreground"
+        >
+          Class standings
         </h2>
-        <span className="text-[0.75rem] text-muted-foreground">{unit}</span>
+        <span className="font-sans text-[0.75rem] text-muted-foreground">
+          {unit}
+        </span>
       </div>
-      <ol className="flex flex-col gap-1">
+      <ol className="flex flex-col">
         {standings.map((s) => {
           const you = s.player.uid === myUid;
           const name = names.get(s.player.uid) ?? s.player.displayName;
@@ -135,36 +144,42 @@ export const Scoreboard = memo(function Scoreboard({
               layout={reduce ? false : "position"}
               transition={{ type: "spring", stiffness: 500, damping: 40 }}
               className={cn(
-                "flex min-h-11 items-center gap-3 rounded-md px-3 py-2",
-                you ? "bg-primary/[0.06]" : "bg-card/70",
+                "grid min-h-11 grid-cols-[1.5rem_minmax(0,1fr)_auto] items-baseline gap-2 border-b border-primary/20 py-2",
                 s.dropout && "text-muted-foreground",
               )}
             >
-              <span className="w-5 font-mono text-[0.75rem] text-muted-foreground">
+              <span className="font-mono text-[0.8125rem] text-primary">
                 {s.rank}
               </span>
-              <span className="flex min-w-0 flex-1 flex-col">
-                <span className="flex min-w-0 items-center gap-1.5">
-                  <span className="truncate text-[0.9375rem]">{name}</span>
+              <span className="flex min-w-0 flex-col">
+                <span className="flex min-w-0 items-baseline gap-1.5">
+                  <span
+                    className={cn(
+                      "truncate font-serif text-[1rem] font-bold",
+                      you && "highlighter",
+                    )}
+                  >
+                    {name}
+                  </span>
                   {you && <YouTag />}
                 </span>
                 {(s.player.finished || s.dropout) && (
                   <span
                     className={cn(
-                      "inline-flex items-center gap-1 text-[0.75rem]",
-                      s.dropout ? "text-warning" : "text-success",
+                      "inline-flex items-center gap-1 font-sans text-[0.75rem]",
+                      s.dropout ? "text-warning" : "text-muted-foreground",
                     )}
                   >
                     {s.dropout ? (
                       <WifiOff aria-hidden className="size-3" />
                     ) : (
-                      <Check aria-hidden className="size-3" />
+                      <PenTick animate={false} className="size-3.5" />
                     )}
                     {s.dropout ? "Disconnected" : "Finished"}
                   </span>
                 )}
               </span>
-              <span className="font-mono text-[0.9375rem] tabular-nums">
+              <span className="text-right font-mono text-[1rem] tabular-nums">
                 {liveValue(s.player, format, target)}
               </span>
             </m.li>

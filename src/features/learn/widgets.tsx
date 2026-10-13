@@ -6,10 +6,12 @@ import { BaseTag } from "@/components/ui/base-tag";
 import { Button } from "@/components/ui/button";
 import { Digits } from "@/components/ui/digits";
 import { Input } from "@/components/ui/input";
+import { Kbd } from "@/components/ui/kbd";
 import { Label } from "@/components/ui/label";
 import { Segmented } from "@/components/ui/segmented";
 import { cn } from "@/lib/utils";
 import { BitMatrix } from "./BitMatrix";
+import { Figure } from "./book";
 import {
   ASCII_ANCHORS,
   POWER_LANDMARKS,
@@ -45,27 +47,14 @@ export function WidgetFrame({
 }: {
   title: React.ReactNode;
   children: React.ReactNode;
+  /** Printed after the title in the figure caption. */
   footer?: React.ReactNode;
   className?: string;
 }) {
   return (
-    <figure
-      className={cn(
-        "flex flex-col overflow-hidden rounded-lg border bg-card shadow-xs",
-        className,
-      )}
-    >
-      <figcaption className="flex items-center gap-2 border-b px-4 py-2.5 sm:px-5">
-        <span aria-hidden className="size-1.5 rounded-full bg-base-bin" />
-        <span className="eyebrow text-foreground">{title}</span>
-      </figcaption>
-      <div className="flex flex-col gap-5 p-4 sm:p-5">{children}</div>
-      {footer && (
-        <div className="border-t px-4 py-3 text-[0.8125rem] text-muted-foreground sm:px-5">
-          {footer}
-        </div>
-      )}
-    </figure>
+    <Figure title={title} caption={footer} className={className}>
+      {children}
+    </Figure>
   );
 }
 
@@ -84,7 +73,7 @@ function Readouts({
   return (
     <dl
       className={cn(
-        "grid grid-cols-2 gap-px overflow-hidden rounded-md border bg-border [&>*:last-child:nth-child(odd)]:col-span-2 sm:grid-cols-[repeat(auto-fit,minmax(8rem,1fr))] sm:[&>*:last-child:nth-child(odd)]:col-span-1",
+        "grid grid-cols-2 gap-px overflow-hidden border border-foreground/25 bg-border [&>*:last-child:nth-child(odd)]:col-span-2 sm:grid-cols-[repeat(auto-fit,minmax(8rem,1fr))] sm:[&>*:last-child:nth-child(odd)]:col-span-1",
         className,
       )}
     >
@@ -93,9 +82,9 @@ function Readouts({
           key={i}
           className="flex min-w-0 flex-col gap-1.5 bg-card px-3 py-2.5"
         >
-          <dt className="flex items-center gap-1.5 text-[0.75rem] text-muted-foreground">
+          <dt className="flex items-center gap-1.5 font-sans text-[0.75rem] text-muted-foreground">
             {item.tag}
-            {item.label}
+            <span>{item.label}</span>
           </dt>
           <dd className="min-w-0 truncate font-mono text-[1.125rem] font-medium tabular-nums leading-tight">
             {item.value}
@@ -125,7 +114,7 @@ function PresetButtons<T>({
 }) {
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <span className="text-[0.8125rem] text-muted-foreground">{label}</span>
+      <span className="smallcaps">{label}</span>
       {presets.map((p, i) => (
         <Button
           key={i}
@@ -188,7 +177,7 @@ export function NibbleWidget() {
       </Live>
       <ul
         aria-label="All sixteen nibbles"
-        className="grid grid-cols-2 gap-px overflow-hidden rounded-md border bg-border xs:grid-cols-4 md:grid-cols-8"
+        className="grid grid-cols-2 gap-px overflow-hidden border border-border-strong bg-border-strong xs:grid-cols-4 md:grid-cols-8"
       >
         {Array.from({ length: 16 }, (_, i) => (
           <li
@@ -196,7 +185,7 @@ export function NibbleWidget() {
             aria-current={i === v ? "true" : undefined}
             className={cn(
               "flex items-baseline justify-between gap-2 px-2.5 py-2",
-              i === v ? "bg-accent" : "bg-card",
+              i === v ? "bg-tint" : "bg-card",
             )}
           >
             <Digits base="bin" value={i} pad={4} size="xs" />
@@ -252,7 +241,7 @@ export function PowersWidget() {
             value={n}
             aria-valuetext={`n = ${n}, 2 to the ${n} is ${value}`}
             onChange={(e) => setN(Number(e.target.value))}
-            className="h-11 min-w-0 flex-1 cursor-pointer accent-[rgb(var(--base-bin))]"
+            className="h-11 min-w-0 flex-1 cursor-pointer accent-[rgb(var(--primary))]"
           />
           <Button
             type="button"
@@ -285,7 +274,7 @@ export function PowersWidget() {
           },
         ]}
       />
-      <div className="flex flex-col gap-2 rounded-md bg-sunken px-3 py-3">
+      <div className="flex flex-col gap-2 rounded-sm bg-sunken px-3 py-3">
         <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
           <span className="w-24 shrink-0 text-[0.75rem] text-muted-foreground">
             2<sup>{n}</sup> in binary
@@ -330,7 +319,15 @@ export function ByteWidget() {
   return (
     <WidgetFrame
       title="Flip the bits of a byte"
-      footer="Click or tab to any bit and press Space to flip it. Count up and watch carries ripple left."
+      footer={
+        <>
+          Click a bit, or tab to it and press{" "}
+          <span className="whitespace-nowrap">
+            <Kbd size="sm">Space</Kbd>,
+          </span>{" "}
+          to flip it. Count up and watch the carries ripple left.
+        </>
+      }
     >
       <BaseOdometer
         value={v}
@@ -340,7 +337,7 @@ export function ByteWidget() {
         placeValues
         size="md"
         bases={["bin", "dec", "hex"]}
-        className="shadow-none"
+        className="-mx-4 -mt-2 w-auto border-0 bg-transparent sm:-mx-5"
       />
       <div className="flex flex-wrap items-center gap-2">
         <Button
@@ -361,7 +358,7 @@ export function ByteWidget() {
         >
           <Plus aria-hidden /> 1
         </Button>
-        <span className="mx-1 h-5 w-px bg-border" aria-hidden />
+        <span className="mx-1 h-5 w-px bg-border-strong" aria-hidden />
         <PresetButtons
           label="Try"
           onPick={setV}
@@ -451,9 +448,9 @@ export function ConverterWidget() {
         </p>
       </div>
 
-      <div className="flex flex-col divide-y divide-dashed rounded-md border px-3">
+      <div className="flex flex-col divide-y divide-border border-y border-foreground/40">
         {(["bin", "oct", "dec", "hex"] as const).map((b) => (
-          <div key={b} className="flex min-h-11 items-center gap-3 py-2">
+          <div key={b} className="flex min-h-11 items-center gap-3 px-1 py-2">
             <BaseTag base={b} size="sm" showRadix className="w-12" />
             <span className="min-w-0 overflow-x-auto">
               {value === null ? (
@@ -474,14 +471,14 @@ export function ConverterWidget() {
 
       {value !== null && (
         <div className="flex flex-col gap-2">
-          <p className="text-[0.75rem] text-muted-foreground">
+          <p className="font-sans text-[0.8125rem] text-muted-foreground">
             Each group of four bits is one hex digit
           </p>
           <div className="flex flex-wrap gap-2" aria-hidden>
             {nibbles.map((nb, i) => (
               <div
                 key={i}
-                className="flex flex-col items-center gap-1 rounded-md border bg-sunken px-2.5 py-2"
+                className="flex flex-col items-center gap-1 border border-border-strong bg-background px-2.5 py-2"
               >
                 <Digits base="bin" value={nb} size="sm" />
                 <span className="text-[0.6875rem] text-muted-foreground">
@@ -532,11 +529,9 @@ export function ChmodWidget() {
         {WHO.map((who, wi) => (
           <fieldset
             key={who}
-            className="flex flex-col gap-2 rounded-md border px-3 pb-3 pt-2"
+            className="flex flex-col gap-2 border border-border-strong px-3 pb-3 pt-2"
           >
-            <legend className="px-1 text-label text-muted-foreground">
-              {who}
-            </legend>
+            <legend className="smallcaps px-1">{who}</legend>
             <div className="flex gap-1.5">
               {PERMS.map((p) => {
                 const on = (digits[wi] & p.bit) !== 0;
@@ -548,13 +543,13 @@ export function ChmodWidget() {
                     aria-label={`${who} ${p.name}`}
                     onClick={() => toggle(wi, p.bit)}
                     className={cn(
-                      "flex h-12 min-w-11 flex-1 flex-col items-center justify-center rounded-md border font-mono transition-[background-color,border-color,color] duration-fast",
+                      "flex h-12 min-w-11 flex-1 flex-col items-center justify-center border font-mono transition-[background-color,border-color,color] duration-fast",
                       on
-                        ? "border-base-bin/35 bg-base-bin/10 text-base-bin"
-                        : "border-border bg-card text-muted-foreground hover:border-border-strong",
+                        ? "border-foreground/50 bg-tint text-foreground"
+                        : "border-border-strong bg-card text-muted-foreground hover:border-foreground",
                     )}
                   >
-                    <span className="text-[1rem] font-medium leading-none">
+                    <span className="text-[1rem] font-bold leading-none">
                       {on ? p.letter : "-"}
                     </span>
                     <span className="mt-1 text-[0.625rem] leading-none opacity-80">
@@ -573,7 +568,7 @@ export function ChmodWidget() {
           </fieldset>
         ))}
       </div>
-      <div className="flex flex-col gap-2 rounded-md bg-sunken px-3 py-3 font-mono text-[0.9375rem] sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-2 rounded-sm bg-sunken px-3 py-3 font-mono text-[0.9375rem] sm:flex-row sm:items-center sm:justify-between">
         <span>
           <span className="text-muted-foreground">$ chmod </span>
           <Digits base="oct" value={octal} size="inherit" />
@@ -661,9 +656,9 @@ export function WordWidget() {
             ].map((b) => (
               <div
                 key={b.name}
-                className="flex flex-col gap-2 rounded-md border px-3 py-3"
+                className="flex flex-col gap-2 border border-border-strong px-3 py-3"
               >
-                <p className="flex items-center justify-between text-[0.75rem] text-muted-foreground">
+                <p className="flex items-center justify-between font-sans text-[0.75rem] text-muted-foreground">
                   {b.name}
                   <span className="font-mono">{b.weight}</span>
                 </p>
@@ -678,7 +673,7 @@ export function WordWidget() {
               </div>
             ))}
           </div>
-          <p className="rounded-md bg-sunken px-3 py-3 font-mono text-[0.9375rem]">
+          <p className="rounded-sm bg-sunken px-3 py-3 font-mono text-[0.9375rem]">
             {hi} × 256 + {lo} ={" "}
             <Digits
               base="dec"
@@ -690,9 +685,7 @@ export function WordWidget() {
         </>
       )}
       <div className="flex flex-col gap-2">
-        <p className="text-[0.75rem] text-muted-foreground">
-          Worth knowing on sight
-        </p>
+        <p className="smallcaps">Worth knowing on sight</p>
         <ul className="flex flex-wrap gap-2">
           {WORD_LANDMARKS.map((w) => (
             <li key={w.hex}>
@@ -935,9 +928,9 @@ export function BitwiseWidget() {
           {OP_SYMBOL[op]}
         </span>
         : {OP_RULE[op]}
-        {!isShift && " Outlined result bits differ from A."}
+        {!isShift && " Highlighted result bits differ from A."}
       </p>
-      <p className="flex flex-wrap items-baseline gap-x-2 gap-y-1 rounded-md bg-sunken px-3 py-2.5 font-mono text-[0.875rem]">
+      <p className="flex flex-wrap items-baseline gap-x-2 gap-y-1 rounded-sm bg-sunken px-3 py-2.5 font-mono text-[0.875rem]">
         <Digits base="hex" value={hex2(a)} prefix size="inherit" />
         <span className="text-muted-foreground">{OP_SYMBOL[op]}</span>
         {isShift ? (
@@ -1025,7 +1018,7 @@ export function AdditionWidget() {
           },
         ]}
       />
-      <p className="rounded-md bg-sunken px-3 py-2.5 font-mono text-[0.875rem]">
+      <p className="rounded-sm bg-sunken px-3 py-2.5 font-mono text-[0.875rem]">
         {a} + {b} = {trueSum}
         {cols.carryOut ? (
           <span className="text-warning">
@@ -1103,7 +1096,7 @@ export function ColorWidget() {
         <div className="flex flex-col gap-2">
           <div
             aria-hidden
-            className="h-24 rounded-md border border-foreground/15 shadow-xs md:h-full md:min-h-28"
+            className="h-24 border border-foreground/25 md:h-full md:min-h-28"
             style={{ backgroundColor: hex }}
           />
           <p className="text-center font-mono text-[1rem] font-medium">
@@ -1112,7 +1105,7 @@ export function ColorWidget() {
           </p>
         </div>
       </div>
-      <p className="flex flex-wrap gap-x-4 gap-y-1 rounded-md bg-sunken px-3 py-2.5 font-mono text-[0.8125rem]">
+      <p className="flex flex-wrap gap-x-4 gap-y-1 rounded-sm bg-sunken px-3 py-2.5 font-mono text-[0.8125rem]">
         {CHANNELS.map((c, i) => (
           <span key={c.key}>
             <span className="text-muted-foreground">
@@ -1220,7 +1213,7 @@ export function AsciiWidget() {
       )}
       {/* Scrolls sideways on phones: focusable so keyboard users can too. */}
       <div
-        className="overflow-x-auto rounded-md border"
+        className="overflow-x-auto border-y border-foreground/60"
         tabIndex={0}
         role="region"
         aria-label="ASCII table"
@@ -1231,7 +1224,7 @@ export function AsciiWidget() {
             hex digit.
           </caption>
           <thead>
-            <tr className="border-b bg-sunken text-muted-foreground">
+            <tr className="border-b-[3px] border-double border-foreground/60 text-muted-foreground">
               <th scope="col" className="px-2 py-1.5 text-left font-normal">
                 <span className="sr-only">High digit</span>
               </th>

@@ -1,6 +1,10 @@
+/**
+ * /join/:code and /multiplayer/join — the room code in candidate boxes, the
+ * room itself on an index card (drill, seats, host), your name, Join.
+ */
 import { useEffect, useId, useState, type FormEvent } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Users } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
@@ -10,13 +14,13 @@ import { roomApi, type Room } from "@/hooks/useRoom";
 import { describeRoomMode } from "@/lib/roomMode";
 import { RoomCodeInput } from "@/features/multiplayer/RoomCodeInput";
 import { DisplayNameField } from "@/features/multiplayer/DisplayNameField";
-import { nameError } from "@/features/multiplayer/names";
+import { FIELD_LABEL } from "@/features/multiplayer/FormRow";
+import { nameError, roomNames } from "@/features/multiplayer/names";
 import {
   codeHalves,
   isRoomCode,
   normalizeRoomCode,
 } from "@/features/multiplayer/roomCode";
-import { roomNames } from "@/features/multiplayer/names";
 import { useJoinRoom } from "@/features/multiplayer/useJoinRoom";
 
 type Preview =
@@ -66,6 +70,8 @@ export default function JoinRoom() {
   const mine = room && user ? room.players[user.uid] : undefined;
   const kicked = !!mine?.kicked;
   const member = !!mine && !kicked;
+  // A removed player gets no look inside the room.
+  const shownRoom = kicked ? null : room;
   const nameProblem = nameTouched ? nameError(name) : null;
   const shown = complete ? codeHalves(code).join(" ") : "";
   const codeMessage =
@@ -75,6 +81,10 @@ export default function JoinRoom() {
       : kicked
         ? "The host removed you from this room, so you can't rejoin it."
         : null);
+  const hostName = shownRoom
+    ? (roomNames(Object.values(shownRoom.players)).get(shownRoom.hostUid) ??
+      "the host")
+    : null;
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -87,47 +97,32 @@ export default function JoinRoom() {
   };
 
   return (
-    <div className="container max-w-md py-10 md:py-16">
+    <div className="container max-w-lg py-8 md:py-14">
       <Button
         asChild
         variant="ghost"
         size="sm"
-        className="-ml-3 mb-6 text-muted-foreground"
+        className="-ml-3 mb-5 text-muted-foreground"
       >
         <Link to="/multiplayer">
           <ArrowLeft aria-hidden />
-          Multiplayer
+          Rooms
         </Link>
       </Button>
       <PageHeader
         size="sm"
-        eyebrow="Join a room"
-        title={
-          room ? (
-            <>
-              Join{" "}
-              <em>
-                {roomNames(Object.values(room.players)).get(room.hostUid) ??
-                  "the host"}
-              </em>
-              ’s room
-            </>
-          ) : (
-            <>
-              Join a <em>room</em>
-            </>
-          )
-        }
+        eyebrow="Rooms · Join"
+        title={hostName ? `Join ${hostName}’s room` : "Join a room"}
         lede={
-          room
+          shownRoom
             ? undefined
             : "Type the 8-character code your host shared, or paste the invite link."
         }
       />
 
-      <form onSubmit={onSubmit} noValidate className="mt-8 flex flex-col gap-6">
-        <div className="flex flex-col gap-2">
-          <label htmlFor={codeId} className="text-label font-medium">
+      <form onSubmit={onSubmit} noValidate className="mt-8 flex flex-col gap-7">
+        <div className="flex flex-col gap-2.5">
+          <label htmlFor={codeId} className={FIELD_LABEL}>
             Room code
           </label>
           <RoomCodeInput
@@ -146,8 +141,8 @@ export default function JoinRoom() {
             aria-live="polite"
             className={
               codeMessage
-                ? "text-[0.8125rem] text-destructive"
-                : "text-[0.8125rem] text-muted-foreground"
+                ? "font-sans text-[0.8125rem] text-destructive"
+                : "font-sans text-[0.8125rem] text-muted-foreground"
             }
           >
             {codeMessage ??
@@ -155,9 +150,9 @@ export default function JoinRoom() {
           </p>
         </div>
 
-        <RoomPreview preview={preview} />
+        {!kicked && <RoomPreview preview={preview} hostName={hostName} />}
 
-        {!member && (
+        {!member && !kicked && (
           <DisplayNameField
             value={name}
             onChange={(v) => {
@@ -171,7 +166,7 @@ export default function JoinRoom() {
         <Button
           type="submit"
           size="lg"
-          className="w-full"
+          className="w-full justify-between"
           disabled={
             pending || !complete || preview.state === "missing" || kicked
           }
@@ -184,17 +179,42 @@ export default function JoinRoom() {
   );
 }
 
-function RoomPreview({ preview }: { preview: Preview }) {
+/** One ruled line of the index card: a small-caps label, then the value. */
+function CardLine({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="grid min-h-9 grid-cols-[4.5rem_minmax(0,1fr)] items-baseline gap-3 border-b border-primary/20 py-1.5 last:border-b-0">
+      <dt className="smallcaps">{label}</dt>
+      <dd className="min-w-0 text-body-sm">{children}</dd>
+    </div>
+  );
+}
+
+/** The room on an index card: a heading line in the spot colour, ruled below. */
+function RoomPreview({
+  preview,
+  hostName,
+}: {
+  preview: Preview;
+  hostName: string | null;
+}) {
   if (preview.state === "loading")
     return (
-      <div className="flex flex-col gap-2 rounded-lg border bg-card p-4">
+      <div className="paper-sheet flex flex-col gap-3 rounded-sm px-5 py-4">
+        <Skeleton className="h-5 w-48" />
+        <Skeleton className="h-4 w-64" />
         <Skeleton className="h-4 w-40" />
-        <Skeleton className="h-4 w-56" />
       </div>
     );
   if (preview.state !== "ready") return null;
   const { room } = preview;
-  const players = Object.values(room.players).filter((p) => !p.disconnected);
+  // Everyone not removed holds a seat, connected or not.
+  const taken = Object.values(room.players).filter((p) => !p.kicked).length;
   const status =
     room.status === "waiting"
       ? "In the lobby"
@@ -204,22 +224,22 @@ function RoomPreview({ preview }: { preview: Preview }) {
   return (
     <section
       aria-label="Room"
-      className="flex flex-col gap-1.5 rounded-lg border bg-card p-4"
+      className="paper-sheet rounded-sm px-5 pb-2 pt-4 dark:bg-card"
     >
-      <p className="text-title-sm font-semibold">
+      <p className="border-b-2 border-primary/70 pb-2 font-serif text-title font-bold">
         {room.engineMode?.name ?? "Custom mode"}
       </p>
-      {room.engineMode && (
-        <p className="text-body-sm text-muted-foreground">
-          {describeRoomMode(room.engineMode)}
-        </p>
-      )}
-      <p className="mt-1 flex items-center gap-2 text-body-sm text-muted-foreground">
-        <Users aria-hidden className="size-4" />
-        <span>
-          {players.length} of {room.maxPlayers} seats taken · {status}
-        </span>
-      </p>
+      <dl className="flex flex-col">
+        {room.engineMode && (
+          <CardLine label="Rules">{describeRoomMode(room.engineMode)}</CardLine>
+        )}
+        <CardLine label="Seats">
+          <span className="font-mono">{taken}</span> of{" "}
+          <span className="font-mono">{room.maxPlayers}</span> taken
+        </CardLine>
+        {hostName && <CardLine label="Host">{hostName}</CardLine>}
+        <CardLine label="Now">{status}</CardLine>
+      </dl>
     </section>
   );
 }

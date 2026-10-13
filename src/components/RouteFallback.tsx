@@ -3,7 +3,8 @@ import { BaseOdometer } from "@/components/ui/base-odometer";
 
 /**
  * Suspense / auth-loading fallback. Waits 200ms before showing anything so
- * fast navigations never flash a loader, then shows a compact odometer.
+ * fast navigations never flash a loader, then turns pages quietly: a small
+ * odometer counting in binary and hex, and one line of italic.
  */
 export default function RouteFallback({
   fullScreen = false,
@@ -31,7 +32,7 @@ export default function RouteFallback({
       <div
         className={
           show
-            ? "flex w-full max-w-[15rem] flex-col items-center gap-3 animate-in fade-in-0 duration-300"
+            ? "flex w-full max-w-[13rem] flex-col items-center gap-3 animate-in fade-in-0 duration-300"
             : "invisible"
         }
       >
@@ -40,9 +41,10 @@ export default function RouteFallback({
           bases={["bin", "hex"]}
           autoPlay={650}
           header={false}
-          className="shadow-sm"
         />
-        <p className="text-[0.75rem] text-muted-foreground">Loading…</p>
+        <p className="font-serif text-body-sm italic text-muted-foreground">
+          Turning pages…
+        </p>
       </div>
     </div>
   );

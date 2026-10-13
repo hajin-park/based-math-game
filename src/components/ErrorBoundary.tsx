@@ -1,9 +1,8 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
-import { ArrowLeft, RefreshCw } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { GridPaper } from "@/components/ui/grid-paper";
-import { Logomark } from "@/components/ui/logo";
+import { Wordmark } from "@/components/ui/logo";
 
 interface Props {
   children: ReactNode;
@@ -27,8 +26,8 @@ function isChunkLoadError(error: Error | null): boolean {
 
 /**
  * App-level error boundary (outside the router and providers, so it uses
- * plain links). Honest copy, two ways out, and no stack traces in
- * production builds.
+ * plain links): "This page didn’t print", Reload, back to the cover, and no
+ * stack traces in production builds.
  */
 class ErrorBoundary extends Component<Props, State> {
   state: State = { error: null, componentStack: null };
@@ -52,48 +51,40 @@ class ErrorBoundary extends Component<Props, State> {
     const stale = isChunkLoadError(error);
 
     return (
-      <div className="relative isolate flex min-h-dvh flex-col bg-background text-foreground">
-        <GridPaper fade />
-        <header className="container flex h-[var(--nav-h)] items-center">
-          <a
-            href="/"
-            aria-label="Based Math Game home"
-            className="-ml-1 flex items-center rounded-md p-1"
-          >
-            <Logomark />
-          </a>
+      <div className="flex min-h-dvh flex-col bg-background text-foreground">
+        <header className="border-b border-border">
+          <div className="container flex h-[var(--nav-h)] items-center justify-between">
+            <a
+              href="/"
+              aria-label="Based Math Game — the cover"
+              className="-ml-1 flex items-center rounded-sm p-1"
+            >
+              <Wordmark />
+            </a>
+            <span className="smallcaps">
+              {stale ? "New edition" : "Misprint"}
+            </span>
+          </div>
         </header>
         <main
           id="main"
-          className="container flex flex-1 flex-col justify-center gap-6 py-12"
+          className="container flex flex-1 flex-col justify-center gap-5 py-12"
         >
-          <p className="eyebrow">{stale ? "Update available" : "Error"}</p>
-          <h1 className="max-w-2xl text-display-xl font-serif font-normal text-balance [font-variation-settings:'opsz'_72]">
-            {stale ? (
-              <>
-                A new version is <em className="italic text-primary">ready</em>.
-              </>
-            ) : (
-              <>
-                Something went <em className="italic text-primary">wrong</em>.
-              </>
-            )}
+          <h1 className="max-w-[40rem] text-display-xl font-bold text-balance">
+            {stale ? "A new edition is ready." : "This page didn’t print."}
           </h1>
-          <p className="max-w-lede text-body-lg text-muted-foreground text-pretty">
+          <p className="max-w-prose text-body-lg text-muted-foreground text-pretty">
             {stale
               ? "The game was updated while this tab was open. Reload to get the latest version."
-              : "A bug stopped the page from working. Your saved runs and settings are safe. Reloading usually fixes it; if it keeps happening, let us know on GitHub."}
+              : "A bug stopped the page from working. Your saved runs and settings are safe. Reloading usually fixes it; if it keeps happening, please report it on GitHub."}
           </p>
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-3 pt-2">
             <Button size="lg" onClick={() => window.location.reload()}>
               <RefreshCw aria-hidden />
               Reload
             </Button>
             <Button asChild size="lg" variant="outline">
-              <a href="/">
-                <ArrowLeft aria-hidden />
-                Back to home
-              </a>
+              <a href="/">Back to the cover</a>
             </Button>
           </div>
           {!stale && (
@@ -113,7 +104,7 @@ class ErrorBoundary extends Component<Props, State> {
               <summary className="cursor-pointer">
                 Details (development only)
               </summary>
-              <pre className="mt-2 overflow-x-auto rounded-md border bg-sunken p-3">
+              <pre className="mt-2 overflow-x-auto border border-border-strong bg-card p-3">
                 {String(error)}
                 {componentStack}
               </pre>

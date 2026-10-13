@@ -15,6 +15,7 @@ import { minSeatsFor, roomApi, type Room } from "@/hooks/useRoom";
 import { ModePicker } from "./ModePicker";
 import { pickerValueOf, roomModeOf, type ModePickerValue } from "./modeChoice";
 import { SeatStepper } from "./SeatStepper";
+import { FIELD_LABEL, FormRow } from "./FormRow";
 
 /** Host-only: change mode, seats and visual aids between rounds. */
 export function RoomSettingsDialog({
@@ -75,31 +76,51 @@ export function RoomSettingsDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[min(52rem,92dvh)] max-w-2xl flex-col gap-0 p-0">
-        <DialogHeader className="border-b px-6 pb-4 pt-6">
+        <DialogHeader className="rule-double px-6 pb-4 pt-6">
           <DialogTitle>Room settings</DialogTitle>
           <DialogDescription>
             Changes apply to the next round for everyone.
           </DialogDescription>
         </DialogHeader>
-        <div className="flex min-h-0 flex-1 flex-col gap-8 overflow-y-auto px-6 py-6">
-          <ModePicker value={mode} onChange={setMode} />
-          <div className="grid gap-6 border-t pt-6 sm:grid-cols-2">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor={seatsId}>Seats</Label>
-              <SeatStepper
-                id={seatsId}
-                value={seats}
-                min={minSeats}
-                onChange={setSeats}
-              />
-            </div>
-            <div className="flex items-center justify-between gap-4 self-start sm:justify-start sm:pt-7">
-              <Label htmlFor={aidsId}>Visual aids</Label>
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-6 pb-2 [&>div:first-child]:border-t-0">
+          <ModePicker dense value={mode} onChange={setMode} />
+          <FormRow
+            dense
+            label={
+              <Label htmlFor={seatsId} className={FIELD_LABEL}>
+                Seats
+              </Label>
+            }
+            note={
+              minSeats > 2
+                ? `At least ${minSeats}, for the seats in use.`
+                : undefined
+            }
+          >
+            <SeatStepper
+              id={seatsId}
+              value={seats}
+              min={minSeats}
+              onChange={setSeats}
+            />
+          </FormRow>
+          <FormRow
+            dense
+            label={
+              <Label htmlFor={aidsId} className={FIELD_LABEL}>
+                Visual aids
+              </Label>
+            }
+          >
+            <div className="flex items-center gap-4">
               <Switch id={aidsId} checked={aids} onCheckedChange={setAids} />
+              <span className="text-body-sm text-muted-foreground">
+                {aids ? "Allowed" : "Off"}
+              </span>
             </div>
-          </div>
+          </FormRow>
         </div>
-        <DialogFooter className="border-t px-6 py-4">
+        <DialogFooter className="border-t border-foreground/20 px-6 py-4">
           <Button
             type="button"
             variant="ghost"

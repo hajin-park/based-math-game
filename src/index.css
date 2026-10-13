@@ -549,6 +549,18 @@
   }
 }
 
+/* Pen strokes (src/components/ui/pen-mark.tsx) reference this by name in an
+ * inline animation, so it is declared here rather than left to Tailwind's
+ * class scan. */
+@keyframes pen-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
 /* Motion off when the user asks for it. Components additionally branch on
  * useReducedMotion() for JS-driven (framer-motion) animation. */
 @media (prefers-reduced-motion: reduce) {
