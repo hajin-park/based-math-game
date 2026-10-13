@@ -184,6 +184,8 @@ export const PromptView = memo(function PromptView({
             className={cn(
               "font-serif italic text-foreground/80",
               small ? "text-body-sm" : "text-body-lg",
+              // "13" + "-bit value" reads as one word: "13-bit value".
+              part.text.startsWith("-") && (small ? "-ml-2" : "-ml-4"),
             )}
           >
             {part.text}

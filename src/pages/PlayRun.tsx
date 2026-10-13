@@ -202,7 +202,7 @@ function RunScreen({
         <div className="relative flex w-full max-w-2xl flex-col">
           {/* Graph lines only around the work, and the exercise book's
               double margin rule on wide screens. */}
-          <GridPaper fade className="-inset-x-24 opacity-80" />
+          <GridPaper fade className="-inset-x-24 opacity-50 sm:opacity-80" />
           <span
             aria-hidden
             className="pointer-events-none absolute inset-y-0 left-[calc(3.75rem+0.375rem)] hidden w-[3px] border-x border-primary/25 lg:block"

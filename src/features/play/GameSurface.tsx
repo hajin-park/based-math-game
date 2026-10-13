@@ -505,7 +505,7 @@ const LedgerLine = memo(function LedgerLine({
   return (
     <div
       aria-hidden
-      className="flex min-h-10 min-w-0 max-w-md items-center gap-x-2 overflow-hidden whitespace-nowrap text-muted-foreground"
+      className="flex min-h-10 min-w-0 max-w-md items-center gap-x-2 overflow-hidden whitespace-nowrap text-muted-foreground [mask-image:linear-gradient(to_right,#000_88%,transparent)]"
     >
       <span className="font-mono text-mono-sm tabular-nums">{n}.</span>
       <PromptView
