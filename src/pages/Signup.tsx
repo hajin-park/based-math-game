@@ -13,10 +13,7 @@ import {
   PasswordField,
 } from "@/components/auth/AuthFields";
 import { useAuth } from "@/contexts/AuthContext";
-import { DEFAULT_GAME_SETTINGS, getLocalRuns } from "@/data";
-import { getLocalSettings } from "@/data/localStore";
-import { saveUserSettings } from "@/data/profile";
-import { auth } from "@/firebase/app";
+import { getLocalRuns } from "@/data";
 import { friendlyAuthError, safeNextPath } from "@/lib/authErrors";
 import {
   DISPLAY_NAME_MAX,
@@ -25,19 +22,6 @@ import {
 
 const PASSWORD_MIN = 8;
 type Busy = null | "email" | "google";
-
-/** Guest settings live in localStorage; carry them into the new account. */
-async function carryOverGuestSettings(
-  settings: ReturnType<typeof getLocalSettings>,
-) {
-  const uid = auth.currentUser?.uid;
-  if (!uid || auth.currentUser?.isAnonymous) return;
-  const changed = (
-    Object.keys(DEFAULT_GAME_SETTINGS) as (keyof typeof settings)[]
-  ).some((k) => settings[k] !== DEFAULT_GAME_SETTINGS[k]);
-  if (!changed) return;
-  await saveUserSettings(uid, settings).catch(() => undefined);
-}
 
 export default function Signup() {
   // Google sign-in opens a popup; load its helper before the click.
@@ -102,10 +86,12 @@ export default function Signup() {
       return;
     }
     setBusy("email");
-    const settings = getLocalSettings();
     try {
+      // A real upgrade carries the guest's settings and runs over inside
+      // signUpWithEmail (finishUpgrade). If the email already has an account
+      // it signs into that account instead, and that account keeps its own
+      // settings.
       await signUpWithEmail(email.trim(), password, displayName.trim());
-      await carryOverGuestSettings(settings);
       navigate(next, { replace: true });
     } catch (err) {
       fail(err);
@@ -118,10 +104,8 @@ export default function Signup() {
     setError(null);
     setFieldErrors({});
     setBusy("google");
-    const settings = getLocalSettings();
     try {
       await signInWithGoogle();
-      await carryOverGuestSettings(settings);
       navigate(next, { replace: true });
     } catch (err) {
       fail(err);
