@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
   Check,
-  Circle,
   Crown,
   MoreHorizontal,
   Pencil,
@@ -20,11 +19,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { PenTick } from "@/components/ui/pen-mark";
 import type { Room, RoomPlayer } from "@/hooks/useRoom";
 import { cn } from "@/lib/utils";
 import { NAME_MAX, nameError } from "./names";
 import { seatOrder } from "./lobbyRules";
-import { PlayerAvatar, YouTag } from "./PlayerAvatar";
+import { YouTag } from "./PlayerAvatar";
 
 export interface PlayerListProps {
   room: Room;
@@ -35,6 +35,11 @@ export interface PlayerListProps {
   onMakeHost: (player: RoomPlayer) => void;
 }
 
+/**
+ * The class register: one ruled line per seat, numbered by the seat each
+ * player actually holds. Names, the host marked, a tick in the box when a
+ * player is ready (spoken as text), empty seats left as blank lines.
+ */
 export function PlayerList({
   room,
   myUid,
@@ -45,41 +50,85 @@ export function PlayerList({
 }: PlayerListProps) {
   const players = seatOrder(room);
   const iAmHost = room.hostUid === myUid;
+  const bySeat = new Map<number, RoomPlayer>();
+  const unseated: RoomPlayer[] = [];
+  for (const p of players) {
+    const n = Number(p.slot);
+    if (p.slot !== undefined && Number.isInteger(n) && !bySeat.has(n))
+      bySeat.set(n, p);
+    else unseated.push(p);
+  }
+  const lines = Math.max(
+    room.maxPlayers,
+    bySeat.size ? Math.max(...bySeat.keys()) + 1 : 0,
+  );
+  const seats: (RoomPlayer | undefined)[] = Array.from(
+    { length: lines },
+    (_, i) => bySeat.get(i),
+  );
+  // Legacy players without a seat fill the first blank lines.
+  for (const p of unseated) {
+    const free = seats.findIndex((x) => !x);
+    if (free === -1) seats.push(p);
+    else seats[free] = p;
+  }
+  let firstEmpty = true;
+
   return (
-    <ul className="flex flex-col divide-y rounded-lg border bg-card">
-      {players.map((p) => (
-        <PlayerRow
-          key={p.uid}
-          player={p}
-          name={names.get(p.uid) ?? p.displayName}
-          you={p.uid === myUid}
-          host={p.uid === room.hostUid}
-          canManage={iAmHost && p.uid !== myUid}
-          onRename={onRename}
-          onKick={() => onKick(p)}
-          onMakeHost={() => onMakeHost(p)}
-        />
-      ))}
-      {Array.from(
-        { length: Math.max(0, Math.min(room.maxPlayers - players.length, 2)) },
-        (_, i) => (
-          <li
-            key={`empty-${i}`}
-            className="flex min-h-14 items-center gap-3 px-3 text-body-sm text-muted-foreground sm:px-4"
-          >
-            <span
-              aria-hidden
-              className="size-9 shrink-0 rounded-full border border-dashed border-border-strong"
-            />
-            {i === 0 ? "Open seat · share the code" : "Open seat"}
-          </li>
-        ),
-      )}
-    </ul>
+    <div>
+      <div
+        aria-hidden
+        className="rule-double grid grid-cols-[2.25rem_minmax(0,1fr)_3.5rem] items-end gap-3 pb-1.5 sm:grid-cols-[2.5rem_minmax(0,1fr)_4rem]"
+      >
+        <span className="smallcaps">No.</span>
+        <span className="smallcaps">Name</span>
+        <span className="smallcaps text-center">Ready</span>
+      </div>
+      <ol aria-label="Seats">
+        {seats.map((p, i) => {
+          if (p)
+            return (
+              <PlayerRow
+                key={p.uid}
+                seat={i + 1}
+                player={p}
+                name={names.get(p.uid) ?? p.displayName}
+                you={p.uid === myUid}
+                host={p.uid === room.hostUid}
+                canManage={iAmHost && p.uid !== myUid}
+                onRename={onRename}
+                onKick={() => onKick(p)}
+                onMakeHost={() => onMakeHost(p)}
+              />
+            );
+          const hint = firstEmpty;
+          firstEmpty = false;
+          return (
+            <li
+              key={`empty-${i}`}
+              className="grid min-h-12 grid-cols-[2.25rem_minmax(0,1fr)_3.5rem] items-center gap-3 border-b border-primary/20 sm:grid-cols-[2.5rem_minmax(0,1fr)_4rem]"
+            >
+              <span className="font-mono text-[0.9375rem] text-muted-foreground/70">
+                {i + 1}
+              </span>
+              <span className="font-serif text-body-sm italic text-muted-foreground">
+                {hint ? (
+                  "Empty seat · share the code"
+                ) : (
+                  <span className="sr-only">Empty seat</span>
+                )}
+              </span>
+              <span />
+            </li>
+          );
+        })}
+      </ol>
+    </div>
   );
 }
 
 function PlayerRow({
+  seat,
   player,
   name,
   you,
@@ -89,6 +138,7 @@ function PlayerRow({
   onKick,
   onMakeHost,
 }: {
+  seat: number;
   player: RoomPlayer;
   name: string;
   you: boolean;
@@ -103,114 +153,134 @@ function PlayerRow({
 
   return (
     <li
-      className={cn(
-        "flex min-h-14 items-center gap-3 px-3 py-2 sm:px-4",
-        you && "bg-primary/[0.035]",
-      )}
+      className="grid min-h-12 grid-cols-[2.25rem_minmax(0,1fr)_3.5rem] items-center gap-3 border-b border-primary/20 py-1 sm:grid-cols-[2.5rem_minmax(0,1fr)_4rem]"
       data-player={player.uid}
     >
-      <PlayerAvatar name={name} you={you} muted={away} />
+      <span className="font-mono text-[0.9375rem] text-primary">
+        <span className="sr-only">Seat </span>
+        {seat}
+      </span>
       {editing ? (
-        <NameEditor
-          initial={player.displayName}
-          onCancel={() => setEditing(false)}
-          onSave={async (n) => {
-            await onRename(n);
-            setEditing(false);
-          }}
-        />
+        <div className="col-span-2">
+          <NameEditor
+            initial={player.displayName}
+            onCancel={() => setEditing(false)}
+            onSave={async (n) => {
+              await onRename(n);
+              setEditing(false);
+            }}
+          />
+        </div>
       ) : (
         <>
-          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-            <span className="flex min-w-0 items-center gap-2">
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="flex min-w-0 flex-wrap items-baseline gap-x-2.5 gap-y-0.5">
               <span
                 className={cn(
-                  "truncate text-[0.9375rem] font-medium",
-                  away && "text-muted-foreground",
+                  "truncate font-serif text-[1.0625rem] font-bold leading-snug",
+                  you && "highlighter",
+                  away && "font-medium text-muted-foreground",
                 )}
               >
                 {name}
               </span>
               {you && <YouTag />}
-            </span>
-            <span className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[0.8125rem] text-muted-foreground">
               {host && (
-                <span className="inline-flex items-center gap-1 text-foreground">
-                  <Crown aria-hidden className="size-3.5" />
-                  Host
+                <span className="font-serif text-[0.9375rem] font-medium tracking-[0.06em] text-foreground [font-variant-caps:all-small-caps]">
+                  host
                 </span>
               )}
-              <PlayerState player={player} host={host} />
+              {away && (
+                <span className="inline-flex items-center gap-1 font-sans text-[0.8125rem] text-warning">
+                  <WifiOff aria-hidden className="size-3.5" />
+                  Disconnected
+                </span>
+              )}
             </span>
-          </div>
-          {you && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              onClick={() => setEditing(true)}
-              aria-label="Change your name"
-              className="text-muted-foreground"
-            >
-              <Pencil aria-hidden />
-            </Button>
-          )}
-          {canManage && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
+            <span className="ml-auto flex shrink-0 items-center">
+              {you && (
                 <Button
                   type="button"
                   variant="ghost"
-                  size="icon-sm"
-                  aria-label={`Manage ${name}`}
-                  className="text-muted-foreground"
+                  size="sm"
+                  onClick={() => setEditing(true)}
+                  aria-label="Change your name"
+                  className="px-2 text-muted-foreground"
                 >
-                  <MoreHorizontal aria-hidden />
+                  <Pencil aria-hidden />
+                  <span aria-hidden className="hidden sm:inline">
+                    Rename
+                  </span>
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="min-w-48">
-                <DropdownMenuLabel className="truncate">
-                  {name}
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={onMakeHost} disabled={away}>
-                  <Crown aria-hidden />
-                  Make host
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onSelect={onKick}
-                  className="text-destructive focus:text-destructive"
-                >
-                  <UserMinus aria-hidden />
-                  Remove from room
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
+              )}
+              {canManage && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      aria-label={`Manage ${name}`}
+                      className="px-2 text-muted-foreground"
+                    >
+                      <MoreHorizontal aria-hidden className="sm:hidden" />
+                      <span aria-hidden className="hidden sm:inline">
+                        Manage
+                      </span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="min-w-48">
+                    <DropdownMenuLabel className="truncate">
+                      {name}
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onSelect={onMakeHost} disabled={away}>
+                      <Crown aria-hidden />
+                      Make host
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onSelect={onKick}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <UserMinus aria-hidden />
+                      Remove from room
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </span>
+          </div>
+          <ReadyBox player={player} host={host} />
         </>
       )}
     </li>
   );
 }
 
-function PlayerState({ player, host }: { player: RoomPlayer; host: boolean }) {
-  if (player.disconnected)
+/**
+ * The ready column: a ruled box the tick goes in. The host never readies.
+ *
+ * PenTick draws with an inline `pen-draw` animation, but Tailwind only emits
+ * `@keyframes pen-draw` when the class name animate-pen-draw appears in the
+ * source; naming it here keeps the keyframes in the build (without them the
+ * stroke stays at its start and the tick never shows).
+ */
+function ReadyBox({ player, host }: { player: RoomPlayer; host: boolean }) {
+  if (host)
     return (
-      <span className="inline-flex items-center gap-1 text-warning">
-        <WifiOff aria-hidden className="size-3.5" />
-        Disconnected
+      <span className="text-center font-sans text-[0.75rem] text-muted-foreground">
+        <span aria-hidden>—</span>
+        <span className="sr-only">Host, starts the round</span>
       </span>
     );
-  if (host) return null;
-  return player.ready ? (
-    <span className="inline-flex items-center gap-1 text-success">
-      <Check aria-hidden className="size-3.5" />
-      Ready
-    </span>
-  ) : (
-    <span className="inline-flex items-center gap-1">
-      <Circle aria-hidden className="size-3" />
-      Not ready
+  return (
+    <span className="flex justify-center">
+      <span className="relative flex size-6 items-center justify-center border border-foreground/40">
+        {player.ready && (
+          <PenTick className="absolute -right-1 -top-2 size-7" />
+        )}
+      </span>
+      <span className="sr-only">{player.ready ? "Ready" : "Not ready"}</span>
     </span>
   );
 }

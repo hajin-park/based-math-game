@@ -3,6 +3,8 @@ import { Segmented } from "@/components/ui/segmented";
 import { TIERS, topicsInTier, type Tier } from "@/game";
 import { cn } from "@/lib/utils";
 import { CustomModeBuilder } from "@/features/play/CustomModeBuilder";
+import { TopicExample } from "@/features/play/TopicExample";
+import { FIELD_LABEL, FormRow } from "./FormRow";
 import {
   DEFAULT_ROOM_CUSTOM,
   type ModePickerValue,
@@ -43,18 +45,19 @@ const FORMAT_OPTIONS: { value: RoomFormat; label: ReactNode; hint: string }[] =
 type CustomTiming = "sprint" | "speedrun";
 
 /**
- * Compact mode picker for rooms: a format switch and a topic list built from
- * the engine catalog (native radios, so arrow keys and screen readers work).
- * Practice and daily are not room formats.
+ * Mode picker for rooms, printed as worksheet rows: a format switch, then the
+ * drill list from the engine catalog laid out like a contents page (native
+ * radios, so arrow keys and screen readers work). Practice and daily are not
+ * room formats. `dense` narrows the label column (settings dialog).
  */
 export function ModePicker({
   value,
   onChange,
-  className,
+  dense,
 }: {
   value: ModePickerValue;
   onChange: (value: ModePickerValue) => void;
-  className?: string;
+  dense?: boolean;
 }) {
   const uid = useId();
   const survival = value.format === "survival";
@@ -73,29 +76,40 @@ export function ModePicker({
   const hint = FORMAT_OPTIONS.find((o) => o.value === value.format)?.hint;
 
   return (
-    <div className={cn("flex flex-col gap-6", className)}>
-      <div className="flex flex-col gap-2">
-        <span id={`${uid}-format`} className="text-label font-medium">
-          Format
-        </span>
-        <Segmented
-          id={`${uid}-seg`}
-          aria-label="Format"
-          size="lg"
-          fullWidth
-          // Four formats must fit a 320px screen without scrolling.
-          className="max-xs:[&>button]:px-1.5 max-xs:[&>button]:text-label"
-          value={value.format}
-          onValueChange={(format) => onChange({ ...value, format })}
-          options={FORMAT_OPTIONS.map(({ value, label }) => ({ value, label }))}
-        />
-        <p className="text-body-sm text-muted-foreground">{hint}</p>
-      </div>
+    <>
+      <FormRow
+        dense={dense}
+        label={
+          <span id={`${uid}-format`} className={FIELD_LABEL}>
+            Format
+          </span>
+        }
+      >
+        <div className="flex flex-col gap-2.5">
+          <Segmented
+            id={`${uid}-seg`}
+            aria-label="Format"
+            size="lg"
+            fullWidth
+            // Four formats must fit a 320px screen without scrolling.
+            className="max-xs:[&>button]:px-1.5 max-xs:[&>button]:text-label"
+            value={value.format}
+            onValueChange={(format) => onChange({ ...value, format })}
+            options={FORMAT_OPTIONS.map(({ value, label }) => ({
+              value,
+              label,
+            }))}
+          />
+          <p className="text-body-sm text-muted-foreground">{hint}</p>
+        </div>
+      </FormRow>
 
       {isCustom ? (
-        <div className="flex flex-col gap-5">
-          <div className="flex flex-col gap-2">
-            <span className="text-label font-medium">Timing</span>
+        <>
+          <FormRow
+            dense={dense}
+            label={<span className={FIELD_LABEL}>Timing</span>}
+          >
             <Segmented
               aria-label="Custom drill timing"
               value={timing}
@@ -105,102 +119,123 @@ export function ModePicker({
                 { value: "speedrun", label: "Race to 15" },
               ]}
             />
-          </div>
-          <CustomModeBuilder
-            hideFormat
-            value={custom}
-            onChange={(next) => onChange({ ...value, custom: next })}
-          />
-        </div>
-      ) : (
-        <fieldset
-          disabled={survival}
-          aria-describedby={survival ? `${uid}-survival` : undefined}
-          className="flex min-w-0 flex-col gap-3"
-        >
-          <legend className="mb-2 text-label font-medium">Topic</legend>
-          {survival && (
-            <p
-              id={`${uid}-survival`}
-              className="-mt-1 rounded-md border border-dashed px-3 py-2.5 text-body-sm text-muted-foreground"
-            >
-              Survival plays every topic in order, so there is nothing to pick.
-            </p>
-          )}
-          <div
-            className={cn(
-              "flex flex-col gap-5",
-              survival && "pointer-events-none opacity-45",
-            )}
+          </FormRow>
+          <FormRow
+            dense={dense}
+            label={<span className={FIELD_LABEL}>Drill</span>}
+            note="Your own conversions and number ranges."
           >
-            {TIERS.map((tier) => {
-              const topics = topicsInTier(tier).filter(
-                (t) => t.id !== "custom",
-              );
-              if (!topics.length) return null;
-              return (
-                <div key={tier} className="flex flex-col gap-1.5">
-                  <p className="eyebrow" aria-hidden>
-                    {TIER_LABEL[tier]}
-                  </p>
-                  <div className="grid grid-cols-1 gap-1.5 md:grid-cols-2">
-                    {topics.map((topic) => {
-                      const checked = !survival && value.topicId === topic.id;
-                      return (
-                        <label
-                          key={topic.id}
-                          className={cn(
-                            "group relative flex min-h-12 cursor-pointer items-start gap-3 rounded-md border bg-card px-3 py-2.5",
-                            "transition-[border-color,background-color] duration-fast",
-                            "hover:border-border-strong has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ring",
-                            checked &&
-                              "border-primary/60 bg-primary/[0.05] hover:border-primary/60",
-                          )}
-                        >
-                          <input
-                            type="radio"
-                            name={`${uid}-topic`}
-                            value={topic.id}
-                            checked={checked}
-                            onChange={() =>
-                              onChange({ ...value, topicId: topic.id })
-                            }
-                            className="sr-only"
-                          />
-                          <span
-                            aria-hidden
+            <CustomModeBuilder
+              hideFormat
+              value={custom}
+              onChange={(next) => onChange({ ...value, custom: next })}
+            />
+          </FormRow>
+        </>
+      ) : (
+        <FormRow
+          dense={dense}
+          label={
+            <span aria-hidden className={FIELD_LABEL}>
+              Drill
+            </span>
+          }
+        >
+          <fieldset
+            disabled={survival}
+            aria-describedby={survival ? `${uid}-survival` : undefined}
+            className="flex min-w-0 flex-col gap-4"
+          >
+            <legend className="sr-only">Drill</legend>
+            {survival && (
+              <p
+                id={`${uid}-survival`}
+                className="bg-tint px-4 py-3 text-body-sm"
+              >
+                <span className="mr-2 font-serif font-medium tracking-[0.05em] text-primary [font-variant-caps:all-small-caps]">
+                  Note
+                </span>
+                Survival plays every topic in order, so there is nothing to
+                pick.
+              </p>
+            )}
+            <div
+              className={cn(
+                "flex flex-col gap-5",
+                survival && "pointer-events-none opacity-45",
+              )}
+            >
+              {TIERS.map((tier) => {
+                const topics = topicsInTier(tier).filter(
+                  (t) => t.id !== "custom",
+                );
+                if (!topics.length) return null;
+                return (
+                  <div key={tier} className="flex flex-col">
+                    <p
+                      aria-hidden
+                      className="smallcaps border-b border-foreground/25 pb-1"
+                    >
+                      {TIER_LABEL[tier]}
+                    </p>
+                    <div className="flex flex-col">
+                      {topics.map((topic) => {
+                        const checked = !survival && value.topicId === topic.id;
+                        return (
+                          <label
+                            key={topic.id}
                             className={cn(
-                              "mt-1 flex size-4 shrink-0 items-center justify-center rounded-full border border-input",
-                              checked && "border-primary",
+                              "group relative grid min-h-12 cursor-pointer grid-cols-[1.25rem_minmax(0,1fr)] items-start gap-x-3 gap-y-1 border-b border-foreground/10 px-2 py-2.5 sm:grid-cols-[1.25rem_minmax(0,1fr)_auto]",
+                              "transition-colors duration-fast hover:bg-accent",
+                              "has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:-outline-offset-2 has-[:focus-visible]:outline-ring",
+                              checked && "bg-tint hover:bg-tint",
                             )}
                           >
-                            {checked && (
-                              <span className="size-2 rounded-full bg-primary" />
-                            )}
-                          </span>
-                          <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                            <span className="flex flex-wrap items-baseline justify-between gap-x-3">
-                              <span className="text-[0.9375rem] font-medium">
+                            <input
+                              type="radio"
+                              name={`${uid}-topic`}
+                              value={topic.id}
+                              checked={checked}
+                              onChange={() =>
+                                onChange({ ...value, topicId: topic.id })
+                              }
+                              className="sr-only"
+                            />
+                            {/* An answer bubble, filled in when chosen. */}
+                            <span
+                              aria-hidden
+                              className={cn(
+                                "mt-[0.3rem] flex size-4 shrink-0 items-center justify-center rounded-full border-[1.5px] border-foreground/55",
+                                checked && "border-foreground",
+                              )}
+                            >
+                              {checked && (
+                                <span className="size-2 rounded-full bg-foreground" />
+                              )}
+                            </span>
+                            <span className="flex min-w-0 flex-col gap-0.5">
+                              <span className="font-serif text-[1.0625rem] font-bold leading-snug">
                                 {topic.name}
                               </span>
-                              <span className="truncate font-mono text-[0.75rem] text-muted-foreground">
-                                {topic.example}
+                              <span className="text-body-sm text-muted-foreground">
+                                {topic.summary}
                               </span>
                             </span>
-                            <span className="text-body-sm text-muted-foreground">
-                              {topic.summary}
-                            </span>
-                          </span>
-                        </label>
-                      );
-                    })}
+                            <TopicExample
+                              topicId={topic.id}
+                              className="col-start-2 gap-x-1.5 text-[0.8125rem] max-sm:flex-wrap max-sm:whitespace-normal sm:col-start-3 sm:row-start-1 sm:mt-1 sm:justify-self-end"
+                            />
+                          </label>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        </fieldset>
+                );
+              })}
+            </div>
+          </fieldset>
+        </FormRow>
       )}
-    </div>
+    </>
   );
 }
