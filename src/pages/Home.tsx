@@ -171,14 +171,22 @@ export default function Home() {
   ];
 
   return (
-    <div className="[perspective:2400px]">
+    <div className="overflow-hidden [perspective:2200px]">
       <section
         aria-labelledby="cover-title"
         className={cn(
           "book-cloth relative isolate flex min-h-dvh flex-col overflow-hidden text-cover-foreground",
-          "origin-left transition-[transform,opacity] duration-[520ms] ease-[cubic-bezier(0.55,0,0.35,1)] [backface-visibility:hidden] [transform-style:preserve-3d]",
-          opening && "[transform:rotateY(-88deg)] opacity-60",
+          "origin-left [backface-visibility:hidden]",
         )}
+        style={
+          opening
+            ? {
+                transform: "rotateY(-84deg)",
+                opacity: 0.5,
+                transition: `transform ${OPEN_MS}ms cubic-bezier(0.55, 0, 0.3, 1), opacity ${OPEN_MS}ms ease-in`,
+              }
+            : undefined
+        }
       >
         {/* Spine */}
         <div
