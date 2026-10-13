@@ -14,7 +14,9 @@ import {
   runClock,
   runReducer,
   runSummary,
+  snapshotRun,
   type RunReveal,
+  type RunSnapshot,
   type RunStatus,
 } from "./run";
 import type { GameMode, Question, QuestionOutcome, RunSummary } from "./types";
@@ -31,6 +33,12 @@ export interface UseRunOptions {
   autoStart?: boolean;
   /** Ticker interval in ms (default 100). */
   tickMs?: number;
+  /**
+   * Mount already running: the run began at `startedAt` (Date.now() clock)
+   * and continues from `snapshot` (null = nothing answered yet). Read once,
+   * on mount; used to pick a multiplayer round back up after a reload.
+   */
+  resume?: { snapshot: RunSnapshot | null; startedAt: number } | null;
 }
 
 export interface UseRunResult {
@@ -76,7 +84,10 @@ export interface UseRunResult {
   summary: RunSummary | null;
   /** Effective seed (daily: the date seed). */
   seed: number;
-  start: () => void;
+  /** Compact record of the run so far (null before start), for resuming. */
+  snapshot: RunSnapshot | null;
+  /** Start now; `elapsedMs` > 0 when the run officially began that long ago. */
+  start: (elapsedMs?: number) => void;
   /** End the run now. Only practice counts an early finish as completed. */
   finish: () => void;
   /** Throw away the current run and get ready to start a new one with the same mode and seed. */
@@ -92,10 +103,20 @@ export function useRun({
   paused = false,
   autoStart = false,
   tickMs = 100,
+  resume = null,
 }: UseRunOptions): UseRunResult {
-  const [state, dispatch] = useReducer(runReducer, undefined, () =>
-    createRunState(mode, seed),
-  );
+  const [state, dispatch] = useReducer(runReducer, undefined, () => {
+    const fresh = createRunState(mode, seed);
+    if (!resume) return fresh;
+    const wall = Date.now();
+    return runReducer(fresh, {
+      type: "restore",
+      snapshot: resume.snapshot,
+      now: now(),
+      wall,
+      elapsedMs: wall - resume.startedAt,
+    });
+  });
 
   // Reset when the mode (including a custom config) or seed changes.
   const key = `${mode.id}|${seed}|${mode.custom ? JSON.stringify(mode.custom) : ""}`;
@@ -145,6 +166,44 @@ export function useRun({
     [state],
   );
 
+  // Changes only when progress does (not on every clock tick).
+  const {
+    status,
+    outcomes,
+    questionShownAt,
+    input,
+    keystrokes,
+    deletions,
+    finishedAt,
+    endedAt,
+    completed,
+  } = state;
+  const snapshot = useMemo(
+    () =>
+      snapshotRun({
+        status,
+        outcomes,
+        questionShownAt,
+        input,
+        keystrokes,
+        deletions,
+        finishedAt,
+        endedAt,
+        completed,
+      }),
+    [
+      status,
+      outcomes,
+      questionShownAt,
+      input,
+      keystrokes,
+      deletions,
+      finishedAt,
+      endedAt,
+      completed,
+    ],
+  );
+
   const onFinishRef = useRef(onFinish);
   useEffect(() => {
     onFinishRef.current = onFinish;
@@ -171,7 +230,15 @@ export function useRun({
     () => dispatch({ type: "skip", now: now(), wall: Date.now() }),
     [],
   );
-  const start = useCallback(() => dispatch({ type: "start", now: now() }), []);
+  const start = useCallback(
+    (elapsedMs?: number) =>
+      dispatch({
+        type: "start",
+        now: now(),
+        elapsedMs: typeof elapsedMs === "number" ? elapsedMs : undefined,
+      }),
+    [],
+  );
   const finish = useCallback(
     () => dispatch({ type: "finish", now: now(), wall: Date.now() }),
     [],
@@ -208,6 +275,7 @@ export function useRun({
     dismissReveal,
     summary,
     seed: state.seed,
+    snapshot,
     start,
     finish,
     reset,
