@@ -96,15 +96,13 @@ export function GameView({
       confirm: "End round",
       destructive: true,
       onConfirm: () =>
-        roomApi
-          .endRound(room.id)
-          .catch(() =>
-            toast({
-              variant: "destructive",
-              title: "Round not ended",
-              description: "Try again.",
-            }),
-          ),
+        roomApi.endRound(room.id).catch(() =>
+          toast({
+            variant: "destructive",
+            title: "Round not ended",
+            description: "Try again.",
+          }),
+        ),
     });
 
   // Phones and tablets: a compact strip right under the timer, so live scores
