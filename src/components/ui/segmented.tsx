@@ -29,7 +29,7 @@ export interface SegmentedProps<T extends string = string> {
 }
 
 const sizes = {
-  sm: "h-8 text-[0.75rem] px-2.5",
+  sm: "h-8 text-[0.8125rem] px-2.5",
   md: "h-9 text-label px-3",
   lg: "h-11 text-[0.9375rem] px-4",
 };
@@ -105,7 +105,7 @@ function Segmented<T extends string = string>({
       role="radiogroup"
       aria-label={aria["aria-label"]}
       className={cn(
-        "relative inline-flex max-w-full items-center gap-0.5 overflow-x-auto rounded-lg border bg-sunken/70 p-0.5",
+        "relative inline-flex max-w-full items-stretch overflow-x-auto rounded-sm border border-foreground/40 bg-card/60 p-[3px] gap-[3px] dark:bg-transparent",
         fullWidth && "flex w-full",
         className,
       )}
@@ -128,19 +128,19 @@ function Segmented<T extends string = string>({
             onClick={() => onValueChange(option.value)}
             onKeyDown={(e) => onKeyDown(e, index)}
             className={cn(
-              "relative inline-flex shrink-0 select-none items-center justify-center gap-1.5 whitespace-nowrap rounded-md font-medium transition-colors duration-fast ease-out focus-visible:outline-offset-0 disabled:pointer-events-none disabled:opacity-40 pointer-coarse:min-h-11 [&_svg]:size-4",
+              "relative inline-flex shrink-0 select-none items-center justify-center gap-1.5 whitespace-nowrap rounded-[1px] font-sans font-medium transition-colors duration-fast ease-out focus-visible:outline-offset-0 disabled:pointer-events-none disabled:opacity-40 pointer-coarse:min-h-11 [&_svg]:size-4",
               sizes[size],
               fullWidth && "flex-1",
               selected
-                ? "text-foreground"
-                : "text-muted-foreground hover:text-foreground",
+                ? "font-bold text-background"
+                : "text-muted-foreground hover:bg-accent hover:text-foreground",
             )}
           >
             {selected && (
               <m.span
                 layoutId={reduce ? undefined : layoutId}
                 aria-hidden
-                className="absolute inset-0 rounded-md bg-card shadow-[0_0_0_1px_rgb(var(--border)),0_1px_2px_rgb(var(--shadow)/0.08)]"
+                className="absolute inset-0 rounded-[1px] bg-foreground"
                 transition={{ type: "spring", stiffness: 520, damping: 40 }}
               />
             )}

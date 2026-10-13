@@ -76,7 +76,7 @@ const Meter = React.forwardRef<HTMLDivElement, MeterProps>(
           : "primary");
 
     const header = showLabel && (
-      <div className="mb-1.5 flex items-baseline justify-between gap-3 text-[0.75rem]">
+      <div className="mb-1.5 flex items-baseline justify-between gap-3 font-sans text-[0.8125rem]">
         <span className="text-muted-foreground">{label}</span>
         <span className="font-mono tabular-nums text-foreground">
           {display ?? `${clamped}/${max}`}
@@ -101,7 +101,7 @@ const Meter = React.forwardRef<HTMLDivElement, MeterProps>(
               <span
                 key={i}
                 className={cn(
-                  "flex-1 rounded-full transition-colors duration-base",
+                  "flex-1 rounded-[1px] transition-colors duration-base",
                   heights[size],
                   i < clamped ? toneBg[resolvedTone] : "bg-foreground/[0.08]",
                 )}
@@ -123,13 +123,13 @@ const Meter = React.forwardRef<HTMLDivElement, MeterProps>(
           aria-valuenow={clamped}
           aria-valuetext={valueText ?? `${clamped} of ${max}`}
           className={cn(
-            "relative w-full overflow-hidden rounded-full bg-foreground/[0.08]",
+            "relative w-full overflow-hidden rounded-[1px] bg-foreground/[0.1]",
             heights[size],
           )}
         >
           <div
             className={cn(
-              "absolute inset-0 origin-left rounded-full transition-[transform,background-color] ease-linear",
+              "absolute inset-0 origin-left transition-[transform,background-color] ease-linear",
               variant === "timer" ? "duration-1000" : "duration-slow ease-out",
               toneBg[resolvedTone],
             )}
