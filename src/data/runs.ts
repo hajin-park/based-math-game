@@ -17,6 +17,7 @@ import {
   getLocalRuns,
 } from "./localStore";
 import { applyRunToStats, emptyStats, orderForRun, sanitizeRun } from "./stats";
+import { serverClockOffset, toServerTime } from "./serverClock";
 import { isImprovement } from "./limits";
 import type {
   RunRecord,
@@ -31,6 +32,21 @@ export function runsCollection(uid: string) {
 
 export function statsRef(uid: string) {
   return doc(firestore, "userStats", uid);
+}
+
+/**
+ * The run with `endedAt` moved onto the server clock, never later than the
+ * server's "now" (a run cannot end in the future).
+ */
+function onServerClock<T extends { endedAt: number }>(
+  run: T,
+  offsetMs: number,
+): T {
+  const serverNow = toServerTime(Date.now(), offsetMs);
+  return {
+    ...run,
+    endedAt: Math.min(toServerTime(run.endedAt, offsetMs), serverNow),
+  };
 }
 
 function newLocalId(): string {
@@ -51,19 +67,22 @@ function newLocalId(): string {
  *   a rejected leaderboard write never loses the run).
  * - Guests (anonymous or not signed in): stored in localStorage (last 50).
  *
+ * Cloud runs are stamped in server time (see serverClock.ts), so a device
+ * whose clock runs fast still saves.
+ *
  * Accepts the engine's `RunSummary` directly (extra fields are ignored).
  */
 export async function saveRun(
   summary: RunSummaryInput,
 ): Promise<SaveRunResult> {
-  const run = sanitizeRun(summary);
+  const localRun = sanitizeRun(summary);
   const user = auth.currentUser;
 
   if (!user || user.isAnonymous) {
     const before = computeLocalStats(getLocalRuns());
-    const { personalBest } = applyRunToStats(before, run);
+    const { personalBest } = applyRunToStats(before, localRun);
     const id = newLocalId();
-    addLocalRun({ ...run, id });
+    addLocalRun({ ...localRun, id });
     return {
       storedIn: "local",
       runId: id,
@@ -72,6 +91,8 @@ export async function saveRun(
     };
   }
 
+  const offset = await serverClockOffset(user);
+  const run = onServerClock(localRun, offset);
   const runRef = doc(runsCollection(user.uid));
   const sRef = statsRef(user.uid);
   let personalBest = false;
@@ -106,8 +127,11 @@ export async function importLocalRuns(user: User): Promise<number> {
     const sRef = statsRef(user.uid);
     const snap = await getDoc(sRef);
     let stats = snap.exists() ? (snap.data() as UserStatsDoc) : emptyStats();
+    const offset = await serverClockOffset(user);
     const batch = writeBatch(firestore);
-    const oldestFirst = [...local].reverse();
+    const oldestFirst = [...local]
+      .reverse()
+      .map((record) => onServerClock(record, offset));
     for (const record of oldestFirst) {
       const run = sanitizeRun(record);
       stats = applyRunToStats(stats, run).stats;

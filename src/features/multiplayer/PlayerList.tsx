@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
+  Armchair,
   Check,
   Crown,
   MoreHorizontal,
@@ -31,7 +32,10 @@ export interface PlayerListProps {
   myUid: string;
   names: Map<string, string>;
   onRename: (name: string) => Promise<void>;
+  /** Remove and ban (they can't rejoin with this code). */
   onKick: (player: RoomPlayer) => void;
+  /** Disconnected players only: open their seat without a ban. */
+  onFreeSeat: (player: RoomPlayer) => void;
   onMakeHost: (player: RoomPlayer) => void;
 }
 
@@ -46,6 +50,7 @@ export function PlayerList({
   names,
   onRename,
   onKick,
+  onFreeSeat,
   onMakeHost,
 }: PlayerListProps) {
   const players = seatOrder(room);
@@ -98,6 +103,7 @@ export function PlayerList({
                 canManage={iAmHost && p.uid !== myUid}
                 onRename={onRename}
                 onKick={() => onKick(p)}
+                onFreeSeat={() => onFreeSeat(p)}
                 onMakeHost={() => onMakeHost(p)}
               />
             );
@@ -136,6 +142,7 @@ function PlayerRow({
   canManage,
   onRename,
   onKick,
+  onFreeSeat,
   onMakeHost,
 }: {
   seat: number;
@@ -146,6 +153,7 @@ function PlayerRow({
   canManage: boolean;
   onRename: (name: string) => Promise<void>;
   onKick: () => void;
+  onFreeSeat: () => void;
   onMakeHost: () => void;
 }) {
   const [editing, setEditing] = useState(false);
@@ -238,6 +246,14 @@ function PlayerRow({
                       <Crown aria-hidden />
                       Make host
                     </DropdownMenuItem>
+                    {/* Away: open the seat but let them back in later. */}
+                    {away && (
+                      <DropdownMenuItem onSelect={onFreeSeat}>
+                        <Armchair aria-hidden />
+                        Free seat
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onSelect={onKick}
                       className="text-destructive focus:text-destructive"

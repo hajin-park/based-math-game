@@ -247,6 +247,9 @@ const rules = {
         },
 
         // Seats bound the room to maxPlayers (RTDB rules cannot count children).
+        // Besides its holder, only the host frees a seat: with a kick (a ban),
+        // or, for a player marked disconnected, together with their node and
+        // without a ban, so they can rejoin while a seat is free.
         slots: {
           $slot: {
             ".write": x(`auth != null && (
@@ -255,6 +258,9 @@ const rules = {
                   && !${ROOM_POST_FROM_GRANDCHILD}.child('players').child(auth.uid).exists())
               || (!newData.exists() && ${isHost(ROOM_PRE_FROM_GRANDCHILD)}
                   && ${ROOM_POST_FROM_GRANDCHILD}.child('kicked').child(data.val()).val() === true)
+              || (!newData.exists() && ${isHost(ROOM_PRE_FROM_GRANDCHILD)} && data.val() !== auth.uid
+                  && ${ROOM_PRE_FROM_GRANDCHILD}.child('players').child(data.val()).child('disconnected').val() === true
+                  && !${ROOM_POST_FROM_GRANDCHILD}.child('players').child(data.val()).exists())
             )`),
             ".validate": x(`newData.isString() && newData.val() === auth.uid
               && ${slotBelowMax}
@@ -278,6 +284,9 @@ const rules = {
                 || ${ROOM_POST_FROM_GRANDCHILD}.child('slots').child(data.child('slot').val()).val() !== auth.uid))
               || (!newData.exists() && ${isHost(ROOM_PRE_FROM_GRANDCHILD)}
                   && ${ROOM_POST_FROM_GRANDCHILD}.child('kicked').child($uid).val() === true)
+              || (!newData.exists() && ${isHost(ROOM_PRE_FROM_GRANDCHILD)} && $uid !== auth.uid
+                  && data.child('disconnected').val() === true
+                  && ${ROOM_POST_FROM_GRANDCHILD}.child('slots').child(data.child('slot').val()).val() !== $uid)
             )`),
             ".validate":
               x(`newData.hasChildren(['uid', 'displayName', 'slot', 'ready', 'score', 'correct', 'finished', 'wins'])

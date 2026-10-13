@@ -79,7 +79,8 @@ export function useRoomState(
         if (
           e.kind === "reconnected" ||
           e.kind === "left" ||
-          e.kind === "removed"
+          e.kind === "removed" ||
+          e.kind === "freed"
         ) {
           const pending = pendingDrops.get(e.uid);
           if (pending !== undefined) {
