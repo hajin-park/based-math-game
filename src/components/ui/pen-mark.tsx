@@ -114,13 +114,12 @@ export function PenCircle({
         preserveAspectRatio="none"
         aria-hidden
         focusable="false"
-        className="pointer-events-none absolute -inset-x-[14%] -inset-y-[22%] h-[144%] w-[128%] overflow-visible"
+        className="pointer-events-none absolute -inset-x-[14%] -inset-y-[22%] h-[144%] w-[128%] max-w-none overflow-visible"
       >
         <path
           d="M64 9C35 6.5 9.5 17 7.6 39.5 5.8 61 33 73.5 63 72.5 92 71.6 114.5 58 112.6 37 110.9 18.4 86 7.3 58.6 8.9 46 9.7 37.4 12.6 31 16.8"
           pathLength={1}
           strokeWidth={strokeWidth}
-          vectorEffect="non-scaling-stroke"
           className={strokeBase}
           style={drawStyle(animate, delay, 560)}
         />
@@ -149,13 +148,12 @@ export function PenUnderline({
         preserveAspectRatio="none"
         aria-hidden
         focusable="false"
-        className="pointer-events-none absolute -bottom-[0.28em] left-[-2%] h-[0.42em] w-[104%] overflow-visible"
+        className="pointer-events-none absolute -bottom-[0.28em] left-[-2%] h-[0.42em] w-[104%] max-w-none overflow-visible"
       >
         <path
           d="M2 5.2C24 3.4 52 2.6 98 3.6"
           pathLength={1}
           strokeWidth={2.2}
-          vectorEffect="non-scaling-stroke"
           className={strokeBase}
           style={drawStyle(animate, delay, 300)}
         />
