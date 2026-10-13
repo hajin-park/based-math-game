@@ -123,14 +123,18 @@ export default function Daily() {
               <div className="flex flex-col gap-3">
                 <p className="flex flex-wrap items-center gap-x-5 gap-y-2">
                   <span className="sr-only">Your time: </span>
-                  <PenCircle className="-ml-[0.32em]">
-                    <span className="font-mono text-mono-2xl font-medium tabular-nums">
-                      {(first.score / 1000).toFixed(2)}
-                      <span className="ml-1 font-sans text-body text-muted-foreground">
-                        s
+                  <span className="inline-flex items-baseline">
+                    {/* Static mark: the pen-draw keyframes are not emitted
+                        by the frozen Tailwind config (reported). */}
+                    <PenCircle animate={false} className="-ml-[0.32em]">
+                      <span className="font-mono text-mono-2xl font-medium tabular-nums">
+                        {(first.score / 1000).toFixed(2)}
                       </span>
+                    </PenCircle>
+                    <span className="ml-2 font-sans text-body text-muted-foreground">
+                      s
                     </span>
-                  </PenCircle>
+                  </span>
                   <span className="font-sans text-label text-muted-foreground">
                     <DailyRank dailyId={dailyId} />
                   </span>
