@@ -1,4 +1,5 @@
 import * as React from "react";
+import { flushSync } from "react-dom";
 import { ChevronDown } from "lucide-react";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 
@@ -8,8 +9,12 @@ import { scrollToSection } from "./useToc";
 export interface TocItem {
   id: string;
   label: string;
+  /** Section number printed before the label ("2.3", "A.4"). */
+  number?: string;
   /** Optional group heading shown above the first item of each group. */
   group?: string;
+  /** Number printed before the group heading ("2" for Chapter 2). */
+  groupNumber?: string;
 }
 
 function TocLinks({
@@ -35,8 +40,14 @@ function TocLinks({
             {showGroup && (
               <span
                 aria-hidden
-                className={cn("eyebrow mb-1 px-3", index > 0 && "mt-5")}
+                className={cn(
+                  "flex items-baseline gap-2 px-2 pb-1 font-serif text-[0.9375rem] font-bold text-foreground",
+                  index > 0 && "mt-4",
+                )}
               >
+                {item.groupNumber && (
+                  <span className="text-primary">{item.groupNumber}</span>
+                )}
                 {item.group}
               </span>
             )}
@@ -50,14 +61,27 @@ function TocLinks({
                 onNavigate(item.id);
               }}
               className={cn(
-                "relative flex min-h-9 items-center rounded-md px-3 py-1.5 text-body-sm transition-colors duration-fast pointer-coarse:min-h-11",
+                "flex min-h-8 items-baseline gap-2.5 rounded-sm px-2 py-1 text-body-sm transition-colors duration-fast pointer-coarse:min-h-11 pointer-coarse:items-center",
                 current
-                  ? "bg-accent font-medium text-foreground before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-full before:bg-primary"
-                  : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
+                  ? "bg-tint font-bold text-foreground"
+                  : "text-muted-foreground hover:bg-accent hover:text-foreground",
               )}
             >
-              {item.group && <span className="sr-only">{item.group}: </span>}
-              {item.label}
+              {item.number && (
+                <span
+                  aria-hidden
+                  className={cn(
+                    "w-8 shrink-0 font-mono text-[0.8125rem] font-medium",
+                    current ? "text-primary" : "text-muted-foreground",
+                  )}
+                >
+                  {item.number}
+                </span>
+              )}
+              <span className="min-w-0">
+                {item.group && <span className="sr-only">{item.group}: </span>}
+                {item.label}
+              </span>
             </a>
           </li>
         );
@@ -67,15 +91,16 @@ function TocLinks({
 }
 
 /**
- * OnThisPage — table of contents with scroll-spy.
+ * OnThisPage — the book's contents rail, with scroll-spy.
  *  - `variant="sidebar"`: sticky column for lg+ (render inside an <aside>).
- *  - `variant="bar"`: collapsible bar that sticks under the nav on small screens.
+ *  - `variant="bar"`: a compact jump menu that sticks under the nav on
+ *    small screens.
  */
 export function OnThisPage({
   items,
   active,
   variant,
-  label = "On this page",
+  label = "Contents",
   className,
 }: {
   items: readonly TocItem[];
@@ -88,15 +113,23 @@ export function OnThisPage({
   const [open, setOpen] = React.useState(false);
   const panelId = React.useId();
   const navigate = (id: string) => {
-    setOpen(false);
     window.history.replaceState(window.history.state, "", `#${id}`);
+    if (!open) {
+      scrollToSection(id, !reduce);
+      return;
+    }
+    // The open jump menu sits in the flow above the target; close it first
+    // so the scroll position is measured on the final layout.
+    flushSync(() => setOpen(false));
     scrollToSection(id, !reduce);
   };
 
   if (variant === "sidebar") {
     return (
       <nav aria-label={label} className={className}>
-        <p className="eyebrow mb-3 px-3 text-foreground">{label}</p>
+        <p className="smallcaps mb-3 border-b border-foreground/20 px-2 pb-1.5 text-foreground">
+          {label}
+        </p>
         <TocLinks items={items} active={active} onNavigate={navigate} />
       </nav>
     );
@@ -107,7 +140,7 @@ export function OnThisPage({
     <nav
       aria-label={label}
       className={cn(
-        "sticky top-[var(--nav-h)] z-30 border-b bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/85",
+        "sticky top-[var(--nav-h)] z-30 border-b border-foreground/20 bg-background",
         className,
       )}
     >
@@ -119,9 +152,14 @@ export function OnThisPage({
           onClick={() => setOpen((o) => !o)}
           className="flex min-h-12 w-full items-center gap-3 text-left"
         >
-          <span className="eyebrow shrink-0">{label}</span>
-          <span className="min-w-0 flex-1 truncate text-body-sm font-medium text-foreground">
-            {current?.label}
+          <span className="smallcaps shrink-0">{label}</span>
+          <span className="flex min-w-0 flex-1 items-baseline gap-2 truncate text-body-sm font-bold text-foreground">
+            {current?.number && (
+              <span className="font-mono text-[0.8125rem] font-medium text-primary">
+                {current.number}
+              </span>
+            )}
+            <span className="truncate">{current?.label}</span>
           </span>
           <ChevronDown
             aria-hidden
@@ -134,7 +172,7 @@ export function OnThisPage({
         <div
           id={panelId}
           hidden={!open}
-          className="max-h-[min(70dvh,32rem)] overflow-y-auto overscroll-contain border-t pb-3 pt-2"
+          className="max-h-[min(70dvh,32rem)] overflow-y-auto overscroll-contain border-t border-border pb-3 pt-2"
         >
           <TocLinks items={items} active={active} onNavigate={navigate} />
         </div>
