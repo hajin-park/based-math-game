@@ -1,4 +1,5 @@
 import * as React from "react";
+import { flushSync } from "react-dom";
 import { ChevronDown } from "lucide-react";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 
@@ -112,8 +113,14 @@ export function OnThisPage({
   const [open, setOpen] = React.useState(false);
   const panelId = React.useId();
   const navigate = (id: string) => {
-    setOpen(false);
     window.history.replaceState(window.history.state, "", `#${id}`);
+    if (!open) {
+      scrollToSection(id, !reduce);
+      return;
+    }
+    // The open jump menu sits in the flow above the target; close it first
+    // so the scroll position is measured on the final layout.
+    flushSync(() => setOpen(false));
     scrollToSection(id, !reduce);
   };
 

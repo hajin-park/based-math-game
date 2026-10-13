@@ -321,8 +321,11 @@ export function ByteWidget() {
       title="Flip the bits of a byte"
       footer={
         <>
-          Click a bit, or tab to it and press <Kbd size="sm">Space</Kbd>, to
-          flip it. Count up and watch the carries ripple left.
+          Click a bit, or tab to it and press{" "}
+          <span className="whitespace-nowrap">
+            <Kbd size="sm">Space</Kbd>,
+          </span>{" "}
+          to flip it. Count up and watch the carries ripple left.
         </>
       }
     >
@@ -334,7 +337,7 @@ export function ByteWidget() {
         placeValues
         size="md"
         bases={["bin", "dec", "hex"]}
-        className="shadow-none"
+        className="-mx-4 -mt-2 w-auto border-0 bg-transparent sm:-mx-5"
       />
       <div className="flex flex-wrap items-center gap-2">
         <Button

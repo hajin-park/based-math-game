@@ -225,7 +225,9 @@ export function TryOne({
                 )}
               />
               {solved && (
-                <PenTick className="absolute right-1 top-1/2 size-8 -translate-y-1/2" />
+                // animate-pen-draw also makes Tailwind emit the pen-draw
+                // keyframes that PenTick's inline animation names.
+                <PenTick className="absolute right-1 top-1/2 size-8 -translate-y-1/2 [&_path]:animate-pen-draw" />
               )}
             </div>
             <div className="flex gap-2">
