@@ -26,6 +26,7 @@ export type RoomEventKind =
   | "joined"
   | "left"
   | "removed"
+  | "freed"
   | "host"
   | "disconnected"
   | "reconnected"
@@ -95,12 +96,17 @@ export function diffRoomEvents(
   for (const uid of Object.keys(prev.players)) {
     if (next.players[uid] || uid === myUid) continue;
     const removed = !!next.kicked?.[uid];
+    // Gone while away: the host freed their seat (they may rejoin).
+    const freed = !removed && !!prev.players[uid].disconnected;
+    const who = prevNames.get(uid) ?? "A player";
     events.push({
-      kind: removed ? "removed" : "left",
+      kind: removed ? "removed" : freed ? "freed" : "left",
       uid,
       text: removed
-        ? `${prevNames.get(uid) ?? "A player"} was removed by the host`
-        : `${prevNames.get(uid) ?? "A player"} left`,
+        ? `${who} was removed by the host`
+        : freed
+          ? `${who}'s seat was freed`
+          : `${who} left`,
       important: true,
     });
   }

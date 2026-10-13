@@ -14,7 +14,9 @@
  *                    server time of the click, play begins COUNTDOWN later
  *   slots/{0..9}     uid holding each seat (bounds the room to maxPlayers)
  *   kicked/{uid}     true for players the host removed (cannot rejoin, and
- *                    can no longer read the room)
+ *                    can no longer read the room). Freeing a disconnected
+ *                    player's seat (freeSeat) deletes their node and seat
+ *                    without this ban.
  *   winners          { round, uids/{uid}: true } the host records when a round
  *                    ends; a player may only count a win listed here
  *   players/{uid}    { uid, displayName, slot, joinedAt, ready, score, correct,
@@ -943,6 +945,36 @@ const kickPlayer = async (roomId: string, playerUid: string) => {
   await update(roomRef(roomId), updates);
 };
 
+/**
+ * Host: free the seat of a disconnected player without banning them. Their
+ * node and seat go (rules allow it only while they are marked disconnected);
+ * they are not added to `kicked`, so they can rejoin with the code or link,
+ * as a new player, while a seat is free and the room is in the lobby.
+ */
+const freeSeat = async (roomId: string, playerUid: string) => {
+  const uid = currentUid();
+  const raw = await readRoom(roomId);
+  if (!raw) throw new Error("Room not found");
+  if (raw.hostUid !== uid) throw new Error("Only the host can free seats");
+  if (playerUid === uid) throw new Error("Cannot free your own seat");
+  const target = raw.players?.[playerUid];
+  if (!target) return; // Already gone.
+  if (!target.disconnected) {
+    throw new Error("Only a disconnected player's seat can be freed");
+  }
+  const updates: Record<string, unknown> = {
+    [`players/${playerUid}`]: null,
+    lastActivityAt: serverTimestamp(),
+  };
+  if (target.slot !== undefined && slotOf(raw, target.slot) === playerUid)
+    updates[`slots/${target.slot}`] = null;
+  await update(roomRef(roomId), updates);
+};
+
+function slotOf(raw: RawRoom, slot: string): string | undefined {
+  return slotHolders(raw).find(([s]) => s === slot)?.[1];
+}
+
 const transferHost = async (roomId: string, newHostUid: string) => {
   const uid = currentUid();
   const raw = await readRoom(roomId);
@@ -1275,6 +1307,7 @@ export const roomApi = {
   incrementWins,
   updateGameMode,
   kickPlayer,
+  freeSeat,
   updateRoomSettings,
   transferHost,
   subscribeToRoom,

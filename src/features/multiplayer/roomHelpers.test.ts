@@ -77,6 +77,27 @@ describe("room events", () => {
     ]);
   });
 
+  it("a disconnected player who is gone had their seat freed", () => {
+    const away: EventRoom = {
+      ...base,
+      players: {
+        ...base.players,
+        a: { ...base.players.a, disconnected: true },
+      },
+    };
+    const next: EventRoom = {
+      ...base,
+      players: { h: base.players.h, me: base.players.me },
+    };
+    expect(diffRoomEvents(away, next, "me")).toMatchObject([
+      { kind: "freed", text: "Ada's seat was freed", important: true },
+    ]);
+    // Banned while away is still a removal.
+    expect(
+      diffRoomEvents(away, { ...next, kicked: { a: true } }, "me"),
+    ).toMatchObject([{ kind: "removed" }]);
+  });
+
   it("reports connection changes and renames of others", () => {
     const next: EventRoom = {
       ...base,
