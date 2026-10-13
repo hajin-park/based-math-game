@@ -19,10 +19,10 @@ import {
   DAILY_SKIP_PENALTY_MS,
   formatMs,
   getTopic,
-  utcDateKey,
 } from "@/game";
 import { DailyRank } from "@/features/play/DailyStatus";
 import { useDailyAttempts } from "@/features/play/useDailyAttempts";
+import { useUtcDateKey } from "@/hooks/useUtcDateKey";
 import { cn } from "@/lib/utils";
 
 function msUntilUtcMidnight(now = Date.now()): number {
@@ -61,7 +61,7 @@ function ResetCountdown() {
 
 export default function Daily() {
   const navigate = useNavigate();
-  const date = utcDateKey();
+  const date = useUtcDateKey();
   const dailyId = `daily:${date}`;
   const playPath = `/play/${dailyId}`;
   const { first, attempts, loading } = useDailyAttempts(dailyId);
