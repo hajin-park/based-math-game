@@ -150,7 +150,7 @@ export default function ProfileGameSettings() {
   };
 
   return (
-    <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:gap-14">
+    <div className="mx-auto grid w-full max-w-4xl gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,20rem)] lg:gap-12">
       <section aria-labelledby="gs-title" className="flex flex-col gap-2">
         <h2 id="gs-title" className="font-serif text-title font-bold">
           Game settings

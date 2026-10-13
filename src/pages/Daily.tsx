@@ -124,9 +124,7 @@ export default function Daily() {
                 <p className="flex flex-wrap items-center gap-x-5 gap-y-2">
                   <span className="sr-only">Your time: </span>
                   <span className="inline-flex items-baseline">
-                    {/* Static mark: the pen-draw keyframes are not emitted
-                        by the frozen Tailwind config (reported). */}
-                    <PenCircle animate={false} className="-ml-[0.32em]">
+                    <PenCircle delay={150} className="-ml-[0.32em]">
                       <span className="font-mono text-mono-2xl font-medium tabular-nums">
                         {(first.score / 1000).toFixed(2)}
                       </span>

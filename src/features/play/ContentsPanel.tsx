@@ -22,6 +22,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLeaderboard, type BestEntry } from "@/data";
 import {
   FORMATS,
+  SURVIVAL_ENDGAME_FROM,
   SURVIVAL_STAGES,
   getTopic,
   modeId,
@@ -359,7 +360,7 @@ function SurvivalCard({ best }: { best: BestEntry | undefined }) {
   const stages = SURVIVAL_STAGES.map((s, i) => ({
     name: getTopic(s.topicId).name,
     from: s.from + 1,
-    to: SURVIVAL_STAGES[i + 1]?.from,
+    to: SURVIVAL_STAGES[i + 1]?.from ?? SURVIVAL_ENDGAME_FROM,
   }));
   return (
     <>
@@ -376,7 +377,7 @@ function SurvivalCard({ best }: { best: BestEntry | undefined }) {
             </caption>
             <thead className="rule-double">
               <tr className="smallcaps">
-                <th scope="col" className="w-20 pb-1 text-left font-medium">
+                <th scope="col" className="w-28 pb-1 text-left font-medium">
                   Questions
                 </th>
                 <th scope="col" className="pb-1 text-left font-medium">
@@ -395,7 +396,7 @@ function SurvivalCard({ best }: { best: BestEntry | undefined }) {
               ))}
               <tr>
                 <td className="py-1.5 font-mono text-[0.8125rem] tabular-nums text-muted-foreground">
-                  46+
+                  {SURVIVAL_ENDGAME_FROM + 1}+
                 </td>
                 <td className="py-1.5">Everything, mixed</td>
               </tr>
