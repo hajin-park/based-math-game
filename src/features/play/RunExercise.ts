@@ -59,6 +59,9 @@ export const PEN_DRAW_KEYFRAMES = "[&_path]:animate-pen-draw";
  * space there, so on content wider than the mark's own aspect ratio the
  * stroke stops part-way (a half-drawn circle around "7.75"). Scaling the
  * stroke with the SVG keeps pathLength exact; pass a thinner `strokeWidth`
- * to PenCircle to compensate.
+ * to PenCircle to compensate. The base styles also cap SVGs at
+ * `max-width: 100%`, which squeezes the circle's 128%-wide box so it cuts
+ * through the last digit; lift the cap.
  */
-export const PEN_STROKE_SCALES = "[&_path]:[vector-effect:none]";
+export const PEN_STROKE_SCALES =
+  "[&_path]:[vector-effect:none] [&_svg]:max-w-none";

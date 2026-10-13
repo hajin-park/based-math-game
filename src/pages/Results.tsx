@@ -256,17 +256,26 @@ function ResultsView({ summary, custom, previousBest }: ResultsState) {
               className="flex flex-wrap items-baseline gap-x-5 gap-y-2"
             >
               <span className="sr-only">Results: </span>
-              <PenCircle
-                animate={!reduce}
-                delay={CIRCLE_DELAY}
-                strokeWidth={1.4}
-                className={cn(
-                  PEN_STROKE_SCALES,
-                  "font-mono text-[clamp(3.5rem,2.4rem+5vw,6rem)] font-medium leading-none tabular-nums text-foreground sm:-ml-[0.32em] [&>span:first-child]:min-w-[1.5ch] [&>span:first-child]:text-center",
-                )}
+              {/* The drawn circle overhangs its box by about 8% a side: keep
+                  that room so it meets the margin and clears the unit. */}
+              <span
+                className="font-mono text-[clamp(3.5rem,2.4rem+5vw,6rem)] font-medium leading-none tabular-nums text-foreground"
+                style={{
+                  marginInline: `${(0.085 * (Math.max(big.value.length, 1.5) * 0.525 + 0.64)).toFixed(3)}em`,
+                }}
               >
-                {big.value}
-              </PenCircle>
+                <PenCircle
+                  animate={!reduce}
+                  delay={CIRCLE_DELAY}
+                  strokeWidth={1.4}
+                  className={cn(
+                    PEN_STROKE_SCALES,
+                    "[&>span:first-child]:min-w-[1.5ch] [&>span:first-child]:text-center",
+                  )}
+                >
+                  {big.value}
+                </PenCircle>
+              </span>
               <span className="font-serif text-headline italic text-muted-foreground">
                 {big.unit}
               </span>
