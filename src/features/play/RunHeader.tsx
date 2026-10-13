@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { Heart, Pause } from "lucide-react";
+import { Pause } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Kbd } from "@/components/ui/kbd";
 import { Meter } from "@/components/ui/meter";
+import { PenCross } from "@/components/ui/pen-mark";
 import type { BestEntry } from "@/data";
 import { getTopic } from "@/game";
 import { cn } from "@/lib/utils";
@@ -21,10 +23,12 @@ interface RunHeaderProps {
 const SPRINT_MARKS = [30_000, 10_000, 5_000];
 
 /**
- * Minimal top bar of the run screen: exit, mode name and the format's
- * meter (sprint clock, speedrun progress, survival lives + per-question
- * clock, daily progress, practice count). Screen readers hear the clock only
- * at 30 / 10 / 5 seconds and when a life is lost.
+ * The head of the exercise page, like the top of a test paper: Pause at the
+ * left, the drill title and its format line, and at the right the
+ * examiner's box with the live figures (correct, time, lives). The clock is
+ * the printed rule under the header: it shortens as time runs out and turns
+ * ochre, then red, near the end. Screen readers hear the clock only at
+ * 30 / 10 / 5 seconds and when a life is lost.
  */
 export function RunHeader({
   run,
@@ -75,7 +79,7 @@ export function RunHeader({
   const isCustom = mode.topicId === "custom";
   const best = isCustom ? null : previousBest;
 
-  let readout: React.ReactNode = null;
+  let figures: React.ReactNode = null;
   let meter: React.ReactNode = null;
   let pace: string | null = null;
 
@@ -83,10 +87,10 @@ export function RunHeader({
     case "sprint": {
       const duration = spec.durationMs ?? 60_000;
       const left = run.timeLeftMs ?? duration;
-      readout = (
+      figures = (
         <>
-          <Readout label="Correct" value={run.correct} />
-          <Readout
+          <Figure label="Correct" value={run.correct} />
+          <Figure
             label="Time left"
             value={clockText(left)}
             role="timer"
@@ -122,10 +126,10 @@ export function RunHeader({
     }
     case "speedrun": {
       const target = spec.targetCount ?? 15;
-      readout = (
+      figures = (
         <>
-          <Readout label="Correct" value={`${run.correct}/${target}`} />
-          <Readout label="Time" value={seconds1(elapsed)} role="timer" />
+          <Figure label="Correct" value={`${run.correct}/${target}`} />
+          <Figure label="Time" value={seconds1(elapsed)} role="timer" />
         </>
       );
       meter = (
@@ -150,13 +154,13 @@ export function RunHeader({
     case "daily": {
       const target = spec.targetCount ?? 10;
       const done = run.outcomes.length;
-      readout = (
+      figures = (
         <>
-          <Readout
+          <Figure
             label="Question"
             value={`${Math.min(done + 1, target)}/${target}`}
           />
-          <Readout label="Time" value={seconds1(elapsed)} role="timer" />
+          <Figure label="Time" value={seconds1(elapsed)} role="timer" />
         </>
       );
       meter = (
@@ -173,33 +177,37 @@ export function RunHeader({
     case "survival": {
       const limit = run.questionTimeLimitMs ?? 15_000;
       const left = run.questionTimeLeftMs ?? limit;
-      readout = (
+      const total = spec.lives ?? 3;
+      const have = run.lives ?? 0;
+      figures = (
         <>
-          <Readout label="Cleared" value={run.correct} />
-          <div className="flex flex-col items-end gap-1">
-            <span className="sr-only">Lives</span>
-            <span
-              className="flex items-center gap-1"
-              role="img"
-              aria-label={`${run.lives ?? 0} of ${spec.lives ?? 3} lives`}
-            >
-              {Array.from({ length: spec.lives ?? 3 }, (_, i) => (
-                <Heart
-                  key={i}
-                  aria-hidden
-                  className={cn(
-                    "size-4 transition-[color,opacity] duration-base",
-                    i < (run.lives ?? 0)
-                      ? "fill-primary text-primary"
-                      : "text-muted-foreground/40",
-                  )}
-                />
-              ))}
-            </span>
-            <span className="font-mono text-[0.6875rem] tabular-nums text-muted-foreground">
-              {seconds1(left)}
-            </span>
-          </div>
+          <Figure label="Cleared" value={run.correct} />
+          <Figure
+            label="Lives"
+            value={
+              <span
+                className="flex h-[1.1em] items-center gap-1.5"
+                role="img"
+                aria-label={`${have} of ${total} lives`}
+              >
+                {Array.from({ length: total }, (_, i) => (
+                  <span
+                    key={i}
+                    aria-hidden
+                    className={cn(
+                      "relative inline-block size-3 rounded-[1px] border border-foreground/80 transition-colors duration-base",
+                      i < have ? "bg-foreground" : "bg-transparent",
+                    )}
+                  >
+                    {i >= have && (
+                      <PenCross className="absolute -inset-1.5 size-6" />
+                    )}
+                  </span>
+                ))}
+              </span>
+            }
+          />
+          <Figure label="This one" value={seconds1(left)} role="timer" />
         </>
       );
       meter = (
@@ -210,25 +218,13 @@ export function RunHeader({
           max={limit}
           label="Time for this question"
           valueText={`${Math.ceil(left / 1000)} seconds`}
-          size="md"
+          size="sm"
         />
       );
       break;
     }
     case "practice":
-      readout = (
-        <>
-          <Readout label="Correct" value={run.correct} />
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={run.finish}
-            disabled={!running}
-          >
-            Finish
-          </Button>
-        </>
-      );
+      figures = <Figure label="Correct" value={run.correct} />;
       break;
   }
 
@@ -240,37 +236,57 @@ export function RunHeader({
       : null;
 
   return (
-    <header className="border-b bg-background/90">
-      <div className="container flex h-14 items-center gap-2 sm:gap-3 [@media(max-height:480px)]:h-12">
+    <header>
+      <div className="container flex min-h-16 items-center gap-2 py-2.5 sm:gap-4 sm:py-3 [@media(max-height:560px)]:min-h-12 [@media(max-height:560px)]:py-1.5">
         <Button
           variant="ghost"
-          size="icon"
+          size="sm"
           onClick={onPause}
           disabled={!running}
           aria-label="Pause"
           aria-keyshortcuts="Escape"
-          className="-ml-2 shrink-0 text-muted-foreground hover:text-foreground"
+          className="-ml-2 shrink-0 px-2 text-muted-foreground hover:text-foreground sm:-ml-3 sm:px-3"
         >
-          <Pause aria-hidden className="size-5" />
+          <Pause aria-hidden />
+          <span className="hidden sm:inline">Pause</span>
+          <Kbd size="sm" className="hidden pointer-fine:sm:inline-flex">
+            Esc
+          </Kbd>
         </Button>
-        <div className="flex min-w-0 flex-1 flex-col">
-          <h1 className="truncate text-label font-semibold text-foreground">
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <h1 className="truncate font-serif text-[1.0625rem] font-bold leading-tight text-foreground sm:text-title">
             {modeTitle(mode)}
           </h1>
-          <p className="truncate text-[0.75rem] text-muted-foreground">
+          <p className="smallcaps truncate leading-tight">
             {stage ? `Stage · ${stage}` : formatLine(mode)}
             {pace && (
-              <span className="ml-2 font-mono tabular-nums text-foreground/80">
+              <span className="ml-2 font-mono text-[0.8125rem] tabular-nums text-foreground/80 [font-variant-caps:normal]">
                 {pace}
               </span>
             )}
           </p>
         </div>
-        <div className="flex shrink-0 items-center gap-4 sm:gap-6">
-          {readout}
-        </div>
+        {mode.format === "practice" && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={run.finish}
+            disabled={!running}
+            className="shrink-0"
+          >
+            Finish
+          </Button>
+        )}
+        <dl
+          aria-label="Score"
+          className="flex shrink-0 divide-x divide-foreground/25 rounded-[1px] border border-foreground/60 bg-card/60"
+        >
+          {figures}
+        </dl>
       </div>
-      {meter && <div className="container pb-2">{meter}</div>}
+      <div className="container">
+        {meter ?? <div aria-hidden className="h-px bg-foreground/25" />}
+      </div>
       <div aria-live="polite" aria-atomic="true" className="sr-only">
         {message.text && <p key={message.n}>{message.text}</p>}
       </div>
@@ -278,7 +294,8 @@ export function RunHeader({
   );
 }
 
-function Readout({
+/** One cell of the examiner's box: a small-caps label over a typewriter figure. */
+function Figure({
   label,
   value,
   role,
@@ -290,19 +307,21 @@ function Readout({
   tone?: "warning" | "destructive";
 }) {
   return (
-    <div className="flex flex-col items-end leading-none">
-      <span className="text-[0.6875rem] text-muted-foreground">{label}</span>
-      <span
+    <div className="flex min-w-[3.25rem] flex-col items-start px-2 py-1 sm:min-w-[4.5rem] sm:px-3 sm:py-1.5">
+      <dt className="smallcaps whitespace-nowrap text-[0.75rem] leading-none">
+        {label}
+      </dt>
+      <dd
         role={role}
         aria-live={role ? "off" : undefined}
         className={cn(
-          "mt-1 font-mono text-[1.125rem] font-medium tabular-nums text-foreground sm:text-[1.25rem]",
+          "mt-1 font-mono text-mono-md font-medium leading-none tabular-nums text-foreground sm:text-mono-lg",
           tone === "warning" && "text-warning",
-          tone === "destructive" && "text-destructive",
+          tone === "destructive" && "text-pen",
         )}
       >
         {value}
-      </span>
+      </dd>
     </div>
   );
 }

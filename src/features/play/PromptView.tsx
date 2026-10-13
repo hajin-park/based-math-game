@@ -14,34 +14,68 @@ export interface PromptViewProps {
   placeValues: boolean;
   /** Visual size: xl on the game surface, sm in review lists. */
   size?: "xl" | "lg" | "sm";
+  /**
+   * Horizontal alignment (default "center"). The exercise page sets
+   * "start": the problem is typeset flush with its number in the margin.
+   */
+  align?: "center" | "start";
   className?: string;
 }
 
-const DIGIT_SIZE = { xl: "xl", lg: "lg", sm: "sm" } as const;
-
-/** Long values switch to condensed Martian Mono so 16-bit binary fits a phone. */
+/** Long values switch to the condensed cut so 16-bit binary fits a phone. */
 function isLong(digits: string, size: PromptViewProps["size"]) {
   return size === "sm" ? digits.length > 16 : digits.length > 8;
 }
 
+/** Operators that are worked in columns, like a sum on paper. */
+const COLUMN_OPS = new Set(["+", "AND", "OR", "XOR"]);
+
+function isColumnSum(prompt: PromptPart[]) {
+  return (
+    prompt.length === 3 &&
+    prompt[0].type === "number" &&
+    prompt[1].type === "op" &&
+    COLUMN_OPS.has(prompt[1].text) &&
+    prompt[2].type === "number"
+  );
+}
+
 /**
- * PromptView renders an engine prompt (`PromptPart[]`): numbers in their base
- * colour with a BaseTag, operators dimmed, colour swatches and ASCII
- * characters in a box. It is purely visual: the caller supplies the
- * accessible name (see `questionLabel`).
+ * PromptView renders an engine prompt (`PromptPart[]`) the way a textbook
+ * typesets an exercise: numbers in typewriter, in their base ink, labelled
+ * with a BaseTag; sums and bitwise operations of two operands set in
+ * columns over a rule; colour swatches and ASCII characters in a ruled box.
+ * It is purely visual: the caller supplies the accessible name (see
+ * `questionLabel`).
  */
 export const PromptView = memo(function PromptView({
   prompt,
   grouped,
   placeValues,
   size = "xl",
+  align = "center",
   className,
 }: PromptViewProps) {
+  const small = size === "sm";
+
+  if (!small && isColumnSum(prompt)) {
+    return (
+      <ColumnSum
+        prompt={prompt}
+        grouped={grouped}
+        placeValues={placeValues}
+        size={size}
+        align={align}
+        className={className}
+      />
+    );
+  }
+
   const numbers = prompt.filter((p) => p.type === "number");
   // A lone decimal number is a conversion source: tag it. Decimals inside an
   // expression (exponents, shift counts, "8-bit") are plain counts.
   const tagDecimal = prompt.length === 1;
-  const small = size === "sm";
+  const lone = prompt.length === 1;
   const out: ReactNode[] = [];
 
   for (let i = 0; i < prompt.length; i++) {
@@ -60,19 +94,19 @@ export const PromptView = memo(function PromptView({
         <span
           key={i}
           className={cn(
-            "inline-flex items-start font-mono font-medium text-base-dec",
+            "inline-flex items-start font-mono font-medium leading-none text-base-dec",
             small
               ? "text-mono-md"
               : size === "lg"
                 ? "text-mono-xl"
-                : "text-mono-2xl",
+                : "text-mono-3xl",
           )}
         >
           2
           <span
             className={cn(
-              "ml-[0.06em] text-[0.55em] leading-none",
-              next.type === "text" ? "italic text-primary" : "",
+              "ml-[0.06em] text-[0.5em] leading-none",
+              next.type === "text" ? "font-serif italic text-foreground" : "",
             )}
           >
             {exp}
@@ -86,33 +120,45 @@ export const PromptView = memo(function PromptView({
     switch (part.type) {
       case "number": {
         const showTag = part.base !== 10 || tagDecimal;
+        const key = baseTagKey(part.base);
+        const long = isLong(part.digits, size);
+        // The given number of a conversion is the largest thing on the page.
+        const hero = !small && size === "xl" && lone && !long;
+        const tag = showTag && (
+          <BaseTag
+            base={key}
+            size={small ? "xs" : "sm"}
+            variant={small ? "outline" : "soft"}
+            aria-hidden
+          />
+        );
         out.push(
           <span
             key={i}
             className={cn(
-              "inline-flex items-center",
-              small ? "gap-1.5" : "flex-col gap-1.5",
+              "inline-flex max-w-full",
+              small ? "items-center gap-1.5" : "items-baseline gap-2.5",
             )}
           >
-            {showTag && (
-              <BaseTag
-                base={baseTagKey(part.base)}
-                size={small ? "xs" : "sm"}
-                variant={small ? "outline" : "soft"}
-                aria-hidden
-              />
-            )}
+            {small && tag}
             <Digits
-              base={baseTagKey(part.base)}
+              base={key}
               value={part.digits}
               size={
-                numbers.length > 1 && size === "xl" ? "lg" : DIGIT_SIZE[size]
+                hero
+                  ? "inherit"
+                  : numbers.length > 1 && size === "xl"
+                    ? "lg"
+                    : size === "xl"
+                      ? "xl"
+                      : size
               }
               group={grouped}
               placeValues={placeValues && part.base !== 10 && !small}
-              condensed={isLong(part.digits, size)}
-              className="max-w-full"
+              condensed={long}
+              className={cn("max-w-full", hero && "text-mono-3xl")}
             />
+            {!small && tag}
           </span>,
         );
         break;
@@ -124,7 +170,7 @@ export const PromptView = memo(function PromptView({
             className={cn(
               "font-mono font-medium text-muted-foreground",
               small ? "text-mono-sm" : "text-mono-lg",
-              !small && numbers.length > 1 && "self-end pb-[0.35em]",
+              !small && numbers.length > 1 && "self-center",
             )}
           >
             {part.text}
@@ -136,7 +182,7 @@ export const PromptView = memo(function PromptView({
           <span
             key={i}
             className={cn(
-              "text-muted-foreground",
+              "font-serif italic text-foreground/80",
               small ? "text-body-sm" : "text-body-lg",
             )}
           >
@@ -150,13 +196,12 @@ export const PromptView = memo(function PromptView({
             <span
               aria-hidden
               className={cn(
-                "inline-block rounded-md shadow-xs ring-1 ring-inset ring-foreground/15",
-                small ? "size-5" : "size-12 sm:size-14",
+                "inline-block rounded-sm ring-1 ring-inset ring-foreground/25",
+                small ? "size-5" : "size-14 sm:size-16",
               )}
               style={{ backgroundColor: part.hex }}
             />
-            <span className="inline-flex flex-col items-start gap-1.5">
-              {!small && <BaseTag base="hex" size="sm" aria-hidden />}
+            <span className="inline-flex items-baseline gap-2.5">
               <span className="inline-flex items-baseline">
                 <span
                   className={cn(
@@ -173,34 +218,41 @@ export const PromptView = memo(function PromptView({
                   size={small ? "sm" : "lg"}
                 />
               </span>
+              {!small && <BaseTag base="hex" size="sm" aria-hidden />}
             </span>
           </span>,
         );
         break;
       case "char":
         out.push(
-          <span key={i} className="inline-flex flex-col items-center gap-1.5">
-            {!small && (
-              <span className="eyebrow text-[0.625rem]" aria-hidden>
-                ASCII
-              </span>
+          <span
+            key={i}
+            className={cn(
+              "inline-flex items-baseline",
+              small ? "gap-1.5" : "gap-2.5",
             )}
+          >
             <span
               className={cn(
-                "inline-grid place-items-center rounded-md border border-border-strong bg-card font-mono font-medium text-foreground shadow-xs",
+                "inline-grid place-items-center rounded-sm border bg-card font-mono font-medium text-foreground",
                 small
-                  ? "h-7 min-w-7 px-1.5 text-mono-md"
-                  : "h-16 min-w-16 px-3 text-mono-2xl sm:h-20 sm:min-w-20",
+                  ? "h-7 min-w-7 border-border-strong px-1.5 text-mono-md"
+                  : "h-20 min-w-20 border-foreground/50 px-3 text-mono-3xl sm:h-24 sm:min-w-24",
               )}
             >
               {part.char === " " ? (
-                <span className="text-[0.4em] uppercase tracking-[0.08em] text-muted-foreground">
+                <span className="font-serif text-[0.32em] italic text-muted-foreground">
                   space
                 </span>
               ) : (
                 part.char
               )}
             </span>
+            {!small && (
+              <span className="smallcaps" aria-hidden>
+                ASCII
+              </span>
+            )}
           </span>,
         );
         break;
@@ -210,7 +262,8 @@ export const PromptView = memo(function PromptView({
   return (
     <div
       className={cn(
-        "flex max-w-full flex-wrap items-center justify-center",
+        "flex max-w-full flex-wrap items-center",
+        align === "start" ? "justify-start" : "justify-center",
         small ? "gap-x-2 gap-y-1" : "gap-x-4 gap-y-3",
         className,
       )}
@@ -219,3 +272,69 @@ export const PromptView = memo(function PromptView({
     </div>
   );
 });
+
+/** Two operands worked in columns over a rule, the operator in front. */
+function ColumnSum({
+  prompt,
+  grouped,
+  placeValues,
+  size,
+  align,
+  className,
+}: Omit<PromptViewProps, "prompt" | "size"> & {
+  prompt: PromptPart[];
+  size: "xl" | "lg";
+}) {
+  const [a, op, b] = prompt as [
+    Extract<PromptPart, { type: "number" }>,
+    Extract<PromptPart, { type: "op" }>,
+    Extract<PromptPart, { type: "number" }>,
+  ];
+  const long = Math.max(a.digits.length, b.digits.length) > 12;
+  const digitSize = size === "lg" || long ? "lg" : "xl";
+  const row = (part: typeof a, weights: boolean) => (
+    <>
+      <Digits
+        base={baseTagKey(part.base)}
+        value={part.digits}
+        size={digitSize}
+        group={grouped}
+        placeValues={weights && placeValues && part.base !== 10}
+        condensed={long}
+        className="justify-self-end"
+      />
+      {part.base !== 10 ? (
+        <BaseTag
+          base={baseTagKey(part.base)}
+          size="sm"
+          aria-hidden
+          className="self-baseline"
+        />
+      ) : (
+        <span />
+      )}
+    </>
+  );
+  return (
+    <div
+      className={cn(
+        "flex max-w-full",
+        align === "start" ? "justify-start" : "justify-center",
+        className,
+      )}
+    >
+      <div className="inline-grid max-w-full grid-cols-[auto_auto_auto] items-baseline gap-x-3 gap-y-2 sm:gap-x-4">
+        <span />
+        {row(a, false)}
+        <span className="justify-self-end font-mono text-mono-lg font-medium text-muted-foreground">
+          {op.text}
+        </span>
+        {row(b, true)}
+        <span
+          aria-hidden
+          className="col-span-2 -mt-1 h-0 border-t-2 border-foreground/80"
+        />
+      </div>
+    </div>
+  );
+}

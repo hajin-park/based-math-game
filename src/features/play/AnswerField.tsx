@@ -5,13 +5,15 @@ import {
   useImperativeHandle,
   useRef,
   type KeyboardEvent,
+  type ReactNode,
 } from "react";
 
 import { BaseTag } from "@/components/ui/base-tag";
-import { inputVariants } from "@/components/ui/input";
+import { Input } from "@/components/ui/input";
 import { answerPrefix, inputModeFor, type Question } from "@/game";
 import { cn } from "@/lib/utils";
 import { answerWord, baseTagKey } from "./describe";
+import { answerLabel } from "./RunExercise";
 
 export interface AnswerFieldHandle {
   focus: () => void;
@@ -36,6 +38,10 @@ export interface AnswerFieldProps {
   /** id(s) of elements describing the field (question, shortcut hints). */
   describedBy?: string;
   autoFocus?: boolean;
+  /** Alignment of the label and the answer (default "center"). */
+  align?: "center" | "start";
+  /** Rendered at the end of the answer line (e.g. the last answer's mark). */
+  adornment?: ReactNode;
   className?: string;
 }
 
@@ -47,9 +53,10 @@ function reducedMotion() {
 }
 
 /**
- * The answer field: big mono input on the raised surface with the answer
- * base's prefix as a non-editable adornment, per-format mobile keyboard and
- * keystroke filtering (the engine decides what is acceptable).
+ * The answer blank: a typewriter answer written on a rule (`Input
+ * variant="answer"`), the answer base's prefix printed at the start of the
+ * line, a small-caps label above, per-format mobile keyboard and keystroke
+ * filtering (the engine decides what is acceptable).
  */
 export const AnswerField = forwardRef<AnswerFieldHandle, AnswerFieldProps>(
   function AnswerField(
@@ -64,6 +71,8 @@ export const AnswerField = forwardRef<AnswerFieldHandle, AnswerFieldProps>(
       invalid,
       describedBy,
       autoFocus,
+      align = "center",
+      adornment,
       className,
     },
     ref,
@@ -102,12 +111,7 @@ export const AnswerField = forwardRef<AnswerFieldHandle, AnswerFieldProps>(
 
     const prefix = answerPrefix(question);
     const format = question.answerFormat;
-    const label = `Answer in ${answerWord(question)}`;
-    // Width tracks the longest possible answer so the caret sits centred.
-    const chars = Math.max(
-      2,
-      question.maxLength + (question.maxLength > 8 ? 3 : 1),
-    );
+    const label = answerLabel(answerWord(question));
     const long = question.maxLength > 12;
 
     const onKeyDown = useCallback(
@@ -131,10 +135,16 @@ export const AnswerField = forwardRef<AnswerFieldHandle, AnswerFieldProps>(
     );
 
     return (
-      <div className={cn("flex w-full flex-col items-center gap-2", className)}>
+      <div
+        className={cn(
+          "flex w-full flex-col gap-1.5",
+          align === "start" ? "items-start" : "items-center",
+          className,
+        )}
+      >
         <label
           htmlFor={id}
-          className="inline-flex items-center gap-2 text-label text-muted-foreground"
+          className="inline-flex items-center gap-2 font-serif text-eyebrow text-muted-foreground [font-variant-caps:all-small-caps]"
         >
           <span>{label}</span>
           {question.answerBase && format !== "char" && (
@@ -145,61 +155,71 @@ export const AnswerField = forwardRef<AnswerFieldHandle, AnswerFieldProps>(
             />
           )}
         </label>
-        <div
-          ref={shellRef}
-          data-invalid={invalid || undefined}
-          className={cn(
-            inputVariants({ variant: "answer" }),
-            "relative w-full max-w-md items-center justify-center gap-0 px-3",
-            "focus-within:border-primary focus-within:shadow-[0_0_0_3px_rgb(var(--ring)/0.16)]",
-            "data-[invalid]:border-destructive data-[invalid]:focus-within:shadow-[0_0_0_3px_rgb(var(--destructive)/0.16)]",
-            disabled && "opacity-60",
-          )}
-          onClick={() => inputRef.current?.focus()}
-        >
-          <span
-            ref={ringRef}
-            aria-hidden
-            className="pointer-events-none absolute -inset-px rounded-md border-2 border-success opacity-0"
-          />
-          {prefix && (
-            <span
-              aria-hidden
-              className="select-none font-mono text-muted-foreground"
-            >
-              {prefix}
-            </span>
-          )}
-          <input
-            ref={inputRef}
-            id={id}
-            data-answer-field=""
-            aria-label={label}
-            aria-describedby={describedBy}
-            aria-invalid={invalid || undefined}
-            value={value}
-            disabled={disabled}
-            autoFocus={autoFocus}
-            onChange={(e) => {
-              const raw = e.target.value;
-              if (!onValueChange(raw) && raw.length > value.length)
-                onReject?.(raw);
-            }}
-            onKeyDown={onKeyDown}
-            type="text"
-            inputMode={inputModeFor(format)}
-            enterKeyHint="next"
-            autoComplete="off"
-            autoCorrect="off"
-            autoCapitalize="none"
-            spellCheck={false}
-            className={cn(
-              "min-w-0 bg-transparent text-center font-mono text-foreground caret-primary outline-none placeholder:text-muted-foreground/50 focus-visible:outline-none",
-              format === "hex" && "uppercase",
-              long && "text-mono-lg sm:text-[1.375rem]",
+        <div className="flex w-full max-w-md items-end gap-3">
+          <div
+            ref={shellRef}
+            className={cn("relative min-w-0 flex-1", disabled && "opacity-60")}
+          >
+            {prefix && (
+              <span
+                aria-hidden
+                className={cn(
+                  "pointer-events-none absolute inset-y-0 left-2 flex select-none items-center font-mono font-medium text-muted-foreground",
+                  long ? "text-mono-lg sm:text-[1.375rem]" : "text-mono-xl",
+                )}
+              >
+                {prefix}
+              </span>
             )}
-            style={{ width: `${chars}ch` }}
-          />
+            <Input
+              ref={inputRef}
+              id={id}
+              variant="answer"
+              data-answer-field=""
+              aria-label={label}
+              aria-describedby={describedBy}
+              aria-invalid={invalid || undefined}
+              value={value}
+              disabled={disabled}
+              autoFocus={autoFocus}
+              onChange={(e) => {
+                const raw = e.target.value;
+                if (!onValueChange(raw) && raw.length > value.length)
+                  onReject?.(raw);
+              }}
+              onKeyDown={onKeyDown}
+              type="text"
+              inputMode={inputModeFor(format)}
+              enterKeyHint="next"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="none"
+              spellCheck={false}
+              className={cn(
+                "caret-primary",
+                align === "start" ? "text-left" : "text-center",
+                format === "hex" && "uppercase",
+                long && "text-mono-lg sm:text-[1.375rem]",
+              )}
+              style={
+                prefix
+                  ? {
+                      paddingLeft: `calc(0.5rem + ${prefix.length + 0.35}ch)`,
+                      paddingRight:
+                        align === "start"
+                          ? undefined
+                          : `calc(0.5rem + ${prefix.length + 0.35}ch)`,
+                    }
+                  : undefined
+              }
+            />
+            <span
+              ref={ringRef}
+              aria-hidden
+              className="pointer-events-none absolute inset-x-0 bottom-0 h-0.5 bg-success opacity-0"
+            />
+          </div>
+          {adornment}
         </div>
       </div>
     );

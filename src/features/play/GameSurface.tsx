@@ -1,6 +1,9 @@
 /**
- * GameSurface — the playable part of a run: instruction, prompt, answer
- * field, skip, and the reveal / worked solution after a skip.
+ * GameSurface — the playable part of a run, set as an exercise on a
+ * workbook page: the problem number in the margin, the instruction, the
+ * given number typeset large, the answer blank on its rule, and under it the
+ * last exercise marked in red pen (a tick, or a cross with the correct
+ * answer). Practice shows a worked solution after a skip.
  *
  * It renders no top bar, does no routing and writes no data, so both the
  * singleplayer run screen and multiplayer rooms can place it beside their own
@@ -19,10 +22,11 @@ import {
   useState,
 } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, BookOpen, Lightbulb, SkipForward } from "lucide-react";
+import { BookOpen, Lightbulb } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
+import { PenCross, PenTick } from "@/components/ui/pen-mark";
 import type { GameSettings } from "@/data";
 import {
   explainQuestion,
@@ -37,6 +41,7 @@ import { AnswerField, type AnswerFieldHandle } from "./AnswerField";
 import { AnswerValue } from "./AnswerValue";
 import { ExplanationSteps } from "./ExplanationSteps";
 import { PromptView } from "./PromptView";
+import { exerciseInstruction, PEN_DRAW_KEYFRAMES } from "./RunExercise";
 import { questionLabel, spokenAnswer } from "./describe";
 import { useSoundCues } from "./sound";
 
@@ -48,6 +53,7 @@ export { useSoundCues } from "./sound";
 export type { SoundCue, SoundCues } from "./sound";
 
 export type RunHandle = ReturnType<typeof useRun>;
+type Outcome = RunHandle["outcomes"][number];
 
 export interface GameSurfaceProps {
   run: RunHandle;
@@ -272,26 +278,44 @@ export function GameSurface({
     if (first) announce(`Hint: ${first.title}. ${first.note ?? ""}`);
   };
 
+  // Exercise numbers run through the whole sheet: the current problem is
+  // one past the last one marked.
+  const number = run.outcomes.length + 1;
+  const last = run.outcomes.length
+    ? run.outcomes[run.outcomes.length - 1]
+    : null;
+
   return (
-    <div
-      className={cn(
-        "flex w-full flex-col items-center gap-5 sm:gap-7",
-        className,
-      )}
-    >
+    <div className={cn("w-full", className)}>
       {practiceReveal ? (
         <PracticeReveal
           reveal={practiceReveal}
+          number={number - 1}
           grouped={grouped}
           placeValues={placeValues}
           onNext={run.dismissReveal}
         />
       ) : (
-        <>
-          <p className="min-h-5 text-center text-label text-muted-foreground">
-            {question?.instruction ?? " "}
+        <div className={EXERCISE_GRID}>
+          {/* Problem number in the margin, the instruction beside it. */}
+          <span aria-hidden className={NUMBER_CLASS}>
+            {question ? `${number}.` : ""}
+          </span>
+          <p
+            data-exercise={question ? number : undefined}
+            className="min-h-7 font-serif text-title-sm leading-tight text-foreground sm:text-title"
+          >
+            {question ? (
+              <>
+                <span className="sr-only">Exercise {number}. </span>
+                {exerciseInstruction(question)}
+              </>
+            ) : (
+              " "
+            )}
           </p>
 
+          <span aria-hidden />
           <div
             ref={promptRef}
             id={questionId}
@@ -304,13 +328,14 @@ export function GameSurface({
                 : "Waiting for the first question"
             }
             {...convertData(question)}
-            className="flex min-h-24 w-full items-center justify-center sm:min-h-32"
+            className="flex min-h-28 w-full items-center py-4 sm:min-h-40 sm:py-6 [@media(max-height:560px)]:min-h-20 [@media(max-height:560px)]:py-2"
           >
             {question ? (
               <PromptView
                 prompt={question.prompt}
                 grouped={grouped}
                 placeValues={placeValues}
+                align="start"
               />
             ) : (
               <span
@@ -322,6 +347,7 @@ export function GameSurface({
             )}
           </div>
 
+          <span aria-hidden />
           {question ? (
             <AnswerField
               ref={field}
@@ -334,54 +360,58 @@ export function GameSurface({
               invalid={invalid}
               disabled={!running}
               describedBy={`${questionId} ${hintId}`}
+              align="start"
               autoFocus
             />
           ) : (
-            <div aria-hidden className="h-[5.5rem] w-full max-w-md sm:h-24" />
+            <div aria-hidden className="h-[5.25rem] w-full sm:h-24" />
           )}
 
-          {practice ? (
-            hintOpen && question && <HintPanel question={question} />
-          ) : (
-            <FlashReveal reveal={run.reveal} />
-          )}
+          {/* The last exercise, marked: a tick, or a cross and the answer in red. */}
+          <LedgerMark outcome={last} n={number - 1} />
+          <LedgerLine outcome={last} n={number - 1} />
 
-          <div className="flex min-h-11 w-full max-w-md items-center justify-between gap-3">
-            {practice ? (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={showHint}
-                disabled={!running || !question || hintOpen}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <Lightbulb aria-hidden />
-                Hint
-              </Button>
-            ) : (
-              <Streak count={streak} />
+          <span aria-hidden />
+          <div className="flex w-full max-w-md flex-col gap-3 pt-1">
+            {practice && hintOpen && question && (
+              <HintPanel question={question} />
             )}
-            {showSkip && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={skip}
-                disabled={!running || !question}
-                className="text-muted-foreground hover:text-foreground"
-                aria-keyshortcuts="Tab"
-              >
-                <SkipForward aria-hidden />
-                {skipLabel(run)}
-                <Kbd
+            <div className="flex min-h-11 w-full items-center justify-between gap-3">
+              {practice ? (
+                <Button
+                  type="button"
+                  variant="ghost"
                   size="sm"
-                  className="ml-0.5 hidden pointer-fine:inline-flex"
+                  onClick={showHint}
+                  disabled={!running || !question || hintOpen}
+                  className="-ml-3 text-muted-foreground hover:text-foreground"
                 >
-                  Tab
-                </Kbd>
-              </Button>
-            )}
+                  <Lightbulb aria-hidden />
+                  Hint
+                </Button>
+              ) : (
+                <Streak count={streak} />
+              )}
+              {showSkip && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={skip}
+                  disabled={!running || !question}
+                  className="-mr-3 text-muted-foreground hover:text-foreground"
+                  aria-keyshortcuts="Tab"
+                >
+                  {skipLabel(run)}
+                  <Kbd
+                    size="sm"
+                    className="ml-0.5 hidden pointer-fine:inline-flex"
+                  >
+                    Tab
+                  </Kbd>
+                </Button>
+              )}
+            </div>
           </div>
           <p id={hintId} className="sr-only">
             {showSkip
@@ -390,7 +420,7 @@ export function GameSurface({
                 : "Answers advance as soon as they are correct. Press Tab to skip."
               : "Answers advance as soon as they are correct."}
           </p>
-        </>
+        </div>
       )}
 
       <div aria-live="polite" aria-atomic="true" className="sr-only">
@@ -399,6 +429,12 @@ export function GameSurface({
     </div>
   );
 }
+
+/** Margin column for problem numbers and marks, then the work column. */
+const EXERCISE_GRID =
+  "grid grid-cols-[2.25rem_minmax(0,1fr)] gap-x-2.5 sm:grid-cols-[3.75rem_minmax(0,1fr)] sm:gap-x-4";
+const NUMBER_CLASS =
+  "pt-px text-right font-mono text-mono-lg font-medium tabular-nums leading-tight text-primary";
 
 function convertData(q: Question | null) {
   if (!q || q.kind !== "convert" || !q.answerBase) return {};
@@ -420,11 +456,11 @@ function convertData(q: Question | null) {
 const Streak = memo(function Streak({ count }: { count: number }) {
   if (count < 3) return <span aria-hidden />;
   return (
-    <span className="inline-flex items-baseline gap-1.5 text-label text-muted-foreground">
-      <span className="eyebrow text-[0.625rem]">Streak</span>
+    <span className="inline-flex items-baseline gap-2 text-muted-foreground">
+      <span className="smallcaps">Streak</span>
       <span
         key={count}
-        className="font-mono tabular-nums text-foreground motion-safe:animate-in motion-safe:fade-in-0 motion-safe:zoom-in-95"
+        className="font-mono text-mono-md tabular-nums text-foreground motion-safe:animate-in motion-safe:fade-in-0"
       >
         {count}
       </span>
@@ -432,54 +468,94 @@ const Streak = memo(function Streak({ count }: { count: number }) {
   );
 });
 
+/** Margin mark of the last exercise: a red-pen tick or cross, drawn once. */
+function LedgerMark({ outcome, n }: { outcome: Outcome | null; n: number }) {
+  return (
+    <span
+      aria-hidden
+      className={cn(
+        "flex min-h-10 items-center justify-end",
+        PEN_DRAW_KEYFRAMES,
+      )}
+    >
+      {outcome &&
+        (outcome.result === "correct" ? (
+          <PenTick key={n} className="size-6" />
+        ) : (
+          <PenCross key={n} className="size-5" />
+        ))}
+    </span>
+  );
+}
+
+/**
+ * The last exercise written small under the answer line: its number, the
+ * given value and the answer. A miss carries the correct answer in red pen.
+ * Purely visual: the live region has already spoken the outcome.
+ */
+const LedgerLine = memo(function LedgerLine({
+  outcome,
+  n,
+}: {
+  outcome: Outcome | null;
+  n: number;
+}) {
+  if (!outcome) return <span aria-hidden className="min-h-10" />;
+  const miss = outcome.result !== "correct";
+  return (
+    <div
+      aria-hidden
+      className="flex min-h-10 min-w-0 max-w-md items-center gap-x-2 overflow-hidden whitespace-nowrap text-muted-foreground"
+    >
+      <span className="font-mono text-mono-sm tabular-nums">{n}.</span>
+      <PromptView
+        prompt={outcome.question.prompt}
+        grouped={false}
+        placeValues={false}
+        size="sm"
+        align="start"
+        className="shrink-0 flex-nowrap opacity-80"
+      />
+      <span className="font-mono text-mono-sm">=</span>
+      <AnswerValue
+        question={outcome.question}
+        size="sm"
+        className={cn("shrink-0", miss && "[&_*]:!text-pen")}
+      />
+      {miss && (
+        <span className="font-serif text-body-sm italic text-pen">
+          {outcome.result === "timeout" ? "time ran out" : "skipped"}
+        </span>
+      )}
+    </div>
+  );
+});
+
 function HintPanel({ question }: { question: Question }) {
   const [first] = explainQuestion(question);
   if (!first) return null;
   return (
-    <div className="w-full max-w-md rounded-lg border border-dashed border-border-strong bg-card/80 px-4 py-3 motion-safe:animate-in motion-safe:fade-in-0">
-      <p className="flex items-center gap-1.5 text-label font-medium text-foreground">
-        <Lightbulb aria-hidden className="size-4 text-muted-foreground" />
+    <div className="w-full rounded-sm bg-tint px-4 py-3 motion-safe:animate-rise">
+      <p className="smallcaps text-primary">Hint</p>
+      <p className="mt-1 font-serif text-body font-bold text-foreground">
         {first.title}
       </p>
       {first.note && (
-        <p className="mt-1.5 text-body-sm text-muted-foreground">
-          {first.note}
-        </p>
+        <p className="mt-1 text-body-sm text-foreground/80">{first.note}</p>
       )}
     </div>
   );
 }
 
-function FlashReveal({ reveal }: { reveal: RunReveal | null }) {
-  return (
-    <p
-      aria-hidden
-      className={cn(
-        "flex min-h-6 items-center justify-center gap-2 text-label text-muted-foreground transition-opacity duration-base",
-        reveal ? "opacity-100" : "opacity-0",
-      )}
-    >
-      {reveal && (
-        <>
-          <span>
-            {reveal.result === "timeout"
-              ? "Time's up · it was"
-              : "Skipped · it was"}
-          </span>
-          <AnswerValue question={reveal.question} size="sm" />
-        </>
-      )}
-    </p>
-  );
-}
-
 function PracticeReveal({
   reveal,
+  number,
   grouped,
   placeValues,
   onNext,
 }: {
   reveal: RunReveal;
+  number: number;
   grouped: boolean;
   placeValues: boolean;
   onNext: () => void;
@@ -495,42 +571,58 @@ function PracticeReveal({
   }, [q]);
 
   return (
-    <section
-      aria-labelledby="practice-reveal-title"
-      className="w-full max-w-xl rounded-xl border bg-card p-5 shadow-xs motion-safe:animate-rise sm:p-6"
-      onKeyDown={(e) => {
-        if (e.key === "Enter" && e.target === e.currentTarget) onNext();
-      }}
-    >
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1">
-          <p className="eyebrow">Worked solution</p>
-          <h2 id="practice-reveal-title" className="text-title font-semibold">
-            {q.instruction}
+    <div className={EXERCISE_GRID}>
+      <span aria-hidden className="flex flex-col items-end gap-3">
+        <span className={NUMBER_CLASS}>{number}.</span>
+        <PenCross className="size-5" />
+      </span>
+      <section
+        aria-labelledby="practice-reveal-title"
+        className="flex w-full max-w-xl flex-col gap-5 motion-safe:animate-rise"
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && e.target === e.currentTarget) onNext();
+        }}
+      >
+        <div className="flex flex-col gap-3">
+          <h2
+            id="practice-reveal-title"
+            className="font-serif text-title-sm leading-tight text-foreground sm:text-title"
+          >
+            <span className="sr-only">Exercise {number}. </span>
+            {exerciseInstruction(q)}
           </h2>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+            <PromptView
+              prompt={q.prompt}
+              grouped={grouped}
+              placeValues={placeValues}
+              size="sm"
+              align="start"
+            />
+            <span
+              aria-hidden
+              className="font-mono text-mono-md text-muted-foreground"
+            >
+              =
+            </span>
+            <AnswerValue question={q} size="md" className="[&_*]:!text-pen" />
+            <span className="sr-only">
+              {questionLabel(q)}. Answer: {spokenAnswer(q)}.
+            </span>
+          </div>
         </div>
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border bg-sunken/50 px-4 py-3">
-          <PromptView
-            prompt={q.prompt}
-            grouped={grouped}
-            placeValues={placeValues}
-            size="sm"
-          />
-          <ArrowRight aria-hidden className="size-4 text-muted-foreground" />
-          <AnswerValue question={q} size="md" />
-          <span className="sr-only">
-            {questionLabel(q)}. Answer: {spokenAnswer(q)}.
-          </span>
+        <div className="rounded-sm bg-tint px-4 py-4 sm:px-5">
+          <p className="smallcaps mb-3 text-primary">Worked solution</p>
+          <ExplanationSteps question={q} />
         </div>
-        <ExplanationSteps question={q} />
-        <div className="flex flex-col-reverse items-stretch gap-3 border-t pt-4 xs:flex-row xs:items-center xs:justify-between">
+        <div className="flex flex-col-reverse items-stretch gap-3 xs:flex-row xs:items-center xs:justify-between">
           {topic ? (
             <Link
               to={`/learn#${topic.learnAnchor}`}
               className="link inline-flex items-center gap-1.5 text-label"
             >
               <BookOpen aria-hidden className="size-4" />
-              Learn: {topic.name}
+              Lesson: {topic.name}
             </Link>
           ) : (
             <span />
@@ -547,7 +639,7 @@ function PracticeReveal({
             </Kbd>
           </Button>
         </div>
-      </div>
-    </section>
+      </section>
+    </div>
   );
 }

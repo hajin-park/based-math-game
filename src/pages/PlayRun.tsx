@@ -1,6 +1,9 @@
 /**
  * Run screen: /play/:modeId (custom drills: /play/custom?c=…, daily:
  * /play/daily:YYYY-MM-DD for today only). Immersive: no nav or footer.
+ * The page is an exercise sheet: a test-paper header with the examiner's
+ * box and the clock as a printed rule, then one problem at a time in a
+ * centred column with the problem number in the margin.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -13,6 +16,7 @@ import {
 
 import Countdown from "@/components/Countdown";
 import { GridPaper } from "@/components/ui/grid-paper";
+import { Kbd } from "@/components/ui/kbd";
 import { toast } from "@/components/ui/use-toast";
 import { useGameSettings, usePersonalBest } from "@/data";
 import {
@@ -193,26 +197,35 @@ function RunScreen({
       />
       <section
         aria-label="Game"
-        className="relative isolate flex flex-1 flex-col items-center px-4 pb-10 pt-8 sm:justify-center sm:pb-16 sm:pt-10 pointer-coarse:justify-start pointer-coarse:pt-6 [@media(max-height:480px)]:justify-start [@media(max-height:480px)]:pt-3"
+        className="relative isolate flex flex-1 justify-center px-4 sm:px-6"
       >
-        <GridPaper fade className="opacity-70" />
-        <div
-          className={cn("w-full max-w-2xl", paused && "invisible")}
-          aria-hidden={paused || undefined}
-        >
-          <GameSurface run={run} settings={settings} />
+        <div className="relative flex w-full max-w-2xl flex-col">
+          {/* Graph lines only around the work, and the exercise book's
+              double margin rule on wide screens. */}
+          <GridPaper fade className="-inset-x-24 opacity-80" />
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-y-0 left-[calc(3.75rem+0.375rem)] hidden w-[3px] border-x border-primary/25 lg:block"
+          />
+          <div
+            className={cn(
+              "flex w-full flex-col pb-8 pt-7 sm:my-auto sm:pb-14 sm:pt-10 pointer-coarse:my-0 pointer-coarse:pt-5 [@media(max-height:560px)]:my-0 [@media(max-height:560px)]:pt-3",
+              paused && "invisible",
+            )}
+            aria-hidden={paused || undefined}
+          >
+            <GameSurface run={run} settings={settings} />
+          </div>
+          <p className="mb-6 hidden items-center gap-5 pl-[4.75rem] text-label text-muted-foreground sm:pointer-fine:flex [@media(max-height:560px)]:hidden">
+            <span className="inline-flex items-center gap-1.5">
+              <Kbd size="sm">Tab</Kbd> skip
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <Kbd size="sm">Esc</Kbd> pause
+            </span>
+            <span className="font-serif italic">Answers mark themselves.</span>
+          </p>
         </div>
-        <p className="mt-8 hidden items-center gap-4 text-[0.75rem] text-muted-foreground sm:pointer-fine:flex [@media(max-height:480px)]:hidden">
-          <span>
-            <kbd className="font-mono">Tab</kbd> skip
-          </span>
-          <span aria-hidden>·</span>
-          <span>
-            <kbd className="font-mono">Esc</kbd> pause
-          </span>
-          <span aria-hidden>·</span>
-          <span>Answers submit themselves</span>
-        </p>
       </section>
       <PauseOverlay
         open={paused && running}

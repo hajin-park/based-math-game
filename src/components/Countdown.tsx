@@ -14,13 +14,18 @@ interface CountdownProps {
    * when the start time is shared (multiplayer rooms).
    */
   skippable?: boolean;
-  /** Line under the number (default "Get ready"). */
+  /** Running head above the number (default "Get ready"). */
   caption?: string;
+  /** Quiet line under the number (default "Pencils ready."). */
+  note?: string;
+  /** Extra classes for the full-screen overlay. */
+  className?: string;
 }
 
 /**
- * 3-2-1 before a run. Announced assertively to screen readers; no motion
- * under prefers-reduced-motion.
+ * 3-2-1 before a run: big typewriter numerals between two rules on the
+ * paper, a running head and a quiet line. Announced assertively to screen
+ * readers; no motion under prefers-reduced-motion.
  */
 export default function Countdown({
   onComplete,
@@ -28,6 +33,8 @@ export default function Countdown({
   inline = false,
   skippable = false,
   caption = "Get ready",
+  note = "Pencils ready.",
+  className,
 }: CountdownProps) {
   const [count, setCount] = useState(duration);
   const done = useRef(false);
@@ -65,30 +72,35 @@ export default function Countdown({
   }, [skippable, complete]);
 
   const content = (
-    <div className="flex flex-col items-center gap-5 text-center">
-      <p className="eyebrow">{caption}</p>
+    <div className="flex w-full max-w-sm flex-col items-center text-center">
+      <p className="smallcaps w-full border-b border-foreground/25 pb-2">
+        {caption}
+      </p>
       <div
         aria-live="assertive"
         aria-atomic="true"
-        className="grid h-[1em] place-items-center font-mono text-[clamp(5rem,3rem+10vw,9rem)] font-medium leading-none tabular-nums"
+        className="grid h-[1.15em] place-items-center py-2 font-mono text-[clamp(6rem,3.5rem+11vw,10rem)] font-medium leading-none tabular-nums"
       >
         <span
           key={count}
           className={cn(
-            "motion-safe:animate-in motion-safe:fade-in-0 motion-safe:zoom-in-90 motion-safe:duration-200",
+            "motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-1 motion-safe:duration-200",
             count <= 1 ? "text-primary" : "text-foreground",
           )}
         >
           {Math.max(count, 1)}
         </span>
       </div>
+      <p className="w-full border-t border-foreground/25 pt-3 font-serif text-body-lg italic text-foreground/80">
+        {note}
+      </p>
       {skippable && (
-        <p className="hidden items-center gap-1.5 text-label text-muted-foreground pointer-fine:inline-flex">
+        <p className="mt-4 hidden items-center gap-1.5 text-label text-muted-foreground pointer-fine:inline-flex">
           Press <Kbd size="sm">Enter</Kbd> to start now
         </p>
       )}
       {skippable && (
-        <p className="text-label text-muted-foreground pointer-fine:hidden">
+        <p className="mt-4 text-label text-muted-foreground pointer-fine:hidden">
           Tap to start now
         </p>
       )}
@@ -99,7 +111,10 @@ export default function Countdown({
 
   return (
     <div
-      className="fixed inset-0 z-50 grid place-items-center bg-background/95"
+      className={cn(
+        "fixed inset-0 z-50 grid place-items-center bg-background px-4",
+        className,
+      )}
       onClick={skippable ? complete : undefined}
     >
       {content}
