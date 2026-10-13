@@ -672,8 +672,9 @@ const startGame = async (roomId: string) => {
   const raw = await readRoom(roomId);
   if (!raw) throw new Error("Room not found");
   if (raw.hostUid !== uid) throw new Error("Only host can start the game");
-  // A second start (double click, stale handler) would restart the round.
-  if (raw.status !== "waiting") throw new Error("A round is already running");
+  // A second start (double click, stale handler) would restart the round
+  // with a new seed; the first one already did the job.
+  if (raw.status !== "waiting") return;
   const others = activePlayers(raw).filter((p) => p.uid !== raw.hostUid);
   if (
     others.length === 0 ||
