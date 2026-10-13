@@ -197,7 +197,7 @@ function RunScreen({
       />
       <section
         aria-label="Game"
-        className="relative isolate flex flex-1 justify-center px-4 sm:px-6"
+        className="relative isolate flex flex-1 justify-center overflow-x-clip px-4 sm:px-6"
       >
         <div className="relative flex w-full max-w-2xl flex-col">
           {/* Graph lines only around the work, and the exercise book's
