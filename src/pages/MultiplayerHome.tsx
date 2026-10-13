@@ -167,7 +167,7 @@ export default function MultiplayerHome() {
                   {pending ? "Joining…" : "Join room"}
                   {!pending && <ArrowRight aria-hidden />}
                 </Button>
-                <span className="hidden font-sans text-label text-muted-foreground pointer-fine:inline-flex pointer-fine:items-center pointer-fine:gap-1.5">
+                <span className="hidden whitespace-nowrap font-sans text-label text-muted-foreground pointer-fine:inline-flex pointer-fine:items-center pointer-fine:gap-1.5">
                   or press <Kbd size="sm">Enter</Kbd>
                 </span>
               </div>

@@ -329,7 +329,11 @@ export function ResultsView({
                       <td className="whitespace-nowrap py-3 text-right">
                         <span className="font-mono text-[1.125rem] tabular-nums">
                           {s.winner ? (
-                            <PenCircle delay={250}>{r.main}</PenCircle>
+                            <PenCircle delay={250}>
+                              <span className="inline-block min-w-[1.5em] text-center">
+                                {r.main}
+                              </span>
+                            </PenCircle>
                           ) : (
                             r.main
                           )}
