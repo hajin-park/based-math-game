@@ -141,7 +141,7 @@ Known limits found in QA, with the product decision on each:
 - **A ranked daily can be previewed.** The lock is claimed when a daily finishes, so a player can quit before the end, see the questions, and retry. Closing this needs the lock claimed at the start, which is a rules change. _Accepted as is._
 - **Reloading mid-round forfeits that round in a room.** The player becomes a spectator; their progress so far is kept. _Changed: see §14._
 - **Removing a disconnected player also bans them.** It is the only way to free their seat; anything else needs a rules change. _Changed: see §14._
-- **`userStats.bests` grows by one key per daily played.** After about 930 dailies, a player would hit the 1000-key rules limit. A clean-up or a separate daily-bests document is needed before then. _Accepted for now; revisit before mid-2029._
+- **`userStats.bests` grows by one key per daily played.** After about 930 dailies, a player would hit the 1000-key rules limit. A clean-up or a separate daily-bests document is needed before then. _Accepted for now; revisit by early 2029 (about 930 days after the October 2026 daily launch)._
 - **A device clock more than 5 minutes fast fails run saves** (the `endedAt` bound in the rules). _Changed: see §14._
 
 ---
