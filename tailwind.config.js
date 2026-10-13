@@ -1,5 +1,5 @@
 /**
- * Based Math Game — "Engineer's Notebook" design tokens.
+ * Based Math Game — "Exercise Workbook" design tokens (chalkboard at night).
  * Colors are RGB channel triplets declared in src/index.css so that every
  * Tailwind opacity modifier works (bg-primary/10, border-base-bin/30, …).
  * See DESIGN.md for usage rules.
@@ -47,6 +47,14 @@ module.exports = {
         foreground: withAlpha("foreground"),
         surface: withAlpha("card"),
         sunken: withAlpha("sunken"),
+        tint: withAlpha("tint"),
+        pen: pair("pen"),
+        cover: {
+          DEFAULT: withAlpha("cover"),
+          deep: withAlpha("cover-deep"),
+          foreground: withAlpha("cover-foreground"),
+          muted: withAlpha("cover-muted"),
+        },
         primary: {
           ...pair("primary"),
           hover: withAlpha("primary-hover"),
@@ -76,29 +84,26 @@ module.exports = {
         trophy: pair("trophy"),
       },
       fontFamily: {
+        // Computer Modern throughout; see src/styles/fonts.css.
+        body: ['"BM Concrete"', '"BM Serif"', "Georgia", "Cambria", "serif"],
+        serif: [
+          '"BM Serif"',
+          "Georgia",
+          "Cambria",
+          '"Times New Roman"',
+          "serif",
+        ],
+        display: ['"BM Serif"', "Georgia", "Cambria", "serif"],
         sans: [
-          '"Schibsted Grotesk"',
-          '"Schibsted Grotesk Fallback"',
+          '"BM Sans"',
           "ui-sans-serif",
           "system-ui",
+          "-apple-system",
+          '"Segoe UI"',
           "sans-serif",
         ],
-        serif: [
-          "Newsreader",
-          '"Newsreader Fallback"',
-          "Georgia",
-          "Cambria",
-          "serif",
-        ],
-        display: [
-          "Newsreader",
-          '"Newsreader Fallback"',
-          "Georgia",
-          "Cambria",
-          "serif",
-        ],
         mono: [
-          '"Martian Mono"',
+          '"BM Typewriter"',
           "ui-monospace",
           "SFMono-Regular",
           "Menlo",
@@ -108,53 +113,48 @@ module.exports = {
       },
       fontSize: {
         // ---- Semantic scale (preferred) ----
-        // Display: Newsreader, for page heroes only.
+        // Display: BM Serif bold extended — the cover, page titles.
         "display-2xl": [
-          "clamp(2.75rem, 1.6rem + 4.6vw, 5.25rem)",
-          { lineHeight: "0.98", letterSpacing: "-0.028em" },
+          "clamp(3.25rem, 1.9rem + 5.2vw, 6rem)",
+          { lineHeight: "0.95", letterSpacing: "-0.012em" },
         ],
         "display-xl": [
-          "clamp(2.25rem, 1.5rem + 3vw, 3.75rem)",
-          { lineHeight: "1.02", letterSpacing: "-0.024em" },
+          "clamp(2.5rem, 1.75rem + 3.2vw, 4.25rem)",
+          { lineHeight: "1", letterSpacing: "-0.01em" },
         ],
         "display-lg": [
-          "clamp(1.875rem, 1.45rem + 1.7vw, 2.75rem)",
-          { lineHeight: "1.08", letterSpacing: "-0.018em" },
+          "clamp(2rem, 1.55rem + 1.9vw, 3rem)",
+          { lineHeight: "1.06", letterSpacing: "-0.008em" },
         ],
-        // Headline: Newsreader, section headings.
+        // Headline: chapter and section headings.
         headline: [
-          "clamp(1.5rem, 1.3rem + 0.8vw, 2rem)",
-          { lineHeight: "1.15", letterSpacing: "-0.012em" },
+          "clamp(1.5rem, 1.28rem + 0.9vw, 2.0625rem)",
+          { lineHeight: "1.15", letterSpacing: "-0.005em" },
         ],
-        // Title: Schibsted, card / panel titles.
-        title: ["1.1875rem", { lineHeight: "1.35", letterSpacing: "-0.01em" }],
-        "title-sm": [
-          "1.0625rem",
-          { lineHeight: "1.4", letterSpacing: "-0.006em" },
-        ],
-        // Body.
-        "body-lg": [
-          "1.125rem",
-          { lineHeight: "1.6", letterSpacing: "-0.003em" },
-        ],
-        body: ["1rem", { lineHeight: "1.6" }],
-        "body-sm": ["0.875rem", { lineHeight: "1.55" }],
-        // Label: UI controls, table headers.
-        label: ["0.8125rem", { lineHeight: "1.3", letterSpacing: "0.005em" }],
-        // Eyebrow: Martian Mono uppercase overline.
-        eyebrow: ["0.6875rem", { lineHeight: "1.2", letterSpacing: "0.08em" }],
-        // Mono numerals.
-        "mono-sm": ["0.75rem", { lineHeight: "1.4" }],
-        "mono-md": ["0.875rem", { lineHeight: "1.45" }],
-        "mono-lg": ["1.25rem", { lineHeight: "1.3" }],
+        // Title: panel and list titles (serif bold).
+        title: ["1.25rem", { lineHeight: "1.3", letterSpacing: "-0.003em" }],
+        "title-sm": ["1.125rem", { lineHeight: "1.35" }],
+        // Body: BM Concrete.
+        "body-lg": ["1.1875rem", { lineHeight: "1.6" }],
+        body: ["1.0625rem", { lineHeight: "1.62" }],
+        "body-sm": ["0.9375rem", { lineHeight: "1.55" }],
+        // Label: controls, tabs, table heads (BM Sans).
+        label: ["0.875rem", { lineHeight: "1.3", letterSpacing: "0.01em" }],
+        // Small caps running-head voice (.smallcaps).
+        eyebrow: ["0.875rem", { lineHeight: "1.2", letterSpacing: "0.06em" }],
+        // Typewriter numerals.
+        "mono-sm": ["0.8125rem", { lineHeight: "1.4" }],
+        "mono-md": ["0.9375rem", { lineHeight: "1.45" }],
+        "mono-lg": ["1.3125rem", { lineHeight: "1.3" }],
         "mono-xl": [
-          "clamp(1.5rem, 1.2rem + 1.2vw, 2.25rem)",
-          { lineHeight: "1.15" },
+          "clamp(1.625rem, 1.25rem + 1.4vw, 2.5rem)",
+          { lineHeight: "1.12" },
         ],
         "mono-2xl": [
-          "clamp(2rem, 1.4rem + 2.6vw, 3.5rem)",
-          { lineHeight: "1.05" },
+          "clamp(2.25rem, 1.5rem + 3vw, 4rem)",
+          { lineHeight: "1.04" },
         ],
+        "mono-3xl": ["clamp(2.75rem, 1.6rem + 5vw, 6rem)", { lineHeight: "1" }],
 
         // ---- Tailwind defaults with tightened line-heights (legacy) ----
         xs: ["0.75rem", { lineHeight: "1.1rem" }],
@@ -195,29 +195,30 @@ module.exports = {
         lede: "34rem",
         page: "1240px",
       },
+      // Printed matter has square corners. Every radius is a hair.
       borderRadius: {
         none: "0",
-        xs: "3px",
-        sm: "4px",
-        DEFAULT: "6px",
-        md: "6px",
-        lg: "8px",
-        xl: "10px",
-        "2xl": "12px",
+        xs: "1px",
+        sm: "2px",
+        DEFAULT: "2px",
+        md: "2px",
+        lg: "3px",
+        xl: "4px",
+        "2xl": "6px",
       },
       boxShadow: {
-        // Hairline + very soft ambient. Shadow colour is tinted ink.
+        // Paper on paper: a contact shadow plus a soft fall-off. Tinted ink.
         none: "none",
-        xs: "0 1px 0 0 rgb(var(--shadow) / 0.04)",
-        sm: "0 1px 2px 0 rgb(var(--shadow) / 0.06)",
+        xs: "0 1px 0 0 rgb(var(--shadow) / 0.05)",
+        sm: "0 1px 1px 0 rgb(var(--shadow) / 0.08)",
         DEFAULT:
-          "0 1px 2px 0 rgb(var(--shadow) / 0.05), 0 2px 6px -2px rgb(var(--shadow) / 0.06)",
-        md: "0 1px 2px 0 rgb(var(--shadow) / 0.06), 0 6px 16px -6px rgb(var(--shadow) / 0.12)",
-        lg: "0 1px 2px 0 rgb(var(--shadow) / 0.06), 0 12px 32px -10px rgb(var(--shadow) / 0.18)",
-        xl: "0 2px 4px 0 rgb(var(--shadow) / 0.06), 0 24px 56px -16px rgb(var(--shadow) / 0.24)",
+          "0 1px 1px 0 rgb(var(--shadow) / 0.07), 0 3px 8px -3px rgb(var(--shadow) / 0.12)",
+        md: "0 1px 1px 0 rgb(var(--shadow) / 0.08), 0 6px 16px -6px rgb(var(--shadow) / 0.22)",
+        lg: "0 1px 2px 0 rgb(var(--shadow) / 0.08), 0 14px 32px -12px rgb(var(--shadow) / 0.32)",
+        xl: "0 2px 3px 0 rgb(var(--shadow) / 0.08), 0 24px 48px -18px rgb(var(--shadow) / 0.38)",
         "2xl":
-          "0 2px 4px 0 rgb(var(--shadow) / 0.08), 0 32px 72px -20px rgb(var(--shadow) / 0.3)",
-        inner: "inset 0 1px 2px 0 rgb(var(--shadow) / 0.06)",
+          "0 2px 4px 0 rgb(var(--shadow) / 0.1), 0 32px 64px -22px rgb(var(--shadow) / 0.45)",
+        inner: "inset 0 1px 2px 0 rgb(var(--shadow) / 0.08)",
         hairline: "0 0 0 1px rgb(var(--border))",
       },
       transitionTimingFunction: {
@@ -228,7 +229,7 @@ module.exports = {
       transitionDuration: {
         fast: "120ms",
         base: "180ms",
-        slow: "240ms",
+        slow: "260ms",
       },
       keyframes: {
         "accordion-down": {
@@ -244,6 +245,19 @@ module.exports = {
         rise: {
           from: { opacity: "0", transform: "translateY(6px)" },
           to: { opacity: "1", transform: "translateY(0)" },
+        },
+        // Pen strokes: SVG paths with pathLength="1".
+        "pen-draw": {
+          from: { strokeDashoffset: "1" },
+          to: { strokeDashoffset: "0" },
+        },
+        // A sheet laid down on the desk.
+        "sheet-in": {
+          from: {
+            opacity: "0",
+            transform: "translateY(10px) rotate(-0.35deg)",
+          },
+          to: { opacity: "1", transform: "translateY(0) rotate(0)" },
         },
         "caret-blink": {
           "0%, 70%, 100%": { opacity: "1" },
@@ -273,6 +287,8 @@ module.exports = {
         "fade-out": "fade-out 120ms ease-in",
         rise: "rise 240ms cubic-bezier(0.2, 0.8, 0.2, 1) both",
         "caret-blink": "caret-blink 1.1s ease-out infinite",
+        "pen-draw": "pen-draw 320ms cubic-bezier(0.65, 0, 0.35, 1) both",
+        "sheet-in": "sheet-in 280ms cubic-bezier(0.2, 0.8, 0.2, 1) both",
         "slide-in-from-top":
           "slide-in-from-top 240ms cubic-bezier(0.2, 0.8, 0.2, 1)",
         "slide-in-from-bottom":

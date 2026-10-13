@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   customMode,
   dailyDateOf,
+  dailyNumber,
+  DAILY_EPOCH,
   dailyModeFor,
   FORMATS,
   FORMAT_IDS,
@@ -201,5 +203,14 @@ describe("catalog", () => {
     expect(
       normalizeCustomConfig({ conversions: [], kinds: ["ascii"] }).kinds,
     ).toEqual(["ascii"]);
+  });
+
+  it("numbers daily sheets from the launch day", () => {
+    expect(dailyNumber(DAILY_EPOCH)).toBe(1);
+    expect(dailyNumber("2026-10-13")).toBe(5);
+    expect(dailyNumber(new Date(Date.UTC(2026, 9, 13, 23, 59)))).toBe(5);
+    expect(dailyNumber("2027-10-09")).toBe(366);
+    expect(dailyNumber("2026-01-01")).toBe(1);
+    expect(() => dailyNumber("2026-02-30")).toThrow();
   });
 });

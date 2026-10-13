@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+# Local agent worktrees and design-review captures
+.claude/worktrees/
+.impeccable/review/
+.impeccable/mocks/
+.impeccable/build/
+.impeccable/questions/

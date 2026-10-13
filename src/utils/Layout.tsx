@@ -21,6 +21,8 @@ export const Layout = () => {
   // The run screen (/play/:modeId) is immersive; the /play hub is not.
   const isActiveQuiz = /^\/play\/[^/]+\/?$/.test(location.pathname);
   const immersive = isMultiplayerRoom || isActiveQuiz;
+  // The cover ("/") prints its own chrome on the book cloth.
+  const isCover = location.pathname === "/";
 
   // Auth no longer blocks rendering: pages render immediately and the
   // components that need a uid wait for `user` (or call ensureUser()).
@@ -31,7 +33,7 @@ export const Layout = () => {
       </a>
       <ScrollToTop />
       <ConnectionStatus />
-      {!immersive && <NavigationBar />}
+      {!immersive && !isCover && <NavigationBar />}
       <main id="main" tabIndex={-1} className="flex-auto outline-none">
         <Suspense fallback={<RouteFallback />}>
           <Outlet />

@@ -191,7 +191,7 @@ export function BaseOdometer({
     <div
       ref={rootRef}
       className={cn(
-        "relative w-full overflow-hidden rounded-xl border bg-card/90 shadow-md backdrop-blur-[1px]",
+        "relative w-full overflow-hidden rounded-sm border border-border-strong/70 bg-card shadow-md",
         className,
       )}
     >

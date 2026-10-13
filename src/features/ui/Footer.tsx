@@ -1,119 +1,87 @@
 import { Link } from "react-router-dom";
-import { Github } from "lucide-react";
-import { Wordmark } from "@/components/ui/logo";
 
-const SECTIONS = [
+const LINKS = [
+  { name: "About", href: "/about" },
+  { name: "How to play", href: "/how-to-play" },
+  { name: "Your stats", href: "/stats" },
+  { name: "Privacy", href: "/privacy" },
+  { name: "Terms", href: "/terms" },
+];
+
+const EXTERNAL = [
   {
-    title: "Play",
-    links: [
-      { name: "Solo sprint", href: "/play" },
-      { name: "Multiplayer rooms", href: "/multiplayer" },
-      { name: "Leaderboard", href: "/leaderboard" },
-      { name: "Your stats", href: "/stats" },
-    ],
+    name: "Source",
+    href: "https://github.com/hajin-park/based-math-game",
   },
   {
-    title: "Learn",
-    links: [
-      { name: "Learn", href: "/learn" },
-      { name: "How to play", href: "/how-to-play" },
-      { name: "About", href: "/about" },
-    ],
-  },
-  {
-    title: "Legal",
-    links: [
-      { name: "Privacy", href: "/privacy" },
-      { name: "Terms", href: "/terms" },
-      {
-        name: "GPL-3.0 license",
-        href: "https://github.com/hajin-park/based-math-game/blob/main/LICENSE",
-        external: true,
-      },
-    ],
+    name: "GPL-3.0",
+    href: "https://github.com/hajin-park/based-math-game/blob/main/LICENSE",
   },
 ];
 
-export default function Footer() {
+/**
+ * The colophon: one quiet block at the back of the book. What it is, what it
+ * is set in, where the source lives.
+ */
+export default function Footer({ className }: { className?: string }) {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="border-t bg-background">
-      <div className="container grid gap-10 py-12 md:grid-cols-[1.4fr_repeat(3,1fr)] md:gap-8 md:py-16">
-        <div className="flex max-w-xs flex-col gap-4">
-          <Link
-            to="/"
-            aria-label="Based Math Game — home"
-            className="-ml-1 flex w-fit items-center rounded-md px-1 py-1"
-          >
-            <Wordmark />
-          </Link>
-          <p className="text-body-sm text-muted-foreground">
-            Timed drills for converting between binary, octal, decimal and
-            hexadecimal. Free and open source.
+    <footer className={className}>
+      <div className="container">
+        <div className="flex flex-col gap-4 border-t-[3px] border-double border-foreground/40 py-8 text-[0.9375rem] text-muted-foreground md:flex-row md:items-baseline md:justify-between md:gap-8">
+          <p className="max-w-[34rem] text-pretty">
+            <span className="font-serif font-bold text-foreground">
+              Based Math
+            </span>{" "}
+            — timed drills in binary, octal, decimal and hexadecimal. Set in
+            Computer Modern. Inspired by{" "}
+            <a
+              href="https://arithmetic.zetamac.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="link font-normal text-muted-foreground"
+            >
+              zetamac
+            </a>
+            .{" "}
+            <span className="whitespace-nowrap">
+              © {year}{" "}
+              <span
+                className="font-mono text-[0.875rem]"
+                title={`${year} in hexadecimal`}
+              >
+                (0x{year.toString(16).toUpperCase()})
+              </span>
+            </span>
           </p>
+          <nav aria-label="Colophon">
+            <ul className="flex flex-wrap gap-x-5 gap-y-1">
+              {LINKS.map((l) => (
+                <li key={l.href}>
+                  <Link
+                    to={l.href}
+                    className="inline-flex min-h-8 items-center transition-colors duration-fast hover:text-foreground"
+                  >
+                    {l.name}
+                  </Link>
+                </li>
+              ))}
+              {EXTERNAL.map((l) => (
+                <li key={l.href}>
+                  <a
+                    href={l.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex min-h-8 items-center transition-colors duration-fast hover:text-foreground"
+                  >
+                    {l.name}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
         </div>
-
-        <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 md:col-span-3">
-          {SECTIONS.map((section) => (
-            <div key={section.title} className="flex flex-col gap-3">
-              <h2 className="eyebrow">{section.title}</h2>
-              <ul className="flex flex-col gap-1">
-                {section.links.map((link) => (
-                  <li key={link.name}>
-                    {"external" in link && link.external ? (
-                      <a
-                        href={link.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex min-h-8 items-center text-body-sm text-foreground/80 transition-colors duration-fast hover:text-foreground"
-                      >
-                        {link.name}
-                      </a>
-                    ) : (
-                      <Link
-                        to={link.href}
-                        className="inline-flex min-h-8 items-center text-body-sm text-foreground/80 transition-colors duration-fast hover:text-foreground"
-                      >
-                        {link.name}
-                      </Link>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="container flex flex-col gap-3 border-t py-5 text-[0.8125rem] text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-        <p>
-          © {year}{" "}
-          <span
-            className="font-mono text-[0.75rem]"
-            title={`${year} in hexadecimal`}
-          >
-            (0x{year.toString(16).toUpperCase()})
-          </span>{" "}
-          Based Math Game · Inspired by{" "}
-          <a
-            href="https://arithmetic.zetamac.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="link font-normal text-muted-foreground"
-          >
-            zetamac
-          </a>
-        </p>
-        <a
-          href="https://github.com/hajin-park/based-math-game"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex min-h-8 w-fit items-center gap-2 transition-colors duration-fast hover:text-foreground"
-        >
-          <Github className="size-4" aria-hidden />
-          Source on GitHub
-        </a>
       </div>
     </footer>
   );

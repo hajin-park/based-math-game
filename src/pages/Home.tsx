@@ -1,224 +1,128 @@
-import { useEffect, type ReactNode } from "react";
+/**
+ * "/" — the cover of the workbook. Blue book cloth, a printed label with the
+ * title, the player's name and today's sheet number, one big Play, and four
+ * numbered picks. The back-cover conversion table runs along the bottom.
+ * Play (or Enter) opens the cover and starts a run straight away.
+ */
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, Check, Link2, UserRoundX, Users } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
-import { BaseOdometer } from "@/components/ui/base-odometer";
-import { BaseTag } from "@/components/ui/base-tag";
-import { Digits } from "@/components/ui/digits";
-import { GridPaper } from "@/components/ui/grid-paper";
-import { Meter } from "@/components/ui/meter";
-import {
-  FORMAT_IDS,
-  SPEEDRUN_TARGET,
-  SPRINT_DURATION_MS,
-  TOPICS,
-  listRankedModes,
-  topicsInTier,
-  type Tier,
-} from "@/game";
+import { PenTick } from "@/components/ui/pen-mark";
+import ProfileDropdown from "@/components/ProfileDropdown";
+import { useAuth } from "@/contexts/AuthContext";
+import { SiteMenu, ThemeMenu } from "@/features/ui/Navigation-Bar";
+import { useDailyAttempts } from "@/features/play/useDailyAttempts";
+import { useStartTarget } from "@/features/play/useStartTarget";
+import { dailyModeFor, dailyNumber } from "@/game";
+import { useReducedMotion } from "@/lib/useReducedMotion";
 import { cn } from "@/lib/utils";
 
-/* -------------------------------------------------------------------------- */
-/*  Content                                                                   */
-/* -------------------------------------------------------------------------- */
+const OPEN_MS = 520;
 
-const STEPS = [
-  {
-    n: "01",
-    title: "Pick a topic and a format",
-    body: `From nibbles to two’s complement, then a ${SPRINT_DURATION_MS / 1000}-second sprint, a race to ${SPEEDRUN_TARGET}, survival, the daily, or untimed practice.`,
-  },
-  {
-    n: "10",
-    title: "Type, don’t click",
-    body: "A correct answer advances the moment you type its last digit. No submit button, no mouse, no friction.",
-  },
-  {
-    n: "11",
-    title: "Beat your number",
-    body: "Scores, accuracy and per-base speed are kept, so you can see exactly which conversions slow you down.",
-  },
-];
+function longDate(d: Date) {
+  return d.toLocaleDateString("en-GB", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}
 
-type Track = {
-  tier: Tier;
-  label: string;
-  level: string;
-  sample: ReactNode;
-};
-
-const TRACKS: Track[] = [
-  {
-    tier: "foundations",
-    label: "Foundations",
-    level: "T0",
-    sample: <Digits base="bin" value="1010" size="sm" placeValues />,
-  },
-  {
-    tier: "core",
-    label: "Core",
-    level: "T1",
-    sample: <Digits base="hex" value="FF" size="sm" prefix />,
-  },
-  {
-    tier: "advanced",
-    label: "Advanced",
-    level: "T2",
-    sample: (
-      <span className="inline-flex items-baseline gap-2">
-        <Digits base="bin" value="11111110" size="sm" group condensed />
-        <span className="font-mono text-[0.75rem] text-muted-foreground">
-          = −2
-        </span>
-      </span>
-    ),
-  },
-  {
-    tier: "applied",
-    label: "Applied",
-    level: "T3",
-    sample: (
-      <span className="inline-flex items-center gap-2">
-        <span
-          aria-hidden
-          className="size-3.5 rounded-[3px] bg-[#C23B1B] ring-1 ring-inset ring-black/10"
-        />
-        <Digits base="hex" value="C23B1B" size="sm" group={false} />
-      </span>
-    ),
-  },
-];
-
-const CLASSROOM_POINTS = [
-  {
-    icon: Link2,
-    title: "Share a mode as a link",
-    body: "Every drill has its own URL. Drop it into your LMS or slides and the whole class lands in the same exercise.",
-  },
-  {
-    icon: Users,
-    title: "Live rooms for up to 10",
-    body: "Open a room, share the code, start when everyone is in. Scores update live on every screen.",
-  },
-  {
-    icon: UserRoundX,
-    title: "No sign-up needed to play",
-    body: "Students join as guests in one tap. Accounts are optional — only for keeping long-term stats.",
-  },
-];
-
-const ROOM_PLAYERS = [
-  { name: "Ada", score: 31, you: false },
-  { name: "Grace", score: 27, you: true },
-  { name: "Linus", score: 24, you: false },
-  { name: "Margaret", score: 19, you: false },
-];
-
-/* -------------------------------------------------------------------------- */
-/*  Pieces                                                                    */
-/* -------------------------------------------------------------------------- */
-
-function SectionHeading({
-  eyebrow,
-  title,
-  lede,
-  id,
+/** One labelled fill-in line on the cover label ("Name ____"). */
+function LabelLine({
+  label,
+  children,
 }: {
-  eyebrow: string;
-  title: ReactNode;
-  lede?: ReactNode;
-  id: string;
+  label: string;
+  children: React.ReactNode;
 }) {
   return (
-    <div className="flex max-w-2xl flex-col gap-3">
-      <p className="eyebrow">{eyebrow}</p>
-      <h2
-        id={id}
-        className="text-display-lg font-serif font-normal [font-variation-settings:'opsz'_60] [&_em]:italic [&_em]:text-primary"
-      >
-        {title}
-      </h2>
-      {lede && (
-        <p className="max-w-lede text-body text-muted-foreground">{lede}</p>
-      )}
+    <div className="flex min-w-0 items-baseline gap-3">
+      <span className="smallcaps shrink-0 text-[0.9375rem] text-muted-foreground">
+        {label}
+      </span>
+      <span className="min-w-0 flex-1 truncate border-b border-foreground/35 pb-0.5 font-mono text-[1rem] text-foreground">
+        {children}
+      </span>
     </div>
   );
 }
 
-function RoomPreview() {
+/** The back-cover table every exercise book carries: 0–15 in four bases. */
+function ConversionTable() {
+  const rows: { tag: string; render: (n: number) => string }[] = [
+    { tag: "DEC", render: (n) => String(n) },
+    { tag: "HEX", render: (n) => n.toString(16).toUpperCase() },
+    { tag: "OCT", render: (n) => n.toString(8) },
+    { tag: "BIN", render: (n) => n.toString(2).padStart(4, "0") },
+  ];
+  const cols = Array.from({ length: 16 }, (_, i) => i);
   return (
-    <figure
-      aria-label="Example multiplayer room"
-      className="relative overflow-hidden rounded-xl border bg-card shadow-md"
-    >
-      <div className="flex items-center justify-between gap-3 border-b px-5 py-3">
-        <div className="flex flex-col gap-0.5">
-          <span className="eyebrow">Room code</span>
-          <span className="font-mono text-[1.125rem] font-medium tracking-[0.18em] text-foreground">
-            K7Q2·9XDM
-          </span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <BaseTag base="bin" size="sm" />
-          <span className="text-[0.75rem] text-muted-foreground">↔</span>
-          <BaseTag base="dec" size="sm" />
-        </div>
+    <div className="relative">
+      <div className="overflow-x-auto [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <table className="mx-auto w-max min-w-full border-collapse font-mono text-[0.8125rem] text-cover-muted sm:text-[0.875rem]">
+          <caption className="sr-only">
+            The numbers 0 to 15 in decimal, hexadecimal, octal and binary
+          </caption>
+          <tbody>
+            {rows.map((row) => (
+              <tr
+                key={row.tag}
+                className="border-b border-cover-foreground/15 last:border-b-0"
+              >
+                <th
+                  scope="row"
+                  className="py-1 pl-1 pr-4 text-left font-sans text-[0.75rem] font-bold tracking-[0.08em] text-cover-foreground/80"
+                >
+                  {row.tag}
+                </th>
+                {cols.map((n) => (
+                  <td
+                    key={n}
+                    className="px-2.5 py-1 text-center tabular-nums sm:px-3"
+                  >
+                    {row.render(n)}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
-      <div className="px-5 pt-4">
-        <Meter
-          variant="timer"
-          value={38}
-          max={60}
-          label="Time left"
-          valueText="38 seconds"
-          showLabel
-          display="0:38"
-          size="sm"
-        />
-      </div>
-      <ol className="px-2 pb-2 pt-3">
-        {ROOM_PLAYERS.map((p, i) => (
-          <li
-            key={p.name}
-            className={cn(
-              "flex items-center gap-3 rounded-md px-3 py-2.5",
-              p.you && "bg-primary/[0.06]",
-            )}
-          >
-            <span className="w-5 font-mono text-[0.75rem] text-muted-foreground">
-              {i + 1}
-            </span>
-            <span className="flex-1 truncate text-[0.9375rem]">
-              {p.name}
-              {p.you && (
-                <span className="ml-2 text-[0.75rem] text-primary">you</span>
-              )}
-            </span>
-            <span className="font-mono text-[0.9375rem] tabular-nums text-foreground">
-              {p.score}
-            </span>
-          </li>
-        ))}
-      </ol>
-      <figcaption className="border-t px-5 py-3 text-[0.75rem] text-muted-foreground">
-        4 of 10 seats · Binary Bytes · Sprint · 60 s
-      </figcaption>
-    </figure>
+    </div>
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/*  Page                                                                      */
-/* -------------------------------------------------------------------------- */
-
 export default function Home() {
   const navigate = useNavigate();
-  const rankedModeCount = listRankedModes().length;
-  const topicCount = TOPICS.filter((t) => t.id !== "custom").length;
+  const reduce = useReducedMotion();
+  const { user, isGuest } = useAuth();
+  const start = useStartTarget();
+  const [opening, setOpening] = useState(false);
+  const openTimer = useRef<number | undefined>(undefined);
 
-  // Keyboard-first: Enter anywhere on the page (outside a control) starts.
+  const today = new Date();
+  const daily = dailyModeFor(today);
+  const sheetNo = dailyNumber(today);
+  const { first: dailyDone } = useDailyAttempts(daily.id);
+
+  const play = useCallback(() => {
+    if (opening) return;
+    if (reduce) {
+      navigate(start.path);
+      return;
+    }
+    setOpening(true);
+    openTimer.current = window.setTimeout(() => navigate(start.path), OPEN_MS);
+  }, [navigate, opening, reduce, start.path]);
+
+  useEffect(() => () => window.clearTimeout(openTimer.current), []);
+
+  // Keyboard-first: Enter anywhere on the cover (outside a control) plays.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Enter" || e.defaultPrevented || e.repeat) return;
@@ -226,320 +130,175 @@ export default function Home() {
       const t = e.target as HTMLElement | null;
       if (
         t &&
-        t !== document.body &&
-        t.closest(
-          "a,button,input,textarea,select,[role=button],[role=dialog],[contenteditable=true]",
-        )
-      ) {
+        (t.closest(
+          "a, button, input, textarea, select, [role='menu'], [role='dialog'], [contenteditable='true']",
+        ) ||
+          t.isContentEditable)
+      )
         return;
-      }
       e.preventDefault();
-      navigate("/play");
+      play();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [navigate]);
+  }, [play]);
+
+  const name = !isGuest && user?.displayName ? user.displayName : null;
+
+  const picks = [
+    {
+      n: 1,
+      to: "/daily",
+      label: "Daily",
+      detail: dailyDone ? `No. ${sheetNo} · done` : `No. ${sheetNo}`,
+      done: !!dailyDone,
+    },
+    { n: 2, to: "/play", label: "Contents", detail: "Every drill" },
+    { n: 3, to: "/multiplayer", label: "Rooms", detail: "Play a class" },
+    { n: 4, to: "/learn", label: "Learn", detail: "The lessons" },
+  ];
 
   return (
-    <div className="overflow-x-clip">
-      {/* ------------------------------------------------------------ Hero */}
+    <div className="[perspective:2400px]">
       <section
-        aria-labelledby="hero-title"
-        className="relative isolate border-b"
+        aria-labelledby="cover-title"
+        className={cn(
+          "book-cloth relative isolate flex min-h-dvh flex-col overflow-hidden text-cover-foreground",
+          "origin-left transition-[transform,opacity] duration-[520ms] ease-[cubic-bezier(0.55,0,0.35,1)] [backface-visibility:hidden] [transform-style:preserve-3d]",
+          opening && "[transform:rotateY(-88deg)] opacity-60",
+        )}
       >
-        <GridPaper fade className="opacity-90" />
-        <div className="container grid items-center gap-12 pb-14 pt-10 sm:pt-14 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:gap-16 lg:pb-20 lg:pt-16">
-          <div className="flex flex-col items-start gap-7 animate-rise">
-            <p className="eyebrow inline-flex items-center gap-2">
-              <span aria-hidden className="h-px w-6 bg-primary" />
-              Base conversion, as a sport
-            </p>
-            <h1
-              id="hero-title"
-              className="max-w-[13ch] text-display-2xl font-serif font-normal text-foreground [font-variation-settings:'opsz'_72]"
-            >
-              Count in binary. <em className="italic text-primary">Think</em> in
-              hex.
-            </h1>
-            <p className="max-w-lede text-body-lg text-muted-foreground">
-              Sixty-second drills that turn base conversion into reflex. Pick a
-              mode, type the answer, beat your last score — alone or with your
-              whole class.
-            </p>
+        {/* Spine */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-y-0 left-0 w-3 bg-cover-deep shadow-[2px_0_6px_rgb(0_0_0/0.25)] sm:w-5 dark:hidden"
+        />
 
-            <div className="flex w-full flex-col gap-3 xs:w-auto xs:flex-row">
-              <Button asChild size="xl" className="group">
-                <Link to="/play">
-                  Start a sprint
-                  <Kbd
-                    size="sm"
-                    tone="inverse"
-                    className="ml-1 hidden pointer-fine:inline-flex"
-                    aria-hidden
-                  >
-                    ↵
-                  </Kbd>
-                  <ArrowRight aria-hidden className="pointer-fine:hidden" />
-                </Link>
+        {/* Cover chrome: menu left; theme and account right */}
+        <div className="container relative z-10 flex h-[var(--nav-h)] items-center justify-between pl-6 sm:pl-10">
+          <SiteMenu
+            triggerLabel
+            triggerClassName="-ml-2.5 text-cover-foreground hover:bg-cover-foreground/10 hover:text-cover-foreground"
+          />
+          <div className="flex items-center gap-1">
+            <ThemeMenu className="text-cover-foreground/85 hover:bg-cover-foreground/10 hover:text-cover-foreground" />
+            {isGuest ? (
+              <Button
+                asChild
+                variant="ghost"
+                size="sm"
+                className="h-9 px-3 text-cover-foreground hover:bg-cover-foreground/10 hover:text-cover-foreground"
+              >
+                <Link to="/login">Sign in</Link>
               </Button>
-              <Button asChild size="xl" variant="outline">
-                <Link to="/multiplayer">Play with friends</Link>
-              </Button>
-            </div>
-
-            <p className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[0.8125rem] text-muted-foreground">
-              <span className="hidden items-center gap-1.5 pointer-fine:inline-flex">
-                Press <Kbd size="sm">Enter</Kbd> to start
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <Check aria-hidden className="size-3.5 text-success" />
-                No sign-up needed
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <Check aria-hidden className="size-3.5 text-success" />
-                Free &amp; open source
-              </span>
-            </p>
-          </div>
-
-          <div className="relative w-full max-w-xl justify-self-center lg:justify-self-end animate-rise [animation-delay:80ms]">
-            <BaseOdometer
-              size="lg"
-              autoPlay
-              interactive
-              placeValues
-              caption="One number · four bases"
-              hint={
-                <>
-                  <span>Click any bit to flip it</span>
-                  <span className="font-mono text-[0.6875rem] uppercase tracking-[0.06em]">
-                    8-bit unsigned
-                  </span>
-                </>
-              }
-            />
+            ) : (
+              <ProfileDropdown />
+            )}
           </div>
         </div>
-      </section>
 
-      {/* ----------------------------------------------------- Proof strip */}
-      <section aria-label="At a glance" className="border-b bg-card/60">
-        <dl className="container grid grid-cols-2 divide-border md:grid-cols-4 md:divide-x">
-          {[
-            { k: "Topics", v: String(topicCount) },
-            { k: "Formats", v: String(FORMAT_IDS.length) },
-            { k: "Ranked modes", v: String(rankedModeCount) },
-            { k: "Players per room", v: "10" },
-          ].map((s, i) => (
-            <div
-              key={s.k}
-              className={cn(
-                "flex flex-col gap-1.5 py-6 md:px-6 md:first:pl-0",
-                i < 2 && "border-b md:border-b-0",
-                i % 2 === 1 && "pl-4 md:pl-6",
-              )}
-            >
-              <dt className="order-2 text-[0.8125rem] text-muted-foreground">
-                {s.k}
-              </dt>
-              <dd className="order-1 font-mono text-[1.75rem] font-medium leading-none tabular-nums tracking-[-0.02em]">
-                {s.v}
-              </dd>
-            </div>
-          ))}
-        </dl>
-      </section>
+        {/* The label */}
+        <div className="relative z-10 flex flex-1 items-center justify-center px-5 pb-8 pt-2 sm:px-10 sm:pb-10">
+          <div className="paper-sheet relative w-full max-w-[46rem] rounded-[3px] p-2 text-foreground sm:p-2.5 dark:bg-card">
+            <div className="flex flex-col gap-6 border-[1.5px] border-foreground/75 px-5 pb-6 pt-7 outline outline-1 outline-offset-[3px] outline-foreground/35 sm:gap-7 sm:px-12 sm:pb-8 sm:pt-9">
+              <div className="flex flex-col items-center gap-3 text-center">
+                <p className="smallcaps text-[1rem] tracking-[0.12em] text-primary">
+                  Exercises in Number Bases
+                </p>
+                <h1
+                  id="cover-title"
+                  className="text-display-2xl font-bold leading-[0.92] sm:whitespace-nowrap"
+                >
+                  Based Math
+                </h1>
+                <p className="font-serif text-body-lg italic text-muted-foreground">
+                  Binary, octal, decimal &amp; hexadecimal, against the clock
+                </p>
+              </div>
 
-      {/* ---------------------------------------------------- How it works */}
-      <section aria-labelledby="how-title" className="container py-section">
-        <SectionHeading
-          id="how-title"
-          eyebrow="How it works"
-          title={
-            <>
-              Three steps, counted <em>in binary</em>.
-            </>
-          }
-        />
-        <ol className="mt-12 grid border-t md:grid-cols-3">
-          {STEPS.map((step, i) => (
-            <li
-              key={step.n}
-              className={cn(
-                "flex flex-col gap-4 border-b py-8 md:border-b-0 md:py-10",
-                i > 0 && "md:border-l md:pl-8",
-                i < STEPS.length - 1 && "md:pr-8",
-              )}
-            >
-              <span
-                aria-hidden
-                className="font-mono text-[2.5rem] font-light leading-none tracking-[-0.04em] text-base-bin"
-              >
-                {step.n}
-              </span>
-              <h3 className="text-title font-semibold">{step.title}</h3>
-              <p className="max-w-sm text-body text-muted-foreground">
-                {step.body}
-              </p>
-            </li>
-          ))}
-        </ol>
-      </section>
-
-      {/* ------------------------------------------------------ Curriculum */}
-      <section
-        aria-labelledby="curriculum-title"
-        className="border-y bg-card/60"
-      >
-        <div className="container py-section">
-          <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
-            <SectionHeading
-              id="curriculum-title"
-              eyebrow="Curriculum"
-              title={
-                <>
-                  From nibbles to <em>two’s complement</em>.
-                </>
-              }
-              lede="Four tracks that build on each other, each with a short lesson and drills you can assign."
-            />
-            <Button asChild variant="outline" className="w-fit shrink-0">
-              <Link to="/learn">
-                Browse lessons
-                <ArrowRight aria-hidden />
-              </Link>
-            </Button>
-          </div>
-
-          <ol className="relative mt-12 grid gap-px overflow-hidden rounded-xl border bg-border sm:grid-cols-2 lg:grid-cols-4">
-            {TRACKS.map((track, i) => (
-              <li
-                key={track.label}
-                className="group flex flex-col gap-5 bg-card p-6"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-mono text-[0.75rem] text-muted-foreground">
-                    {track.level}
-                  </span>
-                  {i < TRACKS.length - 1 && (
-                    <ArrowRight
-                      aria-hidden
-                      className="hidden size-4 text-border-strong lg:block"
-                    />
+              <div className="flex flex-col gap-3">
+                <LabelLine label="Name">
+                  {name ?? (
+                    <span className="font-serif italic text-muted-foreground">
+                      Guest
+                    </span>
                   )}
+                </LabelLine>
+                <div className="grid grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] gap-5">
+                  <LabelLine label="Sheet">No. {sheetNo}</LabelLine>
+                  <LabelLine label="Date">{longDate(today)}</LabelLine>
                 </div>
-                <h3 className="font-serif text-[1.625rem] font-medium leading-none tracking-[-0.015em]">
-                  {track.label}
-                </h3>
-                <ul className="flex flex-col gap-0.5 text-body-sm text-muted-foreground">
-                  {topicsInTier(track.tier).map((t) => (
-                    <li key={t.id}>
+              </div>
+
+              <div className="flex flex-col gap-2.5">
+                <Button
+                  size="xl"
+                  onClick={play}
+                  className="h-16 w-full justify-between px-6 text-[1.25rem] sm:h-[4.5rem] sm:text-[1.375rem]"
+                  aria-describedby="play-what"
+                >
+                  <span>Play</span>
+                  <span className="flex items-center gap-3">
+                    <Kbd
+                      tone="inverse"
+                      className="hidden h-7 px-2 text-[0.8125rem] pointer-fine:inline-flex"
+                    >
+                      Enter ↵
+                    </Kbd>
+                    <ArrowRight aria-hidden className="!size-5" />
+                  </span>
+                </Button>
+                <p
+                  id="play-what"
+                  className="text-center font-sans text-[0.9375rem] text-muted-foreground"
+                >
+                  {start.resume ? "Continue" : "Start with"}{" "}
+                  <span className="font-bold text-foreground">
+                    {start.title}
+                  </span>{" "}
+                  · {start.format}
+                </p>
+              </div>
+
+              <nav aria-label="More from the cover">
+                <ol className="grid grid-cols-2 border-t border-foreground/25 sm:grid-cols-4">
+                  {picks.map((p) => (
+                    <li
+                      key={p.to}
+                      className="border-b border-foreground/15 odd:border-r sm:border-b-0 sm:border-r sm:last:border-r-0 sm:odd:border-r"
+                    >
                       <Link
-                        to={`/learn#${t.learnAnchor}`}
-                        className="-mx-1 flex min-h-8 items-center gap-2.5 rounded-sm px-1 transition-colors duration-fast hover:text-foreground pointer-coarse:min-h-11"
+                        to={p.to}
+                        className="group flex h-full min-h-[4.25rem] flex-col justify-center gap-0.5 px-3 py-3 transition-colors duration-fast hover:bg-accent"
                       >
-                        <span
-                          aria-hidden
-                          className="h-px w-3 shrink-0 bg-border-strong"
-                        />
-                        {t.name}
+                        <span className="flex items-baseline gap-2 font-serif text-[1.125rem] font-bold">
+                          <span className="font-mono text-[0.8125rem] font-medium text-primary">
+                            {p.n}.
+                          </span>
+                          {p.label}
+                          {p.done && (
+                            <PenTick
+                              animate={false}
+                              className="size-4 -translate-y-0.5"
+                            />
+                          )}
+                        </span>
+                        <span className="pl-[1.35rem] font-sans text-[0.8125rem] text-muted-foreground">
+                          {p.detail}
+                        </span>
                       </Link>
                     </li>
                   ))}
-                </ul>
-                <div className="mt-auto flex min-h-[3.25rem] items-end border-t border-dashed pt-4">
-                  {track.sample}
-                </div>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </section>
-
-      {/* ------------------------------------------------------ Classrooms */}
-      <section
-        aria-labelledby="classroom-title"
-        className="container py-section"
-      >
-        <div className="grid items-center gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:gap-20">
-          <div className="flex flex-col gap-10">
-            <SectionHeading
-              id="classroom-title"
-              eyebrow="For classrooms"
-              title={
-                <>
-                  Made for the <em>lecture hall</em>, not just the homework.
-                </>
-              }
-              lede="Run a five-minute warm-up at the start of class, or set a drill as homework. Nothing to install, nothing to administer."
-            />
-            <ul className="grid gap-px border-t">
-              {CLASSROOM_POINTS.map(({ icon: Icon, title, body }) => (
-                <li
-                  key={title}
-                  className="grid grid-cols-[2rem_1fr] gap-x-4 border-b py-5"
-                >
-                  <Icon
-                    aria-hidden
-                    className="mt-0.5 size-5 text-muted-foreground"
-                  />
-                  <div className="flex flex-col gap-1">
-                    <h3 className="text-title-sm font-semibold">{title}</h3>
-                    <p className="text-body-sm text-muted-foreground">{body}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-            <div className="flex flex-wrap gap-3">
-              <Button asChild>
-                <Link to="/multiplayer/create">Create a room</Link>
-              </Button>
-              <Button asChild variant="ghost">
-                <Link to="/multiplayer/join">Join with a code</Link>
-              </Button>
+                </ol>
+              </nav>
             </div>
           </div>
-          <div className="relative isolate mx-auto w-full max-w-md lg:max-w-none">
-            <GridPaper fade className="-inset-8 rounded-2xl" />
-            <RoomPreview />
-          </div>
         </div>
-      </section>
 
-      {/* ------------------------------------------------------- Closing */}
-      <section
-        aria-labelledby="cta-title"
-        className="relative isolate overflow-hidden border-t"
-      >
-        <GridPaper fade />
-        <div className="container flex flex-col items-center gap-7 py-section text-center">
-          <Digits
-            base="bin"
-            value={60}
-            pad={8}
-            group
-            size="sm"
-            className="opacity-80"
-          />
-          <h2
-            id="cta-title"
-            className="text-display-xl font-serif font-normal [font-variation-settings:'opsz'_72]"
-          >
-            Sixty seconds. <em className="italic text-primary">Go.</em>
-          </h2>
-          <p className="max-w-md text-body-lg text-muted-foreground">
-            Your first sprint takes a minute and needs no account.
-          </p>
-          <div className="flex flex-col items-center gap-3">
-            <Button asChild size="xl">
-              <Link to="/play">
-                Start a sprint
-                <ArrowRight aria-hidden />
-              </Link>
-            </Button>
-            <span className="hidden items-center gap-1.5 text-[0.8125rem] text-muted-foreground pointer-fine:inline-flex">
-              or press <Kbd size="sm">Enter</Kbd>
-            </span>
+        {/* Back-cover table */}
+        <div className="relative z-10 border-t border-cover-foreground/20 pb-[max(0.75rem,env(safe-area-inset-bottom))] pl-3 pt-2 sm:pl-5">
+          <div className="container">
+            <ConversionTable />
           </div>
         </div>
       </section>

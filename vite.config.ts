@@ -8,8 +8,10 @@ import react from "@vitejs/plugin-react-swc";
  * parsed. Keep in sync with src/styles/fonts.css.
  */
 const CRITICAL_FONTS = [
-  "@fontsource-variable/schibsted-grotesk/files/schibsted-grotesk-latin-wght-normal.woff2",
-  "@fontsource-variable/newsreader/files/newsreader-latin-opsz-normal.woff2",
+  "src/styles/fonts/bm-concrete-500.woff2",
+  "src/styles/fonts/bm-serif-700.woff2",
+  "src/styles/fonts/bm-sans-700.woff2",
+  "src/styles/fonts/bm-typewriter-500.woff2",
 ];
 
 function preloadFonts(): Plugin {
@@ -26,17 +28,21 @@ function preloadFonts(): Plugin {
         if (isBuild && ctx.bundle) {
           for (const spec of CRITICAL_FONTS) {
             const base = path.basename(spec, ".woff2");
-            const asset = Object.values(ctx.bundle).find(
-              (chunk) =>
-                chunk.type === "asset" &&
-                chunk.fileName.endsWith(".woff2") &&
-                path.basename(chunk.fileName).startsWith(`${base}-`),
-            );
+            // Emitted as `<name>-<8-char hash>.woff2`; match the length too so
+            // "bm-concrete-500" never picks "bm-concrete-500-italic".
+            const asset = Object.values(ctx.bundle).find((chunk) => {
+              if (chunk.type !== "asset" || !chunk.fileName.endsWith(".woff2"))
+                return false;
+              const name = path.basename(chunk.fileName, ".woff2");
+              return (
+                name.startsWith(`${base}-`) && name.length === base.length + 9
+              );
+            });
             if (asset) hrefs.push(`/${asset.fileName}`);
           }
         } else {
           for (const spec of CRITICAL_FONTS) {
-            hrefs.push(`/node_modules/${spec}`);
+            hrefs.push(`/${spec}`);
           }
         }
         return hrefs.map((href) => ({
