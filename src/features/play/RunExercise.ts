@@ -51,3 +51,14 @@ export function answerLabel(word: string): string {
  * apart from making sure the keyframes ship.
  */
 export const PEN_DRAW_KEYFRAMES = "[&_path]:animate-pen-draw";
+
+/**
+ * PenCircle and PenUnderline stretch their SVG to the content
+ * (preserveAspectRatio="none") and draw with pathLength=1 under
+ * `vector-effect: non-scaling-stroke`. Chrome measures the dash in screen
+ * space there, so on content wider than the mark's own aspect ratio the
+ * stroke stops part-way (a half-drawn circle around "7.75"). Scaling the
+ * stroke with the SVG keeps pathLength exact; pass a thinner `strokeWidth`
+ * to PenCircle to compensate.
+ */
+export const PEN_STROKE_SCALES = "[&_path]:[vector-effect:none]";

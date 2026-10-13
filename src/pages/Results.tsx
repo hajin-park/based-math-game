@@ -61,6 +61,7 @@ import { absoluteUrl, hubLink, runPath } from "@/features/play/links";
 import {
   exerciseInstruction,
   PEN_DRAW_KEYFRAMES,
+  PEN_STROKE_SCALES,
 } from "@/features/play/RunExercise";
 import {
   isResultsState,
@@ -258,8 +259,11 @@ function ResultsView({ summary, custom, previousBest }: ResultsState) {
               <PenCircle
                 animate={!reduce}
                 delay={CIRCLE_DELAY}
-                strokeWidth={2.6}
-                className="sm:-ml-[0.32em] [&>span:first-child]:min-w-[1.5ch] [&>span:first-child]:text-center font-mono text-[clamp(3.5rem,2.4rem+5vw,6rem)] font-medium leading-none tabular-nums text-foreground"
+                strokeWidth={1.4}
+                className={cn(
+                  PEN_STROKE_SCALES,
+                  "font-mono text-[clamp(3.5rem,2.4rem+5vw,6rem)] font-medium leading-none tabular-nums text-foreground sm:-ml-[0.32em] [&>span:first-child]:min-w-[1.5ch] [&>span:first-child]:text-center",
+                )}
               >
                 {big.value}
               </PenCircle>
@@ -391,7 +395,10 @@ function PersonalBestLine({
         <PenUnderline
           animate={animate}
           delay={CIRCLE_DELAY + 520}
-          className="font-serif font-bold text-foreground"
+          className={cn(
+            PEN_STROKE_SCALES,
+            "font-serif font-bold text-foreground",
+          )}
         >
           New personal best
         </PenUnderline>
