@@ -330,12 +330,14 @@ function Player({
         {run.status === "ready" ? (
           <CountdownPanel startAt={startAt} />
         ) : (
-          <GameSurface
-            run={run}
-            settings={settings}
-            allowVisualAids={room.allowVisualAids}
-            showSkip
-          />
+          <div className="w-full max-w-2xl">
+            <GameSurface
+              run={run}
+              settings={settings}
+              allowVisualAids={room.allowVisualAids}
+              showSkip
+            />
+          </div>
         )}
       </div>
     </div>
