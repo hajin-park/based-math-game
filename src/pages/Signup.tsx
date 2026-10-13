@@ -1,11 +1,16 @@
+/**
+ * "/signup" — a new library card. A guest who signs up keeps the same id, so
+ * their runs and settings move over (AuthContext finishUpgrade).
+ */
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { warmUpGoogleSignIn } from "@/lib/googleAuth";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { CloudUpload, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { PageHeader } from "@/components/ui/page-header";
 import {
+  AuthCard,
+  CardNote,
   Field,
   FormError,
   GoogleButton,
@@ -116,71 +121,76 @@ export default function Signup() {
 
   if (!loading && user && !isGuest && busy === null) {
     return (
-      <div className="container flex max-w-md flex-col gap-8 py-12 md:py-20">
-        <PageHeader
-          eyebrow="Account"
-          title={
-            <>
-              You already have an <em>account</em>
-            </>
-          }
-          lede={`Signed in as ${user.displayName || user.email}.`}
-          size="sm"
-        />
+      <AuthCard
+        folio="On file"
+        title="You already have an account"
+        lede={
+          <>
+            Signed in as{" "}
+            <span className="font-mono text-foreground">
+              {user.displayName || user.email}
+            </span>
+            .
+          </>
+        }
+      >
         <Button asChild size="lg" className="w-full">
           <Link to={next === "/" ? "/profile" : next}>Continue</Link>
         </Button>
-      </div>
+      </AuthCard>
     );
   }
 
   return (
-    <div className="container flex max-w-md flex-col gap-8 py-12 md:py-20">
-      <PageHeader
-        eyebrow="Account"
-        title={
-          <>
-            Keep your <em>progress</em>
-          </>
-        }
-        lede="Save every run, track your personal bests and get on the leaderboard. Free, and guests can keep playing without one."
-        size="sm"
-      />
-
-      {isGuest && (
-        <div className="flex gap-3 rounded-lg border bg-card px-4 py-3">
-          <CloudUpload
-            className="mt-0.5 size-4 shrink-0 text-muted-foreground"
-            aria-hidden
-          />
-          <p className="text-body-sm text-muted-foreground text-pretty">
+    <AuthCard
+      folio="New reader"
+      title="Create an account"
+      lede="Save every run, keep your personal bests and get on the leaderboard. Free; guests can keep playing without one."
+      foot={
+        <>
+          <p>
+            Already have an account?{" "}
+            <Link className="link" to={loginHref}>
+              Sign in
+            </Link>
+          </p>
+          <p>
+            Or{" "}
+            <Link className="link" to="/play">
+              play as a guest
+            </Link>
+            ; everything works without an account.
+          </p>
+        </>
+      }
+    >
+      <div className="flex flex-col gap-6">
+        {isGuest && (
+          <CardNote label="Carried over">
             {guestRuns > 0 ? (
               <>
                 Your{" "}
-                <span className="font-medium text-foreground">
+                <span className="font-mono text-foreground">
                   {guestRuns} {guestRuns === 1 ? "run" : "runs"}
                 </span>{" "}
-                on this device will be saved to your account, along with your
-                game settings.
+                on this device move to your new account, with your game
+                settings.
               </>
             ) : (
               <>
-                Your game settings and any room you’re in carry over to your new
+                Your game settings and any room you’re in move to your new
                 account.
               </>
             )}
-          </p>
-        </div>
-      )}
-
-      <div className="flex flex-col gap-5">
+          </CardNote>
+        )}
         <GoogleButton
           onClick={onGoogle}
           busy={busy === "google"}
           disabled={busy !== null}
         />
         <OrRule />
-        <form className="flex flex-col gap-5" onSubmit={onSubmit} noValidate>
+        <form className="flex flex-col gap-6" onSubmit={onSubmit} noValidate>
           <FormError message={error} />
           <Field
             id="displayName"
@@ -215,38 +225,33 @@ export default function Signup() {
             error={fieldErrors.password}
             help={`At least ${PASSWORD_MIN} characters.`}
           />
-          <Button
-            type="submit"
-            size="lg"
-            className="w-full"
-            disabled={busy !== null}
-            aria-busy={busy === "email" || undefined}
-          >
-            {busy === "email" && (
-              <Loader2 className="motion-safe:animate-spin" aria-hidden />
-            )}
-            Create account
-          </Button>
-          <p className="text-[0.8125rem] text-muted-foreground text-pretty">
-            By creating an account you agree to the{" "}
-            <Link className="link" to="/terms">
-              Terms
-            </Link>{" "}
-            and confirm you’ve read the{" "}
-            <Link className="link" to="/privacy">
-              Privacy notice
-            </Link>
-            .
-          </p>
+          <div className="mt-1 flex flex-col gap-3">
+            <Button
+              type="submit"
+              size="lg"
+              className="w-full"
+              disabled={busy !== null}
+              aria-busy={busy === "email" || undefined}
+            >
+              {busy === "email" && (
+                <Loader2 className="motion-safe:animate-spin" aria-hidden />
+              )}
+              Create account
+            </Button>
+            <p className="font-sans text-[0.8125rem] text-muted-foreground text-pretty">
+              By creating an account you agree to the{" "}
+              <Link className="link" to="/terms">
+                Terms
+              </Link>{" "}
+              and confirm you’ve read the{" "}
+              <Link className="link" to="/privacy">
+                Privacy notice
+              </Link>
+              .
+            </p>
+          </div>
         </form>
-
-        <p className="text-center text-body-sm text-muted-foreground">
-          Already have an account?{" "}
-          <Link className="link" to={loginHref}>
-            Sign in
-          </Link>
-        </p>
       </div>
-    </div>
+    </AuthCard>
   );
 }
