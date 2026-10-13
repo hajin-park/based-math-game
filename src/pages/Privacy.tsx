@@ -419,7 +419,7 @@ export default function Privacy() {
   return (
     <LegalDocument
       appendix="A"
-      eyebrow="Appendix A · Privacy"
+      eyebrow="Privacy notice"
       title={
         <>
           Your data, <em>plainly</em>

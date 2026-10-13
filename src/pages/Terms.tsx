@@ -227,7 +227,7 @@ export default function Terms() {
   return (
     <LegalDocument
       appendix="B"
-      eyebrow="Appendix B · Terms"
+      eyebrow="Terms of use"
       title={
         <>
           The <em>rules</em> of the game

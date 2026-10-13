@@ -1,0 +1,1121 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-13T21:38:37.759Z",
+  "title": "Design System: Based Math Game",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Schoolbook Blue",
+        "canonical": "#1F4E9C",
+        "oklch": "oklch(43.8% 0.137 260.1)",
+        "purpose": "Spot colour (light): section and exercise numbers, active nav, links, focus, caret, printed rules.",
+        "tonalRamp": [
+          "#000825",
+          "#001F56",
+          "#0A3A86",
+          "#2B5AAA",
+          "#4D7FD1",
+          "#71A4FA",
+          "#ADCCFF",
+          "#E6EFFF"
+        ]
+      },
+      "primary-hover": {
+        "role": "primary",
+        "displayName": "Schoolbook Blue, deep",
+        "canonical": "#183F80",
+        "oklch": "oklch(38.0% 0.119 260.1)",
+        "purpose": "Hover state of spot-blue links and controls.",
+        "tonalRamp": [
+          "#000925",
+          "#001F56",
+          "#153C7D",
+          "#335CA0",
+          "#5580C7",
+          "#78A5EF",
+          "#ADCCFE",
+          "#E6EFFE"
+        ]
+      },
+      "red-pen": {
+        "role": "secondary",
+        "displayName": "Red Pen",
+        "canonical": "#C02F28",
+        "oklch": "oklch(53.3% 0.183 28.0)",
+        "purpose": "Marks only: ticks, crosses, circled score, corrections, invalid, destructive.",
+        "tonalRamp": [
+          "#1F0000",
+          "#4B0102",
+          "#7D0105",
+          "#AD1816",
+          "#D8473C",
+          "#FF7264",
+          "#FEB5AB",
+          "#FFE9E5"
+        ]
+      },
+      "book-paper": {
+        "role": "neutral",
+        "displayName": "Book Paper",
+        "canonical": "#F6F1E6",
+        "oklch": "oklch(95.9% 0.016 86.4)",
+        "purpose": "Page background (light).",
+        "tonalRamp": [
+          "#0E0B05",
+          "#27241C",
+          "#433F37",
+          "#615D54",
+          "#848076",
+          "#A9A49A",
+          "#CFCABF",
+          "#F3EEE3"
+        ]
+      },
+      "black-ink": {
+        "role": "neutral",
+        "displayName": "Black Ink",
+        "canonical": "#1B1B1F",
+        "oklch": "oklch(22.4% 0.008 285.8)",
+        "purpose": "All text; the primary button fill; the double rule.",
+        "tonalRamp": [
+          "#0B0B0E",
+          "#242428",
+          "#3F3F44",
+          "#5D5D62",
+          "#808085",
+          "#A4A4A9",
+          "#CACACF",
+          "#EEEEF4"
+        ]
+      },
+      "fresh-sheet": {
+        "role": "neutral",
+        "displayName": "Fresh Sheet",
+        "canonical": "#FCFAF4",
+        "oklch": "oklch(98.5% 0.008 91.5)",
+        "purpose": "A sheet laid on the page: cards, results paper, cover label, inputs.",
+        "tonalRamp": [
+          "#0C0B07",
+          "#252420",
+          "#41403B",
+          "#5F5D58",
+          "#82807B",
+          "#A6A49F",
+          "#CCCAC5",
+          "#F0EEE8"
+        ]
+      },
+      "index-slip": {
+        "role": "neutral",
+        "displayName": "Index Slip",
+        "canonical": "#FDFBF6",
+        "oklch": "oklch(98.8% 0.007 88.6)",
+        "purpose": "Menus, dialogs, toasts.",
+        "tonalRamp": [
+          "#0C0B08",
+          "#252420",
+          "#41403C",
+          "#5F5D59",
+          "#82807C",
+          "#A6A4A0",
+          "#CCCAC5",
+          "#F0EEE9"
+        ]
+      },
+      "sunken-well": {
+        "role": "neutral",
+        "displayName": "Sunken Well",
+        "canonical": "#ECE5D6",
+        "oklch": "oklch(92.3% 0.021 85.9)",
+        "purpose": "Table heads, wells, secondary fills.",
+        "tonalRamp": [
+          "#0F0A03",
+          "#292318",
+          "#453F33",
+          "#635D50",
+          "#868072",
+          "#ABA496",
+          "#D1CABB",
+          "#F5EEDF"
+        ]
+      },
+      "blue-screen-tint": {
+        "role": "neutral",
+        "displayName": "Blue Screen Tint",
+        "canonical": "#E1E7EE",
+        "oklch": "oklch(92.5% 0.011 252.1)",
+        "purpose": "12% screen of the spot blue: Example/Hint/Note boxes, secondary button, soft badge.",
+        "tonalRamp": [
+          "#080C10",
+          "#20242A",
+          "#3B4046",
+          "#595E64",
+          "#7B8187",
+          "#A0A5AC",
+          "#C5CBD2",
+          "#E9EFF6"
+        ]
+      },
+      "hover-wash": {
+        "role": "neutral",
+        "displayName": "Hover Wash",
+        "canonical": "#EAE3D3",
+        "oklch": "oklch(91.7% 0.023 87.2)",
+        "purpose": "Hover fill on ghost/outline controls and rows.",
+        "tonalRamp": [
+          "#0F0A02",
+          "#292317",
+          "#453F32",
+          "#635D4F",
+          "#868071",
+          "#ABA495",
+          "#D1CABA",
+          "#F5EEDE"
+        ]
+      },
+      "hairline-rule": {
+        "role": "neutral",
+        "displayName": "Hairline Rule",
+        "canonical": "#DDD4C2",
+        "oklch": "oklch(87.2% 0.026 84.6)",
+        "purpose": "Dividers and card edges.",
+        "tonalRamp": [
+          "#100A01",
+          "#2A2315",
+          "#463F30",
+          "#655D4D",
+          "#887F6F",
+          "#ACA492",
+          "#D2CAB8",
+          "#F7EEDB"
+        ]
+      },
+      "strong-rule": {
+        "role": "neutral",
+        "displayName": "Strong Rule",
+        "canonical": "#BFB4A0",
+        "oklch": "oklch(77.4% 0.030 82.6)",
+        "purpose": "Rules that must read; card edge; scrollbar.",
+        "tonalRamp": [
+          "#110A00",
+          "#2B2312",
+          "#483E2D",
+          "#665C4A",
+          "#897F6C",
+          "#AEA390",
+          "#D4C9B5",
+          "#F9EDD8"
+        ]
+      },
+      "control-outline": {
+        "role": "neutral",
+        "displayName": "Control Outline",
+        "canonical": "#8C8373",
+        "oklch": "oklch(61.3% 0.026 82.1)",
+        "purpose": "Input box outline, at least 3:1 on paper.",
+        "tonalRamp": [
+          "#110A01",
+          "#2A2315",
+          "#473F30",
+          "#655C4D",
+          "#887F6F",
+          "#ADA393",
+          "#D3C9B8",
+          "#F7EDDC"
+        ]
+      },
+      "pencil": {
+        "role": "neutral",
+        "displayName": "Pencil",
+        "canonical": "#5E5951",
+        "oklch": "oklch(46.6% 0.014 79.7)",
+        "purpose": "Secondary text, running heads, captions, inactive nav.",
+        "tonalRamp": [
+          "#0E0B05",
+          "#28231C",
+          "#443F37",
+          "#625D55",
+          "#857F77",
+          "#A9A49B",
+          "#CFCAC0",
+          "#F4EEE4"
+        ]
+      },
+      "green-ink": {
+        "role": "neutral",
+        "displayName": "Green Ink",
+        "canonical": "#2E6B47",
+        "oklch": "oklch(47.7% 0.087 155.2)",
+        "purpose": "Success text; the correct-answer flash.",
+        "tonalRamp": [
+          "#000F05",
+          "#012D16",
+          "#084D2B",
+          "#2F6C48",
+          "#53906A",
+          "#77B58D",
+          "#9DDCB2",
+          "#C5FFD8"
+        ]
+      },
+      "ochre": {
+        "role": "neutral",
+        "displayName": "Ochre",
+        "canonical": "#8A5A0B",
+        "oklch": "oklch(50.8% 0.105 71.9)",
+        "purpose": "Warning text; timer at 25%.",
+        "tonalRamp": [
+          "#140800",
+          "#341F01",
+          "#593800",
+          "#805305",
+          "#A77530",
+          "#CD9956",
+          "#F5BF7C",
+          "#FFEBD4"
+        ]
+      },
+      "highlighter": {
+        "role": "tertiary",
+        "displayName": "Highlighter",
+        "canonical": "#F4D35E",
+        "oklch": "oklch(87.3% 0.140 93.5)",
+        "purpose": "Swipe behind 'you' at 40-60%; text selection.",
+        "tonalRamp": [
+          "#100B00",
+          "#2C2301",
+          "#4D3E00",
+          "#705C02",
+          "#997E05",
+          "#C2A220",
+          "#E9C852",
+          "#FFEEB6"
+        ]
+      },
+      "cover-cloth": {
+        "role": "tertiary",
+        "displayName": "Cover Cloth",
+        "canonical": "#1E4790",
+        "oklch": "oklch(41.3% 0.130 260.9)",
+        "purpose": "Blue linen of the workbook cover; logomark.",
+        "tonalRamp": [
+          "#000826",
+          "#001E58",
+          "#123B83",
+          "#315BA6",
+          "#527FCD",
+          "#75A4F5",
+          "#ADCCFF",
+          "#E6EFFF"
+        ]
+      },
+      "cover-cloth-deep": {
+        "role": "tertiary",
+        "displayName": "Cover Cloth, shadowed",
+        "canonical": "#16356E",
+        "oklch": "oklch(34.1% 0.106 261.3)",
+        "purpose": "Spine and cloth vignette.",
+        "tonalRamp": [
+          "#000827",
+          "#031F56",
+          "#1D3D77",
+          "#3B5C99",
+          "#5C80BF",
+          "#7FA5E7",
+          "#AECCFE",
+          "#E6EFFF"
+        ]
+      },
+      "cover-label-muted": {
+        "role": "tertiary",
+        "displayName": "Cover Muted",
+        "canonical": "#BCCAE6",
+        "oklch": "oklch(83.7% 0.042 264.3)",
+        "purpose": "Secondary text on the cloth, at least 4.5:1.",
+        "tonalRamp": [
+          "#040A1D",
+          "#1A2439",
+          "#344056",
+          "#525E76",
+          "#74809A",
+          "#97A5C0",
+          "#BDCBE7",
+          "#E7EFFE"
+        ]
+      },
+      "ink-bin-teal": {
+        "role": "tertiary",
+        "displayName": "BIN Teal Ink",
+        "canonical": "#0D6A73",
+        "oklch": "oklch(48.0% 0.079 205.5)",
+        "purpose": "Binary digits and BIN tags only.",
+        "tonalRamp": [
+          "#000E10",
+          "#022A2E",
+          "#014950",
+          "#0D6A73",
+          "#3D8E97",
+          "#64B3BC",
+          "#8BDAE3",
+          "#C8F9FF"
+        ]
+      },
+      "ink-oct-moss": {
+        "role": "tertiary",
+        "displayName": "OCT Moss Ink",
+        "canonical": "#4A6A10",
+        "oklch": "oklch(48.2% 0.119 128.2)",
+        "purpose": "Octal digits and OCT tags only.",
+        "tonalRamp": [
+          "#060E00",
+          "#1A2A00",
+          "#304901",
+          "#49690F",
+          "#6B8D3A",
+          "#8FB35F",
+          "#B4DA84",
+          "#D7FEA7"
+        ]
+      },
+      "ink-dec-graphite": {
+        "role": "tertiary",
+        "displayName": "DEC Graphite Ink",
+        "canonical": "#3F3B36",
+        "oklch": "oklch(35.5% 0.010 73.6)",
+        "purpose": "Decimal digits and DEC tags only.",
+        "tonalRamp": [
+          "#0E0B07",
+          "#27231F",
+          "#433F3A",
+          "#615D57",
+          "#847F7A",
+          "#A8A49E",
+          "#CFCAC3",
+          "#F3EEE7"
+        ]
+      },
+      "ink-hex-plum": {
+        "role": "tertiary",
+        "displayName": "HEX Plum Ink",
+        "canonical": "#8B3A83",
+        "oklch": "oklch(48.5% 0.144 331.5)",
+        "purpose": "Hexadecimal digits and HEX tags only.",
+        "tonalRamp": [
+          "#1A0018",
+          "#41003D",
+          "#671661",
+          "#893981",
+          "#B05CA7",
+          "#D881CD",
+          "#FFA8F4",
+          "#FFE5FB"
+        ]
+      },
+      "yellow-chalk": {
+        "role": "primary",
+        "displayName": "Yellow Chalk",
+        "canonical": "#F0CF68",
+        "oklch": "oklch(86.2% 0.128 91.8)",
+        "purpose": "Chalkboard primary: the action fill and every spot-blue job at night.",
+        "tonalRamp": [
+          "#100A00",
+          "#2D2301",
+          "#4E3E00",
+          "#725B01",
+          "#9B7D04",
+          "#C2A136",
+          "#E9C860",
+          "#FFEEBB"
+        ]
+      },
+      "yellow-chalk-bright": {
+        "role": "primary",
+        "displayName": "Yellow Chalk, bright",
+        "canonical": "#F6DC8C",
+        "oklch": "oklch(89.9% 0.104 92.1)",
+        "purpose": "Hover of the yellow-chalk button.",
+        "tonalRamp": [
+          "#100A00",
+          "#2D2301",
+          "#4E3E00",
+          "#715B02",
+          "#967E2C",
+          "#BCA353",
+          "#E3C979",
+          "#FFEEBA"
+        ]
+      },
+      "red-chalk": {
+        "role": "secondary",
+        "displayName": "Red Chalk",
+        "canonical": "#F28C80",
+        "oklch": "oklch(74.6% 0.126 27.6)",
+        "purpose": "Marks on the chalkboard.",
+        "tonalRamp": [
+          "#1F0000",
+          "#4B0002",
+          "#741915",
+          "#983B34",
+          "#C05F55",
+          "#E98478",
+          "#FFB5AB",
+          "#FFE9E6"
+        ]
+      },
+      "chalkboard": {
+        "role": "neutral",
+        "displayName": "Chalkboard Slate",
+        "canonical": "#1D2824",
+        "oklch": "oklch(26.5% 0.017 170.7)",
+        "purpose": "Page background (dark); the room-code board in both themes.",
+        "tonalRamp": [
+          "#050D0A",
+          "#1C2723",
+          "#37433E",
+          "#54615C",
+          "#77847F",
+          "#9BA8A3",
+          "#C0CEC9",
+          "#E4F2ED"
+        ]
+      },
+      "white-chalk": {
+        "role": "neutral",
+        "displayName": "White Chalk",
+        "canonical": "#E8ECE4",
+        "oklch": "oklch(93.8% 0.011 128.6)",
+        "purpose": "Text on the chalkboard.",
+        "tonalRamp": [
+          "#0A0C07",
+          "#22251F",
+          "#3E413B",
+          "#5C5F58",
+          "#7E827A",
+          "#A2A69F",
+          "#C8CCC4",
+          "#ECF0E8"
+        ]
+      },
+      "board-panel": {
+        "role": "neutral",
+        "displayName": "Board Panel",
+        "canonical": "#24312C",
+        "oklch": "oklch(29.9% 0.020 169.5)",
+        "purpose": "Cards and sheets at night.",
+        "tonalRamp": [
+          "#040E0A",
+          "#1B2722",
+          "#36433E",
+          "#53615C",
+          "#75847E",
+          "#99A9A2",
+          "#BFCFC8",
+          "#E2F3EC"
+        ]
+      },
+      "board-slip": {
+        "role": "neutral",
+        "displayName": "Board Slip",
+        "canonical": "#2A3832",
+        "oklch": "oklch(32.6% 0.021 167.0)",
+        "purpose": "Menus and dialogs at night.",
+        "tonalRamp": [
+          "#030E09",
+          "#1A2722",
+          "#35443D",
+          "#53625B",
+          "#75857D",
+          "#99A9A2",
+          "#BECFC7",
+          "#E2F3EB"
+        ]
+      },
+      "board-sunken": {
+        "role": "neutral",
+        "displayName": "Board Sunken",
+        "canonical": "#17201D",
+        "oklch": "oklch(23.4% 0.014 172.7)",
+        "purpose": "Wells and table heads at night.",
+        "tonalRamp": [
+          "#060D0A",
+          "#1D2623",
+          "#38423F",
+          "#56605D",
+          "#78837F",
+          "#9CA8A4",
+          "#C2CEC9",
+          "#E6F2ED"
+        ]
+      },
+      "board-tint": {
+        "role": "neutral",
+        "displayName": "Board Tint",
+        "canonical": "#283A3D",
+        "oklch": "oklch(33.4% 0.024 208.9)",
+        "purpose": "Tint boxes at night.",
+        "tonalRamp": [
+          "#010E10",
+          "#16272A",
+          "#314346",
+          "#4E6265",
+          "#708488",
+          "#94A9AD",
+          "#BACFD3",
+          "#DDF3F7"
+        ]
+      },
+      "board-hover": {
+        "role": "neutral",
+        "displayName": "Board Hover",
+        "canonical": "#2C3B35",
+        "oklch": "oklch(33.7% 0.022 168.6)",
+        "purpose": "Hover wash at night.",
+        "tonalRamp": [
+          "#030E09",
+          "#192822",
+          "#34443E",
+          "#52625B",
+          "#74857E",
+          "#98A9A2",
+          "#BDCFC8",
+          "#E1F4EC"
+        ]
+      },
+      "board-rule": {
+        "role": "neutral",
+        "displayName": "Board Rule",
+        "canonical": "#34433D",
+        "oklch": "oklch(36.8% 0.022 168.8)",
+        "purpose": "Hairlines at night.",
+        "tonalRamp": [
+          "#030E09",
+          "#192822",
+          "#35443E",
+          "#52625B",
+          "#74857E",
+          "#98A9A2",
+          "#BDCFC8",
+          "#E1F4EC"
+        ]
+      },
+      "board-rule-strong": {
+        "role": "neutral",
+        "displayName": "Board Rule, strong",
+        "canonical": "#4A5C55",
+        "oklch": "oklch(45.7% 0.025 169.6)",
+        "purpose": "Strong rules and sheet outlines at night.",
+        "tonalRamp": [
+          "#020E09",
+          "#182822",
+          "#33443E",
+          "#50625B",
+          "#72857E",
+          "#96AAA2",
+          "#BCD0C8",
+          "#DFF4EC"
+        ]
+      },
+      "board-control-outline": {
+        "role": "neutral",
+        "displayName": "Board Control Outline",
+        "canonical": "#71857B",
+        "oklch": "oklch(59.8% 0.028 163.9)",
+        "purpose": "Input outline at night, at least 3:1.",
+        "tonalRamp": [
+          "#010F08",
+          "#172820",
+          "#32453C",
+          "#506359",
+          "#72867C",
+          "#96AAA0",
+          "#BBD1C6",
+          "#DFF5E9"
+        ]
+      },
+      "faded-chalk": {
+        "role": "neutral",
+        "displayName": "Faded Chalk",
+        "canonical": "#A5B2AA",
+        "oklch": "oklch(75.1% 0.018 159.0)",
+        "purpose": "Secondary text at night.",
+        "tonalRamp": [
+          "#050E08",
+          "#1D2721",
+          "#38433C",
+          "#55615A",
+          "#77847C",
+          "#9BA8A0",
+          "#C1CEC6",
+          "#E5F2EA"
+        ]
+      },
+      "green-chalk": {
+        "role": "neutral",
+        "displayName": "Green Chalk",
+        "canonical": "#9BD39A",
+        "oklch": "oklch(81.3% 0.098 144.2)",
+        "purpose": "Success at night.",
+        "tonalRamp": [
+          "#001001",
+          "#002E04",
+          "#174C1A",
+          "#376C38",
+          "#5A8F5A",
+          "#7EB57D",
+          "#A3DCA2",
+          "#CAFFC9"
+        ]
+      },
+      "orange-chalk": {
+        "role": "neutral",
+        "displayName": "Orange Chalk",
+        "canonical": "#F2B36B",
+        "oklch": "oklch(81.1% 0.116 68.7)",
+        "purpose": "Warning at night.",
+        "tonalRamp": [
+          "#140800",
+          "#351E01",
+          "#5A3602",
+          "#835103",
+          "#AD7225",
+          "#D4964E",
+          "#FCBC74",
+          "#FFEBD6"
+        ]
+      },
+      "chalk-bin-blue": {
+        "role": "tertiary",
+        "displayName": "BIN Blue Chalk",
+        "canonical": "#86D0DA",
+        "oklch": "oklch(81.3% 0.075 206.6)",
+        "purpose": "Binary digits and tags at night.",
+        "tonalRamp": [
+          "#000E10",
+          "#022A2E",
+          "#014950",
+          "#186973",
+          "#438D97",
+          "#69B2BC",
+          "#8FD9E3",
+          "#C9F9FF"
+        ]
+      },
+      "chalk-oct-green": {
+        "role": "tertiary",
+        "displayName": "OCT Green Chalk",
+        "canonical": "#B9DC8C",
+        "oklch": "oklch(85.0% 0.111 127.8)",
+        "purpose": "Octal digits and tags at night.",
+        "tonalRamp": [
+          "#070E00",
+          "#1A2A00",
+          "#314801",
+          "#4B6918",
+          "#6D8D3F",
+          "#91B264",
+          "#B6D989",
+          "#D9FDAC"
+        ]
+      },
+      "chalk-dec-white": {
+        "role": "tertiary",
+        "displayName": "DEC White Chalk",
+        "canonical": "#DCE2DA",
+        "oklch": "oklch(90.6% 0.013 137.8)",
+        "purpose": "Decimal digits and tags at night.",
+        "tonalRamp": [
+          "#090C07",
+          "#212620",
+          "#3D413B",
+          "#5A5F59",
+          "#7D827B",
+          "#A1A79F",
+          "#C7CDC5",
+          "#EAF1E8"
+        ]
+      },
+      "chalk-hex-pink": {
+        "role": "tertiary",
+        "displayName": "HEX Pink Chalk",
+        "canonical": "#E9A9E0",
+        "oklch": "oklch(81.2% 0.103 331.4)",
+        "purpose": "Hexadecimal digits and tags at night.",
+        "tonalRamp": [
+          "#1A0017",
+          "#3E083A",
+          "#5D2758",
+          "#7E4678",
+          "#A4689C",
+          "#CA8CC2",
+          "#F2B2E9",
+          "#FFE5FB"
+        ]
+      }
+    },
+    "themes": {
+      "light": {
+        "name": "Printed workbook",
+        "selector": ":root"
+      },
+      "dark": {
+        "name": "Chalkboard",
+        "selector": ".dark",
+        "note": "Also applied to a single subtree with class=\"dark\" for a chalkboard panel (the room code)."
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "The cover title only."
+      },
+      "page-title": {
+        "displayName": "Page title",
+        "purpose": "Inside-page h1 via PageHeader."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Chapter and section heads."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Panel and list titles; the exercise prompt text."
+      },
+      "body-lg": {
+        "displayName": "Lede",
+        "purpose": "Page ledes in pencil."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Running text, 65ch measure."
+      },
+      "body-sm": {
+        "displayName": "Body small",
+        "purpose": "Notes, captions, worked-step notes."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Buttons, tabs, segmented controls, badges (BM Sans)."
+      },
+      "running-head": {
+        "displayName": "Running head",
+        "purpose": "Small-caps line over a rule, table heads, field labels. Folio data only above a title."
+      },
+      "numeral": {
+        "displayName": "Numeral",
+        "purpose": "Figures in tables, steps and folios (BM Typewriter, dotted zero)."
+      },
+      "numeral-answer": {
+        "displayName": "Answer numeral",
+        "purpose": "The answer blank."
+      },
+      "numeral-prompt": {
+        "displayName": "Prompt numeral",
+        "purpose": "The number being converted on the exercise page."
+      }
+    },
+    "shadows": [
+      {
+        "name": "contact",
+        "value": "0 1px 1px 0 rgb(var(--shadow) / 0.08)",
+        "purpose": "Cards at rest."
+      },
+      {
+        "name": "laid-sheet",
+        "value": "0 1px 1px rgb(var(--shadow) / 0.08), 0 10px 30px -14px rgb(var(--shadow) / 0.35)",
+        "purpose": "A sheet laid on the page (.paper-sheet): cover label, results, auth, pause, tooltips."
+      },
+      {
+        "name": "laid-sheet-night",
+        "value": "0 0 0 1px rgb(var(--border-strong)), 0 18px 40px -18px rgb(0 0 0 / 0.6)",
+        "purpose": ".paper-sheet on the chalkboard."
+      },
+      {
+        "name": "lifted",
+        "value": "0 1px 1px 0 rgb(var(--shadow) / 0.08), 0 6px 16px -6px rgb(var(--shadow) / 0.22)",
+        "purpose": "The room-code board."
+      },
+      {
+        "name": "dialog",
+        "value": "0 2px 4px 0 rgb(var(--shadow) / 0.1), 0 32px 64px -22px rgb(var(--shadow) / 0.45)",
+        "purpose": "Modal dialogs."
+      },
+      {
+        "name": "press-line",
+        "value": "0 1px 0 rgb(var(--shadow) / 0.25)",
+        "purpose": "Bottom edge of the ink button."
+      },
+      {
+        "name": "running-head",
+        "value": "0 1px 0 rgb(var(--foreground) / 0.12)",
+        "purpose": "Sticky nav rule; deepens on scroll."
+      }
+    ],
+    "focus": {
+      "value": "outline: 2px solid rgb(var(--ring)); outline-offset: 2px",
+      "purpose": "One focus rule everywhere; 1px offset on fields."
+    },
+    "motion": [
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(0.2, 0.8, 0.2, 1)",
+        "purpose": "Default for state transitions."
+      },
+      {
+        "name": "ease-pen",
+        "value": "cubic-bezier(0.65, 0, 0.35, 1)",
+        "purpose": "Pen strokes drawn once."
+      },
+      {
+        "name": "spring",
+        "value": "cubic-bezier(0.34, 1.4, 0.64, 1)",
+        "purpose": "Things you touch."
+      },
+      {
+        "name": "duration-fast",
+        "value": "120ms",
+        "purpose": "Hover, press, colour."
+      },
+      {
+        "name": "duration-base",
+        "value": "180ms",
+        "purpose": "Menus, toggles, fades."
+      },
+      {
+        "name": "duration-slow",
+        "value": "260ms",
+        "purpose": "Meter fills, sheet-in."
+      },
+      {
+        "name": "pen-draw",
+        "value": "260-560ms ease-pen",
+        "purpose": "Tick 260, cross 2x180, underline 300, circle 560."
+      },
+      {
+        "name": "sheet-in",
+        "value": "280ms: translateY(10px) rotate(-0.35deg) to rest",
+        "purpose": "A sheet laid down on the desk."
+      },
+      {
+        "name": "cover-open",
+        "value": "rotateY(-84deg) about the spine",
+        "purpose": "Play swings the cover open; skipped under reduced motion."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "xs",
+        "value": "400px"
+      },
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      },
+      {
+        "name": "xl",
+        "value": "1280px"
+      },
+      {
+        "name": "2xl",
+        "value": "1440px"
+      },
+      {
+        "name": "short",
+        "value": "max-height: 560px"
+      }
+    ],
+    "devices": [
+      {
+        "name": "rule-double",
+        "value": "border-bottom: 3px double rgb(var(--foreground) / 0.7)",
+        "purpose": "Chapter openings, table heads, results divider."
+      },
+      {
+        "name": "leader",
+        "value": "radial-gradient dots 0.75px on 0.4em pitch, ink 45%",
+        "purpose": "Contents and report-card rows to a folio."
+      },
+      {
+        "name": "ruled-paper",
+        "value": "1px rgb(var(--ruled) / var(--ruled-alpha)) every var(--line)",
+        "purpose": "Exercise and chat paper."
+      },
+      {
+        "name": "grid-paper",
+        "value": "8px cells, heavier every 5",
+        "purpose": "Run and lesson surfaces, charts."
+      },
+      {
+        "name": "highlighter",
+        "value": "104deg swipe of rgb(var(--highlight) / 0.5-0.6) at 0.72em",
+        "purpose": "Marks 'you'."
+      },
+      {
+        "name": "book-cloth",
+        "value": "linen weave over --cover with a deep vignette",
+        "purpose": "The cover."
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Solid ink (yellow chalk at night). The one main action per view.",
+      "html": "<button class=\"ds-btn-primary\">Play again <kbd class=\"ds-btn-kbd\">Enter</kbd></button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 0 16px; border-radius: 2px; font-family: \"BM Sans\", ui-sans-serif, system-ui, sans-serif; font-weight: 700; font-size: 0.9375rem; letter-spacing: 0.01em; border: 0; cursor: pointer; transition: background-color 120ms cubic-bezier(0.2,0.8,0.2,1), border-color 120ms cubic-bezier(0.2,0.8,0.2,1), transform 120ms cubic-bezier(0.2,0.8,0.2,1); background: rgb(var(--foreground, 27 27 31)); color: rgb(var(--background, 246 241 230)); box-shadow: 0 1px 0 rgb(var(--shadow, 60 45 20) / 0.25); } .ds-btn-primary:hover { background: rgb(var(--foreground, 27 27 31) / 0.85); } .ds-btn-primary:active { transform: translateY(1px); } .ds-btn-primary:focus-visible { outline: 2px solid rgb(var(--ring, 31 78 156)); outline-offset: 2px; } .ds-btn-kbd { display: inline-flex; align-items: center; height: 20px; padding: 0 4px; border: 1px solid currentColor; border-bottom-width: 2px; border-radius: 2px; font-family: \"BM Typewriter\", ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.6875rem; font-weight: 500; opacity: 0.6; }"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "A ruled box; the usual companion to the primary.",
+      "html": "<button class=\"ds-btn-outline\">Change drill</button>",
+      "css": ".ds-btn-outline { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 0 16px; border-radius: 2px; font-family: \"BM Sans\", ui-sans-serif, system-ui, sans-serif; font-weight: 700; font-size: 0.9375rem; letter-spacing: 0.01em; border: 0; cursor: pointer; transition: background-color 120ms cubic-bezier(0.2,0.8,0.2,1), border-color 120ms cubic-bezier(0.2,0.8,0.2,1), transform 120ms cubic-bezier(0.2,0.8,0.2,1); background: transparent; color: rgb(var(--foreground, 27 27 31)); border: 1px solid rgb(var(--foreground, 27 27 31) / 0.55); } .ds-btn-outline:hover { border-color: rgb(var(--foreground, 27 27 31)); background: rgb(var(--accent, 234 227 211)); } .ds-btn-outline:active { transform: translateY(1px); } .ds-btn-outline:focus-visible { outline: 2px solid rgb(var(--ring, 31 78 156)); outline-offset: 2px; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "A spot-blue tint screen for supporting actions.",
+      "html": "<button class=\"ds-btn-secondary\">Game settings</button>",
+      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 0 16px; border-radius: 2px; font-family: \"BM Sans\", ui-sans-serif, system-ui, sans-serif; font-weight: 700; font-size: 0.9375rem; letter-spacing: 0.01em; border: 0; cursor: pointer; transition: background-color 120ms cubic-bezier(0.2,0.8,0.2,1), border-color 120ms cubic-bezier(0.2,0.8,0.2,1), transform 120ms cubic-bezier(0.2,0.8,0.2,1); background: rgb(var(--tint, 225 231 238)); color: rgb(var(--foreground, 27 27 31)); } .ds-btn-secondary:hover { background: rgb(var(--primary, 31 78 156) / 0.15); } .ds-btn-secondary:focus-visible { outline: 2px solid rgb(var(--ring, 31 78 156)); outline-offset: 2px; }"
+    },
+    {
+      "name": "Destructive Button",
+      "kind": "button",
+      "refersTo": "button-destructive",
+      "description": "Red pen. Irreversible actions only, always confirmed.",
+      "html": "<button class=\"ds-btn-destructive\">Delete account</button>",
+      "css": ".ds-btn-destructive { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 0 16px; border-radius: 2px; font-family: \"BM Sans\", ui-sans-serif, system-ui, sans-serif; font-weight: 700; font-size: 0.9375rem; letter-spacing: 0.01em; border: 0; cursor: pointer; transition: background-color 120ms cubic-bezier(0.2,0.8,0.2,1), border-color 120ms cubic-bezier(0.2,0.8,0.2,1), transform 120ms cubic-bezier(0.2,0.8,0.2,1); background: rgb(var(--pen, 192 47 40)); color: rgb(var(--pen-foreground, 255 255 255)); } .ds-btn-destructive:hover { background: rgb(var(--pen, 192 47 40) / 0.9); } .ds-btn-destructive:focus-visible { outline: 2px solid rgb(var(--ring, 31 78 156)); outline-offset: 2px; }"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "A field printed on the page: fresh-sheet fill, hairline box, heavier bottom rule.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">Display name</span><input class=\"ds-input\" placeholder=\"Ada\" /></label>",
+      "css": ".ds-field { display: flex; flex-direction: column; gap: 6px; } .ds-field-label { font-family: \"BM Serif\", Georgia, Cambria, serif; font-size: 0.875rem; font-weight: 500; letter-spacing: 0.06em; font-variant-caps: all-small-caps; color: rgb(var(--muted-foreground, 94 89 81)); } .ds-input { height: 40px; padding: 0 12px; border-radius: 2px; border: 1px solid rgb(var(--input, 140 131 115) / 0.7); border-bottom-color: rgb(var(--input, 140 131 115)); box-shadow: inset 0 -1px 0 rgb(var(--input, 140 131 115)); background: rgb(var(--card, 252 250 244)); color: rgb(var(--foreground, 27 27 31)); font-family: \"BM Sans\", ui-sans-serif, system-ui, sans-serif; font-size: 16px; transition: border-color 120ms, box-shadow 120ms; } .ds-input:hover { border-color: rgb(var(--input, 140 131 115)); } .ds-input:focus-visible { outline: none; border-color: rgb(var(--primary, 31 78 156)); box-shadow: inset 0 -1px 0 rgb(var(--primary, 31 78 156)), 0 0 0 3px rgb(var(--ring, 31 78 156) / 0.16); } .ds-input[aria-invalid=\"true\"] { border-color: rgb(var(--pen, 192 47 40)); box-shadow: inset 0 -1px 0 rgb(var(--pen, 192 47 40)); }"
+    },
+    {
+      "name": "Answer Blank",
+      "kind": "input",
+      "refersTo": "input-answer",
+      "description": "The exercise answer written on a rule: typewriter numerals, base prefix in pencil, no box.",
+      "html": "<div class=\"ds-answer\"><label class=\"ds-answer-label\">Answer in hex <span class=\"ds-tag-hex\">HEX</span></label><div class=\"ds-answer-line\"><span class=\"ds-answer-prefix\">0x</span><input class=\"ds-answer-input\" value=\"2A\" aria-label=\"Answer in hex\" /></div></div>",
+      "css": ".ds-answer { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%; max-width: 28rem; } .ds-answer-label { display: inline-flex; align-items: center; gap: 8px; font-family: \"BM Serif\", Georgia, Cambria, serif; font-size: 0.875rem; letter-spacing: 0.06em; font-variant-caps: all-small-caps; color: rgb(var(--muted-foreground, 94 89 81)); } .ds-answer-line { position: relative; width: 100%; } .ds-answer-prefix { position: absolute; left: 8px; top: 0; bottom: 0; display: flex; align-items: center; font-family: \"BM Typewriter\", ui-monospace, SFMono-Regular, Menlo, monospace; font-size: clamp(1.625rem, 1.25rem + 1.4vw, 2.5rem); font-weight: 500; color: rgb(var(--muted-foreground, 94 89 81)); pointer-events: none; } .ds-answer-input { width: 100%; height: 56px; padding: 0 3ch 4px; border: 0; border-bottom: 2px solid rgb(var(--foreground, 27 27 31) / 0.7); border-radius: 0; background: transparent; color: rgb(var(--foreground, 27 27 31)); caret-color: rgb(var(--primary, 31 78 156)); text-align: center; text-transform: uppercase; font-family: \"BM Typewriter\", ui-monospace, SFMono-Regular, Menlo, monospace; font-size: clamp(1.625rem, 1.25rem + 1.4vw, 2.5rem); font-weight: 500; letter-spacing: 0.04em; font-variant-numeric: tabular-nums; } .ds-answer-input:hover { border-bottom-color: rgb(var(--foreground, 27 27 31)); } .ds-answer-input:focus-visible { outline: none; border-bottom-color: rgb(var(--primary, 31 78 156)); } .ds-tag-hex { display: inline-flex; align-items: center; height: 18px; padding: 0 4px; border-radius: 2px; border: 1px solid rgb(var(--base-hex, 139 58 131) / 0.3); background: rgb(var(--base-hex, 139 58 131) / 0.1); color: rgb(var(--base-hex, 139 58 131)); font-family: \"BM Typewriter\", ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.5625rem; font-weight: 500; letter-spacing: 0.06em; font-variant-caps: normal; }"
+    },
+    {
+      "name": "Running Head Navigation",
+      "kind": "nav",
+      "refersTo": null,
+      "description": "Sticky 56px running head: wordmark, sections in small caps, active in spot blue with a 2px underline.",
+      "html": "<nav class=\"ds-nav\"><span class=\"ds-nav-mark\">Based Math</span><a class=\"ds-nav-link\" href=\"#\">Play</a><a class=\"ds-nav-link\" href=\"#\" aria-current=\"page\">Daily</a><a class=\"ds-nav-link\" href=\"#\">Rooms</a><a class=\"ds-nav-link\" href=\"#\">Learn</a><a class=\"ds-nav-link\" href=\"#\">Stats</a></nav>",
+      "css": ".ds-nav { display: flex; align-items: center; gap: 2px; height: 56px; padding: 0 16px; background: rgb(var(--background, 246 241 230)); box-shadow: 0 1px 0 rgb(var(--foreground, 27 27 31) / 0.12); } .ds-nav-mark { margin-right: 22px; font-family: \"BM Serif\", Georgia, Cambria, serif; font-weight: 700; font-size: 1.125rem; color: rgb(var(--foreground, 27 27 31)); } .ds-nav-link { position: relative; display: inline-flex; align-items: center; height: 36px; padding: 0 12px; font-family: \"BM Serif\", Georgia, Cambria, serif; font-size: 1.0625rem; font-variant-caps: all-small-caps; letter-spacing: 0.05em; color: rgb(var(--muted-foreground, 94 89 81)); text-decoration: none; transition: color 120ms; } .ds-nav-link:hover { color: rgb(var(--foreground, 27 27 31)); } .ds-nav-link:focus-visible { outline: 2px solid rgb(var(--ring, 31 78 156)); outline-offset: 2px; } .ds-nav-link[aria-current=\"page\"] { color: rgb(var(--primary, 31 78 156)); } .ds-nav-link[aria-current=\"page\"]::after { content: \"\"; position: absolute; left: 12px; right: 12px; bottom: 2px; height: 2px; background: rgb(var(--primary, 31 78 156)); }"
+    },
+    {
+      "name": "Base Tag",
+      "kind": "chip",
+      "refersTo": "base-tag-hex",
+      "description": "Identity pill for a number base; base inks appear only here and on digits.",
+      "html": "<span class=\"ds-basetag ds-bin\">BIN</span> <span class=\"ds-basetag ds-oct\">OCT</span> <span class=\"ds-basetag ds-dec\">DEC</span> <span class=\"ds-basetag ds-hex\">HEX</span>",
+      "css": ".ds-basetag { display: inline-flex; align-items: center; height: 24px; padding: 0 8px; border-radius: 2px; border: 1px solid; font-family: \"BM Typewriter\", ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.6875rem; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; } .ds-bin { color: rgb(var(--base-bin, 13 106 115)); background: rgb(var(--base-bin, 13 106 115) / 0.1); border-color: rgb(var(--base-bin, 13 106 115) / 0.3); } .ds-oct { color: rgb(var(--base-oct, 74 106 16)); background: rgb(var(--base-oct, 74 106 16) / 0.1); border-color: rgb(var(--base-oct, 74 106 16) / 0.3); } .ds-dec { color: rgb(var(--base-dec, 63 59 54)); background: rgb(var(--base-dec, 63 59 54) / 0.1); border-color: rgb(var(--base-dec, 63 59 54) / 0.3); } .ds-hex { color: rgb(var(--base-hex, 139 58 131)); background: rgb(var(--base-hex, 139 58 131) / 0.1); border-color: rgb(var(--base-hex, 139 58 131) / 0.3); }"
+    },
+    {
+      "name": "Contents Entry",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "A contents row: spot-blue number, serif title, dot leader, typewriter folio.",
+      "html": "<ol class=\"ds-contents\"><li class=\"ds-entry\"><span class=\"ds-entry-n\">1.1</span><span class=\"ds-entry-title\">Binary to decimal</span><span class=\"ds-leader\" aria-hidden=\"true\"></span><span class=\"ds-entry-folio\">27</span></li><li class=\"ds-entry\"><span class=\"ds-entry-n\">1.2</span><span class=\"ds-entry-title\">Hex to binary</span><span class=\"ds-leader\" aria-hidden=\"true\"></span><span class=\"ds-entry-folio\">—</span></li></ol>",
+      "css": ".ds-contents { list-style: none; margin: 0; padding: 0; border-top: 3px double rgb(var(--foreground, 27 27 31) / 0.7); } .ds-entry { display: flex; align-items: baseline; gap: 8px; padding: 10px 0; border-bottom: 1px solid rgb(var(--foreground, 27 27 31) / 0.15); } .ds-entry-n { width: 2.5rem; font-family: \"BM Typewriter\", ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8125rem; font-weight: 500; color: rgb(var(--primary, 31 78 156)); } .ds-entry-title { font-family: \"BM Serif\", Georgia, Cambria, serif; font-weight: 700; font-size: 1.125rem; color: rgb(var(--foreground, 27 27 31)); } .ds-leader { flex: 1 1 1.5rem; min-width: 1.5rem; height: 0.55em; background-image: radial-gradient(circle, rgb(var(--foreground, 27 27 31) / 0.45) 0.75px, transparent 1.25px); background-size: 0.4em 0.4em; background-repeat: repeat-x; background-position: 0 100%; } .ds-entry-folio { font-family: \"BM Typewriter\", ui-monospace, SFMono-Regular, Menlo, monospace; font-variant-numeric: tabular-nums; color: rgb(var(--foreground, 27 27 31)); }"
+    },
+    {
+      "name": "Marked Score",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "The results score in typewriter, circled once in red pen; marks never animate away.",
+      "html": "<div class=\"ds-score\"><span class=\"ds-score-n\">27<svg viewBox=\"0 0 120 80\" preserveAspectRatio=\"none\" aria-hidden=\"true\"><path pathLength=\"1\" d=\"M64 9C35 6.5 9.5 17 7.6 39.5 5.8 61 33 73.5 63 72.5 92 71.6 114.5 58 112.6 37 110.9 18.4 86 7.3 58.6 8.9 46 9.7 37.4 12.6 31 16.8\"/></svg></span><span class=\"ds-score-unit\">correct</span></div>",
+      "css": ".ds-score { display: flex; align-items: baseline; gap: 20px; } .ds-score-n { position: relative; display: inline-grid; place-items: center; padding: 0 0.32em; font-family: \"BM Typewriter\", ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 4rem; font-weight: 500; line-height: 1; font-variant-numeric: tabular-nums; color: rgb(var(--foreground, 27 27 31)); } .ds-score-n svg { position: absolute; left: -14%; top: -22%; width: 128%; height: 144%; overflow: visible; fill: none; stroke: rgb(var(--pen, 192 47 40)); stroke-width: 1.6; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; animation: ds-pen 560ms cubic-bezier(0.65,0,0.35,1) 200ms both; } .ds-score-unit { font-family: \"BM Serif\", Georgia, Cambria, serif; font-style: italic; font-size: 1.75rem; color: rgb(var(--muted-foreground, 94 89 81)); } @keyframes ds-pen { to { stroke-dashoffset: 0; } } @media (prefers-reduced-motion: reduce) { .ds-score-n svg { animation: none; stroke-dashoffset: 0; } }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Exercise Workbook",
+    "overview": "The site is a bound school workbook you play in. The home page is the cover, blue book cloth with a printed paper label and one Play bar. `/play` is the table of contents, set with dot leaders and folios. Each run is an exercise page: a spot-blue exercise number, the problem in typewriter numerals, and an answer blank on a rule. Results come back marked: the score is circled in red pen and each answer is ticked or crossed. Stats are a report card, the leaderboard is an honour roll, lessons are chapters with worked examples. At night the same book becomes the classroom chalkboard: slate ground, white chalk, yellow chalk for the action, red chalk for marks.\n\nThe system is a two-colour printing job plus a teacher's pen. Black ink carries the text, one schoolbook blue carries structure (section numbers, rules, links, focus, selection), and red appears only where a marker would put it. Depth is paper on paper: a fresh sheet laid on the page casts a short, warm contact shadow; nothing floats or glows. Corners are square to the hair. Computer Modern, the face of every LaTeX problem set, sets everything, in four cuts with fixed jobs.\n\nDensity follows the book. Reading pages keep a 65ch measure and generous leading; the run page clears everything except the prompt and the blank; tables (contents, honour roll, report card) are tight, ruled, tabular. The system refuses the SaaS landing page: no hero-plus-feature-cards, no stats band, no glass, no gradient type, and no sticky-note or doodle clip art pretending to be \"school\".",
+    "keyCharacteristics": [
+      "Printed workbook by day, chalkboard by night; both are one world, not two skins.",
+      "Ink for text, spot blue for structure, red pen for marks only.",
+      "Computer Modern throughout: Serif headings, Concrete body, Sans controls, Typewriter numerals with a dotted zero.",
+      "Square hairline corners (2px), paper-on-paper shadows, hairline and double rules instead of boxes.",
+      "Book devices do the work: running heads with folio data, double rules, dot leaders, ruled answer blanks, tint example boxes, pen marks, a highlighter for \"you\".",
+      "Four base inks (BIN, OCT, DEC, HEX) used only on digits and their tags, always labelled."
+    ],
+    "rules": [
+      {
+        "name": "The Red Pen Rule",
+        "body": "Red is a mark, never a decoration. It appears only where a teacher would write: a tick, a cross, a circle round the score, a correction, an invalid field, an irreversible action. Red on a heading, an icon, a link or a border is wrong.",
+        "section": "colors"
+      },
+      {
+        "name": "The Spot Colour Rule",
+        "body": "Schoolbook Blue prints structure (numbers, rules, links, focus, selection). It never fills the main button; the main action is solid ink. A headline's emphasis is italic, never blue.",
+        "section": "colors"
+      },
+      {
+        "name": "The Base Ink Rule",
+        "body": "The four base inks colour digits and their tags only, and a coloured number always carries its BIN/OCT/DEC/HEX tag or a row label. They are an identity system, not a palette for charts, borders or backgrounds.",
+        "section": "colors"
+      },
+      {
+        "name": "The Chalkboard Panel Rule",
+        "body": "A surface that must read as written on the board in either theme (the room code, readable from the back of a classroom on a projector) puts the `dark` class on its own subtree, so the chalkboard tokens apply locally. Use it for that kind of panel, not as a decorative dark band.",
+        "section": "colors"
+      },
+      {
+        "name": "The Typewriter Figure Rule",
+        "body": "Every figure that can change (scores, times, counts, digits in a base, room codes, dates in folios) is set in BM Typewriter with tabular numerals. The dotted zero is what keeps 0 from reading as O; never swap the face for a system mono.",
+        "section": "typography"
+      },
+      {
+        "name": "The Italic Emphasis Rule",
+        "body": "Emphasis inside a headline or a lede is serif italic. Never colour, never weight alone.",
+        "section": "typography"
+      },
+      {
+        "name": "The Laid Sheet Rule",
+        "body": "A shadow means a separate sheet of paper sits on the page. If the thing is not a sheet you could pick up (a dialog, the results paper, the cover label), it is flat and divided by rules.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do make the main action solid black ink (yellow chalk at night), and keep it to one per view; supporting actions are outline, secondary or ghost.",
+      "Do set every number in BM Typewriter with tabular figures, and colour a number in a base only through `Digits` or `BaseTag` with its BIN/OCT/DEC/HEX label present.",
+      "Do keep running heads to folio data: a date, a sheet number, a count, a seat range. Leave the running head out when all it would say is the page's name.",
+      "Do divide with rules: hairlines between rows, the double rule under a chapter opening and over table heads, dot leaders to a folio.",
+      "Do set worked solutions as ruled lines on the page (numbered steps under a hairline), and keep Example, Hint and Note tint boxes one level deep, directly on the page.",
+      "Do mark \"you\" in standings with the highlighter swipe, and mark results with pen ticks, crosses and a circled score.",
+      "Do put the `dark` class on a subtree when a panel must read as the chalkboard in both themes (the room code).",
+      "Do keep corners at 2px (1px for indicators, 3px for the cover label, 4px for dialogs) and reserve shadows for sheets laid on the page.",
+      "Do run `node scripts/check-contrast.mjs` after any token change and add the new pair to its table."
+    ],
+    "donts": [
+      "Don't stack a small-caps label over a heading when it only repeats the nav item or the title; running heads carry folio data only.",
+      "Don't nest boxes: no card inside a card, no box inside a tint box, no boxed worked solution. Worked solutions are ruled lines on the page.",
+      "Don't use red for anything but marks (ticks, crosses, circled scores, corrections, invalid fields, irreversible actions); never for headings, icons, links, borders or emphasis.",
+      "Don't fill the main button with spot blue or colour a headline word; emphasis is italic.",
+      "Don't use the base inks outside digits and their tags, or let a base colour stand without its label.",
+      "Don't use glass or `backdrop-blur`, gradient text, or a coloured side stripe on a card, alert or list item.",
+      "Don't decorate with sticky notes, coffee rings, tape, paper clips or doodles; the school world is carried by type, rules and pen marks, not clip art.",
+      "Don't add pill shapes or large radii to boxes; circles are only for things that are round (radio dots, avatars, the pen circle).",
+      "Don't let anything compete with the prompt and the answer blank on the run page: no nav, no footer, no promotions, no layout shift."
+    ]
+  }
+}

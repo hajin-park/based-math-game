@@ -48,7 +48,7 @@ export interface PageHeaderProps
  * PageHeader — a chapter opening: optional running head, a Computer Modern
  * bold title (with an optional spot-blue section number), a lede, actions.
  *
- *   <PageHeader eyebrow="Contents" number="§" title="Leaderboard"
+ *   <PageHeader folio="Top 50" number="§" title="Leaderboard"
  *     lede="Top scores for each ranked mode." actions={<Button>…</Button>} />
  */
 const PageHeader = React.forwardRef<HTMLElement, PageHeaderProps>(
