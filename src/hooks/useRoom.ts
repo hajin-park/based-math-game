@@ -52,6 +52,7 @@ import type { GameMode } from "@/game";
 import { RoomModeRef, resolveRoomMode, toRoomMode } from "@/lib/roomMode";
 import { serverNow, serverToLocal } from "@/lib/serverTime";
 import { setPresence } from "@/lib/presence";
+import { hostVacant, needsReset, roundComplete } from "@/lib/roomRound";
 import { clampDisplayName } from "@/data/profile";
 import { rankPlayers } from "@/features/multiplayer/standings";
 
@@ -275,7 +276,7 @@ export function normalizeRoom(
       displayName: p.displayName || "Player",
       slot: p.slot,
       joinedAt: p.joinedAt,
-      ready: !!p.ready || uid === raw.hostUid,
+      ready: uid === raw.hostUid || (!!p.ready && !needsReset(raw, p)),
       score: inRound ? (p.score ?? 0) : 0,
       correct: inRound ? (p.correct ?? 0) : 0,
       finished: inRound && !!p.finished,
@@ -377,6 +378,54 @@ function roundWinners(roomId: string, raw: RawRoom): string[] {
   return rankPlayers(Object.values(room.players), room.engineMode.format)
     .filter((s) => s.winner)
     .map((s) => s.player.uid);
+}
+
+/** Rooms whose round this client is ending right now (status write in flight). */
+const endingRounds = new Set<string>();
+/** Rooms whose winners this client is recording right now. */
+const recordingWinners = new Set<string>();
+
+/**
+ * Round over: the host records the winners (a new host does it if the old
+ * one left first). Never from our own optimistic "finished": the local cache
+ * may still miss score writes the server accepted before it.
+ */
+function maybeRecordWinners(roomId: string, raw: RawRoom) {
+  const uid = auth.currentUser?.uid;
+  if (
+    !uid ||
+    raw.hostUid !== uid ||
+    raw.status !== "finished" ||
+    typeof raw.startedAt !== "number" ||
+    raw.winners?.round === raw.startedAt ||
+    endingRounds.has(roomId) ||
+    recordingWinners.has(roomId)
+  )
+    return;
+  recordingWinners.add(roomId);
+  const uids = Object.fromEntries(
+    roundWinners(roomId, raw).map((w) => [w, true]),
+  );
+  update(roomRef(roomId), { winners: { round: raw.startedAt, uids } })
+    .catch((e) => console.error("Error recording winners:", e))
+    .finally(() => recordingWinners.delete(roomId));
+}
+
+/**
+ * Writes the end of a round (`write` sets status "finished"), then records
+ * the winners. The server sends every event it applied before our write
+ * ahead of the write's acknowledgement, so once `write` resolves the
+ * snapshot holds the final scores.
+ */
+async function writeRoundEnd(roomId: string, write: () => Promise<void>) {
+  endingRounds.add(roomId);
+  try {
+    await write();
+  } finally {
+    endingRounds.delete(roomId);
+  }
+  const raw = latestRaw.get(roomId);
+  if (raw) maybeRecordWinners(roomId, raw);
 }
 
 async function readRoom(roomId: string): Promise<RawRoom | null> {
@@ -623,8 +672,14 @@ const startGame = async (roomId: string) => {
   const raw = await readRoom(roomId);
   if (!raw) throw new Error("Room not found");
   if (raw.hostUid !== uid) throw new Error("Only host can start the game");
+  // A second start (double click, stale handler) would restart the round
+  // with a new seed; the first one already did the job.
+  if (raw.status !== "waiting") return;
   const others = activePlayers(raw).filter((p) => p.uid !== raw.hostUid);
-  if (others.length === 0 || !others.every((p) => p.ready)) {
+  if (
+    others.length === 0 ||
+    !others.every((p) => p.ready && !needsReset(raw, p))
+  ) {
     throw new Error("All players must be ready");
   }
   await update(roomRef(roomId), {
@@ -680,16 +735,33 @@ const updatePlayerScore = async (
     updates[`players/${uid}/score`] = value;
     updates[`players/${uid}/correct`] = Math.max(0, Math.floor(correct));
   }
+  // First write of this round: the node may still hold the previous round
+  // (we missed the lobby reset, e.g. disconnected in between or the host
+  // started right away). Clear it so an old finish or time never counts here.
+  const fresh = raw.players?.[uid]?.round !== round;
+  if (fresh) {
+    updates[`players/${uid}/finished`] = false;
+    updates[`players/${uid}/finishMs`] = null;
+    updates[`players/${uid}/penaltyMs`] = null;
+    updates[`players/${uid}/scoreMs`] = null;
+  }
   // When the current score was reached (written once its mark is known).
   const reachedAt = marks[value - 1];
   if (typeof reachedAt === "number" && (raises || value > state.written)) {
     updates[`players/${uid}/scoreMs`] = Math.max(0, Math.round(reachedAt));
   }
-  for (let i = state.written; i < upTo; i++) {
-    updates[`players/${uid}/scoreHistory/${i + 1}`] = Math.max(
-      0,
-      Math.round(marks[i]),
-    );
+  if (fresh) {
+    const history: Record<string, number> = {};
+    for (let i = 0; i < upTo; i++)
+      history[String(i + 1)] = Math.max(0, Math.round(marks[i]));
+    updates[`players/${uid}/scoreHistory`] = upTo > 0 ? history : null;
+  } else {
+    for (let i = state.written; i < upTo; i++) {
+      updates[`players/${uid}/scoreHistory/${i + 1}`] = Math.max(
+        0,
+        Math.round(marks[i]),
+      );
+    }
   }
   const previous = { lastScore: state.lastScore, written: state.written };
   state.lastScore = Math.max(state.lastScore, value);
@@ -726,9 +798,14 @@ const finishGame = async (
       lastActivityAt: serverTimestamp(),
     };
     if (me.round !== raw.startedAt) {
-      // Finished without scoring this round.
+      // Finished without scoring this round; drop anything left from the
+      // previous one.
       updates[`players/${uid}/score`] = 0;
       updates[`players/${uid}/correct`] = 0;
+      updates[`players/${uid}/finishMs`] = null;
+      updates[`players/${uid}/penaltyMs`] = null;
+      updates[`players/${uid}/scoreMs`] = null;
+      updates[`players/${uid}/scoreHistory`] = null;
     }
     if (
       options?.finishMs !== undefined &&
@@ -747,34 +824,36 @@ const finishGame = async (
     }
     await update(roomRef(roomId), updates);
 
-    // End the round once every connected player has finished.
+    // End the round once every player still in it has finished.
     const after = await readRoom(roomId);
     if (!after || after.status !== "playing") return;
-    const active = activePlayers(after);
-    const allFinished =
-      active.length > 0 &&
-      active.every((p) => p.finished && p.round === after.startedAt);
-    if (allFinished) {
-      // The host's subscription normally ends the round. Others only step in
-      // if it hasn't happened shortly after (e.g. the host's tab stalled),
-      // which avoids a denied write racing the host.
-      const end = () =>
-        set(ref(database, `rooms/${roomId}/status`), "finished").catch(
-          (error) => {
-            if (!isPermissionDenied(error)) console.error(error);
-          },
-        );
-      if (after.hostUid === uid) await end();
-      else
-        setTimeout(() => {
-          const latest = latestRaw.get(roomId);
-          if (
-            latest?.status === "playing" &&
-            latest.startedAt === after.startedAt
-          )
-            void end();
-        }, 2000);
+    const { complete, retryInMs } = roundComplete(after, serverNow());
+    if (!complete && retryInMs === undefined) return;
+    const end = () =>
+      writeRoundEnd(roomId, () =>
+        set(ref(database, `rooms/${roomId}/status`), "finished"),
+      ).catch((error) => {
+        if (!isPermissionDenied(error)) console.error(error);
+      });
+    if (complete && after.hostUid === uid) {
+      await end();
+      return;
     }
+    // The host's subscription normally ends the round. Others only step in
+    // if it hasn't happened shortly after (e.g. the host's tab stalled),
+    // which avoids a denied write racing the host.
+    setTimeout(
+      () => {
+        const latest = latestRaw.get(roomId);
+        if (
+          latest &&
+          latest.startedAt === after.startedAt &&
+          roundComplete(latest, serverNow()).complete
+        )
+          void end();
+      },
+      Math.max(2000, retryInMs ?? 0),
+    );
   } catch (error) {
     console.error("Error finishing game:", error);
     throw error;
@@ -928,10 +1007,12 @@ const endRound = async (roomId: string) => {
   if (!raw) throw new Error("Room not found");
   if (raw.hostUid !== uid) throw new Error("Only the host can end the round");
   if (raw.status !== "playing") return;
-  await update(roomRef(roomId), {
-    status: "finished",
-    lastActivityAt: serverTimestamp(),
-  });
+  await writeRoundEnd(roomId, () =>
+    update(roomRef(roomId), {
+      status: "finished",
+      lastActivityAt: serverTimestamp(),
+    }),
+  );
 };
 
 /** One-off read of a room (join page preview). Null when it is gone. */
@@ -966,9 +1047,10 @@ const subscribeToRoom = (
   let finishing = false;
   let resetting = false;
   let restoring = false;
-  let recordingWinners = false;
   let crediting = false;
   let connected = false;
+  let closed = false;
+  let recheck: ReturnType<typeof setTimeout> | undefined;
   let lastRaw: RawRoom | null = null;
 
   const restoreConnection = (rearm: boolean) => {
@@ -983,6 +1065,7 @@ const subscribeToRoom = (
       [`players/${uid}/disconnectedAt`]: null,
     })
       .then(() => armDisconnect(roomId, uid))
+      .then(() => setPresence(uid, roomId))
       .catch((e) => console.error("Error restoring connection:", e))
       .finally(() => {
         restoring = false;
@@ -1016,102 +1099,7 @@ const subscribeToRoom = (
       // (re-entering this listener), and an older snapshot must never be
       // delivered after a newer one.
       callback(normalizeRoom(roomId, raw, uid));
-
-      const me = uid ? raw.players?.[uid] : undefined;
-      if (uid && me && !raw.kicked?.[uid]) {
-        // Marked disconnected while this tab is connected (e.g. a network
-        // blip or another tab of ours closed): we are here, say so.
-        if (connected && me.disconnected) restoreConnection(false);
-
-        // Host left or disconnected: the earliest-joined connected player
-        // claims host (rules allow this only when the host is gone).
-        const host = raw.players?.[raw.hostUid];
-        if (!claiming && (!host || host.disconnected)) {
-          const successor = activePlayers(raw).find(
-            (p) => p.uid !== raw.hostUid,
-          );
-          if (successor?.uid === uid) {
-            claiming = true;
-            update(rRef, {
-              hostUid: uid,
-              lastActivityAt: serverTimestamp(),
-            })
-              .catch((e) => console.error("Error claiming host:", e))
-              .finally(() => {
-                claiming = false;
-              });
-          }
-        }
-
-        // Host ends the round once every connected player finished.
-        if (!finishing && raw.hostUid === uid && raw.status === "playing") {
-          const active = activePlayers(raw);
-          if (
-            active.length > 0 &&
-            active.every((p) => p.finished && p.round === raw.startedAt)
-          ) {
-            finishing = true;
-            set(ref(database, `rooms/${roomId}/status`), "finished")
-              .catch((e) => console.error("Error finishing round:", e))
-              .finally(() => {
-                finishing = false;
-              });
-          }
-        }
-
-        // Round over: the host records the winners (a new host does it if
-        // the old one left first), then each winner counts their own win.
-        if (
-          raw.status === "finished" &&
-          typeof raw.startedAt === "number" &&
-          raw.winners?.round !== raw.startedAt &&
-          raw.hostUid === uid &&
-          !recordingWinners
-        ) {
-          recordingWinners = true;
-          const uids = Object.fromEntries(
-            roundWinners(roomId, raw).map((w) => [w, true]),
-          );
-          update(rRef, { winners: { round: raw.startedAt, uids } })
-            .catch((e) => console.error("Error recording winners:", e))
-            .finally(() => {
-              recordingWinners = false;
-            });
-        }
-        if (
-          raw.status === "finished" &&
-          typeof raw.startedAt === "number" &&
-          raw.winners?.round === raw.startedAt &&
-          raw.winners.uids?.[uid] === true &&
-          me.lastWinRound !== raw.startedAt &&
-          !crediting
-        ) {
-          crediting = true;
-          update(rRef, {
-            [`players/${uid}/wins`]: (me.wins ?? 0) + 1,
-            [`players/${uid}/lastWinRound`]: raw.startedAt,
-          })
-            .catch((e) => console.error("Error counting the win:", e))
-            .finally(() => {
-              crediting = false;
-            });
-        }
-
-        // Back in the lobby: clear my previous round's data.
-        if (
-          !resetting &&
-          raw.status === "waiting" &&
-          (me.round !== undefined || me.finished || (me.score ?? 0) > 0)
-        ) {
-          resetting = true;
-          scoreState.delete(roomId);
-          update(rRef, resetOwnNodeUpdates(uid, raw.hostUid === uid))
-            .catch((e) => console.error("Error resetting player:", e))
-            .finally(() => {
-              resetting = false;
-            });
-        }
-      }
+      react(raw);
     },
     (error) => {
       const uid = auth.currentUser?.uid;
@@ -1128,6 +1116,101 @@ const subscribeToRoom = (
     },
   );
 
+  /** Look at `raw` again later (a grace period running out). */
+  const recheckIn = (ms: number) => {
+    if (recheck !== undefined) return;
+    recheck = setTimeout(() => {
+      recheck = undefined;
+      if (!closed && lastRaw) react(lastRaw);
+    }, ms);
+  };
+
+  /** This client's part in keeping the room going, after each snapshot. */
+  function react(raw: RawRoom) {
+    const uid = auth.currentUser?.uid;
+    const me = uid ? raw.players?.[uid] : undefined;
+    if (uid && me && !raw.kicked?.[uid]) {
+      // Marked disconnected while this tab is connected (e.g. a network
+      // blip or another tab of ours closed): we are here, say so.
+      if (connected && me.disconnected) restoreConnection(false);
+
+      // Host left, or has been disconnected past the grace period (a
+      // reload or a blip keeps the role): the earliest-joined connected
+      // player claims host (rules allow this only when the host is gone).
+      const vacancy = hostVacant(raw, serverNow());
+      if (!claiming && raw.hostUid !== uid && vacancy.vacant) {
+        const successor = activePlayers(raw).find((p) => p.uid !== raw.hostUid);
+        if (successor?.uid === uid) {
+          claiming = true;
+          update(rRef, {
+            hostUid: uid,
+            lastActivityAt: serverTimestamp(),
+          })
+            .catch((e) => console.error("Error claiming host:", e))
+            .finally(() => {
+              claiming = false;
+            });
+        }
+      } else if (vacancy.retryInMs !== undefined) {
+        recheckIn(vacancy.retryInMs);
+      }
+
+      // Host ends the round once every player still in it finished.
+      if (!finishing && raw.hostUid === uid && raw.status === "playing") {
+        const { complete, retryInMs } = roundComplete(raw, serverNow());
+        if (complete) {
+          finishing = true;
+          writeRoundEnd(roomId, () =>
+            set(ref(database, `rooms/${roomId}/status`), "finished"),
+          )
+            .catch((e) => console.error("Error finishing round:", e))
+            .finally(() => {
+              finishing = false;
+            });
+        } else if (retryInMs !== undefined) {
+          recheckIn(retryInMs);
+        }
+      }
+
+      // Round over: the host records the winners, then each winner counts
+      // their own win.
+      maybeRecordWinners(roomId, raw);
+      if (
+        raw.status === "finished" &&
+        typeof raw.startedAt === "number" &&
+        raw.winners?.round === raw.startedAt &&
+        raw.winners.uids?.[uid] === true &&
+        me.lastWinRound !== raw.startedAt &&
+        !crediting
+      ) {
+        crediting = true;
+        update(rRef, {
+          [`players/${uid}/wins`]: (me.wins ?? 0) + 1,
+          [`players/${uid}/lastWinRound`]: raw.startedAt,
+        })
+          .catch((e) => console.error("Error counting the win:", e))
+          .finally(() => {
+            crediting = false;
+          });
+      }
+
+      // Back in the lobby: clear my previous round's data.
+      if (
+        !resetting &&
+        raw.status === "waiting" &&
+        (me.round !== undefined || me.finished || (me.score ?? 0) > 0)
+      ) {
+        resetting = true;
+        scoreState.delete(roomId);
+        update(rRef, resetOwnNodeUpdates(uid, raw.hostUid === uid))
+          .catch((e) => console.error("Error resetting player:", e))
+          .finally(() => {
+            resetting = false;
+          });
+      }
+    }
+  }
+
   // After a network drop the server ran our onDisconnect (marking us
   // disconnected and dropping the handler); once the connection is back,
   // mark ourselves connected again and re-arm the handler.
@@ -1140,9 +1223,37 @@ const subscribeToRoom = (
   );
 
   return () => {
+    closed = true;
+    clearTimeout(recheck);
     unsubscribeRoom();
-    liveRooms.set(roomId, Math.max(0, (liveRooms.get(roomId) ?? 1) - 1));
+    const remaining = Math.max(0, (liveRooms.get(roomId) ?? 1) - 1);
+    liveRooms.set(roomId, remaining);
     unsubscribeConnected();
+    // Left the room page without leaving the room (Back, a link, another
+    // route): the tab stays connected, so onDisconnect would never fire and
+    // we would hold up the round and the host role as a ghost. Say we're
+    // away, as closing the tab would; coming back marks us present again.
+    const uid = auth.currentUser?.uid;
+    const me = uid ? lastRaw?.players?.[uid] : undefined;
+    if (
+      remaining > 0 ||
+      !uid ||
+      !me ||
+      me.disconnected ||
+      lastRaw?.kicked?.[uid]
+    )
+      return;
+    const pRef = playerRef(roomId, uid);
+    void onDisconnect(pRef)
+      .cancel()
+      .then(() =>
+        update(pRef, {
+          disconnected: true,
+          disconnectedAt: serverTimestamp(),
+        }),
+      )
+      .then(() => setPresence(uid, null))
+      .catch((e) => console.error("Error marking away:", e));
   };
 };
 
