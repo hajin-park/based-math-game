@@ -124,12 +124,12 @@ export default function Daily() {
                 <p className="flex flex-wrap items-center gap-x-5 gap-y-2">
                   <span className="sr-only">Your time: </span>
                   <span className="inline-flex items-baseline">
-                    <PenCircle delay={150} className="-ml-[0.32em]">
+                    <PenCircle delay={150} className="[&>svg]:max-w-none">
                       <span className="font-mono text-mono-2xl font-medium tabular-nums">
                         {(first.score / 1000).toFixed(2)}
                       </span>
                     </PenCircle>
-                    <span className="ml-2 font-sans text-body text-muted-foreground">
+                    <span className="ml-4 font-sans text-body text-muted-foreground">
                       s
                     </span>
                   </span>
