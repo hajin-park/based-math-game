@@ -34,9 +34,44 @@ export function useTheme() {
 
 const STORAGE_KEY = "theme";
 const THEME_COLORS: Record<ResolvedTheme, string> = {
-  light: "#F3F0E8",
-  dark: "#12110F",
+  light: "#F6F1E6", // book paper
+  dark: "#1D2824", // chalkboard
 };
+/** Browser chrome over the workbook cover ("/") in the light theme. */
+const COVER_COLOR = "#1E4790";
+
+/** Pages that paint their own ground (the cover) set html[data-surface]. */
+function lightChromeColor() {
+  return document.documentElement.dataset.surface === "cover"
+    ? COVER_COLOR
+    : THEME_COLORS.light;
+}
+
+/** Re-apply the browser theme-color, e.g. after a page sets data-surface. */
+export function syncThemeColor() {
+  const root = document.documentElement;
+  const resolved: ResolvedTheme = root.classList.contains("dark")
+    ? "dark"
+    : "light";
+  const pref = readPreference();
+  writeThemeColor(resolved, pref);
+}
+
+function writeThemeColor(resolved: ResolvedTheme, pref: ThemePreference) {
+  document
+    .querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')
+    .forEach((meta) => {
+      if (pref === "system") {
+        const media = meta.getAttribute("media") ?? "";
+        meta.content = media.includes("dark")
+          ? THEME_COLORS.dark
+          : lightChromeColor();
+      } else {
+        meta.content =
+          resolved === "dark" ? THEME_COLORS.dark : lightChromeColor();
+      }
+    });
+}
 const DARK_QUERY = "(prefers-color-scheme: dark)";
 
 function isPreference(value: unknown): value is ThemePreference {
@@ -66,18 +101,7 @@ function applyTheme(resolved: ResolvedTheme, pref: ThemePreference) {
   root.classList.remove("light", "dark");
   root.classList.add(resolved);
   root.style.colorScheme = resolved;
-  document
-    .querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')
-    .forEach((meta) => {
-      if (pref === "system") {
-        const media = meta.getAttribute("media") ?? "";
-        meta.content = media.includes("dark")
-          ? THEME_COLORS.dark
-          : THEME_COLORS.light;
-      } else {
-        meta.content = THEME_COLORS[resolved];
-      }
-    });
+  writeThemeColor(resolved, pref);
   window.requestAnimationFrame(() =>
     window.requestAnimationFrame(() =>
       root.classList.remove("theme-switching"),

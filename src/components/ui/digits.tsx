@@ -48,7 +48,7 @@ export interface DigitsProps
   colored?: boolean;
   /** Zero-pad to this many digits; leading pad zeros render dimmed. */
   pad?: number;
-  /** Use Martian Mono's condensed width — for long binary strings. */
+  /** Tighten letter-spacing for long binary strings (16-bit words). */
   condensed?: boolean;
   /** Dim leading zeros (default true when `pad` is set). */
   dimLeadingZeros?: boolean;

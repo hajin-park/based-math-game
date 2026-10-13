@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * Dialog — modal sheet of paper centred on a dimmed desk. Title is set in
- * Newsreader. Keep to one primary action in the footer, right-aligned.
+ * BM Serif. Keep to one primary action in the footer, right-aligned.
  */
 const Dialog = DialogPrimitive.Root;
 const DialogTrigger = DialogPrimitive.Trigger;
