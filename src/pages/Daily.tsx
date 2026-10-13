@@ -191,7 +191,7 @@ export default function Daily() {
                 return (
                   <li
                     key={i}
-                    className="grid grid-cols-[2.5rem_minmax(0,1fr)_auto] items-baseline border-b border-primary/25 py-2.5"
+                    className="grid grid-cols-[2.5rem_minmax(0,1fr)_auto] items-baseline border-b border-[rgb(var(--ruled)/0.32)] py-2.5"
                   >
                     <span className="font-mono text-mono-md tabular-nums text-primary">
                       {i + 1}.

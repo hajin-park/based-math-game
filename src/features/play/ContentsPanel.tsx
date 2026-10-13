@@ -99,7 +99,6 @@ export function ContentsPanel({
           <>
             <CardHead
               head="Settings"
-              folio="This device"
               title="Game settings"
               description="Apply to every run on this device and, when signed in, to your account."
             />
@@ -222,7 +221,7 @@ function CopyLinkButton({ path }: { path: string }) {
 function StartButton({ to, disabled }: { to: string; disabled?: boolean }) {
   if (disabled)
     return (
-      <Button id="panel-start" size="lg" disabled className="flex-1">
+      <Button id="panel-start" size="lg" disabled className="xs:flex-1">
         Start
       </Button>
     );
@@ -231,7 +230,7 @@ function StartButton({ to, disabled }: { to: string; disabled?: boolean }) {
       id="panel-start"
       asChild
       size="lg"
-      className="flex-1 justify-between"
+      className="justify-between xs:flex-1"
     >
       <Link to={to}>
         Start

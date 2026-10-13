@@ -181,15 +181,15 @@ function FrontRow({
         <p className="text-body">
           <em className="block font-serif italic text-muted-foreground sm:inline">
             {label}
-          </em>
+          </em>{" "}
           <span
             aria-hidden
-            className="mx-2 hidden text-muted-foreground sm:inline"
+            className="mx-1 hidden text-muted-foreground sm:inline"
           >
             —
-          </span>
-          <span className="font-serif font-bold">{title}</span>
-          <span className="block font-sans text-[0.875rem] text-muted-foreground sm:ml-2 sm:inline sm:whitespace-nowrap">
+          </span>{" "}
+          <span className="font-serif font-bold">{title}</span>{" "}
+          <span className="block font-sans text-[0.875rem] text-muted-foreground sm:inline sm:whitespace-nowrap">
             <span aria-hidden className="hidden sm:inline">
               ·{" "}
             </span>
