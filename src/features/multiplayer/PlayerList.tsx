@@ -257,7 +257,14 @@ function PlayerRow({
   );
 }
 
-/** The ready column: a ruled box the tick goes in. The host never readies. */
+/**
+ * The ready column: a ruled box the tick goes in. The host never readies.
+ *
+ * PenTick draws with an inline `pen-draw` animation, but Tailwind only emits
+ * `@keyframes pen-draw` when the class name animate-pen-draw appears in the
+ * source; naming it here keeps the keyframes in the build (without them the
+ * stroke stays at its start and the tick never shows).
+ */
 function ReadyBox({ player, host }: { player: RoomPlayer; host: boolean }) {
   if (host)
     return (

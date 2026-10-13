@@ -6,11 +6,12 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { Check, Flag, WifiOff } from "lucide-react";
+import { Flag, WifiOff } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { GridPaper } from "@/components/ui/grid-paper";
 import { Meter } from "@/components/ui/meter";
+import { PenTick } from "@/components/ui/pen-mark";
 import { toast } from "@/components/ui/use-toast";
 import { useGameSettings } from "@/data";
 import { GameSurface } from "@/features/play/GameSurface";
@@ -133,7 +134,7 @@ export function GameView({
           {link === "reconnecting" && (
             <p
               role="status"
-              className="flex items-center gap-2 rounded-md border border-warning/30 bg-warning/[0.07] px-3 py-2 text-body-sm"
+              className="flex items-center gap-2 border-y border-warning/40 px-1 py-2 text-body-sm"
             >
               <WifiOff aria-hidden className="size-4 text-warning" />
               Reconnecting… keep playing; your answers sync when you're back.
@@ -168,8 +169,9 @@ export function GameView({
             </div>
           )}
         </div>
-        <aside className="hidden lg:block">
-          <div className="sticky top-20 rounded-lg border bg-card/80 p-3 backdrop-blur-[2px]">
+        {/* The margin column: class standings beside the exercise. */}
+        <aside className="hidden border-l border-primary/30 pl-6 lg:block">
+          <div className="sticky top-8">
             <Scoreboard
               players={players}
               myUid={myUid}
@@ -353,10 +355,12 @@ function Hud({
 }) {
   const announce = useTimeAnnouncements(run.timeLeftMs);
   return (
-    <div className="flex flex-col gap-3 rounded-lg border bg-card/90 px-4 py-3 shadow-xs backdrop-blur-[2px]">
+    <div className="flex flex-col gap-2.5 border-b border-foreground/25 pb-3">
       <div className="flex items-baseline justify-between gap-3">
-        <p className="truncate text-label font-medium">{mode.name}</p>
-        <p className="shrink-0 font-mono text-[0.9375rem] tabular-nums">
+        <p className="truncate font-serif text-title-sm font-bold">
+          {mode.name}
+        </p>
+        <p className="shrink-0 font-mono text-[1.125rem] tabular-nums">
           {mode.format === "speedrun" ? (
             <span>{formatMs(run.elapsedMs + run.penaltyMs)}</span>
           ) : mode.format === "sprint" ? (
@@ -441,7 +445,7 @@ function CountdownPanel({ startAt }: { startAt: number }) {
   const n = Math.ceil(left / 1000);
   return (
     <div className="flex flex-col items-center gap-3 text-center">
-      <p className="eyebrow">Get ready</p>
+      <p className="smallcaps text-[1rem]">Get ready</p>
       <p
         key={n}
         className="font-mono text-[clamp(4rem,18vw,7rem)] font-medium leading-none tabular-nums motion-safe:animate-in motion-safe:fade-in-0 motion-safe:zoom-in-95"
@@ -492,12 +496,13 @@ function MyFinish({
   return (
     <section
       aria-labelledby="my-finish"
-      className="flex flex-col items-center gap-4 rounded-xl border bg-card px-6 py-10 text-center shadow-xs"
+      className="paper-sheet flex animate-sheet-in flex-col items-center gap-4 rounded-sm px-6 py-10 text-center"
     >
-      <span className="flex size-10 items-center justify-center rounded-full bg-success/10 text-success">
-        <Check aria-hidden className="size-5" />
-      </span>
-      <h2 id="my-finish" className="font-serif text-headline font-medium">
+      <h2
+        id="my-finish"
+        className="flex items-center gap-2 font-serif text-headline font-bold"
+      >
+        <PenTick className="size-8" />
         {mode.format === "speedrun" && !summary.completed
           ? "Time's up"
           : "Finished"}
@@ -531,10 +536,10 @@ function Spectator({ room, myUid }: { room: Room; myUid: string }) {
   return (
     <section
       aria-labelledby="spectating"
-      className="flex flex-col items-center gap-3 rounded-xl border bg-card px-6 py-10 text-center"
+      className="paper-sheet flex flex-col items-center gap-3 rounded-sm px-6 py-10 text-center"
     >
-      <p className="eyebrow">This round</p>
-      <h2 id="spectating" className="font-serif text-headline font-medium">
+      <p className="smallcaps">This round</p>
+      <h2 id="spectating" className="font-serif text-headline font-bold">
         {finishedBefore ? "You've finished" : "You left mid-round"}
       </h2>
       <p className="max-w-sm text-body-sm text-muted-foreground">

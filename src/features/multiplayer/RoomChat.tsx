@@ -137,7 +137,7 @@ export function RoomChat({
         style={NOTEPAD}
       >
         {items.length === 0 ? (
-          <p className="pl-[4.5rem] pr-4 font-serif italic text-muted-foreground">
+          <p className="relative top-[0.3rem] pl-[4.5rem] pr-4 font-serif italic text-muted-foreground">
             No notes yet. Say hi before the round.
           </p>
         ) : (
@@ -145,7 +145,7 @@ export function RoomChat({
             item.type === "event" ? (
               <p
                 key={item.id}
-                className="grid grid-cols-[3.75rem_minmax(0,1fr)] pr-4 font-serif italic text-muted-foreground"
+                className="relative top-[0.3rem] grid grid-cols-[3.75rem_minmax(0,1fr)] pr-4 font-serif italic text-muted-foreground"
               >
                 <Time at={item.at} />
                 <span className="pl-3">{item.event.text}</span>
@@ -231,7 +231,7 @@ function ChatLine({
   name: string;
 }) {
   return (
-    <p className="grid grid-cols-[3.75rem_minmax(0,1fr)] pr-4">
+    <p className="relative top-[0.3rem] grid grid-cols-[3.75rem_minmax(0,1fr)] pr-4">
       <Time at={message.timestamp} />
       <span className="whitespace-pre-wrap break-words pl-3">
         <span
