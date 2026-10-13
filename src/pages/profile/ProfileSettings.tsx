@@ -55,7 +55,10 @@ function Section({
       <div className="flex flex-col gap-1.5">
         <h2
           id={id}
-          className={cn("text-title font-bold", tone === "danger" && "text-pen")}
+          className={cn(
+            "text-title font-bold",
+            tone === "danger" && "text-pen",
+          )}
         >
           {title}
         </h2>

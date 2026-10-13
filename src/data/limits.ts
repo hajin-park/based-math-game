@@ -74,7 +74,9 @@ export function dailyStartMs(modeId: string): number | null {
   const ms = Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
   // Reject dates that roll over ("2026-02-31") like the rules do.
   if (!Number.isFinite(ms)) return null;
-  return new Date(ms).toISOString().slice(0, 10) === modeId.slice(6) ? ms : null;
+  return new Date(ms).toISOString().slice(0, 10) === modeId.slice(6)
+    ? ms
+    : null;
 }
 
 /**

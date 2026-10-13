@@ -605,7 +605,7 @@ function PracticeReveal({
             </span>
           </div>
         </div>
-        <div className="rounded-sm bg-tint px-4 py-4 sm:px-5">
+        <div className="border-t border-foreground/25 pt-4">
           <p className="smallcaps mb-3 text-primary">Worked solution</p>
           <ExplanationSteps question={q} />
         </div>

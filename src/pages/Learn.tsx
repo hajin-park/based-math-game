@@ -463,7 +463,6 @@ export default function Learn() {
     <div className="overflow-x-clip">
       <div className="container pb-8 pt-10 md:pb-10 md:pt-14">
         <PageHeader
-          eyebrow="Learn"
           folio={`${TIERS.length} chapters · ${LESSONS.length} sections`}
           size="lg"
           divider

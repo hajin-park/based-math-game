@@ -111,7 +111,6 @@ export default function JoinRoom() {
       </Button>
       <PageHeader
         size="sm"
-        eyebrow="Rooms · Join"
         title={hostName ? `Join ${hostName}’s room` : "Join a room"}
         lede={
           shownRoom

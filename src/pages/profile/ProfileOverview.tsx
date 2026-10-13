@@ -102,7 +102,10 @@ export default function ProfileOverview() {
       )}
 
       <div className="grid gap-12 md:grid-cols-2 md:gap-10">
-        <section aria-labelledby="summary-title" className="flex flex-col gap-3">
+        <section
+          aria-labelledby="summary-title"
+          className="flex flex-col gap-3"
+        >
           <SectionHead id="summary-title">
             {isGuest ? "On this device" : "All time"}
           </SectionHead>
@@ -167,7 +170,10 @@ export default function ProfileOverview() {
             />
           </section>
         ) : highlights.length > 0 ? (
-          <section aria-labelledby="recent-bests" className="flex flex-col gap-3">
+          <section
+            aria-labelledby="recent-bests"
+            className="flex flex-col gap-3"
+          >
             <SectionHead id="recent-bests">Latest personal bests</SectionHead>
             <ul className="flex flex-col">
               {highlights.map(({ modeId, mode, best }) => (

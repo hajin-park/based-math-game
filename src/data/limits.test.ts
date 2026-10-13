@@ -99,9 +99,7 @@ describe("rules stay in sync with the engine limits", () => {
   it("database.rules.json multiplayer bounds", () => {
     const perSecond = SCORE_LIMITS.maxCorrectPerSecond;
     // Counters are bounded by play time (the 3 s countdown excluded).
-    expect(dbRules).toContain(
-      `- 3000) * ${perSecond} / 1000 + ${perSecond}`,
-    );
+    expect(dbRules).toContain(`- 3000) * ${perSecond} / 1000 + ${perSecond}`);
     // One point per correct answer in every room format.
     expect(dbRules).toContain(
       "newData.val() === newData.parent().child('correct').val()",
@@ -127,7 +125,9 @@ describe("daily window (UTC day + grace)", () => {
     expect(dailyStartMs("daily:0000-99-99")).toBeNull();
     expect(dailyStartMs("daily:today")).toBeNull();
     expect(dailyStartMs("survival")).toBeNull();
-    expect(dailyLockExpiresMs(id)).toBe(start + DAY + RULES_LIMITS.dailyGraceMs);
+    expect(dailyLockExpiresMs(id)).toBe(
+      start + DAY + RULES_LIMITS.dailyGraceMs,
+    );
   });
 
   it("is open from UTC midnight until the grace period after the next", () => {
@@ -208,16 +208,16 @@ describe("leaderboardRejection mirrors the rules", () => {
     expect(
       leaderboardRejection(daily, Date.UTC(2026, 9, 10, 0, 11)),
     ).not.toBeNull();
-    expect(leaderboardRejection(daily, Date.UTC(2026, 9, 8, 23))).not.toBeNull();
+    expect(
+      leaderboardRejection(daily, Date.UTC(2026, 9, 8, 23)),
+    ).not.toBeNull();
     expect(
       leaderboardRejection(
         { ...daily, correct: 0, durationMs: 2_500, score: 2_500 },
         noon,
       ),
     ).not.toBeNull();
-    expect(
-      leaderboardRejection({ ...daily, correct: 9 }, noon),
-    ).not.toBeNull();
+    expect(leaderboardRejection({ ...daily, correct: 9 }, noon)).not.toBeNull();
   });
 
   it("rejects incomplete, unranked and implausible results", () => {

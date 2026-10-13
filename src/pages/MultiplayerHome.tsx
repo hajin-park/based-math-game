@@ -66,7 +66,6 @@ export default function MultiplayerHome() {
   return (
     <div className="container flex max-w-5xl flex-col gap-10 py-10 md:gap-14 md:py-14">
       <PageHeader
-        eyebrow="Multiplayer"
         folio="2–10 seats"
         title="Rooms"
         lede="Play a class: everyone gets the same questions, in the same order, starting at the same second."

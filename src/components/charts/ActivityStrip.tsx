@@ -71,8 +71,11 @@ export function ActivityStrip({
                 title={`${long.format(d.at)}: ${d.runs} ${d.runs === 1 ? "run" : "runs"}, ${d.correct} correct`}
                 className={cn(
                   "h-9 border border-foreground/20 p-0 font-mono text-[0.75rem] sm:h-10 sm:text-mono-sm",
-                  i === last && "outline outline-[1.5px] -outline-offset-1 outline-primary",
-                  d.runs > 0 ? "bg-tint/60 text-foreground" : "text-muted-foreground",
+                  i === last &&
+                    "outline outline-[1.5px] -outline-offset-1 outline-primary",
+                  d.runs > 0
+                    ? "bg-tint/60 text-foreground"
+                    : "text-muted-foreground",
                 )}
               >
                 {d.runs > 0 ? (
@@ -94,10 +97,9 @@ export function ActivityStrip({
         </tbody>
       </table>
       <p className="font-sans text-[0.8125rem] text-muted-foreground">
-        Present on{" "}
-        <span className="font-mono text-foreground">{present}</span> of the
-        last <span className="font-mono">{days.length}</span> days. Figures
-        are runs played.
+        Present on <span className="font-mono text-foreground">{present}</span>{" "}
+        of the last <span className="font-mono">{days.length}</span> days.
+        Figures are runs played.
       </p>
     </div>
   );

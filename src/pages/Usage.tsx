@@ -267,7 +267,6 @@ export default function Usage() {
     <div className="overflow-x-clip">
       <div className="container pb-8 pt-10 md:pb-10 md:pt-14">
         <PageHeader
-          eyebrow="How to play"
           size="lg"
           divider
           title="How to use this book"

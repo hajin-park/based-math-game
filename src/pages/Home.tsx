@@ -33,6 +33,15 @@ function longDate(d: Date) {
   });
 }
 
+function shortDate(d: Date) {
+  return d.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}
+
 /** One labelled fill-in line on the cover label ("Name ____"). */
 function LabelLine({
   label,
@@ -54,47 +63,62 @@ function LabelLine({
 }
 
 /** The back-cover table every exercise book carries: 0–15 in four bases. */
-function ConversionTable() {
-  const rows: { tag: string; render: (n: number) => string }[] = [
-    { tag: "DEC", render: (n) => String(n) },
-    { tag: "HEX", render: (n) => n.toString(16).toUpperCase() },
-    { tag: "OCT", render: (n) => n.toString(8) },
-    { tag: "BIN", render: (n) => n.toString(2).padStart(4, "0") },
-  ];
-  const cols = Array.from({ length: 16 }, (_, i) => i);
+const TABLE_ROWS: { tag: string; render: (n: number) => string }[] = [
+  { tag: "DEC", render: (n) => String(n) },
+  { tag: "HEX", render: (n) => n.toString(16).toUpperCase() },
+  { tag: "OCT", render: (n) => n.toString(8) },
+  { tag: "BIN", render: (n) => n.toString(2).padStart(4, "0") },
+];
+
+function TableBand({
+  cols,
+  className,
+}: {
+  cols: number[];
+  className?: string;
+}) {
   return (
-    <div className="relative">
-      <div className="overflow-x-auto [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <table className="mx-auto w-max min-w-full border-collapse font-mono text-[0.8125rem] text-cover-muted sm:text-[0.875rem]">
-          <caption className="sr-only">
-            The numbers 0 to 15 in decimal, hexadecimal, octal and binary
-          </caption>
-          <tbody>
-            {rows.map((row) => (
-              <tr
-                key={row.tag}
-                className="border-b border-cover-foreground/15 last:border-b-0"
-              >
-                <th
-                  scope="row"
-                  className="py-1 pl-1 pr-4 text-left font-sans text-[0.75rem] font-bold tracking-[0.08em] text-cover-foreground/80"
-                >
-                  {row.tag}
-                </th>
-                {cols.map((n) => (
-                  <td
-                    key={n}
-                    className="px-2.5 py-1 text-center tabular-nums sm:px-3"
-                  >
-                    {row.render(n)}
-                  </td>
-                ))}
-              </tr>
+    <table
+      className={cn(
+        "w-full border-collapse font-mono text-[0.8125rem] text-cover-muted sm:text-[0.875rem]",
+        className,
+      )}
+    >
+      <tbody>
+        {TABLE_ROWS.map((row) => (
+          <tr
+            key={row.tag}
+            className="border-b border-cover-foreground/15 last:border-b-0"
+          >
+            <th
+              scope="row"
+              className="w-10 py-1 pl-1 pr-2 text-left font-sans text-[0.75rem] font-bold tracking-[0.08em] text-cover-foreground/80 sm:w-14"
+            >
+              {row.tag}
+            </th>
+            {cols.map((n) => (
+              <td key={n} className="px-0.5 py-1 text-center tabular-nums">
+                {row.render(n)}
+              </td>
             ))}
-          </tbody>
-        </table>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+function ConversionTable() {
+  const all = Array.from({ length: 16 }, (_, i) => i);
+  return (
+    <figure aria-label="The numbers 0 to 15 in decimal, hexadecimal, octal and binary">
+      {/* One band of 16 on wide screens; two bands of 8 on phones. */}
+      <TableBand cols={all} className="hidden md:table" />
+      <div className="flex flex-col gap-2 md:hidden">
+        <TableBand cols={all.slice(0, 8)} />
+        <TableBand cols={all.slice(8)} />
       </div>
-    </div>
+    </figure>
   );
 }
 
@@ -222,9 +246,6 @@ export default function Home() {
           <div className="paper-sheet relative w-full max-w-[46rem] rounded-[3px] p-2 text-foreground sm:p-2.5 dark:bg-card">
             <div className="flex flex-col gap-6 border-[1.5px] border-foreground/75 px-5 pb-6 pt-7 outline outline-1 outline-offset-[3px] outline-foreground/35 sm:gap-7 sm:px-12 sm:pb-8 sm:pt-9">
               <div className="flex flex-col items-center gap-3 text-center">
-                <p className="smallcaps text-[1rem] tracking-[0.12em] text-primary">
-                  Exercises in Number Bases
-                </p>
                 <h1
                   id="cover-title"
                   className="text-display-2xl font-bold leading-[0.92] sm:whitespace-nowrap"
@@ -232,7 +253,8 @@ export default function Home() {
                   Based Math
                 </h1>
                 <p className="font-serif text-body-lg italic text-muted-foreground">
-                  Binary, octal, decimal &amp; hexadecimal, against the clock
+                  Exercises in binary, octal, decimal &amp; hexadecimal, against
+                  the clock
                 </p>
               </div>
 
@@ -246,7 +268,10 @@ export default function Home() {
                 </LabelLine>
                 <div className="grid grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] gap-5">
                   <LabelLine label="Sheet">No. {sheetNo}</LabelLine>
-                  <LabelLine label="Date">{longDate(today)}</LabelLine>
+                  <LabelLine label="Date">
+                    <span className="sm:hidden">{shortDate(today)}</span>
+                    <span className="hidden sm:inline">{longDate(today)}</span>
+                  </LabelLine>
                 </div>
               </div>
 

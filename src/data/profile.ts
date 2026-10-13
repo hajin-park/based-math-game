@@ -25,7 +25,6 @@ export function profileRef(uid: string) {
   return doc(firestore, "users", uid);
 }
 
-
 /**
  * Creates `users/{uid}` for registered users if it does not exist yet, and
  * rewrites a pre-rebuild profile in the current shape (otherwise the rules

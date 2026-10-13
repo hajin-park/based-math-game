@@ -768,12 +768,12 @@ function SlowestList({ outcomes }: { outcomes: QuestionOutcome[] }) {
         {slowest.map(({ o, n }) => (
           <li
             key={n}
-            className="flex items-baseline gap-2 border-b border-border py-2 last:border-0"
+            className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 border-b border-border py-2 last:border-0"
           >
             <span className="font-mono text-mono-sm tabular-nums text-primary">
               {n}.
             </span>
-            <span className="min-w-0 overflow-hidden whitespace-nowrap [mask-image:linear-gradient(to_right,#000_80%,transparent)]">
+            <span className="whitespace-nowrap">
               <span className="sr-only">
                 {questionLabel(o.question)}. Answer: {spokenAnswer(o.question)}.
               </span>
@@ -950,7 +950,7 @@ function ResultsExercise({
       {miss && open && (
         <div
           id={panelId}
-          className="col-span-3 mt-2 rounded-sm bg-tint px-4 py-4 motion-safe:animate-rise sm:col-span-1 sm:col-start-3 sm:px-5"
+          className="col-span-3 mt-2 border-t border-foreground/25 pt-4 motion-safe:animate-rise sm:col-span-1 sm:col-start-3"
         >
           <p className="mb-3 font-serif text-body text-foreground">
             {exerciseInstruction(o.question)}

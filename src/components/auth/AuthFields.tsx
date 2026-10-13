@@ -225,19 +225,15 @@ export function FormError({ message }: { message: string | null }) {
 }
 
 /**
- * The library card: a sheet laid on the page with a framed face, a running
- * head ("Library card" and what this card is for), the h1, and a ruled foot
- * for the way back.
+ * The library card: a sheet laid on the page with a framed face, the h1,
+ * and a ruled foot for the way back.
  */
 export function AuthCard({
-  folio,
   title,
   lede,
   children,
   foot,
 }: {
-  /** Right side of the running head ("Sign in", "New reader"). */
-  folio: ReactNode;
   title: ReactNode;
   lede?: ReactNode;
   children: ReactNode;
@@ -248,11 +244,7 @@ export function AuthCard({
     <div className="container flex justify-center px-4 py-8 sm:py-14 md:py-20">
       <section className="paper-sheet w-full max-w-[29rem] animate-sheet-in rounded-sm p-1.5 sm:p-2">
         <div className="flex flex-col border border-foreground/30 px-5 pb-6 pt-5 sm:px-8 sm:pb-8 sm:pt-6">
-          <div className="smallcaps flex items-baseline justify-between gap-4 border-b border-foreground/25 pb-1.5 text-[0.9375rem]">
-            <span className="text-primary">Library card</span>
-            <span className="shrink-0">{folio}</span>
-          </div>
-          <div className="flex flex-col gap-2 pb-6 pt-6">
+          <div className="flex flex-col gap-2 pb-6 pt-2">
             <h1 className="text-headline font-bold">{title}</h1>
             {lede && (
               <p className="text-body-sm text-muted-foreground text-pretty">

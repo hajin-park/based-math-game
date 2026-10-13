@@ -123,7 +123,7 @@ export default function About() {
   return (
     <div className="overflow-x-clip">
       <div className="container pb-16 pt-10 md:pb-20 md:pt-14">
-        <PageHeader eyebrow="About" title="Preface" size="lg" divider />
+        <PageHeader title="Preface" size="lg" divider />
 
         <article
           aria-labelledby="preface-intro"

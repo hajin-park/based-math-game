@@ -28,7 +28,14 @@ describe("validateDisplayName", () => {
     }
   });
   it("rejects empty, long, markup and obvious slurs", () => {
-    for (const bad of ["", "   ", "x".repeat(25), "<script>", "sh1t head", "f.u.c.k"]) {
+    for (const bad of [
+      "",
+      "   ",
+      "x".repeat(25),
+      "<script>",
+      "sh1t head",
+      "f.u.c.k",
+    ]) {
       expect(validateDisplayName(bad).isValid, bad).toBe(false);
     }
   });
@@ -73,8 +80,9 @@ describe("friendlyAuthError", () => {
   });
   it("parses codes out of messages and falls back politely", () => {
     expect(
-      friendlyAuthError(new Error("Firebase: Error (auth/email-already-in-use)."))
-        .field,
+      friendlyAuthError(
+        new Error("Firebase: Error (auth/email-already-in-use)."),
+      ).field,
     ).toBe("email");
     expect(friendlyAuthError(new Error("Firebase: boom")).message).toMatch(
       /Something went wrong/,
@@ -82,9 +90,9 @@ describe("friendlyAuthError", () => {
     expect(friendlyAuthError("weird").message).toMatch(/Something went wrong/);
   });
   it("is silent when the user closes the popup", () => {
-    expect(friendlyAuthError({ code: "auth/popup-closed-by-user" }).silent).toBe(
-      true,
-    );
+    expect(
+      friendlyAuthError({ code: "auth/popup-closed-by-user" }).silent,
+    ).toBe(true);
   });
   it("keeps the app's own messages", () => {
     expect(
@@ -171,11 +179,17 @@ describe("paceTrend / bests", () => {
     expect(pts[0].value).toBe(30);
   });
   it("lists catalog bests and summarizes dailies", () => {
-    const best = { score: 1, correct: 1, durationMs: 1, accuracy: 1, endedAt: 1 };
+    const best = {
+      score: 1,
+      correct: 1,
+      durationMs: 1,
+      accuracy: 1,
+      endedAt: 1,
+    };
     const bests = {
       survival: best,
-      "nibbles__speedrun": best,
-      "nibbles__sprint": best,
+      nibbles__speedrun: best,
+      nibbles__sprint: best,
       "daily__2026-10-08": { ...best, score: 40_000 },
       "daily__2026-10-09": { ...best, score: 30_000 },
       custom: best,

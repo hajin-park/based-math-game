@@ -35,7 +35,7 @@ const inputVariants = cva(
         ].join(" "),
         answer: [
           "h-16 rounded-none border-0 border-b-2 border-foreground/70 bg-transparent px-2 text-center font-mono text-mono-xl font-medium tracking-[0.04em] sm:h-[4.75rem]",
-          "hover:border-foreground focus-visible:border-primary focus-visible:bg-tint/50",
+          "hover:border-foreground focus-visible:border-primary",
           "aria-[invalid=true]:border-pen",
         ].join(" "),
       },

@@ -330,7 +330,12 @@ function Player({
         {run.status === "ready" ? (
           <CountdownPanel startAt={startAt} />
         ) : (
-          <div className="w-full max-w-2xl">
+          <div className="relative w-full max-w-2xl">
+            {/* The same exercise page as a solo run: the double margin rule. */}
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-y-0 left-[calc(3.75rem+0.375rem)] hidden w-[3px] border-x border-primary/25 lg:block"
+            />
             <GameSurface
               run={run}
               settings={settings}

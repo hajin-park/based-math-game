@@ -165,7 +165,9 @@ export function paceTrend(runs: RunRecord[], n = 30): PacePoint[] {
   return runs
     .filter(
       (r) =>
-        r.format !== "practice" && r.durationMs >= 5_000 && r.completed !== false,
+        r.format !== "practice" &&
+        r.durationMs >= 5_000 &&
+        r.completed !== false,
     )
     .slice(0, n)
     .map((r) => ({

@@ -100,7 +100,6 @@ export default function Daily() {
   return (
     <div className="container flex max-w-[60rem] flex-col gap-10 py-10 md:gap-12 md:py-14">
       <PageHeader
-        eyebrow="Daily sheet"
         folio={
           <time dateTime={date} data-testid="daily-date">
             {longDate(date)}

@@ -176,9 +176,7 @@ export function ResultsView({
         <div className="flex min-w-0 flex-col gap-10 pb-28 md:pb-0">
           <header className="flex flex-col">
             <div className="smallcaps mb-6 flex items-baseline justify-between gap-4 border-b border-foreground/20 pb-1.5">
-              <span className="min-w-0 truncate">
-                Class results · {mode.name}
-              </span>
+              <span className="min-w-0 truncate">{mode.name}</span>
               <span className="shrink-0 font-mono text-[0.8125rem] [font-variant-caps:normal]">
                 {standings.length} player{standings.length === 1 ? "" : "s"}
               </span>

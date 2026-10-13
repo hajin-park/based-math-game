@@ -362,7 +362,9 @@ export async function chatKeyFor(roomId: string, uid: string): Promise<string> {
   if ((liveRooms.get(roomId) ?? 0) > 0 && latestRaw.has(roomId)) {
     stamp = latestRaw.get(roomId)?.lastChatAt?.[uid];
   } else {
-    stamp = (await get(ref(database, `rooms/${roomId}/lastChatAt/${uid}`))).val();
+    stamp = (
+      await get(ref(database, `rooms/${roomId}/lastChatAt/${uid}`))
+    ).val();
   }
   return `${uid}_${typeof stamp === "number" ? stamp : 0}`;
 }

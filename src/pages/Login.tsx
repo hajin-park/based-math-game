@@ -134,7 +134,6 @@ export default function Login() {
   if (!loading && user && !isGuest) {
     return (
       <AuthCard
-        folio="On file"
         title="You’re signed in"
         lede={
           <>
@@ -165,7 +164,6 @@ export default function Login() {
   if (mode === "reset") {
     return (
       <AuthCard
-        folio="Password"
         title="Reset your password"
         lede="Enter the email you signed up with and we’ll send a link to choose a new password."
         foot={
@@ -227,7 +225,6 @@ export default function Login() {
 
   return (
     <AuthCard
-      folio="Sign in"
       title="Sign in"
       lede="Keep your runs, stats and leaderboard places on every device."
       foot={

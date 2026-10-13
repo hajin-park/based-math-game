@@ -5,9 +5,9 @@ import { cn } from "@/lib/utils";
 
 /**
  * Worked solution for a question (engine `explainQuestion`), set like a
- * textbook example: numbered steps, the working in typewriter on a slip of
- * paper, and a plain-language note. Sits inside a tint "Worked solution"
- * box on the run screen and the results.
+ * textbook example: numbered steps, the working in typewriter as
+ * worked lines, and a plain-language note. Set on the page under a rule
+ * on the run screen and the results — no boxes.
  */
 export const ExplanationSteps = memo(function ExplanationSteps({
   question,
@@ -35,7 +35,7 @@ export const ExplanationSteps = memo(function ExplanationSteps({
               <pre
                 tabIndex={0}
                 aria-label={`Working for step ${i + 1}`}
-                className="max-w-full overflow-x-auto whitespace-pre rounded-sm border border-border bg-card px-3 py-2 font-mono text-[0.8125rem] leading-relaxed text-foreground"
+                className="max-w-full overflow-x-auto whitespace-pre py-0.5 font-mono text-[0.875rem] leading-relaxed text-foreground"
               >
                 {step.work.join("\n")}
               </pre>

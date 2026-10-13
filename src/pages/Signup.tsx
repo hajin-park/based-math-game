@@ -122,7 +122,6 @@ export default function Signup() {
   if (!loading && user && !isGuest && busy === null) {
     return (
       <AuthCard
-        folio="On file"
         title="You already have an account"
         lede={
           <>
@@ -143,7 +142,6 @@ export default function Signup() {
 
   return (
     <AuthCard
-      folio="New reader"
       title="Create an account"
       lede="Save every run, keep your personal bests and get on the leaderboard. Free; guests can keep playing without one."
       foot={

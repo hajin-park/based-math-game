@@ -95,7 +95,13 @@ function HeadLine({ label, children }: { label: string; children: ReactNode }) {
 }
 
 /** A margin note: blue small-caps label, pencil text, no box. */
-function MarginNote({ label, children }: { label: string; children: ReactNode }) {
+function MarginNote({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}) {
   return (
     <div className="flex flex-col gap-1 text-body-sm text-muted-foreground text-pretty">
       <p className="smallcaps text-[0.9375rem] text-primary">{label}</p>
@@ -200,8 +206,8 @@ export default function Stats() {
   const guestNote = !authLoading && isGuest && (
     <div role="note">
       <MarginNote label="Note">
-        Saved on this device: your last {GUEST_RUN_LIMIT} runs in this
-        browser, gone if you clear its data.{" "}
+        Saved on this device: your last {GUEST_RUN_LIMIT} runs in this browser,
+        gone if you clear its data.{" "}
         <Link className="link" to="/signup?next=%2Fstats">
           Create an account
         </Link>{" "}
@@ -213,8 +219,11 @@ export default function Stats() {
   return (
     <div className="container flex flex-col gap-10 py-10 md:gap-12 md:py-14">
       <PageHeader
-        eyebrow="Stats"
-        folio={runs.length >= HISTORY_LIMIT ? `Last ${HISTORY_LIMIT} runs` : undefined}
+        folio={
+          runs.length >= HISTORY_LIMIT
+            ? `Last ${HISTORY_LIMIT} runs`
+            : undefined
+        }
         title="Report card"
         divider
         size="md"
@@ -335,7 +344,10 @@ export default function Stats() {
             </div>
 
             {/* Grades */}
-            <section aria-labelledby="grades-title" className="flex flex-col gap-4">
+            <section
+              aria-labelledby="grades-title"
+              className="flex flex-col gap-4"
+            >
               <SectionHead
                 id="grades-title"
                 title="Grades"
@@ -358,7 +370,10 @@ export default function Stats() {
             </section>
 
             {/* Pace */}
-            <section aria-labelledby="pace-title" className="flex flex-col gap-4">
+            <section
+              aria-labelledby="pace-title"
+              className="flex flex-col gap-4"
+            >
               <SectionHead
                 id="pace-title"
                 title="Pace"
@@ -408,7 +423,10 @@ export default function Stats() {
             </section>
 
             {/* Personal bests */}
-            <section aria-labelledby="bests-title" className="flex flex-col gap-4">
+            <section
+              aria-labelledby="bests-title"
+              className="flex flex-col gap-4"
+            >
               <SectionHead id="bests-title" title="Personal bests" />
               {loading ? (
                 <LedgerSkeleton rows={3} />
@@ -424,7 +442,10 @@ export default function Stats() {
             </section>
 
             {/* Recent runs */}
-            <section aria-labelledby="recent-title" className="flex flex-col gap-4">
+            <section
+              aria-labelledby="recent-title"
+              className="flex flex-col gap-4"
+            >
               <SectionHead
                 id="recent-title"
                 title="Recent runs"
@@ -434,7 +455,11 @@ export default function Stats() {
                     : undefined
                 }
               />
-              {loading ? <LedgerSkeleton rows={5} /> : <RecentRuns runs={runs} />}
+              {loading ? (
+                <LedgerSkeleton rows={5} />
+              ) : (
+                <RecentRuns runs={runs} />
+              )}
             </section>
           </div>
 
@@ -444,12 +469,12 @@ export default function Stats() {
           >
             {guestNote}
             <MarginNote label="Accuracy">
-              Questions answered correctly out of all questions shown; skips
-              and time-outs count against it.
+              Questions answered correctly out of all questions shown; skips and
+              time-outs count against it.
             </MarginNote>
             <MarginNote label="Avg time">
-              Seconds per correct answer in timed runs. Practice runs count
-              only for a topic you haven’t played timed.
+              Seconds per correct answer in timed runs. Practice runs count only
+              for a topic you haven’t played timed.
             </MarginNote>
             <MarginNote label="Best">
               Your personal best in the topic’s sprint, or its speedrun if you
@@ -516,8 +541,8 @@ function GradesTable({
   return (
     <table className="w-full table-fixed border-collapse text-body tabular-nums">
       <caption className="sr-only">
-        Grades by topic: runs, accuracy, average seconds per correct answer
-        and personal best
+        Grades by topic: runs, accuracy, average seconds per correct answer and
+        personal best
       </caption>
       <colgroup>
         <col />
@@ -532,7 +557,10 @@ function GradesTable({
           <th scope="col" className={cn(th, "pl-1")}>
             Topic
           </th>
-          <th scope="col" className={cn(th, "hidden px-2 text-right sm:table-cell")}>
+          <th
+            scope="col"
+            className={cn(th, "hidden px-2 text-right sm:table-cell")}
+          >
             Runs
           </th>
           <th scope="col" className={cn(th, "px-2 text-right")}>
@@ -541,7 +569,10 @@ function GradesTable({
           <th scope="col" className={cn(th, "px-2 text-right")}>
             Avg time
           </th>
-          <th scope="col" className={cn(th, "hidden px-2 text-right md:table-cell")}>
+          <th
+            scope="col"
+            className={cn(th, "hidden px-2 text-right md:table-cell")}
+          >
             Best
           </th>
           <th scope="col" className={th}>
@@ -562,17 +593,32 @@ function GradesTable({
                   {r.runs} {r.runs === 1 ? "run" : "runs"}
                 </span>
               </td>
-              <td className={cn(td, "hidden px-2 text-right font-mono text-mono-sm text-muted-foreground sm:table-cell")}>
+              <td
+                className={cn(
+                  td,
+                  "hidden px-2 text-right font-mono text-mono-sm text-muted-foreground sm:table-cell",
+                )}
+              >
                 {r.runs}
               </td>
               <td className={cn(td, "px-2 text-right font-mono text-mono-md")}>
                 {pct(r.accuracy)}
               </td>
-              <td className={cn(td, "whitespace-nowrap px-2 text-right font-mono text-mono-md")}>
+              <td
+                className={cn(
+                  td,
+                  "whitespace-nowrap px-2 text-right font-mono text-mono-md",
+                )}
+              >
                 {secs(r.secondsPerAnswer)}
                 <span className="sr-only"> per correct answer</span>
               </td>
-              <td className={cn(td, "hidden whitespace-nowrap px-2 text-right md:table-cell")}>
+              <td
+                className={cn(
+                  td,
+                  "hidden whitespace-nowrap px-2 text-right md:table-cell",
+                )}
+              >
                 {best ? (
                   <span className="font-mono text-mono-md">
                     {formatScore(best.mode.spec, best.best.score)}
@@ -629,8 +675,8 @@ function Remarks({ remark }: { remark: Remark | null }) {
         </p>
       ) : (
         <p className="font-serif text-body italic text-muted-foreground text-pretty">
-          None yet. Remarks compare your topics once you’ve played at least
-          two of them twice or more.
+          None yet. Remarks compare your topics once you’ve played at least two
+          of them twice or more.
         </p>
       )}
     </div>
@@ -660,10 +706,16 @@ function BestsTable({
           <th scope="col" className={cn(th, "px-2 text-right")}>
             Best
           </th>
-          <th scope="col" className={cn(th, "hidden px-2 text-right sm:table-cell")}>
+          <th
+            scope="col"
+            className={cn(th, "hidden px-2 text-right sm:table-cell")}
+          >
             Accuracy
           </th>
-          <th scope="col" className={cn(th, "hidden px-2 text-right md:table-cell")}>
+          <th
+            scope="col"
+            className={cn(th, "hidden px-2 text-right md:table-cell")}
+          >
             Set
           </th>
           <th scope="col" className={th}>
@@ -675,15 +727,32 @@ function BestsTable({
         {rows.map(({ modeId, mode, best }) => (
           <tr key={modeId}>
             <td className={cn(td, "min-w-0 py-2 pl-1 pr-2")}>
-              <span className="block text-pretty leading-snug">{mode.name}</span>
+              <span className="block text-pretty leading-snug">
+                {mode.name}
+              </span>
             </td>
-            <td className={cn(td, "whitespace-nowrap px-2 text-right font-mono text-mono-md")}>
+            <td
+              className={cn(
+                td,
+                "whitespace-nowrap px-2 text-right font-mono text-mono-md",
+              )}
+            >
               {formatScore(mode.spec, best.score)}
             </td>
-            <td className={cn(td, "hidden px-2 text-right font-mono text-mono-sm text-muted-foreground sm:table-cell")}>
+            <td
+              className={cn(
+                td,
+                "hidden px-2 text-right font-mono text-mono-sm text-muted-foreground sm:table-cell",
+              )}
+            >
               {pct(best.accuracy)}
             </td>
-            <td className={cn(td, "hidden whitespace-nowrap px-2 text-right font-mono text-mono-sm text-muted-foreground md:table-cell")}>
+            <td
+              className={cn(
+                td,
+                "hidden whitespace-nowrap px-2 text-right font-mono text-mono-sm text-muted-foreground md:table-cell",
+              )}
+            >
               {formatDate(best.endedAt)}
             </td>
             <td className={cn(td, "text-right")}>
@@ -742,7 +811,10 @@ function RecentRuns({ runs }: { runs: RunRecord[] }) {
             <th scope="col" className={cn(th, "px-2 text-right")}>
               Score
             </th>
-            <th scope="col" className={cn(th, "hidden pr-1 text-right sm:table-cell")}>
+            <th
+              scope="col"
+              className={cn(th, "hidden pr-1 text-right sm:table-cell")}
+            >
               Accuracy
             </th>
           </tr>

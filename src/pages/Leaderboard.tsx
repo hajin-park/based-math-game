@@ -182,7 +182,6 @@ export default function Leaderboard() {
   return (
     <div className="container flex flex-col gap-8 py-10 md:gap-10 md:py-14">
       <PageHeader
-        eyebrow="Leaderboard"
         folio="Top 50"
         title="Honour roll"
         lede="The best score in every ranked mode. Scores are checked for plausibility before they count."
@@ -214,10 +213,7 @@ export default function Leaderboard() {
                 value={topicId}
                 onValueChange={(t) => setMode(`${t}:${board}`)}
               >
-                <SelectTrigger
-                  id="lb-topic"
-                  className="h-11 sm:h-10 sm:w-56"
-                >
+                <SelectTrigger id="lb-topic" className="h-11 sm:h-10 sm:w-56">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -308,7 +304,10 @@ export default function Leaderboard() {
       </section>
 
       <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_15rem] lg:gap-14">
-        <section aria-labelledby="lb-title" className="flex min-w-0 flex-col gap-5">
+        <section
+          aria-labelledby="lb-title"
+          className="flex min-w-0 flex-col gap-5"
+        >
           <div className="flex flex-col gap-1">
             <h2 id="lb-title" className="text-headline font-bold">
               {mode.name}

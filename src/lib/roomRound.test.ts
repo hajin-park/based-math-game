@@ -27,9 +27,9 @@ describe("roundComplete", () => {
     expect(roundComplete(room({ a: done("a"), b: done("b") }), NOW)).toEqual({
       complete: true,
     });
-    expect(
-      roundComplete(room({ a: done("a"), b: playing("b") }), NOW),
-    ).toEqual({ complete: false });
+    expect(roundComplete(room({ a: done("a"), b: playing("b") }), NOW)).toEqual(
+      { complete: false },
+    );
   });
 
   it("an old round's finish does not count", () => {

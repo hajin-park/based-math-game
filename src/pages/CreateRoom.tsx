@@ -97,7 +97,6 @@ export default function CreateRoom() {
       </Button>
       <PageHeader
         size="sm"
-        eyebrow="Rooms · New room"
         title="Set up a room"
         lede="Everyone in the room gets the same questions, in the same order, starting at the same second."
       />
