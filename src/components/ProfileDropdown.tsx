@@ -1,5 +1,11 @@
 import { Link, useNavigate } from "react-router-dom";
-import { BarChart3, LogOut, Settings2, SlidersHorizontal, User } from "lucide-react";
+import {
+  BarChart3,
+  LogOut,
+  Settings2,
+  SlidersHorizontal,
+  User,
+} from "lucide-react";
 
 import {
   DropdownMenu,
@@ -12,7 +18,11 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { initials } from "@/lib/initials";
 
-/** Account menu in the nav for signed-in (registered) players. */
+/**
+ * Account menu for signed-in (registered) players: a small square name
+ * plate with typewritten initials (it sits on the nav and on the cover
+ * cloth), opening a slip with the name in serif and the account pages.
+ */
 export default function ProfileDropdown() {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
@@ -24,24 +34,27 @@ export default function ProfileDropdown() {
         <button
           type="button"
           aria-label={`Account menu for ${name}`}
-          className="inline-flex size-10 items-center justify-center rounded-full"
+          className="group inline-flex size-10 items-center justify-center rounded-sm"
         >
           <span
             aria-hidden
-            className="grid size-8 place-items-center rounded-full border bg-card font-mono text-[0.75rem] font-medium text-foreground transition-colors duration-fast hover:border-border-strong"
+            className="grid size-8 place-items-center rounded-[2px] border border-foreground/55 bg-card font-mono text-[0.75rem] font-bold tracking-[0.04em] text-foreground shadow-[0_1px_0_rgb(var(--shadow)/0.18)] outline outline-1 outline-offset-[-4px] outline-foreground/20 transition-colors duration-fast group-hover:border-foreground group-data-[state=open]:border-primary"
           >
             {initials(name)}
           </span>
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-60">
-        <DropdownMenuLabel className="px-2.5 pb-2 pt-2">
-          <span className="flex flex-col gap-1">
-            <span className="truncate text-[0.875rem] font-semibold text-foreground">
+      <DropdownMenuContent align="end" className="w-64">
+        <DropdownMenuLabel className="px-2.5 pb-2.5 pt-2">
+          <span className="flex flex-col gap-0.5">
+            <span className="smallcaps text-[0.8125rem] text-primary">
+              Signed in as
+            </span>
+            <span className="truncate font-serif text-title-sm font-bold text-foreground">
               {name}
             </span>
             {user?.email && (
-              <span className="truncate text-[0.75rem] font-normal text-muted-foreground">
+              <span className="truncate font-mono text-[0.75rem] font-normal text-muted-foreground">
                 {user.email}
               </span>
             )}
