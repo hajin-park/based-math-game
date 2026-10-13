@@ -384,19 +384,6 @@ function Player({
       <div className="flex flex-col gap-3">
         <Hud run={run} mode={mode} target={target} />
         {scoreboard}
-        {resumed && noteUp && run.correct === resumed.correct && (
-          <p
-            role="status"
-            className="rounded-sm bg-tint px-4 py-3 text-body-sm text-pretty sm:px-5"
-          >
-            <span className="smallcaps mr-2 text-[0.9375rem] text-primary">
-              Note
-            </span>
-            {resumed.source === "device"
-              ? `Picked up where you left off: question ${resumed.question}, ${resumed.correct} correct. The clock kept running while the page reloaded.`
-              : `Picked up from your recorded score: ${resumed.correct} correct, on to question ${resumed.question}. The clock kept running while you were away.`}
-          </p>
-        )}
       </div>
       <div className="relative flex min-h-[18rem] flex-col items-center justify-center">
         {run.status === "ready" ? (
@@ -417,6 +404,19 @@ function Player({
           </div>
         )}
       </div>
+      {/* Under the exercise, so it never moves the prompt when it goes. */}
+      <p role="status" className="mx-auto w-full max-w-2xl">
+        {resumed && noteUp && run.correct === resumed.correct && (
+          <span className="block rounded-sm bg-tint px-4 py-3 text-body-sm text-pretty sm:px-5">
+            <span className="smallcaps mr-2 text-[0.9375rem] text-primary">
+              Note
+            </span>
+            {resumed.source === "device"
+              ? `Picked up where you left off: question ${resumed.question}, ${resumed.correct} correct. The clock kept running while the page reloaded.`
+              : `Picked up from your recorded score: ${resumed.correct} correct, on to question ${resumed.question}. The clock kept running while you were away.`}
+          </span>
+        )}
+      </p>
     </div>
   );
 }
