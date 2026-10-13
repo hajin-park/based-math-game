@@ -50,7 +50,7 @@ import { database } from "@/firebase/database";
 import { ensureSignedIn } from "@/lib/ensureUser";
 import type { GameMode } from "@/game";
 import { RoomModeRef, resolveRoomMode, toRoomMode } from "@/lib/roomMode";
-import { serverNow, serverToLocal } from "@/lib/serverTime";
+import { serverNow, serverTimeOffset, serverToLocal } from "@/lib/serverTime";
 import { setPresence } from "@/lib/presence";
 import { hostVacant, needsReset, roundComplete } from "@/lib/roomRound";
 import { clampDisplayName } from "@/data/profile";
@@ -1044,6 +1044,10 @@ const subscribeToRoom = (
   roomId: string,
   callback: (room: Room | null) => void,
 ) => {
+  // Start tracking the server clock offset before the first snapshot, so the
+  // round start it carries is already on the right clock (a reloaded page
+  // resumes its run from it).
+  serverTimeOffset();
   const rRef = roomRef(roomId);
   let claiming = false;
   let finishing = false;
