@@ -22,22 +22,30 @@ import {
   type GameMode,
   type RunSummary,
 } from "@/game";
-import { roomApi, type Room } from "@/hooks/useRoom";
+import { roomApi, type Room, type RoomPlayer } from "@/hooks/useRoom";
 import type { ConfirmRequest } from "./ConfirmDialog";
+import {
+  loadRoundRun,
+  planResume,
+  pruneRoundRuns,
+  roundStore,
+  saveRoundRun,
+  snapshotCorrect,
+  snapshotMarks,
+  type ResumePlan,
+} from "./roundResume";
 import { Scoreboard } from "./Scoreboard";
 import { ordinal, rankPlayers } from "./standings";
 import type { LinkState } from "./useRoomState";
 
 /** Minimum gap between score writes; the last change always gets written. */
 const SCORE_PUSH_MS = 400;
+/** How long the "picked up where you left off" note stays up. */
+const RESUME_NOTE_MS = 8000;
 
 function clock(ms: number): string {
   const s = Math.max(0, Math.ceil(ms / 1000));
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
-}
-
-function playKey(room: Room) {
-  return `bmg:mp:${room.id}:${room.serverStartedAt}`;
 }
 
 export function GameView({
@@ -55,17 +63,13 @@ export function GameView({
 }) {
   const mode = room.engineMode as GameMode;
   const me = room.players[myUid];
-  // Reloaded mid-round (or already done): watch instead of starting over,
-  // so recorded progress is never replaced by a fresh run.
-  const [spectating] = useState(() => {
-    if (me?.finished) return true;
-    try {
-      if (sessionStorage.getItem(playKey(room))) return true;
-    } catch {
-      /* storage unavailable */
-    }
-    return (me?.correct ?? 0) > 0 && Date.now() > (room.startedAt ?? 0) + 1000;
-  });
+  // Back after a reload (or a dropped connection that reloaded the tab):
+  // continue the run from this device's snapshot, else from the progress the
+  // room recorded. Decided once, when the round's view mounts.
+  const [plan] = useState(() =>
+    planResume(loadRoundRun(roundStore(), room.id, room.serverStartedAt), me),
+  );
+  useEffect(() => pruneRoundRuns(roundStore()), []);
 
   const players = useMemo(
     () => Object.values(room.players).filter((p) => !p.kicked),
@@ -140,9 +144,13 @@ export function GameView({
               Reconnecting… keep playing; your answers sync when you're back.
             </p>
           )}
-          {spectating ? (
+          {plan.kind === "finished" ? (
             <>
-              <Spectator room={room} myUid={myUid} />
+              <MyFinish
+                room={room}
+                myUid={myUid}
+                figures={recordedFigures(me, mode.format)}
+              />
               {strip}
             </>
           ) : (
@@ -152,6 +160,8 @@ export function GameView({
               myUid={myUid}
               target={target}
               scoreboard={strip}
+              plan={plan}
+              recorded={me?.progress ?? []}
             />
           )}
           {isHost && (
@@ -193,18 +203,41 @@ function Player({
   myUid,
   target,
   scoreboard,
+  plan,
+  recorded,
 }: {
   room: Room;
   mode: GameMode;
   myUid: string;
   target: number;
   scoreboard: ReactNode;
+  plan: Extract<ResumePlan, { kind: "play" }>;
+  /** Progress marks the room already holds for this round. */
+  recorded: readonly number[];
 }) {
   const { settings } = useGameSettings();
   const seed = room.seed ?? 0;
   const startAt = room.startedAt ?? Date.now();
-  const marks = useRef<number[]>([]);
-  const correctRef = useRef(0);
+  const round = room.serverStartedAt;
+  // Past the shared start (or with progress to restore): mount running, on
+  // the shared clock, instead of counting down to a start already gone by.
+  const [resume] = useState(() =>
+    plan.snapshot || Date.now() >= startAt
+      ? { snapshot: plan.snapshot, startedAt: startAt }
+      : null,
+  );
+  // Marks the room recorded stay as they are; any newer ones (written
+  // locally just before the reload) come from the snapshot.
+  const [initial] = useState(() => {
+    const correct = plan.snapshot ? snapshotCorrect(plan.snapshot) : 0;
+    const local = snapshotMarks(plan.snapshot);
+    return {
+      correct,
+      marks: [...recorded.slice(0, correct), ...local.slice(recorded.length)],
+    };
+  });
+  const marks = useRef<number[]>(initial.marks);
+  const correctRef = useRef(initial.correct);
   const lastPush = useRef(0);
   const pushTimer = useRef<number | undefined>(undefined);
   const [result, setResult] = useState<RunSummary | null>(null);
@@ -253,20 +286,40 @@ function Player({
     [mode.format, push, room.id],
   );
 
-  const run = useRun({ mode, seed, onFinish });
+  const run = useRun({ mode, seed, onFinish, resume });
 
-  // Synchronised start: everyone begins at the same server moment.
+  // What the note says after picking the round back up.
+  const [resumed] = useState(() =>
+    plan.source !== "none" && run.status === "running"
+      ? { question: run.index + 1, correct: run.correct, source: plan.source }
+      : null,
+  );
+  const [noteUp, setNoteUp] = useState(true);
+  useEffect(() => {
+    if (!resumed) return;
+    const t = window.setTimeout(() => setNoteUp(false), RESUME_NOTE_MS);
+    return () => window.clearTimeout(t);
+  }, [resumed]);
+
+  // Keep this device's record of the run current, for the next reload.
+  const { snapshot } = run;
+  useEffect(() => {
+    if (snapshot && typeof round === "number")
+      saveRoundRun(roundStore(), room.id, round, snapshot);
+  }, [snapshot, room.id, round]);
+
+  // A score reached just before the reload may not have been written yet.
+  useEffect(() => {
+    if (resume?.snapshot) void push();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Synchronised start: everyone begins at the same server moment; a late
+  // start (a slow tab) still runs on that shared clock.
   const { status, start, finish } = run;
   useEffect(() => {
     if (status !== "ready") return;
-    const go = () => {
-      start();
-      try {
-        sessionStorage.setItem(playKey(room), "1");
-      } catch {
-        /* storage unavailable */
-      }
-    };
+    const go = () => start(Math.max(0, Date.now() - startAt));
     const wait = startAt - Date.now();
     if (wait <= 0) {
       go();
@@ -274,7 +327,6 @@ function Player({
     }
     const t = window.setTimeout(go, wait);
     return () => window.clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, startAt, start]);
 
   // Sprint ends at the shared deadline even if this client started late.
@@ -308,10 +360,16 @@ function Player({
     [push],
   );
 
-  if (result)
+  // A run restored as finished has its summary on the first render.
+  const finished = result ?? run.summary;
+  if (finished)
     return (
       <>
-        <MyFinish room={room} myUid={myUid} summary={result} />
+        <MyFinish
+          room={room}
+          myUid={myUid}
+          figures={summaryFigures(finished, mode.format)}
+        />
         {scoreboard}
       </>
     );
@@ -321,6 +379,7 @@ function Player({
       className="flex flex-col gap-4 sm:gap-6"
       data-index={run.index}
       data-run={run.status}
+      data-resumed={resumed?.source}
     >
       <div className="flex flex-col gap-3">
         <Hud run={run} mode={mode} target={target} />
@@ -345,6 +404,19 @@ function Player({
           </div>
         )}
       </div>
+      {/* Under the exercise, so it never moves the prompt when it goes. */}
+      <p role="status" className="mx-auto w-full max-w-2xl">
+        {resumed && noteUp && run.correct === resumed.correct && (
+          <span className="block rounded-sm bg-tint px-4 py-3 text-body-sm text-pretty sm:px-5">
+            <span className="smallcaps mr-2 text-[0.9375rem] text-primary">
+              Note
+            </span>
+            {resumed.source === "device"
+              ? `Picked up where you left off: question ${resumed.question}, ${resumed.correct} correct. The clock kept running while the page reloaded.`
+              : `Picked up from your recorded score: ${resumed.correct} correct, on to question ${resumed.question}. The clock kept running while you were away.`}
+          </span>
+        )}
+      </p>
     </div>
   );
 }
@@ -476,14 +548,53 @@ function waitingFor(room: Room): number {
   ).length;
 }
 
+/** The figures of a finished run, from this device's run or the room's record. */
+interface FinishFigures {
+  correct: number;
+  /** Speedrun: reached the target (otherwise the round ended first). */
+  completed: boolean;
+  /** Speedrun: time plus skip penalties, in ms. */
+  score: number;
+  penaltyMs: number;
+  /** Unknown when only the room's record is left. */
+  skipped?: number;
+}
+
+function summaryFigures(
+  summary: RunSummary,
+  format: GameMode["format"],
+): FinishFigures {
+  return {
+    correct: summary.correct,
+    completed: summary.completed,
+    score: summary.score,
+    penaltyMs: format === "speedrun" ? summary.score - summary.durationMs : 0,
+    skipped: summary.skipped,
+  };
+}
+
+function recordedFigures(
+  me: RoomPlayer | undefined,
+  format: GameMode["format"],
+): FinishFigures {
+  const penaltyMs = me?.penaltyMs ?? 0;
+  const timed = typeof me?.finishMs === "number";
+  return {
+    correct: me?.correct ?? 0,
+    completed: format !== "speedrun" || timed,
+    score: timed ? (me?.finishMs ?? 0) + penaltyMs : 0,
+    penaltyMs,
+  };
+}
+
 function MyFinish({
   room,
   myUid,
-  summary,
+  figures,
 }: {
   room: Room;
   myUid: string;
-  summary: RunSummary;
+  figures: FinishFigures;
 }) {
   const mode = room.engineMode as GameMode;
   const left = waitingFor(room);
@@ -492,70 +603,42 @@ function MyFinish({
     mode.format,
   );
   const mine = standings.find((s) => s.player.uid === myUid);
+  const { correct, completed, score, penaltyMs, skipped } = figures;
   const result =
     mode.format === "speedrun"
-      ? summary.completed
-        ? formatMs(summary.score)
-        : `${summary.correct} of ${mode.spec.targetCount ?? SPEEDRUN_TARGET}`
+      ? completed
+        ? formatMs(score)
+        : `${correct} of ${mode.spec.targetCount ?? SPEEDRUN_TARGET}`
       : mode.format === "survival"
-        ? `${summary.correct} cleared`
-        : `${summary.correct} correct`;
+        ? `${correct} cleared`
+        : `${correct} correct`;
+  const skips =
+    skipped === undefined
+      ? "skip penalties"
+      : `${skipped} skip${skipped > 1 ? "s" : ""}`;
   return (
     <section
       aria-labelledby="my-finish"
       className="paper-sheet flex animate-sheet-in flex-col items-center gap-4 rounded-sm px-6 py-10 text-center"
+      data-testid="my-finish"
     >
       <h2
         id="my-finish"
         className="flex items-center gap-2 font-serif text-headline font-bold"
       >
         <PenTick className="size-8" />
-        {mode.format === "speedrun" && !summary.completed
-          ? "Time's up"
-          : "Finished"}
+        {mode.format === "speedrun" && !completed ? "Time's up" : "Finished"}
       </h2>
       <p className="font-mono text-mono-xl tabular-nums">{result}</p>
-      {summary.skipped > 0 && mode.format === "speedrun" && (
+      {mode.format === "speedrun" && completed && penaltyMs > 0 && (
         <p className="text-body-sm text-muted-foreground">
-          includes {summary.skipped} skip{summary.skipped > 1 ? "s" : ""} · +
-          {(summary.score - summary.durationMs) / 1000} s
+          includes {skips} · +{penaltyMs / 1000} s
         </p>
       )}
       <p className="text-body-sm text-muted-foreground" role="status">
         {left > 0
           ? `${mine ? `You're ${ordinal(mine.rank)} so far. ` : ""}Waiting for ${left} player${left > 1 ? "s" : ""} to finish…`
           : "Tallying the results…"}
-      </p>
-    </section>
-  );
-}
-
-function Spectator({ room, myUid }: { room: Room; myUid: string }) {
-  const me = room.players[myUid];
-  const left = waitingFor(room);
-  // Not playing on: count as done so the round can end without us (a
-  // speedrun without a time ranks by progress, like any unfinished run).
-  const done = !!me?.finished;
-  const [finishedBefore] = useState(done);
-  useEffect(() => {
-    if (!done) void roomApi.finishGame(room.id).catch(() => undefined);
-  }, [done, room.id]);
-  return (
-    <section
-      aria-labelledby="spectating"
-      className="paper-sheet flex flex-col items-center gap-3 rounded-sm px-6 py-10 text-center"
-    >
-      <p className="smallcaps">This round</p>
-      <h2 id="spectating" className="font-serif text-headline font-bold">
-        {finishedBefore ? "You've finished" : "You left mid-round"}
-      </h2>
-      <p className="max-w-sm text-body-sm text-muted-foreground">
-        {finishedBefore
-          ? "Your result is in."
-          : `Your progress so far is kept: ${me?.correct ?? 0} correct. You'll play the next round from the start.`}{" "}
-        {left > 0
-          ? `Waiting for ${left} player${left > 1 ? "s" : ""}.`
-          : "Results are on the way."}
       </p>
     </section>
   );

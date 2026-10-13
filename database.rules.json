@@ -86,7 +86,7 @@
         },
         "slots": {
           "$slot": {
-            ".write": "auth != null && ( (!data.exists() && newData.val() === auth.uid) || (data.val() === auth.uid && !newData.exists() && !newData.parent().parent().child('players').child(auth.uid).exists()) || (!newData.exists() && data.parent().parent().child('hostUid').val() === auth.uid && newData.parent().parent().child('kicked').child(data.val()).val() === true) )",
+            ".write": "auth != null && ( (!data.exists() && newData.val() === auth.uid) || (data.val() === auth.uid && !newData.exists() && !newData.parent().parent().child('players').child(auth.uid).exists()) || (!newData.exists() && data.parent().parent().child('hostUid').val() === auth.uid && newData.parent().parent().child('kicked').child(data.val()).val() === true) || (!newData.exists() && data.parent().parent().child('hostUid').val() === auth.uid && data.val() !== auth.uid && data.parent().parent().child('players').child(data.val()).child('disconnected').val() === true && !newData.parent().parent().child('players').child(data.val()).exists()) )",
             ".validate": "newData.isString() && newData.val() === auth.uid && ($slot === '0' || $slot === '1' || ($slot === '2' && newData.parent().parent().child('maxPlayers').val() > 2) || ($slot === '3' && newData.parent().parent().child('maxPlayers').val() > 3) || ($slot === '4' && newData.parent().parent().child('maxPlayers').val() > 4) || ($slot === '5' && newData.parent().parent().child('maxPlayers').val() > 5) || ($slot === '6' && newData.parent().parent().child('maxPlayers').val() > 6) || ($slot === '7' && newData.parent().parent().child('maxPlayers').val() > 7) || ($slot === '8' && newData.parent().parent().child('maxPlayers').val() > 8) || ($slot === '9' && newData.parent().parent().child('maxPlayers').val() > 9)) && newData.parent().parent().child('status').val() === 'waiting' && newData.parent().parent().child('players').child(auth.uid).child('slot').val() === $slot && !newData.parent().parent().child('kicked').child(auth.uid).exists()"
           }
         },
@@ -98,7 +98,7 @@
         },
         "players": {
           "$uid": {
-            ".write": "auth != null && ( ($uid === auth.uid && (newData.exists() || newData.parent().parent().child('slots').child(data.child('slot').val()).val() !== auth.uid)) || (!newData.exists() && data.parent().parent().child('hostUid').val() === auth.uid && newData.parent().parent().child('kicked').child($uid).val() === true) )",
+            ".write": "auth != null && ( ($uid === auth.uid && (newData.exists() || newData.parent().parent().child('slots').child(data.child('slot').val()).val() !== auth.uid)) || (!newData.exists() && data.parent().parent().child('hostUid').val() === auth.uid && newData.parent().parent().child('kicked').child($uid).val() === true) || (!newData.exists() && data.parent().parent().child('hostUid').val() === auth.uid && $uid !== auth.uid && data.child('disconnected').val() === true && newData.parent().parent().child('slots').child(data.child('slot').val()).val() !== $uid) )",
             ".validate": "newData.hasChildren(['uid', 'displayName', 'slot', 'ready', 'score', 'correct', 'finished', 'wins']) && (data.exists() || ( $uid === auth.uid && newData.parent().parent().child('status').val() === 'waiting' && newData.parent().parent().child('slots').child(newData.child('slot').val()).val() === $uid && !newData.parent().parent().child('kicked').child($uid).exists()))",
             "uid": {
               ".validate": "newData.val() === $uid"

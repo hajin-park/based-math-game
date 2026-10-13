@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, beforeEach, describe, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import {
   assertFails,
   assertSucceeds,
@@ -348,7 +348,9 @@ describe("player nodes", () => {
     await assertFails(me.update({ wins: 1, lastWinRound: startedAt }));
     // Only the host records winners, for the current round, once it is over.
     await assertFails(
-      db("bob").ref(`${R}/winners`).set({ round: startedAt, uids: { bob: true } }),
+      db("bob")
+        .ref(`${R}/winners`)
+        .set({ round: startedAt, uids: { bob: true } }),
     );
     await assertFails(
       db("alice")
@@ -361,7 +363,9 @@ describe("player nodes", () => {
         .set({ round: startedAt, uids: { stranger: true } }),
     );
     await assertSucceeds(
-      db("alice").ref(`${R}/winners`).set({ round: startedAt, uids: { bob: true } }),
+      db("alice")
+        .ref(`${R}/winners`)
+        .set({ round: startedAt, uids: { bob: true } }),
     );
     await assertFails(me.update({ wins: 5, lastWinRound: startedAt }));
     await assertSucceeds(me.update({ wins: 1, lastWinRound: startedAt }));
@@ -480,6 +484,100 @@ describe("host controls", () => {
           "players/bob": { ...player("bob", "1"), joinedAt: NOW },
         }),
     );
+  });
+
+  describe("freeing a disconnected player's seat (no ban)", () => {
+    const free = {
+      "players/bob": null,
+      "slots/1": null,
+      lastActivityAt: NOW,
+    };
+    const rejoin = (slot: string) => ({
+      [`slots/${slot}`]: "bob",
+      "players/bob": { ...player("bob", slot), joinedAt: NOW },
+      lastActivityAt: NOW,
+    });
+
+    it("the host frees it; the player can rejoin as a fresh player", async () => {
+      await seed(
+        R,
+        room({
+          lastChatAt: { bob: Date.now() - 5_000 },
+          players: {
+            alice: player("alice", "0", { ready: true }),
+            bob: player("bob", "1", {
+              ready: true,
+              wins: 3,
+              disconnected: true,
+              disconnectedAt: Date.now() - 20_000,
+            }),
+          },
+        }),
+      );
+      await assertSucceeds(db("alice").ref(R).update(free));
+      expect(await read(`${R}/kicked/bob`)).toBeNull();
+      // Still allowed to read the room and come back through a free seat.
+      await assertSucceeds(db("bob").ref(R).get());
+      await assertSucceeds(db("bob").ref(R).update(rejoin("2")));
+      expect(await read(`${R}/players/bob`)).toMatchObject({
+        score: 0,
+        ready: false,
+        wins: 0,
+        slot: "2",
+      });
+      // Chat keeps working: the rate-limit stamp stayed with the uid.
+      const stamp = (await read(`${R}/lastChatAt/bob`)) as number;
+      await assertSucceeds(
+        db("bob")
+          .ref(R)
+          .update({
+            [`chat/bob_${stamp}`]: {
+              senderId: "bob",
+              displayName: "bob",
+              message: "back",
+              timestamp: NOW,
+              isSystem: false,
+            },
+            "lastChatAt/bob": NOW,
+            lastActivityAt: NOW,
+          }),
+      );
+    });
+
+    it("only for a disconnected player, only by the host, node and seat together", async () => {
+      await seed(R, room());
+      // Bob is connected: freeing his seat would throw him out.
+      await assertFails(db("alice").ref(R).update(free));
+
+      await seed(`${R}/players/bob/disconnected`, true);
+      await seed(`${R}/slots/2`, "carol");
+      await seed(`${R}/players/carol`, player("carol", "2"));
+      // Not the host.
+      await assertFails(db("carol").ref(R).update(free));
+      // Node without the seat, or the seat without the node.
+      await assertFails(db("alice").ref(`${R}/players/bob`).remove());
+      await assertFails(db("alice").ref(`${R}/slots/1`).remove());
+      // A connected player's seat, even alongside a disconnected one.
+      await assertFails(
+        db("alice")
+          .ref(R)
+          .update({ ...free, "players/carol": null, "slots/2": null }),
+      );
+      // Handing the freed seat to someone else in the same write.
+      await assertFails(
+        db("alice")
+          .ref(R)
+          .update({ ...free, "slots/1": "carol" }),
+      );
+      await assertSucceeds(db("alice").ref(R).update(free));
+    });
+
+    it("a freed player cannot rejoin while the round is being played", async () => {
+      await seedPlaying();
+      await seed(`${R}/players/bob/disconnected`, true);
+      await assertSucceeds(db("alice").ref(R).update(free));
+      await assertFails(db("bob").ref(R).update(rejoin("1")));
+    });
   });
 
   it("host transfer: host may hand over to an existing player", async () => {

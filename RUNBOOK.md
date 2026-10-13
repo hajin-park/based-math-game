@@ -139,10 +139,27 @@ After the "Deploy to Firebase Hosting on merge" workflow is green, check on http
 Known limits found in QA that need a product decision (not changed in this release):
 
 - **A ranked daily can be previewed.** The lock is claimed when a daily finishes, so a player can quit before the end, see the questions, and retry. Closing this needs the lock claimed at the start, which is a rules change.
-- **Reloading mid-round forfeits that round in a room.** The player becomes a spectator; their progress so far is kept.
-- **Removing a disconnected player also bans them.** It is the only way to free their seat; anything else needs a rules change.
+- **Reloading mid-round forfeits that round in a room.** The player becomes a spectator; their progress so far is kept. _Changed: see §14._
+- **Removing a disconnected player also bans them.** It is the only way to free their seat; anything else needs a rules change. _Changed: see §14._
 - **`userStats.bests` grows by one key per daily played.** After about 930 dailies, a player would hit the 1000-key rules limit. A clean-up or a separate daily-bests document is needed before then.
 - **A device clock more than 5 minutes fast fails run saves** (the `endedAt` bound in the rules).
+
+---
+
+## 14. Release: rooms resume after a reload, Free seat (rules change)
+
+Two product decisions from §13, implemented. **The Realtime Database rules change**, so deploy them right after the Hosting deploy (the old client keeps working with the new rules; the new client's Free seat fails with a toast until they are deployed):
+
+```bash
+npx firebase-tools deploy --only database --project based-math-game
+```
+
+What changed:
+
+- **A reload mid-round resumes the round.** The player continues at the same question with the same score, on the shared clock: in a sprint the time spent reloading is lost, in a speedrun it counts, in survival the current question's clock keeps running (one life at most if it ran out). The run is kept in the browser's localStorage, so a closed tab reopened from the link continues too. From another browser or after clearing site data, the run continues from the score the room recorded, after the last correct answer: the room records neither skips nor lost lives, so a skipped question comes back, speedrun skip penalties are dropped and survival lives are full again. A finished player stays finished.
+- **Free seat.** In the lobby, the host's Manage menu offers **Free seat** for a player shown as Disconnected. It opens the seat without a ban: that player can rejoin with the code or link while a seat is free, as a new player. **Remove from room** still bans, for anyone.
+
+Check after deploying, with two browsers: start a round, reload one tab after a few answers (same question number and score, a note under the exercise says so); in the lobby, close one player's tab, then as host use Manage → Free seat and rejoin from the closed browser with the link.
 
 ## Not used in this project
 

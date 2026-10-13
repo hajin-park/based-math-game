@@ -59,7 +59,16 @@ export interface RunState {
 
 export type RunAction =
   | { type: "reset"; mode: GameMode; seed: number }
-  | { type: "start"; now: number }
+  /** `elapsedMs`: the run began that long before `now` (a shared start passed). */
+  | { type: "start"; now: number; elapsedMs?: number }
+  /** Rebuild a run in progress `elapsedMs` after its start (see restoreRun). */
+  | {
+      type: "restore";
+      snapshot: RunSnapshot | null;
+      now: number;
+      wall: number;
+      elapsedMs: number;
+    }
   | { type: "input"; raw: string; now: number; wall: number }
   | { type: "skip"; now: number; wall: number }
   | { type: "tick"; now: number; wall: number }
@@ -245,19 +254,29 @@ export function runReducer(s: RunState, a: RunAction): RunState {
   switch (a.type) {
     case "reset":
       return createRunState(a.mode, a.seed, s.runId + 1);
-    case "start":
+    case "start": {
       if (s.status !== "ready") return s;
+      const late = Math.max(0, a.elapsedMs ?? 0);
       return {
         ...s,
         status: "running",
-        startedAt: a.now,
+        startedAt: a.now - late,
         now: a.now,
         pausedAt: null,
         pausedTotal: 0,
         index: 0,
         question: s.stream.at(0),
-        questionShownAt: 0,
+        // A survival question's own clock starts when it appears, so a late
+        // start never costs a life before the first question is seen.
+        questionShownAt: s.mode.format === "survival" ? late : 0,
       };
+    }
+    case "restore":
+      return restoreRun(
+        { ...createRunState(s.mode, s.seed, s.runId + 1), stream: s.stream },
+        a.snapshot,
+        a,
+      );
     case "pause":
       if (s.status !== "running" || s.pausedAt !== null) return s;
       return { ...s, pausedAt: a.now, now: a.now };
@@ -326,6 +345,255 @@ export function runReducer(s: RunState, a: RunAction): RunState {
       return typed;
     }
   }
+}
+
+// ---------------------------------------------------------------------------
+// Snapshots: a compact, JSON-safe record of a run in progress, so a page that
+// reloads mid-run (a multiplayer round) can continue where it was. Questions
+// are not stored: the stream is deterministic, so outcome k is question k.
+
+type OutcomeCode = "c" | "s" | "t";
+const CODE: Record<QuestionOutcome["result"], OutcomeCode> = {
+  correct: "c",
+  skipped: "s",
+  timeout: "t",
+};
+const RESULT: Record<OutcomeCode, QuestionOutcome["result"]> = {
+  c: "correct",
+  s: "skipped",
+  t: "timeout",
+};
+
+export interface RunSnapshot {
+  v: 1;
+  /** Resolved questions in order: [result, elapsedMs, keystrokes, deletions]. */
+  outcomes: Array<[OutcomeCode, number, number, number]>;
+  /** Active ms at which the current question appeared. */
+  shownAt: number;
+  /** Partial answer typed for the current question. */
+  input: string;
+  keystrokes: number;
+  deletions: number;
+  /** Set once finished: [active ms at finish, Date.now() at finish, completed]. */
+  end?: [number, number, boolean];
+}
+
+/** Longest run a snapshot may describe (survival tops out far below this). */
+const MAX_SNAPSHOT_OUTCOMES = 5000;
+
+/** Snapshot of `s`; null before the run has started. */
+export function snapshotRun(
+  s: Pick<
+    RunState,
+    | "status"
+    | "outcomes"
+    | "questionShownAt"
+    | "input"
+    | "keystrokes"
+    | "deletions"
+    | "finishedAt"
+    | "endedAt"
+    | "completed"
+  >,
+): RunSnapshot | null {
+  if (s.status === "ready") return null;
+  const snap: RunSnapshot = {
+    v: 1,
+    outcomes: s.outcomes.map((o) => [
+      CODE[o.result],
+      o.elapsedMs,
+      o.keystrokes,
+      o.deletions,
+    ]),
+    shownAt: s.questionShownAt,
+    input: s.input,
+    keystrokes: s.keystrokes,
+    deletions: s.deletions,
+  };
+  if (s.status === "finished" && s.finishedAt !== null)
+    snap.end = [s.finishedAt, s.endedAt ?? 0, s.completed];
+  return snap;
+}
+
+const isCount = (n: unknown): n is number =>
+  typeof n === "number" && Number.isFinite(n) && n >= 0;
+
+/** Validates stored data as a snapshot (null when it is not one). */
+export function parseRunSnapshot(value: unknown): RunSnapshot | null {
+  if (typeof value !== "object" || value === null) return null;
+  const v = value as Partial<RunSnapshot>;
+  if (v.v !== 1 || !Array.isArray(v.outcomes)) return null;
+  if (v.outcomes.length > MAX_SNAPSHOT_OUTCOMES) return null;
+  for (const o of v.outcomes as unknown[]) {
+    if (
+      !Array.isArray(o) ||
+      o.length !== 4 ||
+      !(o[0] === "c" || o[0] === "s" || o[0] === "t") ||
+      !isCount(o[1]) ||
+      !isCount(o[2]) ||
+      !isCount(o[3])
+    )
+      return null;
+  }
+  if (!isCount(v.shownAt) || !isCount(v.keystrokes) || !isCount(v.deletions))
+    return null;
+  if (typeof v.input !== "string" || v.input.length > 64) return null;
+  const e = v.end as unknown;
+  if (
+    e !== undefined &&
+    !(
+      Array.isArray(e) &&
+      e.length === 3 &&
+      isCount(e[0]) &&
+      isCount(e[1]) &&
+      typeof e[2] === "boolean"
+    )
+  )
+    return null;
+  return {
+    v: 1,
+    outcomes: v.outcomes.map((o) => [o[0], o[1], o[2], o[3]]),
+    shownAt: v.shownAt,
+    input: v.input,
+    keystrokes: v.keystrokes,
+    deletions: v.deletions,
+    ...(v.end ? { end: [v.end[0], v.end[1], v.end[2]] } : {}),
+  };
+}
+
+/**
+ * A snapshot from recorded progress alone (a multiplayer score): `correct`
+ * answers, `marks[k]` = active ms at which answer k + 1 was given. Skips and
+ * timeouts are not recorded there, so the run continues right after the
+ * last correct answer.
+ */
+export function progressSnapshot(
+  correct: number,
+  marks: readonly number[],
+): RunSnapshot {
+  const n = Math.max(0, Math.min(Math.floor(correct), MAX_SNAPSHOT_OUTCOMES));
+  const outcomes: RunSnapshot["outcomes"] = [];
+  let last = 0;
+  for (let i = 0; i < n; i++) {
+    const at = isCount(marks[i]) ? Math.max(last, marks[i]) : last;
+    outcomes.push(["c", Math.round(at - last), 0, 0]);
+    last = at;
+  }
+  return {
+    v: 1,
+    outcomes,
+    shownAt: Math.round(last),
+    input: "",
+    keystrokes: 0,
+    deletions: 0,
+  };
+}
+
+/** Whether the outcomes alone end the run (lives gone, target reached). */
+function outcomesEndRun(s: RunState): boolean {
+  const spec = s.mode.spec;
+  switch (s.mode.format) {
+    case "survival":
+      return s.lives !== null && s.lives <= 0;
+    case "speedrun":
+      return !!spec.targetCount && s.correct >= spec.targetCount;
+    case "daily":
+      return !!spec.targetCount && s.outcomes.length >= spec.targetCount;
+    default:
+      return false;
+  }
+}
+
+/**
+ * Rebuilds a run from `snap` (null = nothing answered yet) as if it had
+ * started `elapsedMs` before `now`. The clocks keep running across the gap:
+ * a sprint loses the time spent away, a speedrun counts it, and a survival
+ * question that ran out meanwhile costs one life.
+ */
+function restoreRun(
+  base: RunState,
+  snap: RunSnapshot | null,
+  at: { now: number; wall: number; elapsedMs: number },
+): RunState {
+  const elapsed = Math.max(0, at.elapsedMs);
+  const outcomes: QuestionOutcome[] = (snap?.outcomes ?? []).map(
+    ([code, elapsedMs, keystrokes, deletions], i) => ({
+      question: base.stream.at(i),
+      result: RESULT[code],
+      elapsedMs,
+      keystrokes,
+      deletions,
+    }),
+  );
+  let correct = 0;
+  let skipped = 0;
+  let timeouts = 0;
+  for (const o of outcomes) {
+    if (o.result === "correct") correct++;
+    else if (o.result === "skipped") skipped++;
+    else timeouts++;
+  }
+  const index = outcomes.length;
+  const question = base.stream.at(index);
+  const shownAt = snap
+    ? Math.min(snap.shownAt, elapsed)
+    : base.mode.format === "survival"
+      ? elapsed
+      : 0;
+  let state: RunState = {
+    ...base,
+    status: "running",
+    startedAt: at.now - elapsed,
+    now: at.now,
+    pausedAt: null,
+    pausedTotal: 0,
+    outcomes,
+    correct,
+    skipped,
+    timeouts,
+    penaltyMs: skipped * (base.mode.spec.skipPenaltyMs ?? 0),
+    lives:
+      base.lives !== null ? Math.max(0, base.lives - skipped - timeouts) : null,
+    index,
+    question,
+    questionShownAt: shownAt,
+    input: "",
+    keystrokes: 0,
+    deletions: 0,
+    reveal: null,
+  };
+  if (snap?.end) {
+    const [finishedAt, endedAt, completed] = snap.end;
+    return finish(state, finishedAt, endedAt, completed);
+  }
+  if (outcomesEndRun(state)) return finish(state, shownAt, at.wall, true);
+  if (
+    snap?.input &&
+    isAcceptableKeystroke(snap.input, question) &&
+    !checkAnswer(question, snap.input)
+  ) {
+    state = {
+      ...state,
+      input: snap.input,
+      keystrokes: snap.keystrokes,
+      deletions: snap.deletions,
+    };
+  }
+  return advanceClock(state, at.now, at.wall);
+}
+
+/** A run of `mode` restored from `snap` (see the "restore" action). */
+export function restoreRunState(
+  mode: GameMode,
+  seed: number,
+  snap: RunSnapshot | null,
+  at: { now: number; wall: number; elapsedMs: number },
+): RunState {
+  return runReducer(createRunState(mode, seed), {
+    type: "restore",
+    snapshot: snap,
+    ...at,
+  });
 }
 
 /** Summary of a finished (or in-progress) run. */

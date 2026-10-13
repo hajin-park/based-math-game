@@ -66,7 +66,7 @@ export function LobbyView({
     const name = names.get(p.uid) ?? p.displayName;
     confirm({
       title: `Remove ${name}?`,
-      description: `${name} leaves the room and can't rejoin with this code.`,
+      description: `${name} leaves the room and can't rejoin with this code.${p.disconnected ? " To keep the door open for them, free their seat instead." : ""}`,
       confirm: "Remove",
       destructive: true,
       onConfirm: () =>
@@ -75,6 +75,23 @@ export function LobbyView({
             variant: "destructive",
             title: `Couldn't remove ${name}`,
             description: "Try again in a moment.",
+          }),
+        ),
+    });
+  };
+
+  const freeSeat = (p: RoomPlayer) => {
+    const name = names.get(p.uid) ?? p.displayName;
+    confirm({
+      title: `Free ${name}'s seat?`,
+      description: `${name} lost connection. Their seat opens for someone else. They aren't banned: they can rejoin with the code or link while a seat is free, starting again as a new player.`,
+      confirm: "Free seat",
+      onConfirm: () =>
+        roomApi.freeSeat(room.id, p.uid).catch(() =>
+          toast({
+            variant: "destructive",
+            title: "Seat not freed",
+            description: `${name} may be back already.`,
           }),
         ),
     });
@@ -190,6 +207,7 @@ export function LobbyView({
               names={names}
               onRename={rename}
               onKick={kick}
+              onFreeSeat={freeSeat}
               onMakeHost={makeHost}
             />
           </section>
