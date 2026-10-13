@@ -96,7 +96,7 @@ export function BitMatrix({
 
 function Cell({ row, position }: { row: BitRow; position: number }) {
   if (row.kind === "rule") {
-    return <span aria-hidden className="h-px bg-border-strong" />;
+    return <span aria-hidden className="h-px bg-foreground/60" />;
   }
   if (row.kind === "weights") {
     return (
@@ -123,12 +123,12 @@ function Cell({ row, position }: { row: BitRow; position: number }) {
   const on = bit === 1;
   const highlighted = row.highlight?.(position);
   const box = cn(
-    "flex h-12 w-11 items-center justify-center rounded-md border font-mono text-[1.25rem] font-medium tabular-nums transition-[background-color,border-color,color] duration-fast",
+    "flex h-12 w-11 items-center justify-center rounded-none border font-mono text-[1.25rem] tabular-nums transition-[background-color,border-color,color] duration-fast",
     on
-      ? "border-base-bin/35 bg-base-bin/10 text-base-bin"
-      : "border-border bg-card text-muted-foreground",
-    row.tone === "result" && "border-dashed",
-    highlighted && "ring-2 ring-highlight/70 ring-offset-1 ring-offset-card",
+      ? "border-foreground/50 bg-tint font-bold text-base-bin"
+      : "border-border-strong bg-card font-medium text-muted-foreground",
+    row.tone === "result" && "border-foreground/70 border-b-2",
+    highlighted && "bg-highlight/45",
   );
   if (row.onToggle) {
     const toggle = row.onToggle;
@@ -138,7 +138,7 @@ function Cell({ row, position }: { row: BitRow; position: number }) {
         aria-pressed={on}
         aria-label={`${row.name ?? row.label}, bit ${position}`}
         onClick={() => toggle(position)}
-        className={cn(box, "hover:border-base-bin/50 active:translate-y-px")}
+        className={cn(box, "hover:border-foreground active:translate-y-px")}
       >
         {bit}
       </button>
