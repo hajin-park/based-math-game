@@ -70,7 +70,7 @@ function TocLinks({
                 <span
                   aria-hidden
                   className={cn(
-                    "w-7 shrink-0 font-mono text-[0.8125rem] font-medium",
+                    "w-8 shrink-0 font-mono text-[0.8125rem] font-medium",
                     current ? "text-primary" : "text-muted-foreground",
                   )}
                 >
