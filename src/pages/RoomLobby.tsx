@@ -5,7 +5,7 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
-import { DoorOpen, Info, LogOut, Wifi, WifiOff } from "lucide-react";
+import { LogOut, Wifi, WifiOff } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Logomark } from "@/components/ui/logo";
@@ -182,16 +182,17 @@ function RoomBar({
         ? "Playing"
         : "Results";
   return (
-    <header className="sticky top-0 z-30 border-b bg-background/95 backdrop-blur-sm">
+    <header className="sticky top-0 z-30 border-b border-foreground/20 bg-background">
       <div className="container flex h-14 items-center gap-3">
         <Logomark className="size-6 shrink-0" aria-hidden />
-        <div className="flex min-w-0 items-baseline gap-2">
-          <span className="eyebrow hidden xs:inline">{phase}</span>
+        <div className="flex min-w-0 items-baseline gap-2.5">
+          <span className="smallcaps hidden xs:inline">Room</span>
           <span className="font-mono text-[0.9375rem] font-medium tracking-[0.12em]">
             {a}
             <span aria-hidden className="inline-block w-[0.35em]" />
             {b}
           </span>
+          <span className="smallcaps hidden sm:inline">· {phase}</span>
         </div>
         <LinkBadge link={link} />
         <div className="ml-auto">
@@ -247,8 +248,10 @@ function EventBanner({ events }: { events: FeedEvent[] }) {
   return (
     <div role="status" aria-live="polite" className="container">
       {shown && (
-        <p className="mt-3 flex items-center gap-2 rounded-md border border-info/25 bg-info/[0.06] px-3 py-2 text-body-sm motion-safe:animate-rise">
-          <Info aria-hidden className="size-4 shrink-0 text-info" />
+        <p className="mt-3 flex items-baseline gap-3 bg-tint px-4 py-2 text-body-sm motion-safe:animate-rise">
+          <span className="font-serif font-medium tracking-[0.05em] text-primary [font-variant-caps:all-small-caps]">
+            Note
+          </span>
           {shown.text}
         </p>
       )}
@@ -263,33 +266,36 @@ function MissingRoom({ code, closed }: { code: string; closed?: boolean }) {
       toast({ title: "Room closed", description: `Room ${shown} has closed.` });
   }, [closed, shown]);
   return (
-    <div className="container flex min-h-dvh items-center justify-center py-16">
-      <section className="flex max-w-md flex-col items-center gap-5 rounded-xl border border-dashed border-border-strong px-6 py-12 text-center">
-        <span
-          aria-hidden
-          className="grid size-11 place-items-center rounded-lg border bg-card text-muted-foreground shadow-xs"
-        >
-          <DoorOpen className="size-5" />
-        </span>
-        <div className="flex flex-col gap-2">
-          <h1 className="font-serif text-headline font-medium">
-            {closed ? "This room has closed" : "Room not found"}
-          </h1>
-          <p className="text-body-sm text-muted-foreground text-pretty">
-            {closed
-              ? "Everyone left, or the room sat idle. Start a new one, or join another with its code."
-              : `There is no open room with code ${shown || "this code"}. Check the code with your host; rooms close when everyone leaves.`}
-          </p>
-        </div>
-        <div className="flex flex-col gap-2 xs:flex-row">
-          <Button asChild>
-            <Link to="/multiplayer">Join another room</Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link to="/multiplayer/create">Create a room</Link>
-          </Button>
-        </div>
-      </section>
+    <div className="container flex min-h-dvh max-w-xl flex-col justify-center gap-6 py-16">
+      <p className="smallcaps border-b border-foreground/20 pb-1.5">
+        Rooms
+        {shown ? (
+          <>
+            {" "}
+            ·{" "}
+            <span className="font-mono [font-variant-caps:normal]">
+              {shown}
+            </span>
+          </>
+        ) : null}
+      </p>
+      <h1 className="font-serif text-display-lg font-bold">
+        {closed ? "This room has closed" : "Room not found"}
+      </h1>
+      <p className="text-body-lg text-muted-foreground text-pretty">
+        {closed
+          ? "Everyone left, or the room sat idle. Start a new one, or join another with its code."
+          : `There is no open room with code ${shown || "this code"}. Check the code with your host; rooms close when everyone leaves.`}
+      </p>
+      <div className="rule-double" aria-hidden />
+      <div className="flex flex-col gap-2 xs:flex-row">
+        <Button asChild size="lg">
+          <Link to="/multiplayer">Join another room</Link>
+        </Button>
+        <Button asChild size="lg" variant="outline">
+          <Link to="/multiplayer/create">Create a room</Link>
+        </Button>
+      </div>
     </div>
   );
 }

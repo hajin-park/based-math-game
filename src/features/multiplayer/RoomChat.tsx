@@ -4,6 +4,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type CSSProperties,
   type FormEvent,
 } from "react";
 import { SendHorizontal } from "lucide-react";
@@ -17,7 +18,6 @@ import {
 } from "@/hooks/useChat";
 import { cn } from "@/lib/utils";
 import type { FeedEvent } from "./useRoomState";
-import { YouTag } from "./PlayerAvatar";
 
 type FeedItem =
   | { type: "chat"; id: string; at: number; message: ChatMessage }
@@ -27,6 +27,15 @@ const timeFormat = new Intl.DateTimeFormat(undefined, {
   hour: "numeric",
   minute: "2-digit",
 });
+
+/** Ruled lines plus a margin rule (where the times sit), scrolling with the notes. */
+const NOTEPAD: CSSProperties = {
+  backgroundImage: [
+    "linear-gradient(to right, transparent calc(3.75rem - 1px), rgb(var(--ruled) / calc(var(--ruled-alpha) * 1.6)) calc(3.75rem - 1px), rgb(var(--ruled) / calc(var(--ruled-alpha) * 1.6)) 3.75rem, transparent 3.75rem)",
+    "linear-gradient(to bottom, transparent calc(var(--line) - 1px), rgb(var(--ruled) / var(--ruled-alpha)) calc(var(--line) - 1px))",
+  ].join(", "),
+  backgroundSize: "100% 100%, 100% var(--line)",
+};
 
 /**
  * Room chat: messages and system lines (joins, leaves, host changes) in one
@@ -109,6 +118,10 @@ export function RoomChat({
 
   return (
     <div className={cn("flex min-h-0 flex-col", className)}>
+      {/*
+       * A lined notepad: every line of text sits on a printed rule (the log's
+       * line-height equals --line), times in the margin, senders in small caps.
+       */}
       <div
         ref={logRef}
         role="log"
@@ -120,24 +133,22 @@ export function RoomChat({
           const el = e.currentTarget;
           stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < 32;
         }}
-        className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto px-4 py-3"
+        className="ruled-paper relative min-h-0 flex-1 overflow-y-auto bg-local pb-[var(--line)] pt-[var(--line)] text-body-sm leading-[var(--line)] [--line:1.75rem] focus-visible:-outline-offset-2"
+        style={NOTEPAD}
       >
         {items.length === 0 ? (
-          <p className="m-auto max-w-[16rem] text-center text-body-sm text-muted-foreground">
-            No messages yet. Say hi, or share a tip before the round.
+          <p className="pl-[4.5rem] pr-4 font-serif italic text-muted-foreground">
+            No notes yet. Say hi before the round.
           </p>
         ) : (
           items.map((item) =>
             item.type === "event" ? (
               <p
                 key={item.id}
-                className="text-center text-[0.8125rem] text-muted-foreground"
+                className="grid grid-cols-[3.75rem_minmax(0,1fr)] pr-4 font-serif italic text-muted-foreground"
               >
-                {item.event.text}
-                <span className="text-[0.75rem] tabular-nums">
-                  {" · "}
-                  {timeFormat.format(item.at)}
-                </span>
+                <Time at={item.at} />
+                <span className="pl-3">{item.event.text}</span>
               </p>
             ) : (
               <ChatLine
@@ -152,7 +163,10 @@ export function RoomChat({
           )
         )}
       </div>
-      <form onSubmit={send} className="flex flex-col gap-1 border-t p-3">
+      <form
+        onSubmit={send}
+        className="flex flex-col gap-1 border-t border-foreground/25 bg-card px-3 pb-2 pt-3"
+      >
         <label htmlFor={inputId} className="sr-only">
           Message
         </label>
@@ -187,7 +201,7 @@ export function RoomChat({
           id={`${inputId}-status`}
           aria-live="polite"
           className={cn(
-            "min-h-4 text-[0.75rem]",
+            "min-h-4 font-sans text-[0.75rem]",
             error ? "text-destructive" : "text-muted-foreground",
           )}
         >
@@ -195,6 +209,15 @@ export function RoomChat({
         </p>
       </form>
     </div>
+  );
+}
+
+/** The time in the notepad's margin, in typewriter. */
+function Time({ at }: { at: number }) {
+  return (
+    <span className="pl-3 font-mono text-[0.75rem] tabular-nums text-muted-foreground">
+      {Number.isFinite(at) ? timeFormat.format(at) : ""}
+    </span>
   );
 }
 
@@ -208,26 +231,25 @@ function ChatLine({
   name: string;
 }) {
   return (
-    <div className={cn("flex flex-col gap-0.5", mine && "items-end")}>
-      <p className="flex items-center gap-1.5 text-[0.75rem] text-muted-foreground">
-        <span className="max-w-[12rem] truncate font-medium text-foreground">
-          {name}
+    <p className="grid grid-cols-[3.75rem_minmax(0,1fr)] pr-4">
+      <Time at={message.timestamp} />
+      <span className="whitespace-pre-wrap break-words pl-3">
+        <span
+          className={cn(
+            "mr-2 font-serif text-[1rem] font-medium tracking-[0.05em] [font-variant-caps:all-small-caps]",
+            mine ? "text-primary" : "text-foreground",
+          )}
+        >
+          {mine ? (
+            <>
+              you<span className="sr-only"> ({name})</span>
+            </>
+          ) : (
+            name
+          )}
         </span>
-        {mine && <YouTag className="h-4 px-1 text-[0.625rem]" />}
-        <span className="tabular-nums">
-          {Number.isFinite(message.timestamp)
-            ? timeFormat.format(message.timestamp)
-            : ""}
-        </span>
-      </p>
-      <p
-        className={cn(
-          "max-w-[85%] whitespace-pre-wrap break-words rounded-lg px-3 py-1.5 text-body-sm",
-          mine ? "bg-secondary text-foreground" : "border bg-card",
-        )}
-      >
         {message.message}
-      </p>
-    </div>
+      </span>
+    </p>
   );
 }
