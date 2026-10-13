@@ -60,7 +60,7 @@ export function SeatStepper({
             set(max);
           }
         }}
-        className="flex h-10 min-w-16 items-center justify-center rounded-md border bg-card px-3 font-mono text-[1.125rem] tabular-nums dark:bg-sunken/60"
+        className="flex h-10 min-w-16 items-center justify-center rounded-sm border border-foreground/45 bg-card px-3 font-mono text-[1.25rem] tabular-nums dark:bg-sunken/60"
       >
         {value}
       </div>

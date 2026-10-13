@@ -15,9 +15,11 @@ export interface RoomCodeInputProps {
 }
 
 /**
- * Eight-character room code field with a segmented look. It is one real text
- * input (so paste, select-all, autofill and screen readers behave normally)
- * laid over eight display cells. Pasting an invite link extracts its code.
+ * Eight-character room code field, printed like the candidate-number boxes on
+ * an exam paper: two runs of four square, ruled boxes, one typewriter letter
+ * in each. It is one real text input (so paste, select-all, autofill and
+ * screen readers behave normally) laid over the eight boxes. Pasting an
+ * invite link extracts its code.
  */
 export const RoomCodeInput = forwardRef<HTMLInputElement, RoomCodeInputProps>(
   function RoomCodeInput(
@@ -41,7 +43,8 @@ export const RoomCodeInput = forwardRef<HTMLInputElement, RoomCodeInputProps>(
     return (
       <div
         className={cn(
-          "relative grid w-full max-w-[26rem] grid-cols-[repeat(4,minmax(0,1fr))_0.5rem_repeat(4,minmax(0,1fr))] gap-1 xs:gap-1.5",
+          "relative grid w-full grid-cols-[repeat(4,minmax(0,1fr))_1.25rem_repeat(4,minmax(0,1fr))]",
+          size === "lg" ? "max-w-[27rem]" : "max-w-[24rem]",
           disabled && "opacity-60",
           className,
         )}
@@ -55,6 +58,7 @@ export const RoomCodeInput = forwardRef<HTMLInputElement, RoomCodeInputProps>(
             invalid={invalid}
             size={size}
             gapAfter={i === 3}
+            groupStart={i === 0 || i === 4}
           />
         ))}
         <input
@@ -83,7 +87,7 @@ export const RoomCodeInput = forwardRef<HTMLInputElement, RoomCodeInputProps>(
             );
           }}
           onBlur={() => setFocused(false)}
-          className="absolute inset-0 h-full w-full cursor-text rounded-md bg-transparent text-transparent caret-transparent outline-none selection:bg-transparent focus-visible:outline-none"
+          className="absolute inset-0 h-full w-full cursor-text rounded-none bg-transparent text-base text-transparent caret-transparent outline-none selection:bg-transparent focus-visible:outline-none"
         />
       </div>
     );
@@ -97,6 +101,7 @@ function Cell({
   invalid,
   size,
   gapAfter,
+  groupStart,
 }: {
   char?: string;
   caret: boolean;
@@ -104,29 +109,35 @@ function Cell({
   invalid?: boolean;
   size: "md" | "lg";
   gapAfter: boolean;
+  groupStart: boolean;
 }) {
   return (
     <>
       <span
         aria-hidden
+        data-box
         className={cn(
-          "flex items-center justify-center rounded-md border bg-card font-mono font-medium uppercase text-foreground shadow-xs transition-[border-color,box-shadow] duration-fast dark:bg-sunken/60",
+          // Square boxes that share their rules, like a printed grid.
+          "relative flex aspect-square items-center justify-center border-y border-r bg-card font-mono font-medium uppercase leading-none text-foreground transition-[background-color,border-color] duration-fast dark:bg-sunken/60",
+          groupStart && "border-l",
           size === "lg"
-            ? "h-14 text-[1.375rem] sm:h-16 sm:text-[1.625rem]"
-            : "h-12 text-[1.125rem]",
-          char ? "border-border-strong" : "border-input",
-          current && "border-primary shadow-[0_0_0_3px_rgb(var(--ring)/0.16)]",
-          invalid && "border-destructive",
+            ? "text-[1.375rem] sm:text-[1.75rem]"
+            : "text-[1.125rem] sm:text-[1.375rem]",
+          invalid ? "border-pen/70" : "border-foreground/45",
+          current && "bg-tint dark:bg-tint",
         )}
       >
         {char ??
           (caret ? (
-            <span className="h-[1.1em] w-px animate-pulse bg-primary motion-reduce:animate-none" />
+            <span className="h-[1.05em] w-[2px] animate-pulse bg-primary motion-reduce:animate-none" />
           ) : null)}
+        {current && (
+          <span className="absolute inset-x-0 bottom-0 h-[2px] bg-primary" />
+        )}
       </span>
       {gapAfter && (
         <span aria-hidden className="flex items-center justify-center">
-          <span className="h-px w-2 bg-border-strong" />
+          <span className="h-px w-2.5 bg-foreground/50" />
         </span>
       )}
     </>

@@ -278,7 +278,12 @@ export default function NavigationBar() {
             )}
           </div>
 
-          <Button asChild size="sm" className="h-9 px-4 lg:hidden">
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="h-9 px-4 lg:hidden"
+          >
             <Link to="/play">Play</Link>
           </Button>
 

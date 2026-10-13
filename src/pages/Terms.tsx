@@ -4,15 +4,27 @@ import { LegalDocument, type LegalSection } from "@/components/LegalDocument";
 
 const REPO = "https://github.com/hajin-park/based-math-game";
 
-const Ext = ({ href, children }: { href: string; children: React.ReactNode }) => (
+const Ext = ({
+  href,
+  children,
+}: {
+  href: string;
+  children: React.ReactNode;
+}) => (
   <a className="link" href={href} target="_blank" rel="noopener noreferrer">
     {children}
   </a>
 );
 
 const SUMMARY = [
-  <>Based Math Game is free and open source. Play as a guest or with a free account.</>,
-  <>Play fair: no bots, scripts or tampering with scores. Suspicious scores can be removed.</>,
+  <>
+    Based Math Game is free and open source. Play as a guest or with a free
+    account.
+  </>,
+  <>
+    Play fair: no bots, scripts or tampering with scores. Suspicious scores can
+    be removed.
+  </>,
   <>Keep display names and chat suitable for a classroom.</>,
   <>The game is provided as is, without guarantees, and may change.</>,
   <>
@@ -50,8 +62,8 @@ const SECTIONS: LegalSection[] = [
       <ul>
         <li>One account per person. Use an email address you control.</li>
         <li>
-          Keep your password to yourself. You’re responsible for what happens
-          on your account.
+          Keep your password to yourself. You’re responsible for what happens on
+          your account.
         </li>
         <li>
           If you’re under 13, or under the age where you live at which you can
@@ -82,8 +94,8 @@ const SECTIONS: LegalSection[] = [
           Scores are sent by the game in your browser. Our database rules check
           each one for plausibility (for example, how fast answers can
           physically be typed) before it is accepted, but they can’t prove a
-          score was earned fairly. We may remove leaderboard entries, or
-          suspend accounts, that look automated or tampered with.
+          score was earned fairly. We may remove leaderboard entries, or suspend
+          accounts, that look automated or tampered with.
         </p>
         <p>
           Each daily challenge has one ranked attempt per account, on its own
@@ -103,13 +115,16 @@ const SECTIONS: LegalSection[] = [
         </p>
         <ul>
           <li>No harassment, hate, sexual content or threats.</li>
-          <li>Don’t share other people’s personal information, or your own beyond what you’re comfortable with.</li>
+          <li>
+            Don’t share other people’s personal information, or your own beyond
+            what you’re comfortable with.
+          </li>
           <li>Don’t impersonate other people, teachers or the project.</li>
           <li>No spam or advertising.</li>
         </ul>
         <p>
-          Room hosts can remove players from their room. We may rename or
-          remove accounts that break these rules.
+          Room hosts can remove players from their room. We may rename or remove
+          accounts that break these rules.
         </p>
       </>
     ),
@@ -121,13 +136,15 @@ const SECTIONS: LegalSection[] = [
       <>
         <p>
           The game’s source code is licensed under the{" "}
-          <Ext href={`${REPO}/blob/main/LICENSE`}>GNU General Public License v3.0</Ext>
+          <Ext href={`${REPO}/blob/main/LICENSE`}>
+            GNU General Public License v3.0
+          </Ext>
           . You’re free to study, change and share it under that licence.
         </p>
         <p>
           You keep any rights you have in the messages you write. By sending
-          them in a room you let us store and show them to that room for as
-          long as the room exists.
+          them in a room you let us store and show them to that room for as long
+          as the room exists.
         </p>
       </>
     ),
@@ -137,11 +154,11 @@ const SECTIONS: LegalSection[] = [
     title: "Availability and changes",
     body: (
       <p>
-        We run the game on a best-effort basis. Features, modes and scoring
-        may change, the service may be interrupted, and leaderboards may be
-        reset if a scoring rule changes. We’ll try to keep your saved runs
-        safe, but please don’t rely on the game as the only record of
-        anything important, such as coursework grades.
+        We run the game on a best-effort basis. Features, modes and scoring may
+        change, the service may be interrupted, and leaderboards may be reset if
+        a scoring rule changes. We’ll try to keep your saved runs safe, but
+        please don’t rely on the game as the only record of anything important,
+        such as coursework grades.
       </p>
     ),
   },
@@ -151,8 +168,8 @@ const SECTIONS: LegalSection[] = [
     body: (
       <p>
         The game is provided “as is” and “as available”, without warranties of
-        any kind, to the extent the law allows. This matches the GPL-3.0
-        licence the code is released under.
+        any kind, to the extent the law allows. This matches the GPL-3.0 licence
+        the code is released under.
       </p>
     ),
   },
@@ -163,8 +180,8 @@ const SECTIONS: LegalSection[] = [
       <p>
         To the extent the law allows, the maintainers are not liable for any
         indirect or consequential loss arising from your use of the game,
-        including lost data or scores. Nothing in these terms limits rights
-        you have under laws that can’t be waived.
+        including lost data or scores. Nothing in these terms limits rights you
+        have under laws that can’t be waived.
       </p>
     ),
   },
@@ -174,8 +191,8 @@ const SECTIONS: LegalSection[] = [
     body: (
       <p>
         You can stop playing at any time and delete your account from your
-        profile. We may suspend or delete accounts that seriously or
-        repeatedly break these terms.
+        profile. We may suspend or delete accounts that seriously or repeatedly
+        break these terms.
       </p>
     ),
   },
@@ -197,7 +214,9 @@ const SECTIONS: LegalSection[] = [
     body: (
       <p>
         Questions, reports of abuse or cheating: open an issue at{" "}
-        <Ext href={`${REPO}/issues`}>github.com/hajin-park/based-math-game/issues</Ext>
+        <Ext href={`${REPO}/issues`}>
+          github.com/hajin-park/based-math-game/issues
+        </Ext>
         . Please don’t post personal information in public issues.
       </p>
     ),
@@ -207,7 +226,8 @@ const SECTIONS: LegalSection[] = [
 export default function Terms() {
   return (
     <LegalDocument
-      eyebrow="Terms"
+      appendix="B"
+      eyebrow="Appendix B · Terms"
       title={
         <>
           The <em>rules</em> of the game
