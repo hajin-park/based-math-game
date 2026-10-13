@@ -1,9 +1,15 @@
 /*
- * Based Math Game — "Engineer's Notebook" design system.
- * Tokens live here as RGB channel triplets (consumed by tailwind.config.js as
- * rgb(var(--token) / <alpha-value>)). To use a token in raw CSS or inline
- * styles write rgb(var(--primary)) or rgb(var(--primary) / 0.2).
- * Contrast is validated by scripts/check-contrast.mjs. See DESIGN.md.
+ * Based Math Game — "Exercise Workbook" design system.
+ *
+ * Light theme: a two-colour school workbook. Book paper, black ink, one
+ * schoolbook-blue spot colour for structure, and a teacher's red pen for
+ * marks. Dark theme: the classroom chalkboard — slate, white chalk, yellow
+ * chalk for emphasis, red chalk for marks.
+ *
+ * Tokens are RGB channel triplets (consumed by tailwind.config.js as
+ * rgb(var(--token) / <alpha-value>)). In raw CSS write rgb(var(--primary)) or
+ * rgb(var(--primary) / 0.2). Contrast is validated by
+ * scripts/check-contrast.mjs. See DESIGN.md.
  */
 @import "./styles/fonts.css";
 
@@ -15,131 +21,159 @@
   :root {
     color-scheme: light;
 
-    /* Paper, ink, hairlines */
-    --background: 243 240 232; /* #F3F0E8 paper */
-    --foreground: 26 25 23; /* #1A1917 ink */
-    --card: 251 250 246; /* #FBFAF6 raised sheet */
-    --card-foreground: 26 25 23;
-    --popover: 252 251 248; /* #FCFBF8 */
-    --popover-foreground: 26 25 23;
-    --sunken: 234 230 219; /* #EAE6DB wells, code, table headers */
-    --border: 226 221 208; /* #E2DDD0 hairline */
-    --border-strong: 207 200 184; /* #CFC8B8 dividers that must read */
-    --input: 201 194 177; /* #C9C2B1 control outline */
+    /* Paper and ink */
+    --background: 246 241 230; /* #F6F1E6 book paper */
+    --foreground: 27 27 31; /* #1B1B1F black ink */
+    --card: 252 250 244; /* #FCFAF4 a fresh sheet laid on the page */
+    --card-foreground: 27 27 31;
+    --popover: 253 251 246; /* #FDFBF6 slips and index cards */
+    --popover-foreground: 27 27 31;
+    --sunken: 236 229 214; /* #ECE5D6 wells, table heads */
+    --tint: 225 231 238; /* #E1E7EE 12% screen of the spot blue */
+    --border: 221 212 194; /* #DDD4C2 hairline rule */
+    --border-strong: 191 180 160; /* #BFB4A0 rule that must read */
+    --input: 140 131 115; /* #8C8373 control outline, ≥3:1 on paper */
 
-    /* Red pen */
-    --primary: 194 59 27; /* #C23B1B — 5.34:1 with white, 4.69:1 on paper */
-    --primary-hover: 169 50 22; /* #A93216 */
+    /* Spot colour: schoolbook blue (structure, links, focus, selection) */
+    --primary: 31 78 156; /* #1F4E9C */
+    --primary-hover: 24 63 128; /* #183F80 */
     --primary-foreground: 255 255 255;
-    --ring: 194 59 27;
+    --ring: 31 78 156;
 
-    --secondary: 234 230 219; /* #EAE6DB */
-    --secondary-foreground: 26 25 23;
-    --muted: 234 230 219;
-    --muted-foreground: 107 103 94; /* #6B675E — 4.95:1 on paper */
-    --accent: 236 232 222; /* #ECE8DE hover wash */
-    --accent-foreground: 26 25 23;
+    /* The red pen: ticks, crosses, circled scores, wrong, irreversible */
+    --pen: 192 47 40; /* #C02F28 */
+    --pen-foreground: 255 255 255;
+
+    --secondary: 236 229 214;
+    --secondary-foreground: 27 27 31;
+    --muted: 236 229 214;
+    --muted-foreground: 94 89 81; /* #5E5951 pencil */
+    --accent: 234 227 211; /* #EAE3D3 hover wash */
+    --accent-foreground: 27 27 31;
 
     /* Status */
-    --success: 46 107 71; /* #2E6B47 */
+    --success: 46 107 71; /* #2E6B47 green ink */
     --success-foreground: 255 255 255;
-    --warning: 138 90 11; /* #8A5A0B */
+    --warning: 138 90 11; /* #8A5A0B ochre */
     --warning-foreground: 255 255 255;
-    --destructive: 163 38 31; /* #A3261F */
+    --destructive: 192 47 40; /* = pen */
     --destructive-foreground: 255 255 255;
-    --info: 43 84 196;
+    --info: 31 78 156;
     --info-foreground: 255 255 255;
     --trophy: 154 106 18; /* #9A6A12 */
     --trophy-foreground: 255 255 255;
-    --highlight: 240 205 96; /* marker yellow, use at /30–/45 */
+    --highlight: 244 211 94; /* #F4D35E highlighter, use at /40–/60 */
 
-    /* Number bases — identity colours */
-    --base-bin: 43 84 196; /* #2B54C4 cobalt */
+    /* Number bases — the four inks. Digits and their tags only. */
+    --base-bin: 13 106 115; /* #0D6A73 teal */
     --base-bin-foreground: 255 255 255;
-    --base-oct: 76 112 36; /* #4C7024 moss */
+    --base-oct: 74 106 16; /* #4A6A10 moss */
     --base-oct-foreground: 255 255 255;
-    --base-dec: 74 70 63; /* #4A463F graphite */
+    --base-dec: 63 59 54; /* #3F3B36 graphite */
     --base-dec-foreground: 255 255 255;
-    --base-hex: 138 59 135; /* #8A3B87 plum */
+    --base-hex: 139 58 131; /* #8B3A83 plum */
     --base-hex-foreground: 255 255 255;
 
     /* Charts (categorical, in order) */
-    --chart-1: 194 59 27;
-    --chart-2: 43 84 196;
-    --chart-3: 76 112 36;
-    --chart-4: 138 59 135;
+    --chart-1: 31 78 156;
+    --chart-2: 13 106 115;
+    --chart-3: 74 106 16;
+    --chart-4: 139 58 131;
     --chart-5: 176 122 30;
 
-    /* Texture & elevation */
-    --grid: 26 25 23;
-    --grid-minor: 0.045;
-    --grid-major: 0.085;
-    --shadow: 48 40 24;
+    /* The workbook cover: blue book cloth with a printed label */
+    --cover: 30 71 144; /* #1E4790 */
+    --cover-deep: 22 53 110; /* #16356E shadowed cloth */
+    --cover-foreground: 246 241 230;
+    --cover-muted: 188 202 230; /* #BCCAE6 ≥4.5:1 on cover */
 
-    --radius: 8px;
+    /* Printed rules: ruled lines and graph paper are spot blue */
+    --grid: 31 78 156;
+    --grid-minor: 0.07;
+    --grid-major: 0.14;
+    --ruled: 31 78 156;
+    --ruled-alpha: 0.18;
+    --shadow: 60 45 20;
+
+    --radius: 2px;
     --nav-h: 3.5rem;
     --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+    --ease-pen: cubic-bezier(0.65, 0, 0.35, 1);
     --dur-fast: 120ms;
     --dur-base: 180ms;
-    --dur-slow: 240ms;
+    --dur-slow: 260ms;
   }
 
   .dark {
     color-scheme: dark;
 
-    --background: 18 17 15; /* #12110F graphite night */
-    --foreground: 237 233 223; /* #EDE9DF */
-    --card: 27 26 23; /* #1B1A17 */
-    --card-foreground: 237 233 223;
-    --popover: 32 31 27; /* #201F1B */
-    --popover-foreground: 237 233 223;
-    --sunken: 13 12 11; /* #0D0C0B */
-    --border: 44 42 37; /* #2C2A25 */
-    --border-strong: 64 61 54; /* #403D36 */
-    --input: 66 63 55; /* #423F37 */
+    /* Slate and chalk */
+    --background: 29 40 36; /* #1D2824 chalkboard */
+    --foreground: 232 236 228; /* #E8ECE4 white chalk */
+    --card: 36 49 44; /* #24312C */
+    --card-foreground: 232 236 228;
+    --popover: 42 56 50; /* #2A3832 */
+    --popover-foreground: 232 236 228;
+    --sunken: 23 32 29; /* #17201D */
+    --tint: 40 58 61; /* #283A3D */
+    --border: 52 67 61; /* #34433D */
+    --border-strong: 74 92 85; /* #4A5C55 */
+    --input: 113 133 123; /* #71857B */
 
-    --primary: 255 106 61; /* #FF6A3D */
-    --primary-hover: 255 132 92; /* #FF845C */
-    --primary-foreground: 20 13 10; /* #140D0A — 6.76:1 on primary */
-    --ring: 255 106 61;
+    /* Yellow chalk for emphasis */
+    --primary: 240 207 104; /* #F0CF68 */
+    --primary-hover: 246 220 140;
+    --primary-foreground: 29 40 36;
+    --ring: 240 207 104;
 
-    --secondary: 38 36 31; /* #26241F */
-    --secondary-foreground: 237 233 223;
-    --muted: 35 34 30; /* #23221E */
-    --muted-foreground: 157 152 140; /* #9D988C */
-    --accent: 38 36 31;
-    --accent-foreground: 237 233 223;
+    /* Red chalk */
+    --pen: 242 140 128; /* #F28C80 */
+    --pen-foreground: 29 40 36;
 
-    --success: 111 192 140; /* #6FC08C */
-    --success-foreground: 13 22 16;
-    --warning: 226 177 84; /* #E2B154 */
-    --warning-foreground: 26 19 6;
-    --destructive: 242 124 134; /* #F27C86 */
-    --destructive-foreground: 26 10 12;
-    --info: 135 166 255;
-    --info-foreground: 10 14 30;
-    --trophy: 226 177 84;
-    --trophy-foreground: 26 19 6;
-    --highlight: 226 177 84;
+    --secondary: 42 56 50;
+    --secondary-foreground: 232 236 228;
+    --muted: 42 56 50;
+    --muted-foreground: 165 178 170; /* #A5B2AA faded chalk */
+    --accent: 44 59 53;
+    --accent-foreground: 232 236 228;
 
-    --base-bin: 135 166 255; /* #87A6FF */
-    --base-bin-foreground: 10 14 30;
-    --base-oct: 165 200 120; /* #A5C878 */
-    --base-oct-foreground: 14 20 8;
-    --base-dec: 207 201 188; /* #CFC9BC */
-    --base-dec-foreground: 18 17 15;
-    --base-hex: 222 156 219; /* #DE9CDB */
-    --base-hex-foreground: 28 12 27;
+    --success: 155 211 154; /* #9BD39A green chalk */
+    --success-foreground: 29 40 36;
+    --warning: 242 179 107; /* #F2B36B orange chalk */
+    --warning-foreground: 29 40 36;
+    --destructive: 242 140 128;
+    --destructive-foreground: 29 40 36;
+    --info: 134 208 218;
+    --info-foreground: 29 40 36;
+    --trophy: 240 207 104;
+    --trophy-foreground: 29 40 36;
+    --highlight: 240 207 104;
 
-    --chart-1: 255 106 61;
-    --chart-2: 135 166 255;
-    --chart-3: 165 200 120;
-    --chart-4: 222 156 219;
-    --chart-5: 226 177 84;
+    --base-bin: 134 208 218; /* #86D0DA blue chalk */
+    --base-bin-foreground: 29 40 36;
+    --base-oct: 185 220 140; /* #B9DC8C green chalk */
+    --base-oct-foreground: 29 40 36;
+    --base-dec: 220 226 218; /* #DCE2DA white chalk */
+    --base-dec-foreground: 29 40 36;
+    --base-hex: 233 169 224; /* #E9A9E0 pink chalk */
+    --base-hex-foreground: 29 40 36;
 
-    --grid: 237 233 223;
-    --grid-minor: 0.035;
-    --grid-major: 0.07;
+    --chart-1: 240 207 104;
+    --chart-2: 134 208 218;
+    --chart-3: 185 220 140;
+    --chart-4: 233 169 224;
+    --chart-5: 242 179 107;
+
+    --cover: 29 40 36;
+    --cover-deep: 21 30 27;
+    --cover-foreground: 232 236 228;
+    --cover-muted: 165 178 170;
+
+    --grid: 232 236 228;
+    --grid-minor: 0.045;
+    --grid-major: 0.085;
+    --ruled: 232 236 228;
+    --ruled-alpha: 0.1;
     --shadow: 0 0 0;
   }
 
@@ -162,29 +196,39 @@
   }
 
   body {
-    @apply bg-background font-sans text-body text-foreground antialiased;
+    @apply bg-background font-body text-body text-foreground antialiased;
     font-feature-settings:
       "kern" 1,
-      "liga" 1,
-      "calt" 1;
-    font-optical-sizing: auto;
+      "liga" 1;
     text-rendering: optimizeLegibility;
   }
 
-  /* Headings: serif for h1/h2 (editorial), grotesk for h3+ (UI). */
-  h1,
-  h2 {
-    @apply font-serif font-medium text-balance;
-    letter-spacing: -0.015em;
-    line-height: 1.12;
+  /* The chalkboard: faint eraser haze, fixed so it never scrolls. */
+  .dark body {
+    background-image:
+      radial-gradient(
+        60rem 32rem at 12% 8%,
+        rgb(232 236 228 / 0.035),
+        transparent 70%
+      ),
+      radial-gradient(
+        48rem 28rem at 88% 72%,
+        rgb(232 236 228 / 0.03),
+        transparent 70%
+      );
+    background-attachment: fixed;
   }
+
+  /* Headings are set like a textbook: Computer Modern bold extended. */
+  h1,
+  h2,
   h3,
   h4,
   h5,
   h6 {
-    @apply font-sans font-semibold text-balance;
-    letter-spacing: -0.01em;
-    line-height: 1.3;
+    @apply font-serif font-bold text-balance;
+    letter-spacing: -0.005em;
+    line-height: 1.15;
   }
   h1 {
     @apply text-4xl md:text-5xl;
@@ -212,7 +256,7 @@
   samp,
   pre {
     @apply font-mono;
-    font-size: 0.9em;
+    font-size: 0.95em;
   }
 
   /* Numbers: tabular everywhere a figure can change. */
@@ -222,7 +266,7 @@
     font-variant-numeric: tabular-nums;
   }
 
-  /* Focus — 2px red-pen outline, offset. One rule for the whole app. */
+  /* Focus — 2px spot-blue (or yellow chalk) outline, offset. One rule. */
   :focus {
     outline: none;
   }
@@ -237,12 +281,21 @@
     outline-offset: 1px;
   }
 
-  ::selection {
-    background-color: rgb(var(--primary) / 0.18);
-    color: rgb(var(--foreground));
+  input,
+  textarea {
+    caret-color: rgb(var(--primary));
   }
 
-  /* Quiet, thin scrollbars */
+  /* Selection is a highlighter swipe. */
+  ::selection {
+    background-color: rgb(var(--highlight) / 0.55);
+    color: rgb(var(--foreground));
+  }
+  .dark ::selection {
+    background-color: rgb(var(--highlight) / 0.3);
+  }
+
+  /* Thin scrollbars in pencil. */
   * {
     scrollbar-width: thin;
     scrollbar-color: rgb(var(--border-strong)) transparent;
@@ -279,24 +332,35 @@
   [hidden] {
     display: none !important;
   }
+
+  sub {
+    font-size: 0.62em;
+    vertical-align: -0.28em;
+    line-height: 0;
+  }
 }
 
 @layer components {
-  /* Mono uppercase overline above titles. */
-  .eyebrow {
-    @apply font-mono text-eyebrow uppercase text-muted-foreground;
+  /*
+   * Small-caps label: the running-head voice of the book (section names,
+   * table heads, field labels). Never a kicker stacked above a heading.
+   */
+  .eyebrow,
+  .smallcaps {
+    @apply font-serif text-eyebrow text-muted-foreground;
+    font-variant-caps: all-small-caps;
     font-weight: 500;
   }
 
-  /* Serif italic emphasis inside headlines. */
+  /* Serif italic emphasis inside headlines and running text. */
   .ital {
     @apply font-serif italic;
     font-weight: inherit;
   }
 
-  /* Plain-text link with a quiet underline that inks on hover. */
+  /* Plain-text link: ink with a spot-blue underline; blue on hover. */
   .link {
-    @apply font-medium text-foreground underline decoration-border-strong decoration-1 underline-offset-[0.22em];
+    @apply text-foreground underline decoration-primary/45 decoration-1 underline-offset-[0.2em];
     transition:
       text-decoration-color var(--dur-fast) var(--ease-out),
       color var(--dur-fast) var(--ease-out);
@@ -305,7 +369,7 @@
     @apply text-primary decoration-primary;
   }
 
-  /* Graph-paper field: 8px minor / 40px major grid. Hero + game surfaces only. */
+  /* Graph paper (5 mm squares, heavier every 5): game and lesson surfaces. */
   .grid-paper {
     --cell: 8px;
     --major: calc(var(--cell) * 5);
@@ -337,9 +401,123 @@
     background-position: -1px -1px;
   }
 
+  /* Ruled exercise paper: printed blue lines at the body leading. */
+  .ruled-paper {
+    --line: 2rem;
+    background-image: linear-gradient(
+      to bottom,
+      transparent calc(var(--line) - 1px),
+      rgb(var(--ruled) / var(--ruled-alpha)) calc(var(--line) - 1px)
+    );
+    background-size: 100% var(--line);
+  }
+
+  /* The book's double rule: a hairline over a heavier rule. */
+  .rule-double {
+    border-bottom: 3px double rgb(var(--foreground) / 0.7);
+  }
+
+  /* Dot leaders for contents rows: <span class="leader" /> between label and folio. */
+  .leader {
+    flex: 1 1 1.5rem;
+    min-width: 1.5rem;
+    align-self: baseline;
+    height: 0.55em;
+    background-image: radial-gradient(
+      circle,
+      rgb(var(--foreground) / 0.45) 0.75px,
+      transparent 1.25px
+    );
+    background-size: 0.4em 0.4em;
+    background-repeat: repeat-x;
+    background-position: 0 100%;
+  }
+
+  /* Book cloth: a fine linen weave over the cover colour. */
+  .book-cloth {
+    background-color: rgb(var(--cover));
+    background-image:
+      repeating-linear-gradient(
+        0deg,
+        rgb(255 255 255 / 0.035) 0 1px,
+        transparent 1px 3px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        rgb(0 0 0 / 0.05) 0 1px,
+        transparent 1px 3px
+      ),
+      radial-gradient(
+        120% 90% at 30% 20%,
+        transparent 40%,
+        rgb(var(--cover-deep) / 0.65) 100%
+      );
+  }
+  .dark .book-cloth {
+    background-image:
+      radial-gradient(
+        50rem 26rem at 22% 18%,
+        rgb(232 236 228 / 0.05),
+        transparent 70%
+      ),
+      radial-gradient(
+        40rem 22rem at 80% 80%,
+        rgb(232 236 228 / 0.035),
+        transparent 70%
+      );
+  }
+
+  /* Halftone screen: a printed tint of the spot colour. */
+  .halftone {
+    background-image: radial-gradient(
+      circle at center,
+      rgb(var(--primary) / 0.16) 0.9px,
+      transparent 1.4px
+    );
+    background-size: 5px 5px;
+  }
+
+  /* Highlighter swipe behind inline text. */
+  .highlighter {
+    background-image: linear-gradient(
+      104deg,
+      transparent 0.2em,
+      rgb(var(--highlight) / 0.6) 0.35em,
+      rgb(var(--highlight) / 0.5) calc(100% - 0.4em),
+      transparent calc(100% - 0.2em)
+    );
+    background-size: 100% 0.72em;
+    background-position: 0 72%;
+    background-repeat: no-repeat;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+  }
+  .dark .highlighter {
+    background-image: linear-gradient(
+      104deg,
+      transparent 0.2em,
+      rgb(var(--highlight) / 0.28) 0.35em,
+      rgb(var(--highlight) / 0.22) calc(100% - 0.4em),
+      transparent calc(100% - 0.2em)
+    );
+  }
+
+  /* A sheet of paper laid on the page (dialogs, the cover label, results). */
+  .paper-sheet {
+    @apply bg-card text-card-foreground;
+    box-shadow:
+      0 1px 1px rgb(var(--shadow) / 0.08),
+      0 10px 30px -14px rgb(var(--shadow) / 0.35);
+  }
+  .dark .paper-sheet {
+    box-shadow:
+      0 0 0 1px rgb(var(--border-strong)),
+      0 18px 40px -18px rgb(0 0 0 / 0.6);
+  }
+
   /* Skip link — visible only on keyboard focus. */
   .skip-link {
-    @apply fixed left-3 top-3 z-[100] -translate-y-24 rounded-md bg-foreground px-3 py-2 text-label font-medium text-background;
+    @apply fixed left-3 top-3 z-[100] -translate-y-24 rounded-sm bg-foreground px-3 py-2 font-sans text-label font-bold text-background;
     transition: transform var(--dur-base) var(--ease-out);
   }
   .skip-link:focus-visible {
@@ -355,7 +533,7 @@
     text-wrap: pretty;
   }
   .mono-condensed {
-    font-stretch: 82%;
+    letter-spacing: -0.06em;
   }
   .mask-fade-edges {
     -webkit-mask-image: radial-gradient(
@@ -368,6 +546,18 @@
       #000 40%,
       transparent 100%
     );
+  }
+}
+
+/* Pen strokes (src/components/ui/pen-mark.tsx) reference this by name in an
+ * inline animation, so it is declared here rather than left to Tailwind's
+ * class scan. */
+@keyframes pen-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
   }
 }
 

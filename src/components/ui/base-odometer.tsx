@@ -191,20 +191,13 @@ export function BaseOdometer({
     <div
       ref={rootRef}
       className={cn(
-        "relative w-full overflow-hidden rounded-xl border bg-card/90 shadow-md backdrop-blur-[1px]",
+        "relative w-full overflow-hidden rounded-none border border-foreground/40 bg-card",
         className,
       )}
     >
       {showHeader && (
-        <div className="flex items-center justify-between gap-3 border-b px-4 py-2.5 sm:px-5">
-          <p className="eyebrow flex items-center gap-2">
-            <span
-              aria-hidden
-              className={cn(
-                "inline-block size-1.5 rounded-full bg-primary",
-                playing && visible && "motion-safe:animate-pulse",
-              )}
-            />
+        <div className="flex items-center justify-between gap-3 border-b border-foreground/40 px-4 py-2 sm:px-5">
+          <p className="smallcaps text-foreground">
             {caption ?? `${bits}-bit word`}
           </p>
           {autoPlay && (
@@ -214,7 +207,7 @@ export function BaseOdometer({
               aria-label={
                 playing ? "Pause number animation" : "Play number animation"
               }
-              className="-mr-1.5 inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors duration-fast hover:bg-accent hover:text-foreground pointer-coarse:size-11 [&_svg]:size-3.5"
+              className="-mr-1.5 inline-flex size-8 items-center justify-center rounded-sm text-muted-foreground transition-colors duration-fast hover:bg-accent hover:text-foreground pointer-coarse:size-11 [&_svg]:size-3.5"
             >
               {playing ? <Pause /> : <Play />}
             </button>
@@ -228,7 +221,7 @@ export function BaseOdometer({
 
       <div
         className={cn(
-          "px-4 font-mono font-medium tabular-nums leading-none sm:px-5 [font-stretch:87.5%]",
+          "px-4 font-mono font-medium tabular-nums leading-none sm:px-5",
           s.root,
         )}
       >
@@ -253,7 +246,7 @@ export function BaseOdometer({
               className={cn(
                 "flex items-start justify-between",
                 s.row,
-                rowIndex > 0 && "border-t border-dashed",
+                rowIndex > 0 && "border-t border-border",
               )}
             >
               <div
@@ -264,7 +257,7 @@ export function BaseOdometer({
               >
                 <BaseTag base={b} size={s.tag} showRadix />
                 {showNames && (
-                  <span className="hidden font-sans text-[0.75rem] font-normal leading-none tracking-normal text-muted-foreground [font-stretch:100%] sm:block">
+                  <span className="hidden font-sans text-[0.75rem] font-normal leading-none tracking-normal text-muted-foreground sm:block">
                     {meta.name}
                   </span>
                 )}
@@ -293,7 +286,7 @@ export function BaseOdometer({
                       const weight = pv && (
                         <span
                           aria-hidden
-                          className="mt-1.5 flex flex-col items-center gap-1 font-mono text-[max(0.26em,0.5625rem)] font-normal leading-none text-muted-foreground [font-stretch:87.5%]"
+                          className="mt-1.5 flex flex-col items-center gap-1 font-mono text-[max(0.26em,0.5625rem)] font-normal leading-none text-muted-foreground"
                         >
                           <span className="flex h-2 items-start">
                             <span
@@ -321,7 +314,7 @@ export function BaseOdometer({
                             aria-pressed={on}
                             aria-label={`Bit ${position}, worth ${2 ** position}`}
                             onClick={() => flipBit(position)}
-                            className="group/bit -mx-[0.04em] flex flex-col items-center rounded-[4px] px-[0.04em] transition-colors duration-fast hover:bg-base-bin/10 focus-visible:outline-offset-0"
+                            className="group/bit -mx-[0.04em] flex flex-col items-center rounded-none px-[0.04em] transition-colors duration-fast hover:bg-tint focus-visible:outline-offset-0"
                           >
                             {wheel}
                             {weight}
@@ -344,7 +337,7 @@ export function BaseOdometer({
       </div>
 
       {hint && (
-        <div className="hidden items-center justify-between gap-3 border-t px-4 py-2.5 text-[0.75rem] text-muted-foreground pointer-fine:flex sm:px-5">
+        <div className="hidden items-center justify-between gap-3 border-t border-foreground/40 px-4 py-2 font-sans text-[0.75rem] text-muted-foreground pointer-fine:flex sm:px-5">
           {hint}
         </div>
       )}

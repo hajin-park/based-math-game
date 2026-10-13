@@ -133,6 +133,9 @@ export function useUserStats() {
   const [stats, setStats] = useState<UserStatsDoc>(emptyStats);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  // A failed listener stops for good; refresh() subscribes again.
+  const [nonce, setNonce] = useState(0);
+  const refresh = useCallback(() => setNonce((n) => n + 1), []);
 
   const uid = user?.uid;
   useEffect(() => {
@@ -160,9 +163,9 @@ export function useUserStats() {
         setLoading(false);
       },
     );
-  }, [uid, isGuest, localVersion]);
+  }, [uid, isGuest, localVersion, nonce]);
 
-  return { stats, loading, error };
+  return { stats, loading, error, refresh };
 }
 
 /** The user's best result for one mode, or null if never played. */

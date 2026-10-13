@@ -1,14 +1,18 @@
+/**
+ * "/how-to-play" — How to use this book: the rules, the keys, what each
+ * format does, how answers are accepted, rooms, rankings and classrooms.
+ * Every number comes from the engine (features/learn/howto). Section ids are
+ * linked from elsewhere (#classrooms, #formats…): keep them.
+ */
 import * as React from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Check, X } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Digits } from "@/components/ui/digits";
 import { Kbd } from "@/components/ui/kbd";
-import { Meter } from "@/components/ui/meter";
-import { GridPaper } from "@/components/ui/grid-paper";
 import { PageHeader } from "@/components/ui/page-header";
+import { PenCross, PenTick } from "@/components/ui/pen-mark";
 import { cn } from "@/lib/utils";
 import { OnThisPage, type TocItem } from "@/features/learn/OnThisPage";
 import { useHashScroll, useScrollSpy } from "@/features/learn/useToc";
@@ -20,6 +24,7 @@ import {
 } from "@/features/learn/howto";
 import { playHref } from "@/features/learn/lessons";
 import { PlaceValueDigits } from "@/features/learn/PlaceValueDigits";
+import { BookTable, Figure, TABLE } from "@/features/learn/book";
 
 /* -------------------------------------------------------------------------- */
 /*  Content                                                                   */
@@ -44,7 +49,6 @@ interface FormatRow {
   goal: string;
   rules: React.ReactNode[];
   score: string;
-  meter: React.ReactNode;
 }
 
 const FORMATS: FormatRow[] = [
@@ -57,19 +61,7 @@ const FORMATS: FormatRow[] = [
       "Skipping is free, but the clock keeps running.",
       "Every topic has a sprint.",
     ],
-    score: "Correct answers (higher is better)",
-    meter: (
-      <Meter
-        variant="timer"
-        value={38}
-        max={FACTS.sprintSeconds}
-        label="Time left"
-        valueText="38 seconds left"
-        display="0:38"
-        showLabel
-        size="sm"
-      />
-    ),
+    score: "Correct answers, higher is better",
   },
   {
     id: "speedrun",
@@ -77,18 +69,7 @@ const FORMATS: FormatRow[] = [
     ranked: true,
     goal: `First to ${FACTS.speedrunTarget} correct answers; fastest time wins.`,
     rules: [`Each skip adds ${FACTS.speedrunSkipSeconds} s to your time.`],
-    score: "Time (lower is better)",
-    meter: (
-      <Meter
-        value={9}
-        max={FACTS.speedrunTarget}
-        label="Correct"
-        valueText={`9 of ${FACTS.speedrunTarget}`}
-        display={`9 / ${FACTS.speedrunTarget}`}
-        showLabel
-        size="sm"
-      />
-    ),
+    score: "Time, lower is better",
   },
   {
     id: "survival",
@@ -104,17 +85,7 @@ const FORMATS: FormatRow[] = [
         {FACTS.survivalReviewOneIn} reviews an earlier topic.
       </>,
     ],
-    score: "Questions cleared (higher is better)",
-    meter: (
-      <Meter
-        variant="lives"
-        value={2}
-        max={FACTS.survivalLives}
-        label="Lives"
-        showLabel
-        size="sm"
-      />
-    ),
+    score: "Questions cleared, higher is better",
   },
   {
     id: "daily",
@@ -126,18 +97,7 @@ const FORMATS: FormatRow[] = [
       "One ranked attempt per day.",
       `Each skip adds ${FACTS.dailySkipSeconds} s to your time.`,
     ],
-    score: "Time (lower is better)",
-    meter: (
-      <Meter
-        value={4}
-        max={FACTS.dailyCount}
-        label="Progress"
-        valueText={`4 of ${FACTS.dailyCount}`}
-        display={`4 / ${FACTS.dailyCount}`}
-        showLabel
-        size="sm"
-      />
-    ),
+    score: "Time, lower is better",
   },
   {
     id: "practice",
@@ -149,11 +109,6 @@ const FORMATS: FormatRow[] = [
       "Every topic has a practice mode, and so do custom drills.",
     ],
     score: "Not ranked",
-    meter: (
-      <p className="flex h-full items-end font-mono text-[0.75rem] text-muted-foreground">
-        untimed
-      </p>
-    ),
   },
 ];
 
@@ -197,7 +152,11 @@ const KEYS: { keys: string[]; action: string; note?: string }[] = [
   },
   { keys: ["Tab"], action: "Skip the question" },
   { keys: ["Esc"], action: "Pause, or leave the game" },
-  { keys: ["Enter"], action: "Start a sprint from the home page" },
+  {
+    keys: ["Enter"],
+    action: "Play from the cover",
+    note: "Starts your last drill on this device, or the recommended first one.",
+  },
 ];
 
 /* -------------------------------------------------------------------------- */
@@ -206,13 +165,11 @@ const KEYS: { keys: string[]; action: string; note?: string }[] = [
 
 function Section({
   id,
-  eyebrow,
   title,
   lede,
   children,
 }: {
   id: string;
-  eyebrow: string;
   title: React.ReactNode;
   lede?: React.ReactNode;
   children: React.ReactNode;
@@ -221,19 +178,18 @@ function Section({
     <section
       id={id}
       aria-labelledby={`${id}-title`}
-      className="flex scroll-mt-12 flex-col gap-6 border-t py-12 first:border-t-0 first:pt-0 md:py-14 lg:-scroll-mt-10"
+      className="flex scroll-mt-0 flex-col gap-6 border-t border-border pb-6 pt-12 first:border-t-0 first:pt-0 lg:-scroll-mt-12"
     >
-      <header className="flex flex-col gap-2.5">
-        <p className="eyebrow">{eyebrow}</p>
+      <header className="flex max-w-prose flex-col gap-2">
         <h2
           id={`${id}-title`}
           tabIndex={-1}
-          className="text-headline font-serif font-medium text-balance [font-variation-settings:'opsz'_60]"
+          className="text-headline font-bold text-balance"
         >
           {title}
         </h2>
         {lede && (
-          <p className="max-w-prose text-body-lg text-muted-foreground text-pretty">
+          <p className="font-serif text-body-lg italic text-muted-foreground text-pretty">
             {lede}
           </p>
         )}
@@ -243,24 +199,51 @@ function Section({
   );
 }
 
-function HairlineList({
+/** Run-in heads: "No submit button. A correct answer is accepted…" */
+function RunInList({
   items,
-  className,
 }: {
   items: { title: React.ReactNode; body: React.ReactNode }[];
-  className?: string;
 }) {
   return (
-    <dl className={cn("grid border-t sm:grid-cols-2 sm:gap-x-10", className)}>
+    <dl className="flex max-w-prose flex-col gap-3">
       {items.map((item, i) => (
-        <div key={i} className="flex flex-col gap-1 border-b py-4">
-          <dt className="text-title-sm font-semibold">{item.title}</dt>
-          <dd className="text-body-sm text-muted-foreground text-pretty [&_code]:font-mono [&_code]:text-foreground">
+        <div key={i} className="text-body text-pretty">
+          <dt className="inline font-serif font-bold">{item.title}. </dt>
+          <dd className="inline [&_code]:font-mono [&_code]:text-[0.9em]">
             {item.body}
           </dd>
         </div>
       ))}
     </dl>
+  );
+}
+
+/** A numbered procedure, numbers in the spot colour. */
+function Steps({
+  items,
+}: {
+  items: { title: React.ReactNode; body: React.ReactNode }[];
+}) {
+  return (
+    <ol className="flex max-w-prose flex-col">
+      {items.map((s, i) => (
+        <li
+          key={i}
+          className="grid grid-cols-[2rem_minmax(0,1fr)] gap-x-2 border-b border-border py-3 first:border-t"
+        >
+          <span
+            aria-hidden
+            className="font-serif text-title font-bold leading-[1.6] text-primary"
+          >
+            {i + 1}
+          </span>
+          <p className="text-body text-pretty">
+            <span className="font-serif font-bold">{s.title}.</span> {s.body}
+          </p>
+        </li>
+      ))}
+    </ol>
   );
 }
 
@@ -282,96 +265,76 @@ export default function Usage() {
 
   return (
     <div className="overflow-x-clip">
-      <section className="relative isolate border-b">
-        <GridPaper fade className="opacity-80" />
-        <div className="container py-10 md:py-14">
-          <PageHeader
-            eyebrow="How to play"
-            size="lg"
-            title={
-              <>
-                Read the number. <em>Type</em> the answer.
-              </>
-            }
-            lede="Each question shows a number in one base and asks for it in another, or asks a small question about bits. Everything else, from formats to rankings, is on this page."
-            actions={
-              <Button asChild size="lg">
-                <Link to="/play">
-                  Start playing
-                  <ArrowRight aria-hidden />
-                </Link>
-              </Button>
-            }
-          />
-        </div>
-      </section>
+      <div className="container pb-8 pt-10 md:pb-10 md:pt-14">
+        <PageHeader
+          size="lg"
+          divider
+          title="How to use this book"
+          lede="Each question shows a number in one base and asks for it in another, or asks a small question about bits. The rules, the keys and the formats are below."
+          actions={
+            <Button asChild size="lg">
+              <Link to="/play">
+                Open the contents
+                <ArrowRight aria-hidden />
+              </Link>
+            </Button>
+          }
+        />
+      </div>
 
       <OnThisPage
         items={TOC}
         active={active}
         variant="bar"
+        label="Contents"
         className="lg:hidden"
       />
 
-      <div className="container grid gap-10 py-12 md:py-16 lg:grid-cols-[13rem_minmax(0,1fr)] xl:grid-cols-[14rem_minmax(0,1fr)] xl:gap-16">
+      <div className="container grid gap-10 pb-16 pt-8 md:pb-20 lg:grid-cols-[12.5rem_minmax(0,1fr)] lg:gap-12 lg:pt-10">
         <aside className="hidden lg:block">
-          <div className="sticky top-[calc(var(--nav-h)+2rem)]">
-            <OnThisPage items={TOC} active={active} variant="sidebar" />
+          <div className="sticky top-[calc(var(--nav-h)+1.5rem)]">
+            <OnThisPage
+              items={TOC}
+              active={active}
+              variant="sidebar"
+              label="Contents"
+            />
           </div>
         </aside>
 
-        <article className="flex min-w-0 max-w-3xl flex-col">
+        <article className="flex min-w-0 max-w-[48rem] flex-col">
           {/* ------------------------------------------------ Quick start */}
-          <Section id="quick-start" eyebrow="Quick start" title="Three steps">
-            <ol className="grid border-t md:grid-cols-3">
-              {[
+          <Section id="quick-start" title="Quick start">
+            <Steps
+              items={[
                 {
-                  n: "01",
                   title: "Pick a topic and a format",
                   body: (
                     <>
                       {FACTS.topics} topics from nibbles to two’s complement,
-                      each as a sprint, a speedrun or untimed practice. Or take
-                      the daily challenge or survival.
+                      each as a sprint, a speedrun or untimed practice, are
+                      listed on the{" "}
+                      <Link to="/play" className="link">
+                        contents page
+                      </Link>
+                      . Or take the daily challenge or survival.
                     </>
                   ),
                 },
                 {
-                  n: "10",
                   title: "Type the answer",
                   body: "No submit button: a correct answer moves you on as soon as it is complete.",
                 },
                 {
-                  n: "11",
                   title: "Read your result",
-                  body: "See your score and accuracy, then go again. Signed-in players keep their stats.",
+                  body: "Your paper comes back marked, question by question. Signed-in players keep their stats.",
                 },
-              ].map((s, i) => (
-                <li
-                  key={s.n}
-                  className={cn(
-                    "flex flex-col gap-2 border-b py-6",
-                    i > 0 && "md:border-l md:pl-6",
-                    i < 2 && "md:pr-6",
-                  )}
-                >
-                  <span
-                    aria-hidden
-                    className="font-mono text-[1.75rem] font-light leading-none tracking-[-0.04em] text-base-bin"
-                  >
-                    {s.n}
-                  </span>
-                  <h3 className="text-title-sm font-semibold">{s.title}</h3>
-                  <p className="text-body-sm text-muted-foreground text-pretty">
-                    {s.body}
-                  </p>
-                </li>
-              ))}
-            </ol>
-            <p className="text-body-sm text-muted-foreground">
-              New to a topic? Each one has a short lesson on the{" "}
+              ]}
+            />
+            <p className="max-w-prose text-body-sm text-muted-foreground">
+              New to a topic? Each one has a section in the{" "}
               <Link to="/learn" className="link">
-                Learn page
+                textbook
               </Link>
               .
             </p>
@@ -380,155 +343,194 @@ export default function Usage() {
           {/* ---------------------------------------------------- Formats */}
           <Section
             id="formats"
-            eyebrow="Formats"
-            title="Five ways to play"
+            title="Formats"
             lede="A format sets the clock and the score. Pick any topic, then a format."
           >
-            <ul className="flex flex-col gap-3">
-              {FORMATS.map((f) => (
-                <li
-                  key={f.id}
-                  id={`format-${f.id}`}
-                  className="grid gap-4 rounded-lg border bg-card p-4 shadow-xs sm:grid-cols-[minmax(0,1fr)_12rem] sm:gap-6 sm:p-5"
-                >
-                  <div className="flex min-w-0 flex-col gap-2">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="text-title font-semibold">{f.name}</h3>
-                      {f.ranked ? (
-                        <Badge variant="secondary">Ranked</Badge>
-                      ) : (
-                        <Badge variant="outline">Unranked</Badge>
-                      )}
-                    </div>
-                    <p className="text-body text-foreground text-pretty">
-                      {f.goal}
-                    </p>
-                    <ul className="flex flex-col gap-1 text-body-sm text-muted-foreground">
-                      {f.rules.map((r, i) => (
-                        <li
-                          key={i}
-                          className="grid grid-cols-[0.75rem_minmax(0,1fr)] gap-x-2.5"
-                        >
-                          <span
-                            aria-hidden
-                            className="mt-[0.75em] h-px w-3 bg-border-strong"
-                          />
-                          <span className="text-pretty">{r}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div className="flex flex-col justify-between gap-3 border-t pt-3 sm:border-l sm:border-t-0 sm:pl-5 sm:pt-0">
-                    <p className="text-[0.75rem] text-muted-foreground">
-                      <span className="block font-medium text-foreground">
-                        Score
-                      </span>
-                      {f.score}
-                    </p>
-                    <div aria-hidden>{f.meter}</div>
-                  </div>
-                </li>
-              ))}
-            </ul>
+            <BookTable n="1" caption="The five formats">
+              <table className={cn(TABLE.table, "text-left")}>
+                <caption className="sr-only">
+                  Formats: goal, rules, score and whether they are ranked
+                </caption>
+                <thead className="hidden sm:table-header-group">
+                  <tr className={TABLE.headRow}>
+                    <th scope="col" className={cn(TABLE.th, "w-[8.5rem]")}>
+                      Format
+                    </th>
+                    <th scope="col" className={TABLE.th}>
+                      Goal and rules
+                    </th>
+                    <th scope="col" className={cn(TABLE.th, "w-[10rem]")}>
+                      Score
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {FORMATS.map((f) => (
+                    <tr
+                      key={f.id}
+                      id={`format-${f.id}`}
+                      className="block scroll-mt-16 border-b border-border py-3 last:border-b-0 sm:table-row sm:py-0"
+                    >
+                      <th
+                        scope="row"
+                        className="block px-3 align-top sm:table-cell sm:py-3"
+                      >
+                        <span className="font-serif text-title font-bold">
+                          {f.name}
+                        </span>
+                        <span className="smallcaps ml-2 sm:ml-0 sm:block">
+                          {f.ranked ? "Ranked" : "Unranked"}
+                        </span>
+                      </th>
+                      <td className="block px-3 pt-1 align-top sm:table-cell sm:py-3">
+                        <p className="text-body text-pretty">{f.goal}</p>
+                        <ul className="mt-1 flex flex-col gap-1 text-body-sm text-muted-foreground">
+                          {f.rules.map((r, i) => (
+                            <li
+                              key={i}
+                              className="grid grid-cols-[0.875rem_minmax(0,1fr)] gap-x-1.5"
+                            >
+                              <span aria-hidden>–</span>
+                              <span className="text-pretty">{r}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </td>
+                      <td className="block px-3 pt-2 align-top font-sans text-[0.875rem] sm:table-cell sm:py-3 sm:pt-3.5">
+                        <span className="smallcaps mr-2 sm:hidden">Score</span>
+                        {f.score}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </BookTable>
           </Section>
 
           {/* -------------------------------------------------- Answering */}
           <Section
             id="answering"
-            eyebrow="Answering"
-            title="Type it however you think it"
+            title="How answers are accepted"
             lede="Answers are compared by value, so formatting never costs you a point."
           >
-            <HairlineList items={RULES} />
-            <div className="overflow-hidden rounded-lg border">
-              <div
-                aria-hidden
-                className="hidden grid-cols-[11rem_minmax(0,1fr)_11rem] gap-4 border-b border-border-strong bg-sunken px-4 py-2.5 text-[0.75rem] text-muted-foreground sm:grid"
-              >
-                <span>Question asks for</span>
-                <span>Accepted</span>
-                <span>Not accepted</span>
-              </div>
-              <ul aria-label="Examples of accepted answers">
-                {ANSWER_EXAMPLES.map((ex) => (
-                  <li
-                    key={ex.ask}
-                    className="grid gap-2 border-b px-4 py-3 last:border-b-0 sm:grid-cols-[11rem_minmax(0,1fr)_11rem] sm:gap-4"
-                  >
-                    <span className="text-body-sm font-medium text-foreground sm:font-normal">
-                      {ex.ask}
-                    </span>
-                    <ul
-                      aria-label="Accepted"
-                      className="flex flex-wrap content-start gap-1.5"
+            <RunInList items={RULES} />
+            <BookTable n="2" caption="Accepted and not accepted">
+              <table className={cn(TABLE.table, "text-left")}>
+                <caption className="sr-only">
+                  Examples of accepted and rejected answers
+                </caption>
+                <thead className="hidden sm:table-header-group">
+                  <tr className={TABLE.headRow}>
+                    <th scope="col" className={cn(TABLE.th, "w-[11rem]")}>
+                      Question asks for
+                    </th>
+                    <th scope="col" className={TABLE.th}>
+                      Accepted
+                    </th>
+                    <th scope="col" className={cn(TABLE.th, "w-[11rem]")}>
+                      Not accepted
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {ANSWER_EXAMPLES.map((ex) => (
+                    <tr
+                      key={ex.ask}
+                      className="block border-b border-border py-3 last:border-b-0 sm:table-row sm:py-0"
                     >
-                      {ex.accepted.map((a) => (
-                        <li key={a}>
-                          <code className="inline-flex items-center gap-1 rounded-sm border border-success/25 bg-success/[0.06] px-1.5 py-0.5 font-mono text-[0.8125rem] text-foreground">
-                            <Check
-                              aria-hidden
-                              className="size-3 text-success"
-                            />
-                            {a}
-                          </code>
-                        </li>
-                      ))}
-                    </ul>
-                    {ex.rejected ? (
-                      <span className="flex flex-wrap items-center gap-x-2 gap-y-1 sm:flex-col sm:items-start">
-                        <code className="inline-flex items-center gap-1 rounded-sm border border-destructive/25 bg-destructive/[0.06] px-1.5 py-0.5 font-mono text-[0.8125rem] text-foreground">
-                          <X aria-hidden className="size-3 text-destructive" />
-                          <span className="sr-only">Not accepted: </span>
-                          {ex.rejected.input}
-                        </code>
-                        <span className="text-[0.8125rem] text-muted-foreground">
-                          {ex.rejected.why}
-                        </span>
-                      </span>
-                    ) : (
-                      <span
-                        aria-hidden
-                        className="hidden text-muted-foreground sm:block"
+                      <th
+                        scope="row"
+                        className="block px-3 align-top font-serif text-body-sm font-bold sm:table-cell sm:py-2.5"
                       >
-                        —
-                      </span>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </div>
+                        {ex.ask}
+                      </th>
+                      <td className="block px-3 pt-1.5 align-top sm:table-cell sm:py-2.5">
+                        <ul
+                          aria-label="Accepted"
+                          className="flex flex-wrap gap-x-4 gap-y-1"
+                        >
+                          {ex.accepted.map((a) => (
+                            <li
+                              key={a}
+                              className="inline-flex items-center gap-0.5 font-mono text-[0.875rem]"
+                            >
+                              {a}
+                              <PenTick animate={false} className="size-4" />
+                            </li>
+                          ))}
+                        </ul>
+                      </td>
+                      <td className="block px-3 pt-1.5 align-top sm:table-cell sm:py-2.5">
+                        {ex.rejected ? (
+                          <span className="flex flex-col gap-0.5">
+                            <span className="inline-flex items-center gap-0.5 font-mono text-[0.875rem]">
+                              <span className="sr-only">Not accepted: </span>
+                              {ex.rejected.input}
+                              <PenCross animate={false} className="size-4" />
+                            </span>
+                            <span className="text-body-sm text-muted-foreground">
+                              {ex.rejected.why}
+                            </span>
+                          </span>
+                        ) : (
+                          <span
+                            aria-hidden
+                            className="hidden text-muted-foreground sm:inline"
+                          >
+                            —
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </BookTable>
           </Section>
 
           {/* ------------------------------------------------------- Keys */}
           <Section
             id="keys"
-            eyebrow="Keys"
-            title="Hands stay on the keyboard"
+            title="Keys"
             lede="The whole game works without a mouse."
           >
-            <dl className="grid border-t">
-              {KEYS.map((k) => (
-                <div
-                  key={k.action}
-                  className="grid grid-cols-[7.5rem_minmax(0,1fr)] items-baseline gap-x-4 border-b py-3.5 sm:grid-cols-[9rem_minmax(0,1fr)]"
-                >
-                  <dt className="flex flex-wrap gap-1.5">
-                    {k.keys.map((key) => (
-                      <Kbd key={key}>{key}</Kbd>
-                    ))}
-                  </dt>
-                  <dd className="flex flex-col gap-0.5">
-                    <span className="text-body">{k.action}</span>
-                    {k.note && (
-                      <span className="text-body-sm text-muted-foreground">
-                        {k.note}
-                      </span>
-                    )}
-                  </dd>
-                </div>
-              ))}
-            </dl>
-            <p className="text-body-sm text-muted-foreground">
+            <BookTable n="3" caption="Keys during a run">
+              <table className={cn(TABLE.table, "text-left")}>
+                <caption className="sr-only">Keyboard shortcuts</caption>
+                <thead>
+                  <tr className={TABLE.headRow}>
+                    <th scope="col" className={cn(TABLE.th, "w-[9rem]")}>
+                      Key
+                    </th>
+                    <th scope="col" className={TABLE.th}>
+                      Does
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {KEYS.map((k) => (
+                    <tr key={k.action} className={TABLE.row}>
+                      <td className="px-3 py-2.5 align-top">
+                        <span className="flex flex-wrap gap-1.5">
+                          {k.keys.map((key) => (
+                            <Kbd key={key}>{key}</Kbd>
+                          ))}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2.5 align-top">
+                        <span className="block text-body">{k.action}</span>
+                        {k.note && (
+                          <span className="block text-body-sm text-muted-foreground">
+                            {k.note}
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </BookTable>
+            <p className="max-w-prose text-body-sm text-muted-foreground">
               On a phone or tablet, use the Skip and Pause buttons on screen.
               The keyboard that opens matches the answer: digits for binary,
               octal and decimal; letters too for hex.
@@ -538,54 +540,41 @@ export default function Usage() {
           {/* ------------------------------------------------ Visual aids */}
           <Section
             id="visual-aids"
-            eyebrow="Visual aids"
-            title="See the structure of a number"
+            title="Visual aids"
             lede="Two optional aids make long numbers easier to read."
           >
-            <div className="grid gap-3 sm:grid-cols-2">
-              <figure className="flex flex-col gap-4 rounded-lg border bg-card p-4 shadow-xs sm:p-5">
-                <figcaption className="flex flex-col gap-1">
-                  <span className="text-title-sm font-semibold">
-                    Digit grouping
-                  </span>
-                  <span className="text-body-sm text-muted-foreground">
-                    Binary splits into nibbles, so each group is one hex digit.
-                  </span>
-                </figcaption>
-                <div className="mt-auto flex flex-col gap-2 rounded-md bg-sunken px-3 py-3">
-                  <Digits
-                    base="bin"
-                    value="1011011000101111"
-                    size="sm"
-                    condensed
-                    aria-label="Without grouping: 1011011000101111"
-                  />
-                  <Digits
-                    base="bin"
-                    value="1011011000101111"
-                    group
-                    size="sm"
-                    condensed
-                    aria-label="With grouping: 1011 0110 0010 1111"
-                  />
-                </div>
-              </figure>
-              <figure className="flex flex-col gap-4 rounded-lg border bg-card p-4 shadow-xs sm:p-5">
-                <figcaption className="flex flex-col gap-1">
-                  <span className="text-title-sm font-semibold">
-                    Place-value hints
-                  </span>
-                  <span className="text-body-sm text-muted-foreground">
-                    The weight of each digit, under the digit. Not shown for
-                    decimal prompts.
-                  </span>
-                </figcaption>
-                <div className="mt-auto rounded-md bg-sunken px-3 pb-2 pt-3">
-                  <PlaceValueDigits base="bin" digits="10110110" />
-                </div>
-              </figure>
+            <div className="grid gap-6 sm:grid-cols-2">
+              <Figure
+                n="1"
+                title="Digit grouping"
+                caption="Binary splits into nibbles, so each group is one hex digit."
+                bodyClassName="gap-2"
+              >
+                <Digits
+                  base="bin"
+                  value="1011011000101111"
+                  size="sm"
+                  condensed
+                  aria-label="Without grouping: 1011011000101111"
+                />
+                <Digits
+                  base="bin"
+                  value="1011011000101111"
+                  group
+                  size="sm"
+                  condensed
+                  aria-label="With grouping: 1011 0110 0010 1111"
+                />
+              </Figure>
+              <Figure
+                n="2"
+                title="Place-value hints"
+                caption="The weight of each digit, under the digit. Not shown for decimal prompts."
+              >
+                <PlaceValueDigits base="bin" digits="10110110" />
+              </Figure>
             </div>
-            <p className="text-body-sm text-muted-foreground">
+            <p className="max-w-prose text-body-sm text-muted-foreground">
               Turn them on in{" "}
               <Link to="/profile/game-settings" className="link">
                 Profile → Game settings
@@ -598,12 +587,11 @@ export default function Usage() {
           {/* ----------------------------------------------- Multiplayer */}
           <Section
             id="multiplayer"
-            eyebrow="Multiplayer"
             title={<>Rooms for up to {FACTS.roomSize}</>}
             lede="Race friends or a whole lab section on identical questions."
           >
-            <ol className="grid border-t">
-              {[
+            <Steps
+              items={[
                 {
                   title: "The host creates a room",
                   body: "and picks the mode: any topic and format, or a custom drill.",
@@ -616,24 +604,8 @@ export default function Usage() {
                   title: "Everyone gets the same questions",
                   body: "in the same order, and scores update live on every screen.",
                 },
-              ].map((s, i) => (
-                <li
-                  key={s.title}
-                  className="grid grid-cols-[2rem_minmax(0,1fr)] gap-x-3 border-b py-4"
-                >
-                  <span
-                    aria-hidden
-                    className="font-mono text-[0.8125rem] text-muted-foreground"
-                  >
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  <p className="text-body text-pretty">
-                    <span className="font-semibold">{s.title}</span>{" "}
-                    <span className="text-muted-foreground">{s.body}</span>
-                  </p>
-                </li>
-              ))}
-            </ol>
+              ]}
+            />
             <div className="flex flex-wrap gap-3">
               <Button asChild variant="outline">
                 <Link to="/multiplayer/create">Create a room</Link>
@@ -645,16 +617,12 @@ export default function Usage() {
           </Section>
 
           {/* ---------------------------------------------- Leaderboards */}
-          <Section
-            id="leaderboards"
-            eyebrow="Leaderboards"
-            title="Who gets ranked"
-          >
-            <HairlineList
+          <Section id="leaderboards" title="Accounts and leaderboards">
+            <RunInList
               items={[
                 {
                   title: "Signed-in accounts only",
-                  body: "Guests can play every mode, including multiplayer, but their scores are not ranked or saved.",
+                  body: "Guests can play every mode, including multiplayer, but their scores are not ranked and their runs stay in this browser.",
                 },
                 {
                   title: `${FACTS.rankedModes} ranked modes, plus the daily`,
@@ -670,7 +638,7 @@ export default function Usage() {
                 },
               ]}
             />
-            <p className="text-body-sm text-muted-foreground">
+            <p className="max-w-prose text-body-sm text-muted-foreground">
               <Link to="/signup" className="link">
                 Create an account
               </Link>{" "}
@@ -685,11 +653,10 @@ export default function Usage() {
           {/* ------------------------------------------------ Classrooms */}
           <Section
             id="classrooms"
-            eyebrow="For teaching"
-            title="Classroom tips"
+            title="In the classroom"
             lede="Nothing to install and no student accounts required."
           >
-            <HairlineList
+            <RunInList
               items={[
                 {
                   title: "Share a mode as a link",
@@ -717,7 +684,7 @@ export default function Usage() {
                   body: (
                     <>
                       Practice is untimed and shows worked steps. Pair it with
-                      the matching lesson, e.g.{" "}
+                      the matching section of the textbook, e.g.{" "}
                       <Link to="/learn#twos-complement" className="link">
                         two’s complement
                       </Link>

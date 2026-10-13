@@ -3,7 +3,9 @@ import { DEFAULT_GAME_SETTINGS, type GameSettings } from "./types";
 
 /** The only fields the security rules accept on `users/{uid}`. */
 const PROFILE_KEYS = ["displayName", "createdAt", "settings"];
-const SETTING_KEYS = Object.keys(DEFAULT_GAME_SETTINGS) as (keyof GameSettings)[];
+const SETTING_KEYS = Object.keys(
+  DEFAULT_GAME_SETTINGS,
+) as (keyof GameSettings)[];
 
 export interface ProfileDoc {
   displayName: string;

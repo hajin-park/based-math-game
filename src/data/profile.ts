@@ -25,13 +25,16 @@ export function profileRef(uid: string) {
   return doc(firestore, "users", uid);
 }
 
-
 /**
  * Creates `users/{uid}` for registered users if it does not exist yet, and
  * rewrites a pre-rebuild profile in the current shape (otherwise the rules
- * reject every settings or display-name write to it).
+ * reject every settings or display-name write to it). `initialSettings`
+ * seed a new profile only (a guest's settings when they upgrade).
  */
-export async function ensureUserProfile(user: User): Promise<void> {
+export async function ensureUserProfile(
+  user: User,
+  initialSettings?: GameSettings,
+): Promise<void> {
   if (user.isAnonymous) return;
   const ref = profileRef(user.uid);
   const snap = await getDoc(ref);
@@ -41,10 +44,15 @@ export async function ensureUserProfile(user: User): Promise<void> {
     if (upgraded) await setDoc(ref, upgraded);
     return;
   }
+  const settings = { ...DEFAULT_GAME_SETTINGS };
+  for (const key of Object.keys(settings) as (keyof GameSettings)[]) {
+    const value = initialSettings?.[key];
+    if (typeof value === "boolean") settings[key] = value;
+  }
   await setDoc(ref, {
     displayName: clampDisplayName(user.displayName),
     createdAt: serverTimestamp(),
-    settings: { ...DEFAULT_GAME_SETTINGS },
+    settings,
   });
 }
 

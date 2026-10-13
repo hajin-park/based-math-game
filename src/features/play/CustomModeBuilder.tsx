@@ -5,10 +5,9 @@
  * Shared by the /play hub and multiplayer room setup.
  */
 import { useEffect, useId, useState } from "react";
-import { ArrowRight, Plus, X } from "lucide-react";
+import { ArrowRight, Check, Plus, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { inputVariants } from "@/components/ui/input";
 import { Segmented } from "@/components/ui/segmented";
 import {
   CUSTOM_MAX_VALUE,
@@ -126,100 +125,116 @@ export function CustomModeBuilder({
   };
 
   return (
-    <div className={cn("flex flex-col gap-7", className)}>
-      <fieldset className="flex flex-col gap-3">
-        <legend className="mb-3 text-label font-semibold text-foreground">
-          Conversions
-          <span className="ml-2 font-normal text-muted-foreground">
+    <div
+      className={cn(
+        "flex flex-col divide-y divide-border [&>*:first-child]:pt-0 [&>*]:py-5",
+        className,
+      )}
+    >
+      <fieldset className="flex flex-col">
+        <legend className="float-left mb-1 flex w-full flex-wrap items-baseline justify-between gap-x-3">
+          <span className="smallcaps text-foreground/80">Conversions</span>
+          <span className="font-sans text-[0.8125rem] text-muted-foreground">
             values in decimal, inclusive
           </span>
         </legend>
-        <ul className="flex flex-col gap-3">
+        <ol className="flex flex-col">
           {conversions.map((c, i) => (
             <li
               key={i}
-              className="flex flex-col gap-3 rounded-lg border bg-card p-3 sm:p-4"
+              className="grid grid-cols-[1.75rem_minmax(0,1fr)_auto] items-start gap-x-2 border-b border-border py-3"
             >
-              <div className="-mb-1 -mt-1 flex items-center justify-between">
-                <span className="eyebrow">Conversion {i + 1}</span>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  className="-mr-1 text-muted-foreground"
-                  onClick={() => removeConversion(i)}
-                  disabled={conversions.length === 1 && kinds.length === 0}
-                  aria-label={`Remove conversion ${i + 1}`}
-                >
-                  <X aria-hidden />
-                </Button>
-              </div>
-              <div className="flex items-end gap-2">
-                <BaseSelect
-                  id={`${id}-from-${i}`}
-                  label="From"
-                  value={c.from}
-                  onChange={(from) => setConversion(i, { from })}
-                />
-                <ArrowRight
-                  aria-hidden
-                  className="mb-2.5 size-4 shrink-0 text-muted-foreground"
-                />
-                <BaseSelect
-                  id={`${id}-to-${i}`}
-                  label="To"
-                  value={c.to}
-                  onChange={(to) => setConversion(i, { to })}
-                />
-              </div>
-              <div className="flex flex-wrap items-end gap-2">
-                <NumberField
-                  id={`${id}-min-${i}`}
-                  label="From value"
-                  value={c.min}
-                  onCommit={(min) => setConversion(i, { min })}
-                />
-                <span aria-hidden className="mb-2.5 text-muted-foreground">
-                  –
-                </span>
-                <NumberField
-                  id={`${id}-max-${i}`}
-                  label="To value"
-                  value={c.max}
-                  onCommit={(max) => setConversion(i, { max })}
-                />
-                <div
-                  role="group"
-                  aria-label={`Range presets for conversion ${i + 1}`}
-                  className="flex w-full flex-wrap gap-1 sm:w-auto"
-                >
-                  {RANGE_PRESETS.map((p) => (
-                    <Button
-                      key={p.label}
-                      type="button"
-                      size="sm"
-                      variant={
-                        c.min === 0 && c.max === p.max ? "secondary" : "ghost"
-                      }
-                      aria-pressed={c.min === 0 && c.max === p.max}
-                      className="px-2 font-mono text-[0.75rem]"
-                      onClick={() => setConversion(i, { min: 0, max: p.max })}
-                    >
-                      {p.label}
-                    </Button>
-                  ))}
+              <span className="pt-6 font-mono text-mono-md text-primary">
+                {i + 1}.
+              </span>
+              <div className="flex min-w-0 flex-col gap-3">
+                <div className="flex items-end gap-3">
+                  <BaseSelect
+                    id={`${id}-from-${i}`}
+                    label="From"
+                    value={c.from}
+                    onChange={(from) => setConversion(i, { from })}
+                  />
+                  <ArrowRight
+                    aria-hidden
+                    className="mb-3 size-4 shrink-0 text-muted-foreground"
+                  />
+                  <BaseSelect
+                    id={`${id}-to-${i}`}
+                    label="To"
+                    value={c.to}
+                    onChange={(to) => setConversion(i, { to })}
+                  />
+                </div>
+                <div className="flex flex-wrap items-end gap-x-3 gap-y-2">
+                  <NumberField
+                    id={`${id}-min-${i}`}
+                    label="From value"
+                    value={c.min}
+                    onCommit={(min) => setConversion(i, { min })}
+                  />
+                  <span
+                    aria-hidden
+                    className="mb-2.5 font-sans text-label text-muted-foreground"
+                  >
+                    to
+                  </span>
+                  <NumberField
+                    id={`${id}-max-${i}`}
+                    label="To value"
+                    value={c.max}
+                    onCommit={(max) => setConversion(i, { max })}
+                  />
+                  <div
+                    role="group"
+                    aria-label={`Range presets for conversion ${i + 1}`}
+                    className="flex w-full flex-wrap gap-1 sm:w-auto"
+                  >
+                    {RANGE_PRESETS.map((p) => {
+                      const on = c.min === 0 && c.max === p.max;
+                      return (
+                        <button
+                          key={p.label}
+                          type="button"
+                          aria-pressed={on}
+                          onClick={() =>
+                            setConversion(i, { min: 0, max: p.max })
+                          }
+                          className={cn(
+                            "relative inline-flex h-8 items-center rounded-sm px-2 font-mono text-[0.75rem] transition-colors duration-fast pointer-coarse:after:absolute pointer-coarse:after:inset-x-0 pointer-coarse:after:-inset-y-1.5 pointer-coarse:after:content-['']",
+                            on
+                              ? "bg-foreground text-background"
+                              : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                          )}
+                        >
+                          {p.label}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                className="mt-5 text-muted-foreground"
+                onClick={() => removeConversion(i)}
+                disabled={conversions.length === 1 && kinds.length === 0}
+                aria-label={`Remove conversion ${i + 1}`}
+              >
+                <X aria-hidden />
+              </Button>
             </li>
           ))}
-        </ul>
+        </ol>
         {conversions.length < CUSTOM_LIMITS.conversions && (
           <Button
             type="button"
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={addConversion}
-            className="self-start"
+            className="-ml-3 mt-2 self-start"
           >
             <Plus aria-hidden />
             Add conversion
@@ -227,28 +242,32 @@ export function CustomModeBuilder({
         )}
       </fieldset>
 
-      <fieldset>
-        <legend className="mb-3 text-label font-semibold text-foreground">
+      <fieldset className="flex flex-col">
+        <legend className="smallcaps float-left mb-1 w-full text-foreground/80">
           Also include
         </legend>
-        <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-1 gap-x-6 xs:grid-cols-2">
           {EXTRA_KINDS.map((k) => {
             const on = kinds.includes(k);
             return (
-              <button
+              <label
                 key={k}
-                type="button"
-                aria-pressed={on}
-                onClick={() => toggleKind(k)}
-                className={cn(
-                  "inline-flex h-9 items-center gap-1.5 rounded-md border px-3 text-label transition-[background-color,border-color,color] duration-fast pointer-coarse:min-h-11",
-                  on
-                    ? "border-foreground/70 bg-foreground text-background"
-                    : "border-input bg-card text-foreground hover:border-border-strong",
-                )}
+                className="flex min-h-10 cursor-pointer items-center gap-3 border-b border-border py-1.5 text-body-sm pointer-coarse:min-h-11"
               >
+                <input
+                  type="checkbox"
+                  checked={on}
+                  onChange={() => toggleKind(k)}
+                  className="peer sr-only"
+                />
+                <span
+                  aria-hidden
+                  className="grid size-[1.125rem] shrink-0 place-items-center rounded-[1px] border border-foreground/60 bg-card text-background transition-colors duration-fast peer-checked:border-foreground peer-checked:bg-foreground peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ring dark:bg-transparent [&>svg]:opacity-0 peer-checked:[&>svg]:opacity-100"
+                >
+                  <Check className="size-3.5" strokeWidth={3} />
+                </span>
                 {KIND_LABEL[k]}
-              </button>
+              </label>
             );
           })}
         </div>
@@ -256,7 +275,7 @@ export function CustomModeBuilder({
 
       {!hideFormat && (
         <fieldset className="flex flex-col gap-3">
-          <legend className="mb-3 text-label font-semibold text-foreground">
+          <legend className="smallcaps float-left mb-0 w-full text-foreground/80">
             Format
           </legend>
           <Segmented
@@ -276,6 +295,7 @@ export function CustomModeBuilder({
               aria-label="Sprint length"
               id={`${id}-secs`}
               fullWidth
+              size="sm"
               value={String(Math.round((value.durationMs ?? 60_000) / 1000))}
               onValueChange={(s) =>
                 onChange({ ...value, durationMs: Number(s) * 1000 })
@@ -294,6 +314,7 @@ export function CustomModeBuilder({
               aria-label="Correct answers to finish"
               id={`${id}-target`}
               fullWidth
+              size="sm"
               value={String(value.targetCount ?? 15)}
               onValueChange={(t) =>
                 onChange({ ...value, targetCount: Number(t) })
@@ -326,6 +347,10 @@ export function CustomModeBuilder({
   );
 }
 
+/** A field printed on the form: no box, one rule to write on. */
+const RULED =
+  "h-10 w-full min-w-0 rounded-none border-0 border-b border-foreground/50 bg-transparent px-0.5 text-base text-foreground transition-[border-color,background-color] duration-fast hover:border-foreground focus-visible:border-primary focus-visible:bg-tint/50 focus-visible:outline-none sm:text-[0.9375rem] dark:[color-scheme:dark]";
+
 function withCurrent(options: readonly string[], current: string): string[] {
   return options.includes(current)
     ? [...options]
@@ -345,17 +370,14 @@ function BaseSelect({
 }) {
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-1">
-      <label htmlFor={id} className="text-[0.75rem] text-muted-foreground">
+      <label htmlFor={id} className="smallcaps text-[0.8125rem]">
         {label}
       </label>
       <select
         id={id}
         value={value}
         onChange={(e) => onChange(Number(e.target.value) as Base)}
-        className={cn(
-          inputVariants({ variant: "default" }),
-          "cursor-pointer pr-2",
-        )}
+        className={cn(RULED, "cursor-pointer font-sans")}
       >
         {BASE_OPTIONS.map((o) => (
           <option key={o.value} value={o.value}>
@@ -393,7 +415,7 @@ function NumberField({
   };
   return (
     <div className="flex min-w-0 flex-1 basis-20 flex-col gap-1 sm:max-w-[8.5rem]">
-      <label htmlFor={id} className="text-[0.75rem] text-muted-foreground">
+      <label htmlFor={id} className="smallcaps text-[0.8125rem]">
         {label}
       </label>
       <input
@@ -409,10 +431,7 @@ function NumberField({
             commit();
           }
         }}
-        className={cn(
-          inputVariants({ variant: "default" }),
-          "font-mono tabular-nums",
-        )}
+        className={cn(RULED, "font-mono tabular-nums")}
       />
     </div>
   );

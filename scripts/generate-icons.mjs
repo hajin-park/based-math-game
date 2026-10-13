@@ -1,40 +1,43 @@
 // Renders the logomark into favicon / PWA icons.
 // Run: node scripts/generate-icons.mjs
 //
-// The mark is "10₂" — ten, read in base two — set in hand-drawn geometric
-// strokes (slashed zero, engineer's style) on a red-pen square.
+// The mark is a blue workbook with "10₂" — ten, read in base two — printed on
+// the cover (slashed zero, engineer's style), a darker spine on the left.
 import { writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { Resvg } from "@resvg/resvg-js";
 
-const RED = "#C23B1B";
-const PAPER = "#FBFAF6";
+const COVER = "#1E4790";
+const SPINE = "#16356E";
+const PAPER = "#F6F1E6";
 
 /** Glyphs on a 64-unit grid, optically centred. */
 const glyphs = (color) => `
-  <g fill="none" stroke="${color}" stroke-linecap="square" stroke-linejoin="miter" transform="translate(-5.75 -0.5)">
+  <g fill="none" stroke="${color}" stroke-linecap="square" stroke-linejoin="miter" transform="translate(-1.75 -0.5)">
     <path d="M16.5 22 L23 17.5 V46.5" stroke-width="5"/>
     <rect x="31.5" y="17.5" width="13" height="29" rx="6.5" stroke-width="5"/>
     <path d="M35.9 37.4 L40.1 26.6" stroke-width="3.6" stroke-linecap="round"/>
     <path d="M51.6 40.4 C51.6 37.9 53.3 36.6 55.3 36.6 C57.4 36.6 59 37.9 59 40 C59 41.9 57.9 43.2 56.3 44.7 L52 48.9 H59.6" stroke-width="3.2" stroke-linecap="butt"/>
   </g>`;
 
-/** Favicon / "any" icon: rounded square, transparent corners. */
+/** Favicon / "any" icon: a book with square-ish corners. */
 export const markSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
-  <rect width="64" height="64" rx="14" fill="${RED}"/>${glyphs(PAPER)}
+  <rect width="64" height="64" rx="4" fill="${COVER}"/>
+  <rect width="9" height="64" rx="2" fill="${SPINE}"/>${glyphs(PAPER)}
 </svg>
 `;
 
 /** Maskable: full bleed, glyphs inside the 80% safe zone. */
 const maskableSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
-  <rect width="64" height="64" fill="${RED}"/>
+  <rect width="64" height="64" fill="${COVER}"/>
   <g transform="translate(32 32) scale(0.72) translate(-32 -32)">${glyphs(PAPER)}</g>
 </svg>
 `;
 
 /** Apple touch icon: opaque square (iOS applies its own mask). */
 const appleSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
-  <rect width="64" height="64" fill="${RED}"/>
+  <rect width="64" height="64" fill="${COVER}"/>
+  <rect width="7" height="64" fill="${SPINE}"/>
   <g transform="translate(32 32) scale(0.86) translate(-32 -32)">${glyphs(PAPER)}</g>
 </svg>
 `;

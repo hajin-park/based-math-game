@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { warmUpGoogleSignIn } from "@/lib/googleAuth";
 import { Link, useNavigate } from "react-router-dom";
-import { Check, Loader2, LogOut, MailCheck } from "lucide-react";
+import { Loader2, LogOut, MailCheck } from "lucide-react";
+import { PenTick } from "@/components/ui/pen-mark";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -26,6 +27,7 @@ import {
   validateDisplayName,
 } from "@/utils/displayNameValidator";
 import { toast } from "@/components/ui/use-toast";
+import { cn } from "@/lib/utils";
 
 function Section({
   id,
@@ -43,16 +45,20 @@ function Section({
   return (
     <section
       aria-labelledby={id}
-      className="grid gap-4 border-b py-8 first:pt-0 last:border-b-0 md:grid-cols-[minmax(0,16rem)_minmax(0,1fr)] md:gap-10"
+      className={cn(
+        "grid gap-4 py-8 md:grid-cols-[minmax(0,15rem)_minmax(0,1fr)] md:gap-12",
+        tone === "danger"
+          ? "mt-6 border-t-[3px] border-double border-t-pen pt-7"
+          : "border-b border-foreground/15 first:pt-0",
+      )}
     >
       <div className="flex flex-col gap-1.5">
         <h2
           id={id}
-          className={
-            tone === "danger"
-              ? "text-title font-semibold text-destructive"
-              : "text-title font-semibold"
-          }
+          className={cn(
+            "text-title font-bold",
+            tone === "danger" && "text-pen",
+          )}
         >
           {title}
         </h2>
@@ -126,11 +132,11 @@ function DisplayNameForm() {
         </Button>
         <p
           role="status"
-          className="flex items-center gap-1.5 text-[0.8125rem] text-success"
+          className="flex items-center gap-1.5 font-sans text-[0.8125rem] text-foreground"
         >
           {saved && (
             <>
-              <Check className="size-4" aria-hidden /> Saved
+              <PenTick className="size-5" /> Saved
             </>
           )}
         </p>
@@ -176,7 +182,7 @@ function PasswordSection() {
     <div className="flex flex-col gap-3">
       <p className="text-body-sm text-muted-foreground text-pretty">
         We’ll email a secure link to{" "}
-        <span className="font-medium text-foreground">{user?.email}</span>. Open
+        <span className="font-mono text-foreground">{user?.email}</span>. Open
         it to choose a new password.
       </p>
       <div>
@@ -329,7 +335,7 @@ function DeleteDialog({
                   {user?.email ? (
                     <>
                       {" "}
-                      (<span className="font-medium">{user.email}</span>)
+                      (<span className="font-mono">{user.email}</span>)
                     </>
                   ) : null}
                 </li>
@@ -412,7 +418,7 @@ export default function ProfileSettings() {
   if (loading && !user) return null;
 
   return (
-    <div className="flex flex-col">
+    <div className="mx-auto flex w-full max-w-4xl flex-col">
       <Section
         id="name-title"
         title="Profile"

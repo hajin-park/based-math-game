@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, MessageSquare, Play, Settings2 } from "lucide-react";
+import { Check, MessageSquare, Play } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -133,57 +133,55 @@ export function LobbyView({
       <h1 className="sr-only">
         Lobby of room {room.id.slice(0, 4)} {room.id.slice(4)}
       </h1>
-      <div className="container grid flex-1 gap-8 py-6 md:grid-cols-[minmax(0,1fr)_minmax(0,18rem)] md:gap-8 md:py-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,23rem)] lg:gap-10">
-        <div className="flex min-w-0 flex-col gap-8 pb-36 md:pb-0">
+      <div className="container grid flex-1 gap-8 py-6 md:grid-cols-[minmax(0,1fr)_minmax(0,19rem)] md:gap-8 md:py-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,23rem)] lg:gap-12">
+        <div className="flex min-w-0 flex-col gap-9 pb-36 md:pb-0">
           <RoomCodePanel code={room.id} />
 
-          <section
-            aria-labelledby="lobby-mode"
-            className="flex flex-col gap-3 border-t pt-6"
-          >
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div className="flex min-w-0 flex-col gap-1">
-                <h2 id="lobby-mode" className="eyebrow">
-                  Mode
-                </h2>
-                <p className="text-title font-semibold">
-                  {mode?.name ?? "Custom set"}
-                </p>
-                {mode && (
-                  <p className="text-body-sm text-muted-foreground">
-                    {describeRoomMode(mode)}
-                  </p>
-                )}
-              </div>
+          <section aria-labelledby="lobby-mode" className="flex flex-col gap-2">
+            <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-foreground/25 pb-1.5">
+              <h2 id="lobby-mode" className="smallcaps">
+                Drill
+              </h2>
               {isHost && (
                 <Button
                   type="button"
-                  variant="outline"
+                  variant="link"
                   size="sm"
+                  className="font-sans text-label"
                   onClick={() => setSettingsOpen(true)}
                 >
-                  <Settings2 aria-hidden />
                   Room settings
                 </Button>
               )}
             </div>
-            <ul className="flex flex-wrap gap-x-5 gap-y-1 text-body-sm text-muted-foreground">
-              <li>{room.maxPlayers} seats</li>
-              <li>Visual aids {room.allowVisualAids ? "allowed" : "off"}</li>
-              <li>Same questions for everyone</li>
-            </ul>
+            <p className="font-serif text-title font-bold">
+              {mode?.name ?? "Custom set"}
+            </p>
+            <p className="text-body-sm text-muted-foreground">
+              {mode && <>{describeRoomMode(mode)} · </>}
+              <span className="font-mono">{room.maxPlayers}</span> seats ·
+              visual aids {room.allowVisualAids ? "allowed" : "off"} · same
+              questions for everyone
+            </p>
           </section>
 
           <section
             aria-labelledby="lobby-players"
-            className="flex flex-col gap-3 border-t pt-6"
+            className="flex flex-col gap-3"
           >
             <div className="flex items-baseline justify-between gap-3">
-              <h2 id="lobby-players" className="text-title font-semibold">
-                Players
+              <h2
+                id="lobby-players"
+                className="font-serif text-title font-bold"
+              >
+                Register
               </h2>
-              <span className="font-mono text-[0.8125rem] tabular-nums text-muted-foreground">
-                {present.length} of {room.maxPlayers}
+              <span className="font-sans text-label text-muted-foreground">
+                <span className="font-mono text-foreground">
+                  {present.length}
+                </span>{" "}
+                of <span className="font-mono">{room.maxPlayers}</span> seats
+                taken
               </span>
             </div>
             <PlayerList
@@ -196,15 +194,15 @@ export function LobbyView({
             />
           </section>
 
-          {/* Actions: fixed to the bottom on phones/tablets, inline on desktop. */}
+          {/* Actions: fixed to the bottom on phones, the foot of the page on desktop. Solid paper, no glass. */}
           <div
             className={cn(
-              "fixed inset-x-0 bottom-0 z-20 border-t bg-background/95 backdrop-blur-sm",
+              "fixed inset-x-0 bottom-0 z-20 border-t-[3px] border-double border-foreground/60 bg-background",
               "px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3",
-              "md:sticky md:bottom-6 md:rounded-lg md:border md:bg-card/95 md:p-4 md:shadow-md",
+              "md:sticky md:bottom-0 md:-mt-3 md:px-0 md:pb-6 md:pt-4",
             )}
           >
-            <div className="mx-auto flex max-w-3xl flex-col gap-3 md:max-w-none">
+            <div className="mx-auto flex max-w-3xl flex-col gap-3 md:max-w-none md:flex-row md:items-center md:justify-between md:gap-6">
               <p
                 id="lobby-status"
                 className="text-body-sm text-muted-foreground"
@@ -212,7 +210,7 @@ export function LobbyView({
               >
                 {statusText}
               </p>
-              <div className="flex items-center gap-2">
+              <div className="flex shrink-0 items-center gap-2">
                 <Button
                   type="button"
                   variant="outline"
@@ -226,7 +224,7 @@ export function LobbyView({
                   {unread > 0 && (
                     <span
                       aria-hidden
-                      className="ml-0.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-foreground px-1 font-mono text-[0.6875rem] text-background"
+                      className="ml-0.5 inline-flex h-5 min-w-5 items-center justify-center rounded-sm bg-foreground px-1 font-mono text-[0.6875rem] text-background"
                     >
                       {unread > 9 ? "9+" : unread}
                     </span>
@@ -236,7 +234,7 @@ export function LobbyView({
                   <Button
                     type="button"
                     size="lg"
-                    className="flex-1 md:flex-none"
+                    className="flex-1 md:min-w-44 md:flex-none"
                     onClick={start}
                     disabled={!!blocker || starting}
                     aria-describedby="lobby-status"
@@ -249,7 +247,7 @@ export function LobbyView({
                     type="button"
                     size="lg"
                     variant={me?.ready ? "secondary" : "default"}
-                    className="flex-1 md:flex-none"
+                    className="flex-1 md:min-w-36 md:flex-none"
                     aria-pressed={!!me?.ready}
                     onClick={toggleReady}
                   >
@@ -264,13 +262,16 @@ export function LobbyView({
 
         <aside
           aria-labelledby="lobby-chat"
-          className="sticky top-20 hidden h-[min(42rem,calc(100dvh-7rem))] flex-col overflow-hidden rounded-lg border bg-card md:flex"
+          className="paper-sheet sticky top-20 hidden h-[min(44rem,calc(100dvh-7rem))] flex-col overflow-hidden rounded-sm md:flex"
         >
           <h2
             id="lobby-chat"
-            className="border-b px-4 py-3 text-title-sm font-semibold"
+            className="flex items-baseline justify-between border-b border-foreground/25 px-4 py-3 font-serif text-title-sm font-bold"
           >
             Chat
+            <span className="font-sans text-[0.75rem] font-medium text-muted-foreground">
+              Everyone in the room
+            </span>
           </h2>
           <RoomChat
             roomId={room.id}
@@ -292,9 +293,9 @@ export function LobbyView({
       >
         <SheetContent
           side="bottom"
-          className="flex h-[85dvh] flex-col gap-0 rounded-t-xl p-0"
+          className="flex h-[85dvh] flex-col gap-0 rounded-t-sm p-0"
         >
-          <SheetHeader className="border-b px-4 py-3 text-left">
+          <SheetHeader className="border-b border-foreground/25 px-4 py-3 text-left">
             <SheetTitle>Chat</SheetTitle>
             <SheetDescription className="sr-only">
               Messages from everyone in the room

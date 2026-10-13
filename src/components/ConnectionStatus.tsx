@@ -59,8 +59,9 @@ export default function ConnectionStatus() {
       {state !== "hidden" && !inRoom && (
         <p
           className={cn(
-            "pointer-events-auto flex max-w-sm items-center gap-2 rounded-lg border bg-popover px-4 py-3 text-body-sm shadow-lg",
-            state === "offline" && "border-warning/40",
+            // A slip laid on the page, not a floating glass toast.
+            "paper-sheet pointer-events-auto flex max-w-sm animate-sheet-in items-center gap-2 rounded-sm border-t-2 px-4 py-3 text-body-sm",
+            state === "offline" ? "border-warning" : "border-success",
           )}
         >
           {state === "offline" ? (

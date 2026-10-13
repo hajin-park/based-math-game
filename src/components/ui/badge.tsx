@@ -4,22 +4,22 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 /**
- * Badge — small status label. Tinted wash + matching text; never a loud fill
- * except `solid`. For number bases use <BaseTag>.
+ * Badge — a small printed label in a hairline box, set in small caps.
+ * Never a loud fill except `solid`. For number bases use <BaseTag>.
  */
 const badgeVariants = cva(
-  "inline-flex h-6 shrink-0 items-center gap-1 whitespace-nowrap rounded-sm border px-2 text-[0.75rem] font-medium leading-none [&_svg]:size-3",
+  "inline-flex h-6 shrink-0 items-center gap-1 whitespace-nowrap rounded-sm border px-2 font-sans text-[0.8125rem] font-medium leading-none [&_svg]:size-3",
   {
     variants: {
       variant: {
-        default: "border-primary/25 bg-primary/10 text-primary",
-        solid: "border-transparent bg-primary text-primary-foreground",
-        secondary: "border-transparent bg-secondary text-secondary-foreground",
-        outline: "border-border-strong bg-transparent text-muted-foreground",
-        success: "border-success/25 bg-success/10 text-success",
-        warning: "border-warning/25 bg-warning/10 text-warning",
-        destructive: "border-destructive/25 bg-destructive/10 text-destructive",
-        info: "border-info/25 bg-info/10 text-info",
+        default: "border-primary/35 bg-tint text-primary",
+        solid: "border-transparent bg-foreground text-background",
+        secondary: "border-transparent bg-sunken text-foreground",
+        outline: "border-foreground/30 bg-transparent text-muted-foreground",
+        success: "border-success/35 bg-success/10 text-success",
+        warning: "border-warning/35 bg-warning/10 text-warning",
+        destructive: "border-pen/35 bg-pen/10 text-pen",
+        info: "border-primary/35 bg-tint text-primary",
       },
     },
     defaultVariants: {

@@ -1,17 +1,30 @@
-import { useMemo, useState } from "react";
+/**
+ * "/stats" — the report card. A head with the player's name and the period
+ * the card covers; a summary ledger and the attendance register; grades per
+ * topic with remarks computed from them (only when there is enough data);
+ * the pace plotted on graph paper with new bests circled in red pen;
+ * personal bests; and recent runs on ruled lines.
+ */
+import { useMemo, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, CloudOff, History, Play, RotateCw } from "lucide-react";
+import { ArrowRight, Play } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
-import { statValueVariants } from "@/components/ui/stat";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TrendChart } from "@/components/charts/TrendChart";
 import { ActivityStrip } from "@/components/charts/ActivityStrip";
 import { useAuth } from "@/contexts/AuthContext";
-import { GUEST_RUN_LIMIT, useRunHistory, useUserStats, type RunRecord } from "@/data";
-import { FORMATS, formatScore, getMode } from "@/game";
+import {
+  GUEST_RUN_LIMIT,
+  useRunHistory,
+  useUserStats,
+  type BestEntry,
+  type RunRecord,
+} from "@/data";
+import { useStartTarget } from "@/features/play/useStartTarget";
+import { FORMATS, TOPICS, formatScore, getMode, type GameMode } from "@/game";
 import {
   activityByDay,
   bestsList,
@@ -33,48 +46,142 @@ import { cn } from "@/lib/utils";
 const HISTORY_LIMIT = 200;
 const nf = new Intl.NumberFormat();
 
+/** Remarks need this many runs in a topic before it is compared. */
+const REMARK_MIN_RUNS = 2;
+
 function pct(n: number | null | undefined): string {
   return n === null || n === undefined ? "—" : `${Math.round(n * 100)}%`;
 }
 
-function SectionTitle({
+function secs(n: number | null): string {
+  return n === null ? "—" : `${n.toFixed(1)} s`;
+}
+
+/* -------------------------------------------------------------------------- */
+
+function SectionHead({
   id,
   title,
   meta,
 }: {
   id: string;
   title: string;
-  meta?: React.ReactNode;
+  meta?: ReactNode;
 }) {
   return (
-    <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b pb-3">
-      <h2 id={id} className="text-headline font-serif">
+    <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-foreground/25 pb-2">
+      <h2 id={id} className="text-title font-bold">
         {title}
       </h2>
-      {meta && <p className="text-body-sm text-muted-foreground">{meta}</p>}
+      {meta && (
+        <p className="font-sans text-[0.8125rem] text-muted-foreground">
+          {meta}
+        </p>
+      )}
     </div>
   );
 }
 
+/** A fill-in line on the card's head ("Name ____"). */
+function HeadLine({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="flex min-w-0 items-baseline gap-3">
+      <span className="smallcaps shrink-0 text-[0.9375rem]">{label}</span>
+      <span className="min-w-0 flex-1 truncate border-b border-foreground/35 pb-0.5 font-mono text-[1rem] text-foreground">
+        {children}
+      </span>
+    </div>
+  );
+}
+
+/** A margin note: blue small-caps label, pencil text, no box. */
+function MarginNote({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-1 text-body-sm text-muted-foreground text-pretty">
+      <p className="smallcaps text-[0.9375rem] text-primary">{label}</p>
+      <div>{children}</div>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+
+interface Remark {
+  strong: TopicRow;
+  weak: TopicRow;
+  /** What separates them: accuracy, or pace when accuracy is level. */
+  by: "accuracy" | "pace";
+}
+
+/**
+ * Strongest and weakest topic, from the data only: at least two topics with
+ * REMARK_MIN_RUNS runs, an accuracy and a pace. Ranked by accuracy; when two
+ * accuracies are within two points, by seconds per answer.
+ */
+function computeRemark(rows: TopicRow[]): Remark | null {
+  const eligible = rows.filter(
+    (r) =>
+      r.runs >= REMARK_MIN_RUNS &&
+      r.accuracy !== null &&
+      r.secondsPerAnswer !== null,
+  );
+  if (eligible.length < 2) return null;
+  const sorted = [...eligible].sort((a, b) => {
+    const d = (b.accuracy ?? 0) - (a.accuracy ?? 0);
+    if (Math.abs(d) >= 0.02) return d;
+    return (a.secondsPerAnswer ?? 0) - (b.secondsPerAnswer ?? 0);
+  });
+  const strong = sorted[0];
+  const weak = sorted[sorted.length - 1];
+  const accGap = Math.abs((strong.accuracy ?? 0) - (weak.accuracy ?? 0));
+  const paceGap = Math.abs(
+    (strong.secondsPerAnswer ?? 0) - (weak.secondsPerAnswer ?? 0),
+  );
+  // Nothing worth saying when the two are level on both counts.
+  if (accGap < 0.02 && paceGap < 0.2) return null;
+  return { strong, weak, by: accGap >= 0.02 ? "accuracy" : "pace" };
+}
+
+/* -------------------------------------------------------------------------- */
+
 export default function Stats() {
-  const { isGuest, loading: authLoading } = useAuth();
-  const { stats, loading: statsLoading, error: statsError } = useUserStats();
+  const { user, isGuest, loading: authLoading } = useAuth();
+  const {
+    stats,
+    loading: statsLoading,
+    error: statsError,
+    refresh: refreshStats,
+  } = useUserStats();
   const {
     runs,
     loading: runsLoading,
     error: runsError,
     refresh,
   } = useRunHistory({ limit: HISTORY_LIMIT });
+  const start = useStartTarget();
 
   const loading = authLoading || statsLoading || runsLoading;
   const error = statsError || runsError;
 
   const derived = useMemo(() => {
     const now = Date.now();
+    const order = new Map(TOPICS.map((t, i) => [t.id, i]));
+    const topics = topicBreakdown(runs);
     return {
       streak: dayStreak(runs, now),
       activity: activityByDay(runs, 14, now),
-      topics: topicBreakdown(runs),
+      topics,
+      // Grades read in catalogue order, like subjects on a report card.
+      grades: [...topics].sort(
+        (a, b) => (order.get(a.topicId) ?? 0) - (order.get(b.topicId) ?? 0),
+      ),
+      remark: computeRemark(topics),
       pace: paceTrend(runs, 30),
       bests: bestsList(stats.bests || {}),
       daily: dailySummary(stats.bests || {}),
@@ -82,277 +189,299 @@ export default function Stats() {
   }, [runs, stats.bests]);
 
   const practice = formatPracticeTime(stats.totalDurationMs);
-  const empty = !loading && !error && stats.gamesPlayed === 0 && runs.length === 0;
+  const empty =
+    !loading && !error && stats.gamesPlayed === 0 && runs.length === 0;
+
+  const name = isGuest
+    ? "Guest"
+    : user?.displayName || (authLoading ? "" : "Player");
+  const first = runs.length ? formatDate(runs[runs.length - 1].endedAt) : "";
+  const latest = runs.length ? formatDate(runs[0].endedAt) : "";
+  const period = !runs.length
+    ? "—"
+    : first === latest
+      ? first
+      : `${first} – ${latest}`;
+
+  const guestNote = !authLoading && isGuest && (
+    <div role="note">
+      <MarginNote label="Note">
+        Saved on this device: your last {GUEST_RUN_LIMIT} runs in this browser,
+        gone if you clear its data.{" "}
+        <Link className="link" to="/signup?next=%2Fstats">
+          Create an account
+        </Link>{" "}
+        to keep them.
+      </MarginNote>
+    </div>
+  );
 
   return (
-    <div className="container flex flex-col gap-10 py-10 md:gap-14 md:py-14">
+    <div className="container flex flex-col gap-10 py-10 md:gap-12 md:py-14">
       <PageHeader
-        eyebrow="Stats"
-        title={
-          <>
-            Your <em>numbers</em>
-          </>
+        folio={
+          runs.length >= HISTORY_LIMIT
+            ? `Last ${HISTORY_LIMIT} runs`
+            : undefined
         }
-        lede="Every run you finish, where you’re fast, and where a little practice would pay off."
+        title="Report card"
         divider
         size="md"
-      />
-
-      {!authLoading && isGuest && (
-        <div
-          role="note"
-          className="flex flex-col gap-3 rounded-lg border bg-card px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5"
-        >
-          <div className="flex gap-3">
-            <CloudOff className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
-            <div className="flex flex-col gap-0.5">
-              <p className="text-[0.9375rem] font-semibold">
-                Saved on this device. Create an account to keep them.
-              </p>
-              <p className="text-body-sm text-muted-foreground">
-                Guest stats cover your last {GUEST_RUN_LIMIT} runs in this
-                browser and disappear if you clear its data.
-              </p>
-            </div>
-          </div>
-          <Button asChild variant="outline" className="shrink-0">
-            <Link to="/signup?next=%2Fstats">Create an account</Link>
-          </Button>
+      >
+        <div className="mt-3 grid max-w-[42rem] gap-3 sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] sm:gap-6">
+          <HeadLine label="Name">
+            {name === "Guest" ? (
+              <span className="font-serif italic text-muted-foreground">
+                Guest
+              </span>
+            ) : (
+              name || " "
+            )}
+          </HeadLine>
+          <HeadLine label="Period">{loading ? " " : period}</HeadLine>
         </div>
-      )}
+      </PageHeader>
 
       {error ? (
         <EmptyState
-          icon={<RotateCw />}
-          title="Couldn’t load your stats"
+          title="Couldn’t load your report card"
           description="Check your connection, then try again."
           action={
-            <Button variant="outline" onClick={refresh}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                refresh();
+                refreshStats();
+              }}
+            >
               Try again
             </Button>
           }
         />
       ) : empty ? (
-        <section aria-labelledby="empty-title">
-        <h2 id="empty-title" className="sr-only">Your runs</h2>
-        <EmptyState
-          icon={<History />}
-          title="No runs yet"
-          description="Finish a sprint and your scores, pace and personal bests show up here."
-          action={
-            <Button asChild>
-              <Link to="/play">
-                Start a sprint
-                <ArrowRight aria-hidden />
-              </Link>
-            </Button>
-          }
-        />
+        <section aria-labelledby="empty-title" className="flex flex-col gap-8">
+          <h2 id="empty-title" className="sr-only">
+            Your runs
+          </h2>
+          {guestNote}
+          <EmptyState
+            title="Nothing to report yet"
+            description="Finish a run and the card fills in: grades for each topic, attendance, pace and personal bests."
+            action={
+              <Button asChild>
+                <Link to={start.path}>
+                  Play {start.title}
+                  <ArrowRight aria-hidden />
+                </Link>
+              </Button>
+            }
+          />
         </section>
       ) : (
-        <>
-          {/* Overview */}
-          <section aria-labelledby="overview-title" className="flex flex-col gap-5">
-            <h2 id="overview-title" className="sr-only">
-              Overview
-            </h2>
-            <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border bg-border md:grid-cols-4">
+        <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_15rem] lg:gap-14">
+          <div className="flex min-w-0 flex-col gap-12 md:gap-14">
+            {guestNote && <div className="lg:hidden">{guestNote}</div>}
+
+            {/* Summary + attendance */}
+            <div className="grid gap-10 md:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] md:gap-10">
+              <section
+                aria-labelledby="summary-title"
+                className="flex flex-col gap-4"
+              >
+                <SectionHead id="summary-title" title="Summary" />
+                {loading ? (
+                  <LedgerSkeleton rows={4} />
+                ) : (
+                  <dl className="flex flex-col">
+                    <LedgerRow
+                      label="Runs"
+                      value={nf.format(stats.gamesPlayed)}
+                    />
+                    <LedgerRow
+                      label="Correct answers"
+                      value={nf.format(stats.totalCorrect)}
+                    />
+                    <LedgerRow
+                      label="Time practised"
+                      value={`${practice.value} ${practice.unit}`}
+                    />
+                    <LedgerRow
+                      label="Day streak"
+                      value={`${derived.streak.current} ${derived.streak.current === 1 ? "day" : "days"}`}
+                      note={
+                        derived.streak.current > 0 &&
+                        !derived.streak.playedToday
+                          ? "Play today to keep it."
+                          : undefined
+                      }
+                    />
+                    {derived.daily.played > 0 &&
+                      derived.daily.bestMs !== null && (
+                        <LedgerRow
+                          label="Daily sheets"
+                          value={`${derived.daily.played} · best ${formatScore(FORMATS.daily, derived.daily.bestMs)}`}
+                        />
+                      )}
+                  </dl>
+                )}
+              </section>
+
+              <section
+                aria-labelledby="attendance-title"
+                className="flex min-w-0 flex-col gap-4"
+              >
+                <SectionHead
+                  id="attendance-title"
+                  title="Attendance"
+                  meta="Last 14 days"
+                />
+                {loading ? (
+                  <Skeleton className="h-[5.5rem] w-full rounded-sm" />
+                ) : (
+                  <ActivityStrip days={derived.activity} />
+                )}
+              </section>
+            </div>
+
+            {/* Grades */}
+            <section
+              aria-labelledby="grades-title"
+              className="flex flex-col gap-4"
+            >
+              <SectionHead
+                id="grades-title"
+                title="Grades"
+                meta="By topic, from your saved runs"
+              />
               {loading ? (
-                Array.from({ length: 4 }, (_, i) => (
-                  <div key={i} className="flex flex-col gap-3 bg-card p-4 sm:p-5">
-                    <Skeleton className="h-3 w-20" />
-                    <Skeleton className="h-7 w-16" />
-                  </div>
-                ))
+                <LedgerSkeleton rows={4} />
+              ) : derived.grades.length === 0 ? (
+                <EmptyState
+                  size="sm"
+                  title="No topics graded yet"
+                  description="Play any topic and it shows up here with your accuracy and time per answer."
+                />
               ) : (
                 <>
-                  <OverviewTile label="Runs" value={nf.format(stats.gamesPlayed)} />
-                  <OverviewTile
-                    label="Correct answers"
-                    value={nf.format(stats.totalCorrect)}
-                  />
-                  <OverviewTile
-                    label="Time practiced"
-                    value={practice.value}
-                    unit={practice.unit}
-                  />
-                  <OverviewTile
-                    label="Day streak"
-                    value={String(derived.streak.current)}
-                    unit={derived.streak.current === 1 ? "day" : "days"}
-                    hint={
-                      derived.streak.current > 0 && !derived.streak.playedToday
-                        ? "Play today to keep it"
-                        : undefined
-                    }
-                  />
+                  <GradesTable rows={derived.grades} bests={derived.bests} />
+                  <Remarks remark={derived.remark} />
                 </>
               )}
-            </dl>
-            {!loading && (
-              <div className="rounded-lg border bg-card p-4 sm:p-5">
-                <p className="mb-3 text-label text-muted-foreground">
-                  Correct answers per day
-                </p>
-                <ActivityStrip days={derived.activity} />
-              </div>
-            )}
-          </section>
+            </section>
 
-          {/* Pace trend */}
-          <section aria-labelledby="pace-title" className="flex flex-col gap-5">
-            <SectionTitle
-              id="pace-title"
-              title="Pace"
-              meta="Correct answers per minute, last 30 timed runs"
-            />
-            {loading ? (
-              <Skeleton className="h-[168px] w-full" />
-            ) : derived.pace.length < 2 ? (
-              <EmptyState
-                size="sm"
-                icon={<History />}
-                title="Not enough timed runs yet"
-                description="Your pace line appears after two sprints, speedruns or survival runs."
+            {/* Pace */}
+            <section
+              aria-labelledby="pace-title"
+              className="flex flex-col gap-4"
+            >
+              <SectionHead
+                id="pace-title"
+                title="Pace"
+                meta="Correct answers per minute, last 30 timed runs"
               />
-            ) : (
-              <div className="rounded-lg border bg-card p-4 sm:p-5">
-                <TrendChart
-                  label="Correct answers per minute over your last timed runs"
-                  points={derived.pace.map((p) => ({
-                    at: p.endedAt,
-                    value: p.value,
-                    detail: modeLabel(p.modeId),
-                  }))}
-                  formatValue={(v) => (v >= 10 ? v.toFixed(0) : v.toFixed(1))}
-                  unit="/min"
-                  formatDate={formatDate}
+              {loading ? (
+                <Skeleton className="h-[200px] w-full rounded-sm" />
+              ) : derived.pace.length < 2 ? (
+                <EmptyState
+                  size="sm"
+                  title="Not enough timed runs to plot"
+                  description="Your pace appears after two sprints, speedruns or survival runs."
                 />
-              </div>
-            )}
-          </section>
+              ) : (
+                <>
+                  <TrendChart
+                    label="Correct answers per minute over your last timed runs"
+                    points={derived.pace.map((p) => ({
+                      at: p.endedAt,
+                      value: p.value,
+                      detail: modeLabel(p.modeId),
+                    }))}
+                    formatValue={(v) => (v >= 10 ? v.toFixed(0) : v.toFixed(1))}
+                    unit="/min"
+                    formatDate={formatDate}
+                    markBests
+                  />
+                  <p className="flex items-center gap-2 font-sans text-[0.8125rem] text-muted-foreground">
+                    <svg
+                      viewBox="0 0 20 14"
+                      aria-hidden
+                      className="h-3.5 w-5 shrink-0 overflow-visible"
+                    >
+                      <ellipse
+                        cx="10"
+                        cy="7"
+                        rx="8.5"
+                        ry="5.5"
+                        className="fill-none stroke-pen"
+                        strokeWidth={1.5}
+                      />
+                    </svg>
+                    Circled: a new best pace, faster than every run before it.
+                  </p>
+                </>
+              )}
+            </section>
 
-          {/* Topics */}
-          <section aria-labelledby="topics-title" className="flex flex-col gap-5">
-            <SectionTitle
-              id="topics-title"
-              title="By topic"
-              meta="Slowest first. Seconds per correct answer."
-            />
-            {loading ? (
-              <ListSkeleton rows={4} />
-            ) : derived.topics.length === 0 ? (
-              <EmptyState
-                size="sm"
-                icon={<History />}
-                title="No topics yet"
-                description="Play any topic and it shows up here with your accuracy and pace."
+            {/* Personal bests */}
+            <section
+              aria-labelledby="bests-title"
+              className="flex flex-col gap-4"
+            >
+              <SectionHead id="bests-title" title="Personal bests" />
+              {loading ? (
+                <LedgerSkeleton rows={3} />
+              ) : derived.bests.length === 0 ? (
+                <EmptyState
+                  size="sm"
+                  title="No personal bests yet"
+                  description="Finish a sprint, speedrun or survival run to set one."
+                />
+              ) : (
+                <BestsTable rows={derived.bests} />
+              )}
+            </section>
+
+            {/* Recent runs */}
+            <section
+              aria-labelledby="recent-title"
+              className="flex flex-col gap-4"
+            >
+              <SectionHead
+                id="recent-title"
+                title="Recent runs"
+                meta={
+                  runs.length
+                    ? `${runs.length}${runs.length >= HISTORY_LIMIT ? "+" : ""} ${runs.length === 1 ? "run" : "runs"} ${isGuest ? "on this device" : "saved"}`
+                    : undefined
+                }
               />
-            ) : (
-              <TopicTable rows={derived.topics} />
-            )}
-          </section>
+              {loading ? (
+                <LedgerSkeleton rows={5} />
+              ) : (
+                <RecentRuns runs={runs} />
+              )}
+            </section>
+          </div>
 
-          {/* Personal bests */}
-          <section aria-labelledby="bests-title" className="flex flex-col gap-5">
-            <SectionTitle
-              id="bests-title"
-              title="Personal bests"
-              meta={
-                derived.daily.played > 0 && derived.daily.bestMs !== null ? (
-                  <>
-                    Daily: {derived.daily.played} played, best{" "}
-                    <span className="font-mono text-foreground">
-                      {formatScore(FORMATS.daily, derived.daily.bestMs)}
-                    </span>
-                  </>
-                ) : undefined
-              }
-            />
-            {loading ? (
-              <ListSkeleton rows={3} />
-            ) : derived.bests.length === 0 ? (
-              <EmptyState
-                size="sm"
-                icon={<History />}
-                title="No personal bests yet"
-                description="Finish a sprint, speedrun or survival run to set one."
-              />
-            ) : (
-              <div className="overflow-hidden rounded-lg border bg-card">
-                <table className="w-full table-fixed border-collapse text-body-sm tabular-nums">
-                  <caption className="sr-only">Personal best per mode</caption>
-                  <colgroup>
-                    <col />
-                    <col className="w-[7.25rem] sm:w-32" />
-                    <col className="hidden w-24 sm:table-column" />
-                    <col className="hidden w-32 md:table-column" />
-                    <col className="w-14 sm:w-16" />
-                  </colgroup>
-                  <thead className="bg-sunken/60">
-                    <tr className="border-b border-border-strong text-left text-[0.75rem] font-medium text-muted-foreground">
-                      <th scope="col" className="h-10 pl-4 sm:pl-5">Mode</th>
-                      <th scope="col" className="h-10 px-3 text-right">Best</th>
-                      <th scope="col" className="hidden h-10 px-3 text-right sm:table-cell">Accuracy</th>
-                      <th scope="col" className="hidden h-10 px-3 text-right md:table-cell">Set</th>
-                      <th scope="col" className="h-10 pr-3 sm:pr-4">
-                        <span className="sr-only">Play</span>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {derived.bests.map(({ modeId, mode, best }) => (
-                      <tr key={modeId} className="border-b last:border-b-0">
-                        <td className="h-12 min-w-0 pl-4 sm:pl-5">
-                          <span className="block py-1 text-pretty leading-snug">{mode.name}</span>
-                        </td>
-                        <td className="h-12 whitespace-nowrap px-3 text-right font-mono text-[0.875rem]">
-                          {formatScore(mode.spec, best.score)}
-                        </td>
-                        <td className="hidden h-12 px-3 text-right font-mono text-[0.8125rem] text-muted-foreground sm:table-cell">
-                          {pct(best.accuracy)}
-                        </td>
-                        <td className="hidden h-12 whitespace-nowrap px-3 text-right text-[0.8125rem] text-muted-foreground md:table-cell">
-                          {formatDate(best.endedAt)}
-                        </td>
-                        <td className="h-12 pr-2 text-right sm:pr-3">
-                          <Button
-                            asChild
-                            variant="ghost"
-                            size="icon"
-                            aria-label={`Play ${mode.name}`}
-                          >
-                            <Link to={`/play?mode=${encodeURIComponent(modeId)}`}>
-                              <Play />
-                            </Link>
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </section>
-
-          {/* Recent runs */}
-          <section aria-labelledby="recent-title" className="flex flex-col gap-5">
-            <SectionTitle
-              id="recent-title"
-              title="Recent runs"
-              meta={
-                runs.length
-                  ? `${runs.length}${runs.length >= HISTORY_LIMIT ? "+" : ""} ${runs.length === 1 ? "run" : "runs"} ${isGuest ? "on this device" : "saved"}`
-                  : undefined
-              }
-            />
-            {loading ? (
-              <ListSkeleton rows={5} />
-            ) : (
-              <RecentRuns runs={runs} />
-            )}
-          </section>
-        </>
+          <aside
+            aria-label="Notes on this card"
+            className="hidden flex-col gap-6 border-t border-foreground/20 pt-4 lg:flex"
+          >
+            {guestNote}
+            <MarginNote label="Accuracy">
+              Questions answered correctly out of all questions shown; skips and
+              time-outs count against it.
+            </MarginNote>
+            <MarginNote label="Avg time">
+              Seconds per correct answer in timed runs. Practice runs count only
+              for a topic you haven’t played timed.
+            </MarginNote>
+            <MarginNote label="Best">
+              Your personal best in the topic’s sprint, or its speedrun if you
+              haven’t played the sprint.
+            </MarginNote>
+          </aside>
+        </div>
       )}
     </div>
   );
@@ -360,101 +489,293 @@ export default function Stats() {
 
 /* -------------------------------------------------------------------------- */
 
-function OverviewTile({
+function LedgerRow({
   label,
   value,
-  unit,
-  hint,
+  note,
 }: {
   label: string;
   value: string;
-  unit?: string;
-  hint?: string;
+  note?: string;
 }) {
   return (
-    <div className="flex min-w-0 flex-col gap-2 bg-card p-4 sm:p-5">
-      <dt className="truncate text-label text-muted-foreground">{label}</dt>
-      <dd className="flex flex-col gap-1">
-        <span className="flex items-baseline gap-1">
-          <span className={statValueVariants({ size: "md" })}>{value}</span>
-          {unit && (
-            <span className="font-mono text-[0.8125rem] text-muted-foreground">
-              {unit}
-            </span>
-          )}
-        </span>
-        {hint && <span className="text-[0.75rem] text-muted-foreground">{hint}</span>}
-      </dd>
+    <div className="flex flex-col border-b border-foreground/[0.12] py-2.5">
+      <div className="flex items-baseline gap-2">
+        <dt className="shrink-0 text-body">{label}</dt>
+        <span aria-hidden className="leader" />
+        <dd className="shrink-0 font-mono text-mono-md text-foreground">
+          {value}
+        </dd>
+      </div>
+      {note && (
+        <p className="text-right font-sans text-[0.75rem] text-muted-foreground">
+          {note}
+        </p>
+      )}
     </div>
   );
 }
 
-function TopicTable({ rows }: { rows: TopicRow[] }) {
-  const maxPace = Math.max(...rows.map((r) => r.secondsPerAnswer ?? 0), 1);
-  const slowest = rows.filter((r) => r.secondsPerAnswer !== null).slice(0, 2);
+const th = "smallcaps h-9 pb-1.5 align-bottom font-normal text-[0.9375rem]";
+const td = "h-12 border-b border-foreground/[0.12]";
+
+/** Best per topic: the sprint best, else the speedrun best. */
+function topicBest(
+  topicId: string,
+  bests: { modeId: string; mode: GameMode; best: BestEntry }[],
+) {
   return (
-    <ol className="flex flex-col overflow-hidden rounded-lg border bg-card">
-      {rows.map((r) => {
-        const isSlow = slowest.includes(r) && rows.length > 2;
-        const width = r.secondsPerAnswer ? (r.secondsPerAnswer / maxPace) * 100 : 0;
-        return (
-          <li
-            key={r.topicId}
-            className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-2 border-b px-4 py-3 last:border-b-0 sm:px-5 md:grid-cols-[minmax(0,14rem)_minmax(0,1fr)_5rem_9rem]"
+    bests.find((b) => b.modeId === `${topicId}:sprint`) ??
+    bests.find((b) => b.modeId === `${topicId}:speedrun`) ??
+    null
+  );
+}
+
+function GradesTable({
+  rows,
+  bests,
+}: {
+  rows: TopicRow[];
+  bests: { modeId: string; mode: GameMode; best: BestEntry }[];
+}) {
+  return (
+    <table className="w-full table-fixed border-collapse text-body tabular-nums">
+      <caption className="sr-only">
+        Grades by topic: runs, accuracy, average seconds per correct answer and
+        personal best
+      </caption>
+      <colgroup>
+        <col />
+        <col className="hidden w-16 sm:table-column" />
+        <col className="w-[4.5rem] sm:w-24" />
+        <col className="w-[4.5rem] sm:w-24" />
+        <col className="hidden w-32 md:table-column" />
+        <col className="w-11 sm:w-24" />
+      </colgroup>
+      <thead>
+        <tr className="rule-double text-left">
+          <th scope="col" className={cn(th, "pl-1")}>
+            Topic
+          </th>
+          <th
+            scope="col"
+            className={cn(th, "hidden px-2 text-right sm:table-cell")}
           >
-            <div className="min-w-0">
-              <p className="truncate text-[0.9375rem] font-medium">{r.name}</p>
-              <p className="text-[0.75rem] tabular-nums text-muted-foreground">
-                {r.runs} {r.runs === 1 ? "run" : "runs"} · {pct(r.accuracy)} accuracy
-              </p>
-              {isSlow && (
-                <p className="text-[0.75rem] font-medium text-warning">
-                  Among your slowest
-                </p>
-              )}
-            </div>
-            <div className="col-start-1 row-start-2 flex items-center gap-3 md:col-start-auto md:row-start-auto">
-              <div
-                className="h-2 flex-1 overflow-hidden rounded-full bg-sunken"
-                aria-hidden
+            Runs
+          </th>
+          <th scope="col" className={cn(th, "px-2 text-right")}>
+            Accuracy
+          </th>
+          <th scope="col" className={cn(th, "px-2 text-right")}>
+            Avg time
+          </th>
+          <th
+            scope="col"
+            className={cn(th, "hidden px-2 text-right md:table-cell")}
+          >
+            Best
+          </th>
+          <th scope="col" className={th}>
+            <span className="sr-only">Practice</span>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((r) => {
+          const best = topicBest(r.topicId, bests);
+          return (
+            <tr key={r.topicId}>
+              <td className={cn(td, "min-w-0 py-2 pl-1 pr-2")}>
+                <span className="block truncate font-serif font-bold">
+                  {r.name}
+                </span>
+                <span className="block font-sans text-[0.75rem] text-muted-foreground sm:hidden">
+                  {r.runs} {r.runs === 1 ? "run" : "runs"}
+                </span>
+              </td>
+              <td
+                className={cn(
+                  td,
+                  "hidden px-2 text-right font-mono text-mono-sm text-muted-foreground sm:table-cell",
+                )}
               >
-                <div
-                  className={cn(
-                    "h-full rounded-full",
-                    isSlow ? "bg-warning" : "bg-foreground/70",
-                  )}
-                  style={{ width: `${width}%` }}
-                />
-              </div>
-            </div>
-            <p className="text-right font-mono text-[0.9375rem] tabular-nums md:order-none">
-              {r.secondsPerAnswer !== null ? r.secondsPerAnswer.toFixed(1) : "—"}
-              <span className="ml-0.5 text-[0.75rem] text-muted-foreground">s</span>
-              <span className="sr-only"> per correct answer</span>
-            </p>
-            <div className="col-start-2 row-start-2 flex items-center justify-end md:col-start-auto md:row-start-auto">
-              {r.practiceModeId ? (
-                <Button
-                  asChild
-                  variant={isSlow ? "outline" : "ghost"}
-                  size="sm"
-                  className="pointer-coarse:h-10"
-                >
+                {r.runs}
+              </td>
+              <td className={cn(td, "px-2 text-right font-mono text-mono-md")}>
+                {pct(r.accuracy)}
+              </td>
+              <td
+                className={cn(
+                  td,
+                  "whitespace-nowrap px-2 text-right font-mono text-mono-md",
+                )}
+              >
+                {secs(r.secondsPerAnswer)}
+                <span className="sr-only"> per correct answer</span>
+              </td>
+              <td
+                className={cn(
+                  td,
+                  "hidden whitespace-nowrap px-2 text-right md:table-cell",
+                )}
+              >
+                {best ? (
+                  <span className="font-mono text-mono-md">
+                    {formatScore(best.mode.spec, best.best.score)}
+                    <span className="ml-1.5 font-sans text-[0.75rem] text-muted-foreground">
+                      {best.mode.format === "sprint" ? "sprint" : "speedrun"}
+                    </span>
+                  </span>
+                ) : (
+                  <span className="font-mono text-muted-foreground">—</span>
+                )}
+              </td>
+              <td className={cn(td, "pl-1 text-right")}>
+                {r.practiceModeId ? (
                   <Link
                     to={`/play?mode=${encodeURIComponent(r.practiceModeId)}`}
                     aria-label={`Practice ${r.name}`}
+                    className="link inline-flex min-h-11 items-center font-sans text-[0.8125rem] sm:min-h-0"
                   >
-                    Practice this
+                    <span className="hidden sm:inline">Practice</span>
+                    <ArrowRight aria-hidden className="size-4 sm:hidden" />
                   </Link>
-                </Button>
-              ) : null}
-            </div>
-          </li>
-        );
-      })}
-    </ol>
+                ) : null}
+              </td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
   );
 }
+
+function Remarks({ remark }: { remark: Remark | null }) {
+  return (
+    <div className="flex flex-col gap-1.5 bg-tint/60 px-4 py-3.5 sm:px-5">
+      <p className="smallcaps text-[0.9375rem] text-primary">Remarks</p>
+      {remark ? (
+        <p className="font-serif text-body italic text-foreground text-pretty">
+          Strongest in{" "}
+          <span className="font-bold not-italic">{remark.strong.name}</span>:{" "}
+          {pct(remark.strong.accuracy)} accurate,{" "}
+          {secs(remark.strong.secondsPerAnswer)} per answer. Weakest in{" "}
+          <span className="font-bold not-italic">{remark.weak.name}</span>:{" "}
+          {pct(remark.weak.accuracy)} accurate,{" "}
+          {secs(remark.weak.secondsPerAnswer)} per answer
+          {remark.by === "pace" ? " (level on accuracy, slower)" : ""}.{" "}
+          {remark.weak.practiceModeId && (
+            <Link
+              className="link not-italic"
+              to={`/play?mode=${encodeURIComponent(remark.weak.practiceModeId)}`}
+            >
+              Practise {remark.weak.name}
+            </Link>
+          )}
+        </p>
+      ) : (
+        <p className="font-serif text-body italic text-muted-foreground text-pretty">
+          None yet. Remarks compare your topics once you’ve played at least two
+          of them twice or more.
+        </p>
+      )}
+    </div>
+  );
+}
+
+function BestsTable({
+  rows,
+}: {
+  rows: { modeId: string; mode: GameMode; best: BestEntry }[];
+}) {
+  return (
+    <table className="w-full table-fixed border-collapse text-body tabular-nums">
+      <caption className="sr-only">Personal best per mode</caption>
+      <colgroup>
+        <col />
+        <col className="w-[6.5rem] sm:w-28" />
+        <col className="hidden w-24 sm:table-column" />
+        <col className="hidden w-32 md:table-column" />
+        <col className="w-12" />
+      </colgroup>
+      <thead>
+        <tr className="rule-double text-left">
+          <th scope="col" className={cn(th, "pl-1")}>
+            Mode
+          </th>
+          <th scope="col" className={cn(th, "px-2 text-right")}>
+            Best
+          </th>
+          <th
+            scope="col"
+            className={cn(th, "hidden px-2 text-right sm:table-cell")}
+          >
+            Accuracy
+          </th>
+          <th
+            scope="col"
+            className={cn(th, "hidden px-2 text-right md:table-cell")}
+          >
+            Set
+          </th>
+          <th scope="col" className={th}>
+            <span className="sr-only">Play</span>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map(({ modeId, mode, best }) => (
+          <tr key={modeId}>
+            <td className={cn(td, "min-w-0 py-2 pl-1 pr-2")}>
+              <span className="block text-pretty leading-snug">
+                {mode.name}
+              </span>
+            </td>
+            <td
+              className={cn(
+                td,
+                "whitespace-nowrap px-2 text-right font-mono text-mono-md",
+              )}
+            >
+              {formatScore(mode.spec, best.score)}
+            </td>
+            <td
+              className={cn(
+                td,
+                "hidden px-2 text-right font-mono text-mono-sm text-muted-foreground sm:table-cell",
+              )}
+            >
+              {pct(best.accuracy)}
+            </td>
+            <td
+              className={cn(
+                td,
+                "hidden whitespace-nowrap px-2 text-right font-mono text-mono-sm text-muted-foreground md:table-cell",
+              )}
+            >
+              {formatDate(best.endedAt)}
+            </td>
+            <td className={cn(td, "text-right")}>
+              <Button
+                asChild
+                variant="ghost"
+                size="icon"
+                aria-label={`Play ${mode.name}`}
+              >
+                <Link to={`/play?mode=${encodeURIComponent(modeId)}`}>
+                  <Play />
+                </Link>
+              </Button>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+/** Ruled lines in the book's blue, like exercise paper. */
+const ruledRow = "border-b border-[rgb(var(--ruled)/0.28)]";
 
 function RecentRuns({ runs }: { runs: RunRecord[] }) {
   const [count, setCount] = useState(10);
@@ -462,7 +783,6 @@ function RecentRuns({ runs }: { runs: RunRecord[] }) {
     return (
       <EmptyState
         size="sm"
-        icon={<History />}
         title="No runs yet"
         description="Finished runs appear here, newest first."
       />
@@ -472,57 +792,71 @@ function RecentRuns({ runs }: { runs: RunRecord[] }) {
   const shown = runs.slice(0, count);
   return (
     <div className="flex flex-col gap-3">
-      <div className="overflow-hidden rounded-lg border bg-card">
-        <table className="w-full table-fixed border-collapse text-body-sm tabular-nums">
-          <caption className="sr-only">Recent runs, newest first</caption>
-          <colgroup>
-            <col className="hidden w-36 sm:table-column" />
-            <col />
-            <col className="w-[7.25rem] sm:w-32" />
-            <col className="hidden w-24 sm:table-column" />
-          </colgroup>
-          <thead className="bg-sunken/60">
-            <tr className="border-b border-border-strong text-left text-[0.75rem] font-medium text-muted-foreground">
-              <th scope="col" className="hidden h-10 pl-5 sm:table-cell">When</th>
-              <th scope="col" className="h-10 pl-4 pr-2 sm:pl-2">Mode</th>
-              <th scope="col" className="h-10 px-3 text-right">Score</th>
-              <th scope="col" className="hidden h-10 pr-5 text-right sm:table-cell">Accuracy</th>
-            </tr>
-          </thead>
-          <tbody>
-            {shown.map((r) => {
-              const mode = getMode(r.modeId);
-              const spec = mode?.spec ?? FORMATS[r.format];
-              return (
-                <tr key={r.id} className="border-b last:border-b-0">
-                  <td className="hidden h-12 pl-5 text-[0.8125rem] text-muted-foreground sm:table-cell">
-                    <time dateTime={new Date(r.endedAt).toISOString()} title={formatDateTime(r.endedAt)}>
-                      {relativeTime(r.endedAt, now)}
-                    </time>
-                  </td>
-                  <td className="h-12 min-w-0 py-2 pl-4 pr-2 sm:pl-2">
-                    <span className="block text-pretty leading-snug">{modeLabel(r.modeId, r.format)}</span>
-                    <span className="block text-[0.75rem] text-muted-foreground">
-                      <span className="sm:hidden">{relativeTime(r.endedAt, now)}</span>
-                      {r.completed === false && (
-                        <>
-                          <span className="sm:hidden"> · </span>Quit early
-                        </>
-                      )}
-                    </span>
-                  </td>
-                  <td className="h-12 whitespace-nowrap px-3 text-right font-mono text-[0.875rem]">
-                    {formatScore(spec, r.score)}
-                  </td>
-                  <td className="hidden h-12 pr-5 text-right font-mono text-[0.8125rem] text-muted-foreground sm:table-cell">
-                    {pct(r.accuracy)}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+      <table className="w-full table-fixed border-collapse text-body tabular-nums">
+        <caption className="sr-only">Recent runs, newest first</caption>
+        <colgroup>
+          <col className="hidden w-36 sm:table-column" />
+          <col />
+          <col className="w-[6.5rem] sm:w-28" />
+          <col className="hidden w-24 sm:table-column" />
+        </colgroup>
+        <thead>
+          <tr className={cn(ruledRow, "text-left")}>
+            <th scope="col" className={cn(th, "hidden pl-1 sm:table-cell")}>
+              When
+            </th>
+            <th scope="col" className={cn(th, "pl-1 pr-2 sm:pl-2")}>
+              Mode
+            </th>
+            <th scope="col" className={cn(th, "px-2 text-right")}>
+              Score
+            </th>
+            <th
+              scope="col"
+              className={cn(th, "hidden pr-1 text-right sm:table-cell")}
+            >
+              Accuracy
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {shown.map((r) => {
+            const mode = getMode(r.modeId);
+            const spec = mode?.spec ?? FORMATS[r.format];
+            return (
+              <tr key={r.id} className={ruledRow}>
+                <td className="hidden h-11 pl-1 font-mono text-mono-sm text-muted-foreground sm:table-cell">
+                  <time
+                    dateTime={new Date(r.endedAt).toISOString()}
+                    title={formatDateTime(r.endedAt)}
+                  >
+                    {relativeTime(r.endedAt, now)}
+                  </time>
+                </td>
+                <td className="h-11 min-w-0 py-1.5 pl-1 pr-2 sm:pl-2">
+                  <span className="block text-pretty leading-snug">
+                    {modeLabel(r.modeId, r.format)}
+                    {r.completed === false && (
+                      <span className="smallcaps ml-2 text-[0.875rem]">
+                        quit early
+                      </span>
+                    )}
+                  </span>
+                  <span className="block font-mono text-[0.75rem] text-muted-foreground sm:hidden">
+                    {relativeTime(r.endedAt, now)}
+                  </span>
+                </td>
+                <td className="h-11 whitespace-nowrap px-2 text-right font-mono text-mono-md">
+                  {formatScore(spec, r.score)}
+                </td>
+                <td className="hidden h-11 pr-1 text-right font-mono text-mono-sm text-muted-foreground sm:table-cell">
+                  {pct(r.accuracy)}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
       {runs.length > count && (
         <Button
           variant="ghost"
@@ -536,13 +870,16 @@ function RecentRuns({ runs }: { runs: RunRecord[] }) {
   );
 }
 
-function ListSkeleton({ rows }: { rows: number }) {
+function LedgerSkeleton({ rows }: { rows: number }) {
   return (
-    <div className="overflow-hidden rounded-lg border bg-card" aria-hidden>
+    <div aria-hidden>
       {Array.from({ length: rows }, (_, i) => (
-        <div key={i} className="flex h-14 items-center gap-4 border-b px-4 last:border-b-0 sm:px-5">
-          <Skeleton className="h-3.5 w-32" />
-          <Skeleton className="ml-auto h-3.5 w-16" />
+        <div
+          key={i}
+          className="flex h-11 items-center gap-4 border-b border-foreground/[0.12] px-1"
+        >
+          <Skeleton className="h-3 w-32 rounded-sm" />
+          <Skeleton className="ml-auto h-3 w-14 rounded-sm" />
         </div>
       ))}
     </div>

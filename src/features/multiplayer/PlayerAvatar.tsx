@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import { initials } from "./names";
 
-/** Initials chip. Decorative: the name is always written next to it. */
+/** Initials, set in typewriter. Decorative: the name is always written next to it. */
 export function PlayerAvatar({
   name,
   you,
@@ -17,12 +17,12 @@ export function PlayerAvatar({
     <span
       aria-hidden
       className={cn(
-        "flex shrink-0 items-center justify-center rounded-full border font-mono font-medium",
+        "flex shrink-0 items-center justify-center rounded-sm border font-mono font-medium",
         size === "md" ? "size-9 text-[0.75rem]" : "size-7 text-[0.6875rem]",
         you
-          ? "border-primary/50 bg-primary/10 text-foreground"
-          : "border-border-strong bg-sunken text-foreground",
-        muted && "border-dashed bg-transparent text-muted-foreground",
+          ? "border-primary/60 text-foreground"
+          : "border-foreground/30 text-foreground",
+        muted && "border-dashed text-muted-foreground",
       )}
     >
       {initials(name)}
@@ -30,16 +30,20 @@ export function PlayerAvatar({
   );
 }
 
-/** The "You" marker shown next to the current player's name everywhere. */
+/**
+ * The "you" marker next to the current player's name: a small-caps word in
+ * the spot colour, the way a register marks its own line. Screen readers hear
+ * "(you)".
+ */
 export function YouTag({ className }: { className?: string }) {
   return (
     <span
       className={cn(
-        "inline-flex h-5 shrink-0 items-center rounded-sm bg-foreground px-1.5 text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-background",
+        "shrink-0 font-serif text-[0.9375rem] font-medium leading-none tracking-[0.06em] text-primary [font-variant-caps:all-small-caps]",
         className,
       )}
     >
-      You
+      <span className="sr-only">(</span>you<span className="sr-only">)</span>
     </span>
   );
 }

@@ -8,7 +8,7 @@ Based Math Game drills number-base conversion (zetamac-style: the answer submits
 
 ## Stack
 
-React 19 + TypeScript + Vite 8; Tailwind CSS 3 with CSS-variable tokens and Radix primitives (shadcn-style wrappers in `src/components/ui`); Framer Motion; React Router 7 (`createBrowserRouter`, every route lazy except Home); Firebase 12 (Auth, Realtime Database, Firestore, Hosting, optional App Check). Self-hosted variable fonts via `@fontsource-variable` (Newsreader, Schibsted Grotesk, Martian Mono). Vitest for unit and rules tests.
+React 19 + TypeScript + Vite 8; Tailwind CSS 3 with CSS-variable tokens and Radix primitives (shadcn-style wrappers in `src/components/ui`); Framer Motion; React Router 7 (`createBrowserRouter`, every route lazy except Home); Firebase 12 (Auth, Realtime Database, Firestore, Hosting, optional App Check). Self-hosted Computer Modern subsets in `src/styles/fonts` (BM Serif, BM Concrete, BM Sans, BM Typewriter; OFL; built by `scripts/fonts/subset.py`, which also dots the typewriter zero). Vitest for unit and rules tests.
 
 ## Layout
 
@@ -29,13 +29,14 @@ React 19 + TypeScript + Vite 8; Tailwind CSS 3 with CSS-variable tokens and Radi
 
 ## Routes
 
-`/` Home · `/play` hub (`?mode=<id>`, `?mode=custom&c=…`, `?panel=settings`) · `/play/:modeId` run screen (immersive) · `/daily` · `/results` · `/learn` (anchors per topic) · `/how-to-play` · `/leaderboard` (`?mode=`) · `/stats` · `/profile`, `/profile/settings`, `/profile/game-settings` · `/login`, `/signup` (`?next=` same-origin only) · `/multiplayer`, `/multiplayer/create` (`?mode=`), `/multiplayer/join`, `/multiplayer/join/:code`, `/join/:code`, `/multiplayer/lobby/:roomId` · `/about`, `/privacy`, `/terms`. Redirects: `/singleplayer`, `/quiz` → `/play`; `/settings` → `/play?panel=settings`; `/tutorials` → `/learn`; `/multiplayer/game|results/:id` → lobby.
+`/` the workbook cover (Play/Enter starts `useStartTarget()`: last mode, else `nibbles:practice`) · `/play` contents (hub) (`?mode=<id>`, `?mode=custom&c=…`, `?panel=settings`) · `/play/:modeId` run screen (immersive) · `/daily` · `/results` · `/learn` (anchors per topic) · `/how-to-play` · `/leaderboard` (`?mode=`) · `/stats` · `/profile`, `/profile/settings`, `/profile/game-settings` · `/login`, `/signup` (`?next=` same-origin only) · `/multiplayer`, `/multiplayer/create` (`?mode=`), `/multiplayer/join`, `/multiplayer/join/:code`, `/join/:code`, `/multiplayer/lobby/:roomId` · `/about`, `/privacy`, `/terms`. Redirects: `/singleplayer`, `/quiz` → `/play`; `/settings` → `/play?panel=settings`; `/tutorials` → `/learn`; `/multiplayer/game|results/:id` → lobby.
 
 ## Modes
 
 - Ids: `${topicId}:sprint`, `${topicId}:speedrun`, `${topicId}:practice`, `survival`, `daily:YYYY-MM-DD` (UTC), `custom` (config travels separately).
 - Topics: `nibbles`, `powers` (foundations); `bytes-bin`, `bytes-hex`, `octal`, `mixed` (core); `words`, `twos`, `bitwise`, `binary-add` (advanced); `applied` (colors & ASCII); `custom`.
 - Ranked: every topic × {sprint, speedrun} (22), `survival`, and each daily. Practice and custom are never ranked.
+- Daily sheet number: `dailyNumber(date)` counts from `DAILY_EPOCH` (2026-10-09 is No. 1). Display only; it never feeds the question stream.
 - Sprint 60 000 ms, higher is better. Speedrun 15 correct, lower ms is better, +5 000 ms per skip. Daily 10 questions, lower ms, +10 000 ms per skip, one ranked attempt. Survival 3 lives, per-question clock `max(5000, 15000 − 200·i)` plus allowances.
 
 ## Invariants (read before changing)

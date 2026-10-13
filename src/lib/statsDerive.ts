@@ -33,12 +33,12 @@ export function dayStreak(
 ): { current: number; playedToday: boolean } {
   const days = new Set(runs.map((r) => localDayKey(r.endedAt)));
   const playedToday = days.has(localDayKey(now));
-  let cursor = playedToday ? now : now - DAY_MS;
   let current = 0;
-  // Walk back day by day; noon avoids DST edge cases.
-  const noon = new Date(cursor);
+  // Walk back day by day from noon, which avoids DST edge cases (a 23-hour
+  // day would otherwise be skipped by "now minus 24 hours").
+  const noon = new Date(now);
   noon.setHours(12, 0, 0, 0);
-  cursor = noon.getTime();
+  let cursor = playedToday ? noon.getTime() : noon.getTime() - DAY_MS;
   while (days.has(localDayKey(cursor))) {
     current += 1;
     cursor -= DAY_MS;
@@ -165,7 +165,9 @@ export function paceTrend(runs: RunRecord[], n = 30): PacePoint[] {
   return runs
     .filter(
       (r) =>
-        r.format !== "practice" && r.durationMs >= 5_000 && r.completed !== false,
+        r.format !== "practice" &&
+        r.durationMs >= 5_000 &&
+        r.completed !== false,
     )
     .slice(0, n)
     .map((r) => ({

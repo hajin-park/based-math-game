@@ -1,5 +1,3 @@
-import { Play } from "lucide-react";
-
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,8 +8,9 @@ import {
 import { Kbd } from "@/components/ui/kbd";
 
 /**
- * Pause overlay for the run screen. The clock is stopped and the question is
- * hidden while it is open. Resume has focus, so Enter or Escape resumes.
+ * Pause: a sheet laid over the exercise page. The clock is stopped and the
+ * question is hidden while it is open. Resume has focus, so Enter or Escape
+ * resumes.
  */
 export function PauseOverlay({
   open,
@@ -28,7 +27,7 @@ export function PauseOverlay({
     <Dialog open={open} onOpenChange={(o) => !o && onResume()}>
       <DialogContent
         hideClose
-        className="max-w-sm gap-6 text-center"
+        className="paper-sheet max-w-sm gap-0 rounded-sm border-0 p-0 data-[state=open]:animate-sheet-in"
         onCloseAutoFocus={(e) => {
           // The game surface was hidden while paused; put the caret back in
           // the answer field once it is visible again.
@@ -46,33 +45,36 @@ export function PauseOverlay({
           )?.focus();
         }}
       >
-        <div className="flex flex-col items-center gap-2">
-          <p className="eyebrow">Clock stopped</p>
-          <DialogTitle className="font-serif text-headline font-medium">
-            Paused
-          </DialogTitle>
-          <DialogDescription className="text-body-sm text-muted-foreground text-pretty">
-            {practice
-              ? "Leaving ends this practice session without saving it."
-              : "Leaving ends this run. It is not saved or ranked."}
-          </DialogDescription>
-        </div>
-        <div className="flex flex-col gap-2">
-          <Button id="pause-resume" size="lg" onClick={onResume}>
-            <Play aria-hidden />
-            Resume
-            <Kbd
-              size="sm"
-              tone="inverse"
-              className="hidden pointer-fine:inline-flex"
-              aria-hidden
-            >
-              Esc
-            </Kbd>
-          </Button>
-          <Button size="lg" variant="ghost" onClick={onLeave}>
-            Leave run
-          </Button>
+        <div className="flex flex-col gap-5 p-6 sm:p-7">
+          <p className="smallcaps border-b border-foreground/20 pb-2">
+            Clock stopped
+          </p>
+          <div className="flex flex-col gap-2">
+            <DialogTitle className="font-serif text-headline font-bold">
+              Paused
+            </DialogTitle>
+            <DialogDescription className="text-body-sm text-muted-foreground text-pretty">
+              {practice
+                ? "Quitting ends this practice session without saving it."
+                : "Quitting ends this run. It is not saved or ranked."}
+            </DialogDescription>
+          </div>
+          <div className="flex flex-col gap-2 pt-1">
+            <Button id="pause-resume" size="lg" onClick={onResume}>
+              Resume
+              <Kbd
+                size="sm"
+                tone="inverse"
+                className="ml-auto hidden pointer-fine:inline-flex"
+                aria-hidden
+              >
+                Esc
+              </Kbd>
+            </Button>
+            <Button size="lg" variant="ghost" onClick={onLeave}>
+              Quit
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

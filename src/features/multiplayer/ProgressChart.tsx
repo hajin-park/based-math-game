@@ -12,9 +12,10 @@ export interface ProgressSeries {
 }
 
 /**
- * Categorical colours by seat (fixed order, never by rank): the player is
- * always ink; others take chart-2..5 in join order, then a quiet grey.
- * chart-1 is the red pen and stays reserved for the page's main action.
+ * Inks by seat (fixed order, never by rank): the player is always solid black
+ * ink (white chalk at night); the others take the book's printing inks (teal,
+ * moss, plum, ochre) in join order, then pencil. Each line also gets its own
+ * dash, so the lines stay apart without colour.
  */
 const SERIES_COLORS = [
   "rgb(var(--chart-2))",
@@ -22,7 +23,8 @@ const SERIES_COLORS = [
   "rgb(var(--chart-4))",
   "rgb(var(--chart-5))",
 ];
-const OVERFLOW_COLOR = "rgb(var(--muted-foreground) / 0.55)";
+const SERIES_DASHES = ["6 3", "2 3", "9 3 2 3", "1 0"];
+const OVERFLOW_COLOR = "rgb(var(--muted-foreground) / 0.7)";
 const YOU_COLOR = "rgb(var(--foreground))";
 
 function niceStep(range: number, target: number): number {
@@ -79,14 +81,15 @@ export function ProgressChart({
 
   const colored = useMemo(() => {
     let i = 0;
-    return series.map((s) => ({
-      ...s,
-      color: s.you
-        ? YOU_COLOR
-        : i < SERIES_COLORS.length
-          ? SERIES_COLORS[i++]
-          : (i++, OVERFLOW_COLOR),
-    }));
+    return series.map((s) => {
+      if (s.you) return { ...s, color: YOU_COLOR, dash: undefined };
+      const k = i++;
+      return {
+        ...s,
+        color: k < SERIES_COLORS.length ? SERIES_COLORS[k] : OVERFLOW_COLOR,
+        dash: SERIES_DASHES[k % SERIES_DASHES.length],
+      };
+    });
   }, [series]);
 
   const height = 220;
@@ -142,12 +145,24 @@ export function ProgressChart({
     <figure className={cn("flex flex-col gap-3", className)}>
       <div ref={box} className="relative w-full">
         {width > 0 && (
+          <div
+            aria-hidden
+            className="grid-paper pointer-events-none absolute"
+            style={{
+              left: pad.left,
+              top: pad.top,
+              width: w,
+              height: h,
+            }}
+          />
+        )}
+        {width > 0 && (
           <svg
             width={width}
             height={height}
             role="img"
             aria-labelledby={titleId}
-            className="block touch-pan-y select-none"
+            className="relative block touch-pan-y select-none"
             onPointerMove={(e) => onPointer(e.clientX, e.currentTarget)}
             onPointerDown={(e) => onPointer(e.clientX, e.currentTarget)}
             onPointerLeave={() => setHoverMs(null)}
@@ -160,11 +175,11 @@ export function ProgressChart({
             ).map((v) => (
               <g key={`y${v}`}>
                 <line
-                  x1={pad.left}
-                  x2={pad.left + w}
+                  x1={pad.left - 4}
+                  x2={pad.left}
                   y1={y(v)}
                   y2={y(v)}
-                  stroke="rgb(var(--border))"
+                  stroke="rgb(var(--foreground) / 0.6)"
                   strokeWidth={1}
                 />
                 <text
@@ -182,16 +197,33 @@ export function ProgressChart({
               { length: Math.floor(total / xStep) + 1 },
               (_, i) => i * xStep,
             ).map((t) => (
-              <text
-                key={`x${t}`}
-                x={x(t)}
-                y={height - 8}
-                textAnchor="middle"
-                className="fill-muted-foreground font-mono text-[10px]"
-              >
-                {Math.round(t / 1000)}s
-              </text>
+              <g key={`x${t}`}>
+                <line
+                  x1={x(t)}
+                  x2={x(t)}
+                  y1={pad.top + h}
+                  y2={pad.top + h + 4}
+                  stroke="rgb(var(--foreground) / 0.6)"
+                  strokeWidth={1}
+                />
+                <text
+                  x={x(t)}
+                  y={height - 8}
+                  textAnchor="middle"
+                  className="fill-muted-foreground font-mono text-[10px]"
+                >
+                  {Math.round(t / 1000)} s
+                </text>
+              </g>
             ))}
+            {/* Axes: two hairlines in ink */}
+            <path
+              d={`M${pad.left},${pad.top}V${pad.top + h}H${pad.left + w}`}
+              fill="none"
+              stroke="rgb(var(--foreground) / 0.7)"
+              strokeWidth={1}
+              shapeRendering="crispEdges"
+            />
 
             {/* Others first, the player's own line on top */}
             {[...colored]
@@ -202,9 +234,10 @@ export function ProgressChart({
                   d={path(s)}
                   fill="none"
                   stroke={s.color}
-                  strokeWidth={s.you ? 2.5 : 2}
+                  strokeWidth={s.you ? 2.5 : 1.75}
+                  strokeDasharray={s.dash}
                   strokeLinejoin="round"
-                  strokeLinecap="round"
+                  strokeLinecap={s.dash ? "butt" : "round"}
                 />
               ))}
 
@@ -215,8 +248,8 @@ export function ProgressChart({
                 y={ly}
                 dy="0.32em"
                 className={cn(
-                  "fill-foreground text-[11px]",
-                  s.you && "font-semibold",
+                  "fill-foreground font-sans text-[11px]",
+                  s.you && "font-bold",
                   width <= 420 && "hidden",
                 )}
               >
@@ -240,7 +273,7 @@ export function ProgressChart({
         {hoverMs !== null && width > 0 && (
           <div
             aria-hidden
-            className="pointer-events-none absolute top-2 z-10 min-w-36 rounded-md border bg-popover px-3 py-2 text-[0.75rem] shadow-lg"
+            className="paper-sheet pointer-events-none absolute top-2 z-10 min-w-36 rounded-sm px-3 py-2 font-sans text-[0.75rem]"
             style={{
               left: Math.min(Math.max(0, x(hoverMs) + 10), width - 160),
             }}
@@ -250,10 +283,7 @@ export function ProgressChart({
             </p>
             {colored.map((s) => (
               <p key={s.uid} className="flex items-center gap-2">
-                <span
-                  className="h-0.5 w-3 rounded-full"
-                  style={{ background: s.color }}
-                />
+                <Swatch color={s.color} dash={s.dash} you={s.you} />
                 <span className="flex-1 truncate">{s.name}</span>
                 <span className="font-mono tabular-nums">
                   {scoreAt(s.marks, hoverMs)}
@@ -264,15 +294,11 @@ export function ProgressChart({
         )}
       </div>
       <figcaption>
-        <ul className="flex flex-wrap gap-x-4 gap-y-1.5 text-[0.8125rem]">
+        <ul className="flex flex-wrap gap-x-5 gap-y-1.5 font-sans text-[0.8125rem]">
           {colored.map((s) => (
             <li key={s.uid} className="flex items-center gap-1.5">
-              <span
-                aria-hidden
-                className={cn("w-4 rounded-full", s.you ? "h-[3px]" : "h-0.5")}
-                style={{ background: s.color }}
-              />
-              <span className={cn(s.you && "font-semibold")}>
+              <Swatch color={s.color} dash={s.dash} you={s.you} />
+              <span className={cn(s.you && "font-bold")}>
                 {s.name}
                 {s.you && " (you)"}
               </span>
@@ -281,5 +307,30 @@ export function ProgressChart({
         </ul>
       </figcaption>
     </figure>
+  );
+}
+
+/** A short sample of a series' line for the legend and the hover slip. */
+function Swatch({
+  color,
+  dash,
+  you,
+}: {
+  color: string;
+  dash?: string;
+  you: boolean;
+}) {
+  return (
+    <svg aria-hidden width="18" height="6" className="shrink-0">
+      <line
+        x1="1"
+        x2="17"
+        y1="3"
+        y2="3"
+        stroke={color}
+        strokeWidth={you ? 2.5 : 1.75}
+        strokeDasharray={dash}
+      />
+    </svg>
   );
 }

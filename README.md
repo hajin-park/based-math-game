@@ -15,7 +15,7 @@ Live: https://based-math-game.web.app
 
 ## Stack
 
-React 19, TypeScript, Vite, Tailwind CSS with Radix UI primitives, Framer Motion, and Firebase (Authentication, Realtime Database for rooms, Firestore for profiles, history and leaderboards, Hosting). Fonts (Newsreader, Schibsted Grotesk, Martian Mono) are self-hosted.
+React 19, TypeScript, Vite, Tailwind CSS with Radix UI primitives, Framer Motion, and Firebase (Authentication, Realtime Database for rooms, Firestore for profiles, history and leaderboards, Hosting). Type is Computer Modern (subsets of Computer Modern Unicode under the OFL, self-hosted from `src/styles/fonts`; rebuild with `scripts/fonts/subset.py`).
 
 ## Project layout
 
@@ -36,7 +36,7 @@ tests/rules/       Security-rules tests for Firestore and the Realtime Database
 scripts/           Rules generator, icon and OG-image generators, contrast check
 ```
 
-`DESIGN.md` documents the design system. `RUNBOOK.md` lists the operational steps for the Firebase project. `augment.md` is a reference for agents and contributors.
+`DESIGN.md` documents the design system (the "Exercise Workbook": a two-colour school workbook by day, a chalkboard at night). `PRODUCT.md` records who the game is for and the product principles. `RUNBOOK.md` lists the operational steps for the Firebase project. `augment.md` is a reference for agents and contributors.
 
 ## Develop
 

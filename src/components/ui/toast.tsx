@@ -23,15 +23,15 @@ const ToastViewport = React.forwardRef<
 ToastViewport.displayName = ToastPrimitives.Viewport.displayName;
 
 const toastVariants = cva(
-  "group pointer-events-auto relative flex w-full items-start justify-between gap-3 overflow-hidden rounded-lg border p-4 pr-9 shadow-xl transition-[transform,opacity] data-[swipe=cancel]:translate-x-0 data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)] data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[swipe=move]:transition-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[swipe=end]:animate-out data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-right-full data-[state=open]:slide-in-from-bottom-2 data-[state=open]:fade-in-0 duration-200",
+  "group pointer-events-auto relative flex w-full items-start justify-between gap-3 overflow-hidden rounded-sm border p-4 pr-9 shadow-xl transition-[transform,opacity] data-[swipe=cancel]:translate-x-0 data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)] data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[swipe=move]:transition-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[swipe=end]:animate-out data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-right-full data-[state=open]:slide-in-from-bottom-2 data-[state=open]:fade-in-0 duration-200",
   {
     variants: {
       variant: {
-        default: "border bg-popover text-popover-foreground",
+        default: "border-border-strong bg-popover text-popover-foreground",
         success:
-          "success group border-success/30 bg-popover text-popover-foreground shadow-[inset_3px_0_0_rgb(var(--success)),0_24px_56px_-16px_rgb(var(--shadow)/0.24)]",
+          "success group border-success/50 bg-popover text-popover-foreground [&_[data-toast-title]]:text-success",
         destructive:
-          "destructive group border-destructive/30 bg-popover text-popover-foreground shadow-[inset_3px_0_0_rgb(var(--destructive)),0_24px_56px_-16px_rgb(var(--shadow)/0.24)]",
+          "destructive group border-pen/50 bg-popover text-popover-foreground [&_[data-toast-title]]:text-pen",
       },
     },
     defaultVariants: {
@@ -95,7 +95,8 @@ const ToastTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <ToastPrimitives.Title
     ref={ref}
-    className={cn("text-[0.9375rem] font-semibold leading-snug", className)}
+    data-toast-title=""
+    className={cn("font-serif text-[1rem] font-bold leading-snug", className)}
     {...props}
   />
 ));

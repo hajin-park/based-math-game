@@ -1,11 +1,17 @@
+/**
+ * "/login" — the library card: sign in with Google or email, reset a
+ * password, or go back to playing as a guest.
+ */
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { warmUpGoogleSignIn } from "@/lib/googleAuth";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Loader2, MailCheck } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { PageHeader } from "@/components/ui/page-header";
+import { PenTick } from "@/components/ui/pen-mark";
 import {
+  AuthCard,
+  CardNote,
   Field,
   FormError,
   GoogleButton,
@@ -117,29 +123,29 @@ export default function Login() {
     }
   };
 
+  const backToSignIn = () => {
+    setMode("signin");
+    setResetSentTo(null);
+    setError(null);
+    setFieldErrors({});
+  };
+
   // Already signed in with a real account.
   if (!loading && user && !isGuest) {
     return (
-      <div className="container flex max-w-md flex-col gap-8 py-12 md:py-20">
-        <PageHeader
-          eyebrow="Account"
-          title={
-            <>
-              You’re <em>signed in</em>
-            </>
-          }
-          lede={
-            <>
-              Signed in as{" "}
-              <span className="font-medium text-foreground">
-                {user.displayName || user.email}
-              </span>
-              .
-            </>
-          }
-          size="sm"
-        />
-        <div className="flex flex-col gap-3">
+      <AuthCard
+        title="You’re signed in"
+        lede={
+          <>
+            Signed in as{" "}
+            <span className="font-mono text-foreground">
+              {user.displayName || user.email}
+            </span>
+            .
+          </>
+        }
+      >
+        <div className="flex flex-col gap-2">
           <Button asChild size="lg" className="w-full">
             <Link to={next}>Continue</Link>
           </Button>
@@ -151,53 +157,41 @@ export default function Login() {
             Sign out and use another account
           </Button>
         </div>
-      </div>
+      </AuthCard>
     );
   }
 
   if (mode === "reset") {
     return (
-      <div className="container flex max-w-md flex-col gap-8 py-12 md:py-20">
-        <PageHeader
-          eyebrow="Account"
-          title={
-            <>
-              Reset your <em>password</em>
-            </>
-          }
-          lede="Enter the email you signed up with and we’ll send you a link to choose a new password."
-          size="sm"
-        />
-        {resetSentTo ? (
-          <div
-            role="status"
-            className="flex flex-col gap-4 rounded-lg border bg-card p-5"
+      <AuthCard
+        title="Reset your password"
+        lede="Enter the email you signed up with and we’ll send a link to choose a new password."
+        foot={
+          <button
+            type="button"
+            className="link inline-flex items-center gap-1.5 self-start pointer-coarse:py-2"
+            onClick={backToSignIn}
           >
-            <MailCheck className="size-5 text-success" aria-hidden />
-            <div className="flex flex-col gap-1.5">
-              <p className="text-title-sm font-semibold">Check your inbox</p>
-              <p className="text-body-sm text-muted-foreground text-pretty">
-                If an account exists for{" "}
-                <span className="font-medium text-foreground">
-                  {resetSentTo}
-                </span>
-                , a reset link is on its way. It can take a few minutes; check
-                your spam folder too.
-              </p>
-            </div>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setMode("signin");
-                setResetSentTo(null);
-              }}
-            >
-              <ArrowLeft aria-hidden />
-              Back to sign in
-            </Button>
+            <ArrowLeft aria-hidden className="size-3.5" />
+            Back to sign in
+          </button>
+        }
+      >
+        {resetSentTo ? (
+          <div role="status" className="flex flex-col gap-2">
+            <p className="flex items-center gap-2 font-serif text-title-sm font-bold">
+              <PenTick className="size-5" />
+              Check your inbox
+            </p>
+            <p className="text-body-sm text-muted-foreground text-pretty">
+              If an account exists for{" "}
+              <span className="font-mono text-foreground">{resetSentTo}</span>,
+              a reset link is on its way. It can take a few minutes; check your
+              spam folder too.
+            </p>
           </div>
         ) : (
-          <form className="flex flex-col gap-5" onSubmit={onReset} noValidate>
+          <form className="flex flex-col gap-6" onSubmit={onReset} noValidate>
             <FormError message={error} />
             <Field
               id="email"
@@ -223,45 +217,42 @@ export default function Login() {
               )}
               Send reset link
             </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => {
-                setMode("signin");
-                setError(null);
-                setFieldErrors({});
-              }}
-            >
-              <ArrowLeft aria-hidden />
-              Back to sign in
-            </Button>
           </form>
         )}
-      </div>
+      </AuthCard>
     );
   }
 
   return (
-    <div className="container flex max-w-md flex-col gap-8 py-12 md:py-20">
-      <PageHeader
-        eyebrow="Account"
-        title={
-          <>
-            Welcome <em>back</em>
-          </>
-        }
-        lede="Sign in to keep your runs, stats and leaderboard places across devices."
-        size="sm"
-      />
-
-      <div className="flex flex-col gap-5">
+    <AuthCard
+      title="Sign in"
+      lede="Keep your runs, stats and leaderboard places on every device."
+      foot={
+        <>
+          <p>
+            New here?{" "}
+            <Link className="link" to={signupHref}>
+              Create an account
+            </Link>
+          </p>
+          <p>
+            Or{" "}
+            <Link className="link" to="/play">
+              play as a guest
+            </Link>
+            ; everything works without an account.
+          </p>
+        </>
+      }
+    >
+      <div className="flex flex-col gap-6">
         <GoogleButton
           onClick={onGoogle}
           busy={busy === "google"}
           disabled={busy !== null}
         />
         <OrRule />
-        <form className="flex flex-col gap-5" onSubmit={onSignIn} noValidate>
+        <form className="flex flex-col gap-6" onSubmit={onSignIn} noValidate>
           <FormError message={error} />
           <Field
             id="email"
@@ -285,7 +276,7 @@ export default function Login() {
             labelAside={
               <button
                 type="button"
-                className="link text-[0.8125rem] pointer-coarse:py-2"
+                className="link font-sans text-[0.8125rem] pointer-coarse:py-2"
                 onClick={() => {
                   setMode("reset");
                   setError(null);
@@ -299,7 +290,7 @@ export default function Login() {
           <Button
             type="submit"
             size="lg"
-            className="w-full"
+            className="mt-1 w-full"
             disabled={busy !== null}
             aria-busy={busy === "email" || undefined}
           >
@@ -311,9 +302,9 @@ export default function Login() {
         </form>
 
         {guestRuns > 0 && (
-          <p className="rounded-lg border bg-card px-4 py-3 text-body-sm text-muted-foreground text-pretty">
+          <CardNote>
             You have{" "}
-            <span className="font-medium text-foreground">
+            <span className="font-mono text-foreground">
               {guestRuns} {guestRuns === 1 ? "run" : "runs"}
             </span>{" "}
             saved as a guest on this device. Signing in to an existing account
@@ -322,22 +313,9 @@ export default function Login() {
               create an account
             </Link>{" "}
             to keep them.
-          </p>
+          </CardNote>
         )}
-
-        <p className="text-center text-body-sm text-muted-foreground">
-          New here?{" "}
-          <Link className="link" to={signupHref}>
-            Create an account
-          </Link>
-          <span className="mx-2" aria-hidden>
-            ·
-          </span>
-          <Link className="link" to="/play">
-            Keep playing as a guest
-          </Link>
-        </p>
       </div>
-    </div>
+    </AuthCard>
   );
 }

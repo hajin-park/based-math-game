@@ -1,422 +1,464 @@
-# Based Math Game — Design System
-
-**Concept: the engineer's notebook.** A typeset lab notebook: warm paper,
-hairline rules, a teacher's red pen, graph paper where numbers live, and
-instrument-grade numerals. Numbers are the hero; everything else steps back.
-
-This document is the contract for every page. If something you need is not
-here, add it here first (tokens → primitive → page), never inline a one-off.
-
-- Tokens: [`src/index.css`](src/index.css) (CSS variables) + [`tailwind.config.js`](tailwind.config.js)
-- Fonts: [`src/styles/fonts.css`](src/styles/fonts.css), preloaded by the `preload-fonts` plugin in [`vite.config.ts`](vite.config.ts)
-- Primitives: [`src/components/ui/`](src/components/ui)
-- Base metadata: [`src/lib/bases.ts`](src/lib/bases.ts)
-- Contrast check: `node scripts/check-contrast.mjs`
-- Icons: `node scripts/generate-icons.mjs` (renders `public/icon.svg` + PNGs)
-
+---
+name: Based Math Game
+description: Timed number-base drills set as a bound school workbook by day and a classroom chalkboard by night.
+colors:
+  # The printed workbook (light, :root)
+  primary: "#1F4E9C"
+  primary-hover: "#183F80"
+  red-pen: "#C02F28"
+  book-paper: "#F6F1E6"
+  black-ink: "#1B1B1F"
+  fresh-sheet: "#FCFAF4"
+  index-slip: "#FDFBF6"
+  sunken-well: "#ECE5D6"
+  blue-screen-tint: "#E1E7EE"
+  hover-wash: "#EAE3D3"
+  hairline-rule: "#DDD4C2"
+  strong-rule: "#BFB4A0"
+  control-outline: "#8C8373"
+  pencil: "#5E5951"
+  green-ink: "#2E6B47"
+  ochre: "#8A5A0B"
+  highlighter: "#F4D35E"
+  cover-cloth: "#1E4790"
+  cover-cloth-deep: "#16356E"
+  cover-label-muted: "#BCCAE6"
+  ink-bin-teal: "#0D6A73"
+  ink-oct-moss: "#4A6A10"
+  ink-dec-graphite: "#3F3B36"
+  ink-hex-plum: "#8B3A83"
+  # The chalkboard (dark, .dark)
+  yellow-chalk: "#F0CF68"
+  yellow-chalk-bright: "#F6DC8C"
+  red-chalk: "#F28C80"
+  chalkboard: "#1D2824"
+  white-chalk: "#E8ECE4"
+  board-panel: "#24312C"
+  board-slip: "#2A3832"
+  board-sunken: "#17201D"
+  board-tint: "#283A3D"
+  board-hover: "#2C3B35"
+  board-rule: "#34433D"
+  board-rule-strong: "#4A5C55"
+  board-control-outline: "#71857B"
+  faded-chalk: "#A5B2AA"
+  green-chalk: "#9BD39A"
+  orange-chalk: "#F2B36B"
+  chalk-bin-blue: "#86D0DA"
+  chalk-oct-green: "#B9DC8C"
+  chalk-dec-white: "#DCE2DA"
+  chalk-hex-pink: "#E9A9E0"
+typography:
+  display:
+    fontFamily: '"BM Serif", Georgia, Cambria, serif'
+    fontSize: "clamp(3.25rem, 1.9rem + 5.2vw, 6rem)"
+    fontWeight: 700
+    lineHeight: 0.95
+    letterSpacing: "-0.012em"
+  page-title:
+    fontFamily: '"BM Serif", Georgia, Cambria, serif'
+    fontSize: "clamp(2rem, 1.55rem + 1.9vw, 3rem)"
+    fontWeight: 700
+    lineHeight: 1.06
+    letterSpacing: "-0.008em"
+  headline:
+    fontFamily: '"BM Serif", Georgia, Cambria, serif'
+    fontSize: "clamp(1.5rem, 1.28rem + 0.9vw, 2.0625rem)"
+    fontWeight: 700
+    lineHeight: 1.15
+    letterSpacing: "-0.005em"
+  title:
+    fontFamily: '"BM Serif", Georgia, Cambria, serif'
+    fontSize: "1.25rem"
+    fontWeight: 700
+    lineHeight: 1.3
+    letterSpacing: "-0.003em"
+  body-lg:
+    fontFamily: '"BM Concrete", "BM Serif", Georgia, Cambria, serif'
+    fontSize: "1.1875rem"
+    fontWeight: 400
+    lineHeight: 1.6
+  body:
+    fontFamily: '"BM Concrete", "BM Serif", Georgia, Cambria, serif'
+    fontSize: "1.0625rem"
+    fontWeight: 400
+    lineHeight: 1.62
+    fontFeature: '"kern" 1, "liga" 1'
+  body-sm:
+    fontFamily: '"BM Concrete", "BM Serif", Georgia, Cambria, serif'
+    fontSize: "0.9375rem"
+    fontWeight: 400
+    lineHeight: 1.55
+  label:
+    fontFamily: '"BM Sans", ui-sans-serif, system-ui, sans-serif'
+    fontSize: "0.875rem"
+    fontWeight: 700
+    lineHeight: 1.3
+    letterSpacing: "0.01em"
+  running-head:
+    fontFamily: '"BM Serif", Georgia, Cambria, serif'
+    fontSize: "0.875rem"
+    fontWeight: 500
+    lineHeight: 1.2
+    letterSpacing: "0.06em"
+    fontFeature: "all-small-caps"
+  numeral:
+    fontFamily: '"BM Typewriter", ui-monospace, SFMono-Regular, Menlo, monospace'
+    fontSize: "1.3125rem"
+    fontWeight: 500
+    lineHeight: 1.3
+    fontFeature: '"tnum" 1'
+  numeral-answer:
+    fontFamily: '"BM Typewriter", ui-monospace, SFMono-Regular, Menlo, monospace'
+    fontSize: "clamp(1.625rem, 1.25rem + 1.4vw, 2.5rem)"
+    fontWeight: 500
+    lineHeight: 1.12
+    letterSpacing: "0.04em"
+    fontFeature: '"tnum" 1'
+  numeral-prompt:
+    fontFamily: '"BM Typewriter", ui-monospace, SFMono-Regular, Menlo, monospace'
+    fontSize: "clamp(2.25rem, 1.5rem + 3vw, 4rem)"
+    fontWeight: 500
+    lineHeight: 1.04
+    fontFeature: '"tnum" 1'
+rounded:
+  none: "0"
+  hair: "1px"
+  sm: "2px"
+  label: "3px"
+  xl: "4px"
+spacing:
+  gutter: "16px"
+  gutter-sm: "24px"
+  gutter-lg: "32px"
+  section-sm: "clamp(2.5rem, 1.75rem + 3vw, 4.5rem)"
+  section: "clamp(4rem, 2.75rem + 4.5vw, 6.5rem)"
+  nav-height: "3.5rem"
+  measure: "65ch"
+  page: "1240px"
+components:
+  button-primary:
+    backgroundColor: "{colors.black-ink}"
+    textColor: "{colors.book-paper}"
+    typography: "{typography.label}"
+    rounded: "{rounded.sm}"
+    height: "40px"
+    padding: "0 16px"
+  button-primary-hover:
+    backgroundColor: "rgb(27 27 31 / 0.85)"
+    textColor: "{colors.book-paper}"
+  button-primary-night:
+    backgroundColor: "{colors.yellow-chalk}"
+    textColor: "{colors.chalkboard}"
+    rounded: "{rounded.sm}"
+    height: "40px"
+    padding: "0 16px"
+  button-primary-night-hover:
+    backgroundColor: "{colors.yellow-chalk-bright}"
+  button-play-cover:
+    backgroundColor: "{colors.black-ink}"
+    textColor: "{colors.book-paper}"
+    rounded: "{rounded.sm}"
+    height: "64px"
+    width: "100%"
+    padding: "0 24px"
+  button-secondary:
+    backgroundColor: "{colors.blue-screen-tint}"
+    textColor: "{colors.black-ink}"
+    rounded: "{rounded.sm}"
+    height: "40px"
+    padding: "0 16px"
+  button-outline:
+    backgroundColor: "transparent"
+    textColor: "{colors.black-ink}"
+    rounded: "{rounded.sm}"
+    height: "40px"
+    padding: "0 16px"
+  button-outline-hover:
+    backgroundColor: "{colors.hover-wash}"
+  button-ghost:
+    backgroundColor: "transparent"
+    textColor: "{colors.black-ink}"
+    rounded: "{rounded.sm}"
+    height: "40px"
+    padding: "0 16px"
+  button-destructive:
+    backgroundColor: "{colors.red-pen}"
+    textColor: "#FFFFFF"
+    rounded: "{rounded.sm}"
+    height: "40px"
+    padding: "0 16px"
+  input:
+    backgroundColor: "{colors.fresh-sheet}"
+    textColor: "{colors.black-ink}"
+    rounded: "{rounded.sm}"
+    height: "40px"
+    padding: "0 12px"
+  input-answer:
+    backgroundColor: "transparent"
+    textColor: "{colors.black-ink}"
+    typography: "{typography.numeral-answer}"
+    rounded: "{rounded.none}"
+    height: "56px"
+    padding: "0 8px 4px"
+  badge:
+    backgroundColor: "{colors.blue-screen-tint}"
+    textColor: "{colors.primary}"
+    rounded: "{rounded.sm}"
+    height: "24px"
+    padding: "0 8px"
+  base-tag-hex:
+    backgroundColor: "rgb(139 58 131 / 0.1)"
+    textColor: "{colors.ink-hex-plum}"
+    rounded: "{rounded.sm}"
+    height: "24px"
+    padding: "0 8px"
+  kbd:
+    backgroundColor: "{colors.fresh-sheet}"
+    textColor: "{colors.black-ink}"
+    rounded: "{rounded.sm}"
+    height: "24px"
+    padding: "0 6px"
+  card:
+    backgroundColor: "{colors.fresh-sheet}"
+    textColor: "{colors.black-ink}"
+    rounded: "{rounded.sm}"
+    padding: "20px"
+  example-box:
+    backgroundColor: "{colors.blue-screen-tint}"
+    textColor: "{colors.black-ink}"
+    rounded: "{rounded.sm}"
+    padding: "14px 20px"
+  room-code-board:
+    backgroundColor: "{colors.chalkboard}"
+    textColor: "{colors.white-chalk}"
+    rounded: "{rounded.sm}"
+    padding: "20px 32px 24px"
 ---
 
-## 1. Principles
-
-1. **Numbers first.** A number in a base is always set in Martian Mono, tabular,
-   in its base colour, and labelled (BaseTag or row label). Never colour alone.
-2. **One red pen per view.** Vermilion (`primary`) marks the single main action,
-   the active nav item, focus and the italic accent in a headline. If two things
-   on screen are red, one of them is wrong.
-3. **Hairlines over boxes.** Divide with 1px rules and whitespace. Reach for a
-   Card only when content is a discrete object (a room, a mode, a result).
-4. **Keyboard is the fast path.** Every primary flow works without a mouse;
-   show the shortcut where the action is (`<Kbd>`), hide hints on touch.
-5. **Quiet motion.** 120–240ms, transform/opacity only, springs for things you
-   touch. Nothing moves under `prefers-reduced-motion`.
-6. **Say the specific thing.** "48 official modes", "rooms for up to 10".
-   No "amazing", no "unlock your potential", no emoji.
-
-### Research takeaways (what we borrowed, concretely)
-
-| Source                                              | Takeaway → how it shows up here                                                                                                                                                                                                                                                          |
-| --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Linear (2024 UI redesign, LCH theme generator)      | Themes generated in a perceptual space with an explicit contrast lever; fewer, quieter nav elements with higher density → our tokens are hand-tuned per mode and checked by script; nav is 4 links + 1 CTA.                                                                              |
-| Linear                                              | Increase contrast of default themes; reduce visual noise in sidebar/headers → hairline-only nav, no shadows on chrome.                                                                                                                                                                   |
-| Superhuman (command palette post)                   | Show the shortcut every time the action is offered so muscle memory forms → `Kbd` next to CTAs ("Start a sprint ↵", "Press Enter to start").                                                                                                                                             |
-| Superhuman                                          | Speed is the product; optimistic UI → no submit buttons in drills, answers advance on the last correct digit.                                                                                                                                                                            |
-| Vercel Web Interface Guidelines                     | `:focus-visible` rings everywhere, hit targets ≥24px (≥44px touch), inputs ≥16px on mobile, `theme-color` + `color-scheme` match the page, never `transition: all`, tabular numbers for comparisons, skip link, ellipsis `…` for loading, layered shadows + crisp borders, nested radii. |
-| Vercel WIG                                          | Loading states: delay ~150–300ms before showing, so fast loads never flash → `RouteFallback` waits 200ms.                                                                                                                                                                                |
-| Stripe (accessible colour systems; site typography) | Pick colours in a perceptual model, verify every pair programmatically, ship only two/three font requests, `tnum` on figures → `check-contrast.mjs`, 3 families, `.num`/`tabular-nums`.                                                                                                  |
-| Raycast                                             | Monospace keycaps quote the keyboard-first ethos; brand colour is used almost only on the signature element → `Kbd` in Martian Mono; vermilion reserved.                                                                                                                                 |
-| Awwwards typography winners (editorial sites)       | Large serif display with an italic accent word; mono overlines; generous whitespace → `display-*` scale, `.eyebrow`, `<em>` accent.                                                                                                                                                      |
-| Mobbin-style education onboarding                   | Value before sign-up; a single first action → "No sign-up needed", one CTA per fold.                                                                                                                                                                                                     |
-
----
-
-## 2. Tokens
-
-Colours are declared as **RGB channel triplets** so every Tailwind opacity
-modifier works (`bg-primary/10`, `border-base-bin/30`). In raw CSS / inline
-styles use `rgb(var(--primary))` or `rgb(var(--primary) / 0.2)` — **not**
-`hsl(var(--…))` and **not** bare `var(--primary)`.
-
-### 2.1 Colour
-
-| Token (class)                    | Light                                   | Dark                              | Use                                    |
-| -------------------------------- | --------------------------------------- | --------------------------------- | -------------------------------------- |
-| `background`                     | `#F3F0E8` paper                         | `#12110F` graphite                | page                                   |
-| `card` / `surface`               | `#FBFAF6`                               | `#1B1A17`                         | raised sheets, cards, inputs           |
-| `popover`                        | `#FCFBF8`                               | `#201F1B`                         | menus, dialogs, toasts                 |
-| `sunken`                         | `#EAE6DB`                               | `#0D0C0B`                         | wells, table headers, code             |
-| `border`                         | `#E2DDD0`                               | `#2C2A25`                         | hairlines (default for `border`)       |
-| `border-strong`                  | `#CFC8B8`                               | `#403D36`                         | dividers that must read, hover borders |
-| `input`                          | `#C9C2B1`                               | `#423F37`                         | control outlines                       |
-| `foreground`                     | `#1A1917` ink                           | `#EDE9DF`                         | text                                   |
-| `muted-foreground`               | `#6B675E`                               | `#9D988C`                         | secondary text                         |
-| `primary`                        | `#C23B1B` red pen                       | `#FF6A3D`                         | the one action, focus, accent          |
-| `primary-hover`                  | `#A93216`                               | `#FF845C`                         | hover of primary fill                  |
-| `primary-foreground`             | `#FFFFFF`                               | `#140D0A`                         | text on primary                        |
-| `secondary` / `muted` / `accent` | `#EAE6DB` / `#EAE6DB` / `#ECE8DE`       | `#26241F` / `#23221E` / `#26241F` | quiet fills, hover washes              |
-| `success`                        | `#2E6B47`                               | `#6FC08C`                         | correct, positive delta                |
-| `warning`                        | `#8A5A0B`                               | `#E2B154`                         | low time, caution                      |
-| `destructive`                    | `#A3261F`                               | `#F27C86`                         | wrong, irreversible                    |
-| `info`                           | = `base-bin`                            | = `base-bin`                      | neutral notices                        |
-| `highlight`                      | `#F0CD60`                               | `#E2B154`                         | marker highlight, use at /30–/45 only  |
-| `chart-1…5`                      | primary, bin, oct, hex, ochre `#B07A1E` | brightened equivalents            | categorical series, in order           |
-
-### 2.2 Base identity colours
-
-| Base     | Class           | Light     | Dark      | Name     |
-| -------- | --------------- | --------- | --------- | -------- |
-| BIN (2)  | `text-base-bin` | `#2B54C4` | `#87A6FF` | cobalt   |
-| OCT (8)  | `text-base-oct` | `#4C7024` | `#A5C878` | moss     |
-| DEC (10) | `text-base-dec` | `#4A463F` | `#CFC9BC` | graphite |
-| HEX (16) | `text-base-hex` | `#8A3B87` | `#DE9CDB` | plum     |
-
-Rules:
-
-- Use them **only** for numbers in that base, their tags, and charts split by
-  base. Never for buttons, links, or decoration.
-- Tints: `bg-base-hex/10 border-base-hex/30` (that is what `BaseTag` does).
-  Solid fills use `bg-base-x text-base-x-foreground`.
-- Get classes from `BASES[key]` in `src/lib/bases.ts` (`text`, `softBg`,
-  `border`, `bg`) — do not build class names with template strings.
-
-### 2.3 Measured contrast (WCAG 2.x, `node scripts/check-contrast.mjs`)
-
-| Pair                                    | Light       | Dark          |
-| --------------------------------------- | ----------- | ------------- |
-| ink / paper                             | 15.43       | 15.57         |
-| ink / surface                           | 16.82       | 14.35         |
-| muted / paper                           | 4.95        | 6.56          |
-| muted / surface                         | 5.40        | 6.05          |
-| muted / sunken                          | 4.52        | 6.80          |
-| primary text / paper                    | 4.69        | 6.63          |
-| primary text / surface                  | 5.11        | 6.12          |
-| primary-foreground on primary (buttons) | 5.34        | 6.76          |
-| success / surface                       | 6.07        | 7.95          |
-| warning / surface                       | 5.67        | 8.83          |
-| destructive / surface                   | 7.04        | 6.63          |
-| BIN / paper · surface                   | 5.82 · 6.35 | 8.02 · 7.40   |
-| OCT / paper · surface                   | 5.05 · 5.51 | 10.00 · 9.23  |
-| DEC / paper · surface                   | 8.24 · 8.98 | 11.44 · 10.55 |
-| HEX / paper · surface                   | 6.03 · 6.58 | 8.88 · 8.19   |
-
-All text pairs ≥ 4.5:1 (AA); ink ≥ 7:1 (AAA). If you change a token, update
-the script and rerun it — CI-able (exits non-zero on failure).
-
-### 2.4 Typography
-
-| Family                                       | Class                         | Package (OFL-1.1)                        | Role                              |
-| -------------------------------------------- | ----------------------------- | ---------------------------------------- | --------------------------------- |
-| Newsreader (opsz 6–72, wght 200–800, italic) | `font-serif` / `font-display` | `@fontsource-variable/newsreader`        | h1/h2, display, the italic accent |
-| Schibsted Grotesk (wght 400–900)             | `font-sans` (default)         | `@fontsource-variable/schibsted-grotesk` | all UI and body                   |
-| Martian Mono (wght 100–800, wdth 75–112.5)   | `font-mono`                   | `@fontsource-variable/martian-mono`      | numbers, codes, eyebrows, keycaps |
-
-Only `latin` + `latin-ext` subsets ship (`unicode-range` lazy-loads latin-ext).
-Schibsted latin + Newsreader latin (roman) are preloaded.
-Martian Mono has no `zero` feature; its default zero is already distinguished.
-Use `mono-condensed` (`font-stretch: 82%`) or `condensed` on `<Digits>` for
-16-bit binary strings.
-
-**Scale** (semantic classes; line-height and tracking are baked in):
-
-| Class                       | Size                   | LH   | Tracking | Family              | Use                                                       |
-| --------------------------- | ---------------------- | ---- | -------- | ------------------- | --------------------------------------------------------- |
-| `text-display-2xl`          | 44 → 84px fluid        | 0.98 | −0.028em | serif               | home hero only                                            |
-| `text-display-xl`           | 36 → 60px              | 1.02 | −0.024em | serif               | page hero, 404, closing CTA                               |
-| `text-display-lg`           | 30 → 44px              | 1.08 | −0.018em | serif               | section headings on marketing pages, `PageHeader` default |
-| `text-headline`             | 24 → 32px              | 1.15 | −0.012em | serif               | app page titles, dialog-sized headings                    |
-| `text-title`                | 19px                   | 1.35 | −0.01em  | sans 600            | card / panel titles                                       |
-| `text-title-sm`             | 17px                   | 1.4  | −0.006em | sans 600            | list item titles                                          |
-| `text-body-lg`              | 18px                   | 1.6  | —        | sans                | ledes                                                     |
-| `text-body`                 | 16px                   | 1.6  | —        | sans                | default body                                              |
-| `text-body-sm`              | 14px                   | 1.55 | —        | sans                | secondary copy, descriptions                              |
-| `text-label`                | 13px                   | 1.3  | +0.005em | sans 500            | controls, tabs, table headers                             |
-| `text-eyebrow` / `.eyebrow` | 11px                   | 1.2  | +0.08em  | mono 500, uppercase | overlines                                                 |
-| `text-mono-sm/md/lg/xl/2xl` | 12/14/20/24→36/32→56px | —    | —        | mono                | `<Digits>` sizes                                          |
-
-Headlines: wrap one word in `<em>` for the italic red-pen accent
-(`[&_em]:italic [&_em]:text-primary` is built into `PageHeader`). Set
-`[font-variation-settings:'opsz'_72]` on display sizes for Newsreader's
-display cut. Use `text-balance` on headings, `text-pretty` on paragraphs.
-
-### 2.5 Space, radius, elevation, focus
-
-- **Spacing:** Tailwind 4px scale. Section rhythm: `py-section` (64→104px) for
-  marketing sections, `py-section-sm` for app sections. Inside cards: `p-5`
-  (20px). Gaps: 8 / 12 / 16 / 24 / 40 / 48.
-- **Container:** `.container` = centred, max 1240px, gutters 16 / 24 (`sm`) /
-  32px (`lg`). Never put content flush to the viewport edge.
-- **Radii:** `rounded-sm` 4px (tags, kbd), `rounded-md` 6px (buttons, inputs,
-  menu items), `rounded-lg` 8px (cards), `rounded-xl` 10px (dialogs, feature
-  panels), `rounded-2xl` 12px (rare). Nested radius ≤ parent radius.
-- **Elevation:** border + `shadow-xs` for cards; `shadow-md` for floating
-  panels in content (odometer, room preview); `shadow-lg` menus/popovers;
-  `shadow-xl/2xl` toasts/dialogs. Shadows are tinted ink and very soft — no
-  heavy drop shadows, no glass.
-- **Focus:** global `:focus-visible { outline: 2px solid ring; offset 2px }`
-  (1px for inputs). Do **not** add `focus:ring-*` classes; do not remove
-  outlines. Inputs additionally show a 3px `ring/16` halo.
-- **Selection:** `primary/18` wash with ink text.
-- **Scrollbars:** thin, `border-strong` thumb, transparent track.
-
-### 2.6 Motion
-
-| Token           | Value                             | Use                                      |
-| --------------- | --------------------------------- | ---------------------------------------- |
-| `duration-fast` | 120ms                             | hover/press colour changes               |
-| `duration-base` | 180ms                             | menus, toggles, tab indicator            |
-| `duration-slow` | 240ms                             | odometer digits, page-level enters       |
-| `ease-out`      | `cubic-bezier(.2,.8,.2,1)`        | default                                  |
-| `ease-spring`   | `cubic-bezier(.34,1.4,.64,1)`     | tactile overshoot (switch thumb, digits) |
-| framer spring   | `{ stiffness: 500, damping: 40 }` | sliding indicators (`layoutId`)          |
-| `animate-rise`  | 6px rise + fade, 240ms            | above-the-fold entrance, once            |
-
-Rules: animate `transform`/`opacity` only; list properties explicitly
-(`transition-[background-color,border-color]`), never `transition-all`.
-`prefers-reduced-motion: reduce` kills CSS durations globally; JS motion must
-branch on `useReducedMotion()` (see `Segmented`, `BaseOdometer`, nav). Any
-auto-playing motion > 5s needs a pause control (the odometer has one).
-
----
-
-## 3. Components
-
-All in `src/components/ui/`. Import from the file, e.g.
-`import { Button } from "@/components/ui/button"`.
-
-### Restyled shadcn primitives
-
-| Component                                                                                                                | Notes                                                                                                                                                                                                                                                        |
-| ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `Button`                                                                                                                 | `variant`: `default`/`primary` (red fill — one per view), `secondary`, `outline`, `ghost`, `link`, `destructive`. `size`: `sm` 32, `default` 40, `lg` 48, `xl` 56 (hero), `icon`/`icon-sm`/`icon-lg`. Compact sizes get an invisible 44px hit area on touch. |
-| `Input`                                                                                                                  | `variant`: `default` (40px), `sm`, `answer` (64–72px mono, centred — game answer field). 16px text on mobile. `aria-invalid` turns it red.                                                                                                                   |
-| `Select`, `DropdownMenu`, `Popover`, `HoverCard`, `Tooltip`                                                              | Share `floatingSurface` (exported from `dropdown-menu.tsx`). Menu items 36px (44px touch). `DropdownMenuShortcut` renders mono. Tooltip: ink on paper inverse, 400ms delay, 300ms skip.                                                                      |
-| `Tabs`                                                                                                                   | Sunken track, raised active tab. Use for switching views of the same data. For a choice of value use `Segmented`.                                                                                                                                            |
-| `Dialog` (new), `AlertDialog`, `Sheet`, `Drawer`                                                                         | Serif title, dimmed desk overlay, `rounded-xl`. Footer actions right-aligned; primary last.                                                                                                                                                                  |
-| `Toast`                                                                                                                  | `variant`: `default`, `success`, `destructive` (inset colour rule, neutral surface). Bottom-right, safe-area aware.                                                                                                                                          |
-| `Badge`                                                                                                                  | Tinted wash: `default` (red), `secondary`, `outline`, `success`, `warning`, `destructive`, `info`, `solid`.                                                                                                                                                  |
-| `Card`                                                                                                                   | Hairline sheet, `p-5`. `CardTitle` is sans `text-title`.                                                                                                                                                                                                     |
-| `Table`                                                                                                                  | `tabular-nums`, 48px rows, 12px muted header labels, `border-strong` under header. Right-align numeric columns (`text-right`).                                                                                                                               |
-| `Switch`, `Progress`, `Skeleton`, `Spinner`, `Avatar`, `Alert`, `Separator`, `Label`, `Form`, `Breadcrumb`, `ScrollArea` | Token-aligned; APIs unchanged.                                                                                                                                                                                                                               |
-
-### New primitives
-
-```tsx
-// Digits — a number in a base. Copy-paste yields bare digits.
-<Digits base="bin" value={42} pad={8} group />          // 0010 1010 (leading zeros dimmed)
-<Digits base="hex" value="FF" prefix size="lg" />        // 0xFF
-<Digits base={2} value="1011" placeValues />             // weights 8 4 2 1 under digits
-// props: value (string|number), base ("bin"|"oct"|"dec"|"hex"|2|8|10|16|"Binary"…),
-// group (true=base default | number | false), prefix, placeValues, colored=true,
-// pad, condensed, dimLeadingZeros, size xs|sm|md|lg|xl|inherit
-
-// BaseTag — identity pill. Always next to a number in a base.
-<BaseTag base="hex" />                 // HEX
-<BaseTag base={2} showRadix size="sm" variant="solid" />   // BIN₂
-// props: base, variant soft|solid|outline, size xs|sm|md|lg, showRadix, label
-
-// Kbd / KbdCombo — keycaps. Hide on touch with `hidden pointer-fine:inline-flex`.
-<Kbd>Enter</Kbd>   <KbdCombo keys={["⌘", "K"]} />   <Kbd tone="inverse">↵</Kbd> {/* on a primary button */}
-
-// Stat — label + big tabular value + delta.
-<Stat label="Best score" value={42} delta={6} deltaLabel="vs last week" />
-<Stat label="Avg. answer time" value="2.4" unit="s" delta={-0.3} lowerIsBetter size="lg" />
-// props: label, value, unit, delta, formatDelta, deltaLabel, lowerIsBetter, hint, adornment, size sm|md|lg
-
-// Segmented — single choice, radiogroup, arrow keys + Home/End, one tab stop.
-<Segmented aria-label="Duration" value={d} onValueChange={setD}
-  options={[{ value: "15", label: "15s" }, { value: "30", label: "30s" }, { value: "60", label: "60s" }]} />
-// props: options[{value,label,icon?,ariaLabel?,disabled?}], value, onValueChange, aria-label (required),
-// size sm|md|lg, fullWidth, id (when several share a page)
-
-// Meter — timer / progress / lives. Transform-only fill.
-<Meter variant="timer" value={secondsLeft} max={60} label="Time left" valueText={`${secondsLeft} seconds`} />
-<Meter variant="lives" value={2} max={3} label="Lives" size="lg" />
-<Meter value={7} max={10} label="Lesson progress" showLabel />
-// timer auto-tones: ≤25% warning, ≤10% destructive. props: value, max, variant, tone, size sm|md|lg,
-// label (required), valueText, showLabel, display
-
-// PageHeader — top of every page (renders the h1).
-<PageHeader eyebrow="Leaderboard" title={<>Fastest <em>hands</em></>}
-  lede="Top scores for each official mode, updated live."
-  actions={<Button variant="outline">Filter</Button>} divider />
-// props: eyebrow, title, lede, actions, align left|center, size sm|md|lg, divider, as h1|h2, children (meta row)
-
-// EmptyState — every list/table/history needs one.
-<EmptyState icon={<History />} title="No games yet"
-  description="Finish a sprint and your scores appear here."
-  action={<Button asChild><Link to="/play">Start a sprint</Link></Button>}
-  hint={<>Press <Kbd size="sm">Enter</Kbd> on the home page to start</>} />
-
-// GridPaper — graph-paper texture. Hero and game surfaces ONLY. Parent must be `relative isolate`.
-<section className="relative isolate"><GridPaper fade />…</section>
-// props: cell (px, default 8; majors every 5), fade
-
-// BaseOdometer — the signature element.
-<BaseOdometer size="lg" autoPlay interactive placeValues caption="One number · four bases" />
-<BaseOdometer value={404} bits={12} size="md" />                         // 404 page
-<BaseOdometer size="sm" bases={["bin","hex"]} autoPlay={650} header={false} />  // loader
-// props: value/defaultValue/onValueChange, bits (8), bases, autoPlay (bool|ms), sequence,
-// interactive (bits become toggle buttons), placeValues, size sm|md|lg, header, caption, names, hint
-
-// Logo
-<Logomark className="size-7" />   <Wordmark />
-```
-
-Also: `RouteFallback` (`src/components/RouteFallback.tsx`) — Suspense/auth
-fallback with a 200ms show-delay.
-
-### Utility classes (`src/index.css`)
-
-`.eyebrow` · `.link` (inline text link) · `.grid-paper` · `.mono-condensed` ·
-`.mask-fade-edges` · `.skip-link` · `.text-balance` / `.text-pretty`. Tabular
-figures: Tailwind `tabular-nums` or a `data-numeric` attribute.
-
-Variants (tailwind plugin): `pointer-coarse:`, `pointer-fine:`, `motion-ok:`.
-Breakpoint `xs` = 400px was added.
-
----
-
-## 4. Layout grid & breakpoints
-
-| Name   | Min width | Notes                                                                 |
-| ------ | --------- | --------------------------------------------------------------------- |
-| (base) | 0         | single column, 16px gutters; test at **320px** — no horizontal scroll |
-| `xs`   | 400       | buttons may sit side by side                                          |
-| `sm`   | 640       | 24px gutters                                                          |
-| `md`   | 768       | 2–3 column grids start                                                |
-| `lg`   | 1024      | full nav, hero splits 1.05fr / 1fr, sidebars appear                   |
-| `xl`   | 1280      | —                                                                     |
-| `2xl`  | 1440      | container caps at 1240px                                              |
-
-- 12-column thinking, but write grids explicitly:
-  `grid lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)]` (content + aside),
-  `md:grid-cols-3` (steps/stat rows). Always `minmax(0, …)` to avoid overflow.
-- Reading width: prose ≤ 68ch (`max-w-prose`), ledes ≤ 34rem (`max-w-lede`).
-- Nav height is `--nav-h` (56px); sticky headers inside pages offset by it.
-
----
-
-## 5. Accessibility rules
-
-- Contrast: all text ≥ 4.5:1, large text/UI ≥ 3:1 — run the script.
-- Focus: visible on everything (global outline). Never `outline-none` without
-  a replacement. Menus/dialogs trap & return focus (Radix does this).
-- Hit targets ≥ 44px on touch. Use Button sizes; for custom controls add
-  `pointer-coarse:min-h-11` or an `after:-inset-*` hit area.
-- Every page has one `h1` (use `PageHeader`); headings don't skip levels.
-- `#main` is the skip-link target (in `Layout`). Immersive routes (quiz, rooms)
-  still render `<main id="main">`.
-- Colour is never the only signal: pair base colours with tags, success/error
-  with icons + text, deltas with arrows + sr-only "better/worse".
-- Live regions: `aria-live="polite"` for score/timer changes that matter; do
-  not announce every tick.
-- Inputs ≥ 16px on mobile; `inputMode`/`autoComplete` set; labels always.
-- Reduced motion: no transforms, no auto-play; the odometer starts paused.
-
----
-
-## 6. Page templates
-
-**Marketing page** (Home, About, For classrooms)
-
-```
-<section className="relative isolate border-b"><GridPaper fade />   ← hero only
-  <div className="container py-…"> eyebrow · display-2xl/xl h1 with <em> · lede · 1 primary + 1 outline CTA · Kbd hint
-<section className="container py-section"> eyebrow · display-lg h2 · content separated by hairlines
-<section className="border-y bg-card/60"> alternate band for rhythm (max one per two sections)
-closing CTA section · Footer
-```
-
-**App page** (Leaderboard, Stats, Profile, Multiplayer home)
-
-```
-<div className="container py-10 md:py-14 flex flex-col gap-10">
-  <PageHeader eyebrow="…" title="…" lede="…" actions={…} divider size="sm|md" />
-  filters row: Segmented / Select (left) · secondary actions (right)
-  content: Table or hairline list; Cards only for discrete objects; EmptyState when empty
-```
-
-**Game surface** (Quiz, Multiplayer game)
-
-```
-immersive (no nav/footer) · relative isolate · <GridPaper /> behind the play area
-top bar: ExitButton (ghost) · mode name (label) · <Meter variant="timer"> full width
-centre: prompt = <BaseTag> + <Digits size="xl"> · answer = <Input variant="answer" autoFocus>
-bottom: score <Stat size="lg"> · Kbd hints (Esc to quit)
-correct → success flash on the input border (180ms); wrong → no penalty animation, keep typing
-```
-
-**Form page** (Login, Signup, Create/Join room, Settings)
-
-```
-<div className="container max-w-md py-12 md:py-20">
-  PageHeader size="sm" (no actions) · <form className="flex flex-col gap-5">
-  Label above field, help text text-[0.8125rem] muted, error text destructive below field
-  primary submit full width (size="lg"); secondary action as ghost/link below
-```
-
----
-
-## 7. Don't
-
-- Gradient text, glassmorphism, neon glows, heavy drop shadows.
-- Emoji in UI copy. Lucide icons only, `size-4`/`size-5`, `text-muted-foreground` unless signalling.
-- Three-up "icon + title + text" feature grids. Use numbered steps, hairline lists, or a real example.
-- Stock illustrations. Draw with the system (Digits, BaseTag, odometer, grid paper).
-- More than one filled primary button in a view; red for anything but action/focus/accent.
-- Base colours on non-number UI. Raw Tailwind palette colours (`text-green-500`, `bg-yellow-500/10`, `text-white`).
-- `transition-all`, layout-animating properties, motion without a reduced-motion path.
-- Fixed pixel widths that break at 320px; text in all caps outside `.eyebrow`/tags.
-- `hsl(var(--x))` (tokens are RGB channels) or hex values inline.
-- Sticky-note, folded corner, coffee stain, page curl, scribble highlights (all deprecated).
-
----
-
-## 8. Migration (deprecated → replacement)
-
-The legacy notebook layer is **gone**: the components below were deleted from
-`src/components/ui`, the utilities were removed from `src/index.css`, and the
-legacy aliases were removed from `tailwind.config.js`. Every page now uses the
-primitives in this document. If you are porting old code, this is the mapping:
-
-| Removed                                                                                                                                                      | Use instead                                                                                             |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
-| `PaperCard*` (`ui/paper-card.tsx`, all `variant="folded*"`, `interactive`, `bookmark`)                                                                       | `Card*`; interactive → `<Link className="… rounded-lg border bg-card hover:border-border-strong">`      |
-| `StickyNote*` (`ui/sticky-note.tsx`)                                                                                                                         | `Alert` (`info`/`success`/`warning`) or a hairline aside                                                |
-| `NotebookInput`                                                                                                                                              | `Input` / `<textarea className={inputVariants()}>`                                                      |
-| `SectionHeader`                                                                                                                                              | `PageHeader` (page top) or `<h2 className="text-headline font-serif">`                                  |
-| `RuledSeparator`                                                                                                                                             | `Separator`                                                                                             |
-| `ui/academic.ts` barrel                                                                                                                                      | import each primitive from its own file                                                                 |
-| `.paper-card`, `.paper-texture`, `.folded-corner*`, `.coffee-stain*`, `.torn-edge-top`, `.page-curl`, `.sketch-border`, `.bookmark-ribbon*`, `.sticky-note*` | nothing (hairline `border bg-card`)                                                                     |
-| `.highlight-scribble*`, `.ink-underline*`, `.link-underline`, `.hover-underline`, `.annotation`, `.margin-note`                                              | `<em>` accent, `.link`, or `text-muted-foreground`                                                      |
-| `.ruled-lines*`, `.ruled-line`                                                                                                                               | `Separator` / `border-b`                                                                                |
-| `.fluid-container`, `.responsive-grid`, `.safe-vh-*`, `.p(x/y)-fluid`, `.content-width`, `.transition-smooth`                                                | `container`, Tailwind grid, `min-h-dvh`, Tailwind spacing, `max-w-prose`, explicit `transition-[…]`     |
-| `text-fluid-*`, `p-fluid-*`, `tracking-academic`, `base-binary/octal/decimal`, `critical`, `sidebar` colours                                                 | semantic scale (`text-headline`, `text-body`…), Tailwind spacing, `base-bin/oct/dec`, `destructive`     |
-| `bg-chart-1 text-white` etc. on buttons                                                                                                                      | `Button` variants                                                                                       |
-| `text-yellow-600`, `bg-yellow-500/10`, `text-orange-600`, `text-red-*`, `text-gray-*`, `text-white`                                                          | `text-warning`, `bg-warning/10`, `text-destructive`, `text-muted-foreground`, `text-primary-foreground` |
-| `hsl(var(--background))`                                                                                                                                     | `rgb(var(--background))`                                                                                |
-| `navigate()` on `onClick` of cards for navigation                                                                                                            | `<Link>` (middle-click, a11y)                                                                           |
-| Game-mode `color: "bg-blue-500"` fields                                                                                                                      | `BASES[toBaseKey(name)].bg`                                                                             |
-
-Raw palette classes are allowed in exactly one place: the white/black washes
-on `Kbd` inside filled buttons and the dark-mode scrim on overlays
-(`dark:bg-black/60`), where the colour is deliberately theme-independent.
+# Design System: Based Math Game
+
+Where things live, so a new surface starts from the system and not from a one-off:
+
+- Tokens: `src/index.css` (`:root` workbook, `.dark` chalkboard; RGB channel triplets consumed by `tailwind.config.js` as `rgb(var(--token) / <alpha-value>)`).
+- Fonts: `src/styles/fonts.css`, preloaded by the `preload-fonts` plugin in `vite.config.ts` (keep the file names in sync). Rebuild the subsets with `scripts/fonts/subset.py` (the dotted typewriter zero is cut by `scripts/fonts/dotzero.py`).
+- Primitives: `src/components/ui/`. Base metadata (tags, prefixes, grouping, colour classes): `src/lib/bases.ts`.
+- Contrast: `node scripts/check-contrast.mjs` (exits non-zero on any failing pair; keep its token table in sync with `src/index.css`).
+- Icons: `node scripts/generate-icons.mjs` renders `public/icon.svg` and the PNGs. Social card: `scripts/og/` (`og.html` rendered by `render.mjs` to `public/og.png`).
+
+## Overview
+
+**Creative North Star: "The Exercise Workbook"**
+
+The site is a bound school workbook you play in. The home page is the cover, blue book cloth with a printed paper label and one Play bar. `/play` is the table of contents, set with dot leaders and folios. Each run is an exercise page: a spot-blue exercise number, the problem in typewriter numerals, and an answer blank on a rule. Results come back marked: the score is circled in red pen and each answer is ticked or crossed. Stats are a report card, the leaderboard is an honour roll, lessons are chapters with worked examples. At night the same book becomes the classroom chalkboard: slate ground, white chalk, yellow chalk for the action, red chalk for marks.
+
+The system is a two-colour printing job plus a teacher's pen. Black ink carries the text, one schoolbook blue carries structure (section numbers, rules, links, focus, selection), and red appears only where a marker would put it. Depth is paper on paper: a fresh sheet laid on the page casts a short, warm contact shadow; nothing floats or glows. Corners are square to the hair. Computer Modern, the face of every LaTeX problem set, sets everything, in four cuts with fixed jobs.
+
+Density follows the book. Reading pages keep a 65ch measure and generous leading; the run page clears everything except the prompt and the blank; tables (contents, honour roll, report card) are tight, ruled, tabular. The system refuses the SaaS landing page: no hero-plus-feature-cards, no stats band, no glass, no gradient type, and no sticky-note or doodle clip art pretending to be "school".
+
+**Key Characteristics:**
+
+- Printed workbook by day, chalkboard by night; both are one world, not two skins.
+- Ink for text, spot blue for structure, red pen for marks only.
+- Computer Modern throughout: Serif headings, Concrete body, Sans controls, Typewriter numerals with a dotted zero.
+- Square hairline corners (2px), paper-on-paper shadows, hairline and double rules instead of boxes.
+- Book devices do the work: running heads with folio data, double rules, dot leaders, ruled answer blanks, tint example boxes, pen marks, a highlighter for "you".
+- Four base inks (BIN, OCT, DEC, HEX) used only on digits and their tags, always labelled.
+
+## Colors
+
+A two-colour workbook (black ink plus one schoolbook blue) on warm book paper, with a red pen kept for marks; at night, chalk on slate.
+
+### Primary
+
+- **Schoolbook Blue** (`primary`): the spot colour. Section and exercise numbers, the active nav item and its 2px underline, link underlines, the focus ring, the caret, the printed rules of graph and ruled paper, the label of a Hint or Note. Never a fill for the main button. Hover deepens to `primary-hover`.
+- **Yellow Chalk** (`yellow-chalk`): the chalkboard's primary. It takes over every Schoolbook Blue job at night and also fills the main action button, because white chalk on slate is the body text and the action needs to stand apart. Hover brightens to `yellow-chalk-bright`.
+
+### Secondary
+
+- **Red Pen** (`red-pen`, chalk equivalent `red-chalk`): the teacher's marks. Ticks, crosses, the circled score, the underline under a personal best, the wrong answer shown on a reviewed exercise, invalid fields, and the destructive button for irreversible actions. Status `destructive` is the same value.
+
+### Tertiary
+
+- **Base inks** (`ink-bin-teal`, `ink-oct-moss`, `ink-dec-graphite`, `ink-hex-plum`; chalk `chalk-bin-blue`, `chalk-oct-green`, `chalk-dec-white`, `chalk-hex-pink`): a deliberate functional identity system, committed in PRODUCT.md ("each number base keeps a stable identity colour and is always labelled"). They colour digits rendered by `Digits` and the `BaseTag` pill, through the classes in `src/lib/bases.ts`, and nothing else. Every pair passes AA on paper, sheet, well and tint in both themes.
+- **Highlighter** (`highlighter`): a yellow swipe at 40 to 60 percent behind inline text (at about 25 percent on the chalkboard). It marks "you" in standings and the honour roll, and it is the text selection colour.
+- **Cover Cloth** (`cover-cloth`, `cover-cloth-deep`, `cover-label-muted`): the blue linen of the cover and its spine, the logomark fill. At night the cover is the chalkboard itself.
+
+### Neutral
+
+- **Book Paper** (`book-paper`): the page. Body background in light.
+- **Black Ink** (`black-ink`): all text, headings, the primary button fill, the double rule (at 70 percent).
+- **Fresh Sheet** (`fresh-sheet`) and **Index Slip** (`index-slip`): a sheet laid on the page (cards, the results paper, the cover label, inputs) and slips above it (menus, dialogs, toasts).
+- **Sunken Well** (`sunken-well`): table heads, wells, secondary fills.
+- **Blue Screen Tint** (`blue-screen-tint`): a 12 percent screen of the spot blue. Example, Hint and Note boxes, the secondary button, the soft badge, the selected item in a list.
+- **Hover Wash** (`hover-wash`): hover fill on ghost and outline controls and list rows.
+- **Hairline Rule** (`hairline-rule`), **Strong Rule** (`strong-rule`), **Control Outline** (`control-outline`, at least 3:1 on paper): dividers, card edges, input boxes.
+- **Pencil** (`pencil`): secondary text, running heads, captions, inactive nav.
+- **Green Ink** (`green-ink`) and **Ochre** (`ochre`): success and warning text, the correct-answer flash, the timer's warning stage. Each has a chalk equivalent (`green-chalk`, `orange-chalk`).
+- Chalkboard neutrals mirror the paper set one for one: `chalkboard`, `white-chalk`, `board-panel`, `board-slip`, `board-sunken`, `board-tint`, `board-hover`, `board-rule`, `board-rule-strong`, `board-control-outline`, `faded-chalk`.
+
+### Named Rules
+
+**The Red Pen Rule.** Red is a mark, never a decoration. It appears only where a teacher would write: a tick, a cross, a circle round the score, a correction, an invalid field, an irreversible action. Red on a heading, an icon, a link or a border is wrong.
+
+**The Spot Colour Rule.** Schoolbook Blue prints structure (numbers, rules, links, focus, selection). It never fills the main button; the main action is solid ink. A headline's emphasis is italic, never blue.
+
+**The Base Ink Rule.** The four base inks colour digits and their tags only, and a coloured number always carries its BIN/OCT/DEC/HEX tag or a row label. They are an identity system, not a palette for charts, borders or backgrounds.
+
+**The Chalkboard Panel Rule.** A surface that must read as written on the board in either theme (the room code, readable from the back of a classroom on a projector) puts the `dark` class on its own subtree, so the chalkboard tokens apply locally. Use it for that kind of panel, not as a decorative dark band.
+
+## Typography
+
+**Display Font:** BM Serif (Computer Modern Serif, bold extended for headings; with Georgia, Cambria)
+**Body Font:** BM Concrete (Computer Modern Concrete; with BM Serif, Georgia)
+**Label/Mono Font:** BM Sans (Computer Modern Sans) for controls and labels; BM Typewriter (Computer Modern Typewriter, zero with a centre dot) for every number, code and keycap.
+
+**Character:** One family in four cuts, each with a single job: the bold serif of a textbook heading, Concrete's soft schoolbook body, a plain sans for anything you press, and a typewriter for every figure. Self-hosted subsets of the Computer Modern Unicode fonts (OFL), renamed "BM".
+
+### Hierarchy
+
+- **Display** (BM Serif 700, clamp 52px to 96px, line-height 0.95): the cover title "Based Math", on one line from `sm` up.
+- **Page title** (BM Serif 700, clamp 32px to 48px, 1.06): the h1 of an inside page through `PageHeader` (Contents, Daily sheet No. n, Honour roll, Report card, Rooms). An `<em>` word goes italic.
+- **Headline** (BM Serif 700, clamp 24px to 33px, 1.15): chapter and section heads, compact page titles.
+- **Title** (BM Serif 700, 20px, 1.3; `title-sm` 18px): panel and list titles, the exercise prompt text.
+- **Body** (BM Concrete 400, 17px, 1.62; `body-lg` 19px for ledes, `body-sm` 15px for notes and captions): running text, held to a 65ch measure (`max-w-content`, `max-w-prose` 68ch).
+- **Label** (BM Sans 700 on buttons, 500 elsewhere; 14px, 0.01em): buttons, tabs, segmented controls, field labels, badges.
+- **Running head** (BM Serif 500, 14px, 0.06em, all small caps, pencil colour): the line across the top of a page or panel, table heads, small-caps field labels such as the answer blank's label.
+- **Numerals** (BM Typewriter 500, tabular): `mono-sm` 13px to `mono-lg` 21px in tables and steps; `numeral-answer` (clamp 26px to 40px) in the answer blank; `numeral-prompt` (clamp 36px to 64px) for the number being converted; up to `mono-3xl` 96px for the circled score.
+
+### Named Rules
+
+**The Typewriter Figure Rule.** Every figure that can change (scores, times, counts, digits in a base, room codes, dates in folios) is set in BM Typewriter with tabular numerals. The dotted zero is what keeps 0 from reading as O; never swap the face for a system mono.
+
+**The Italic Emphasis Rule.** Emphasis inside a headline or a lede is serif italic. Never colour, never weight alone.
+
+## Layout
+
+The page is a book page: a centred container up to 1240px (`max-w-page`) with gutters of 16px, 24px from `sm`, 32px from `lg`. Inside pages narrow to a reading block (Contents and Daily at 60rem, Results at 64rem, prose at 65ch to 68ch, ledes at 38rem). Breakpoints: `xs` 400, `sm` 640, `md` 768, `lg` 1024, `xl` 1280, `2xl` 1440. Every layout works at 320px.
+
+- **Cover.** Full-bleed book cloth, `min-h-dvh`, a darker spine down the left edge (light theme), cover chrome in the top band (menu left, theme and sign-in right), and the paper label centred at up to 46rem. A 0 to 15 table in DEC/HEX/OCT/BIN runs across the bottom like a back-cover reference. The cover prints its own chrome, so the site nav is hidden there.
+- **Inside pages.** A sticky running head 56px tall (`--nav-h`): wordmark left, five sections in small caps, theme and account right; on mobile a Play button and a menu sheet that lists the contents with numbers. The colophon footer sits under a double rule.
+- **The run.** Immersive: nav and footer are gone. A compact header (Pause, drill title, figures in a ruled box) over a 1px rule or the timer meter, graph paper behind, and the exercise grid: a 36px number column (60px from `sm`) and the problem column, answer blank at most 28rem wide. Under 560px of height the vertical padding collapses.
+- **Rhythm.** Section spacing uses `section` (clamp 64px to 104px) and `section-sm` (clamp 40px to 72px); page stacks use gaps of 40px to 56px; ruled lists divide with hairlines rather than gaps. Body leading is the unit for ruled paper (2rem lines in exercises, 1.75rem in room chat).
+- **Margins teach.** On `xl`, lesson notes float into a 13rem margin column beside the text (Tufte style); below that they fall back into the flow as tint boxes.
+
+## Elevation & Depth
+
+Paper on paper. Surfaces are flat sheets distinguished by fill (paper, fresh sheet, slip, well) and hairline edges; elevation exists only where one sheet is genuinely laid on another, and its shadow is a short contact line plus a soft warm fall-off tinted with the paper's own brown (`--shadow` 60 45 20). On the chalkboard, shadows go black and a sheet gets a 1px strong-rule outline instead, because shadows barely read on slate. Overlays dim the desk (`rgb(var(--shadow) / 0.42)`, black at 60 percent at night) and never blur it.
+
+### Shadow Vocabulary
+
+- **Contact** (`box-shadow: 0 1px 1px 0 rgb(var(--shadow) / 0.08)`): cards at rest (`shadow-sm`).
+- **Laid sheet** (`.paper-sheet`: `0 1px 1px rgb(var(--shadow) / 0.08), 0 10px 30px -14px rgb(var(--shadow) / 0.35)`; at night `0 0 0 1px rgb(var(--border-strong)), 0 18px 40px -18px rgb(0 0 0 / 0.6)`): the cover label, the results paper, auth and profile sheets, the pause card, chart tooltips, connection toasts.
+- **Lifted** (`shadow-md`: `0 1px 1px 0 rgb(var(--shadow) / 0.08), 0 6px 16px -6px rgb(var(--shadow) / 0.22)`): the room-code board.
+- **Dialog** (`shadow-2xl`: `0 2px 4px 0 rgb(var(--shadow) / 0.1), 0 32px 64px -22px rgb(var(--shadow) / 0.45)`): modal dialogs.
+- **Primary press line** (`0 1px 0 rgb(var(--shadow) / 0.25)`): the ink button's bottom edge.
+- **Running head** (`0 1px 0 rgb(var(--foreground) / 0.12)`, deepening to `0 1px 0 rgb(var(--foreground) / 0.18), 0 6px 14px -12px rgb(var(--shadow) / 0.5)` once scrolled): the sticky nav's bottom rule.
+
+### Named Rules
+
+**The Laid Sheet Rule.** A shadow means a separate sheet of paper sits on the page. If the thing is not a sheet you could pick up (a dialog, the results paper, the cover label), it is flat and divided by rules.
+
+## Shapes
+
+Printed matter has square corners. The radius scale is a hair: 2px for nearly everything (buttons, inputs, cards, badges, tags, tint boxes, kbd), 1px for segment indicators and meter bars, 3px for the cover label and profile sheet, 4px for dialogs. Circles appear only where the object is round: radio dots, avatars, and the hand-drawn pen circle.
+
+Form is made from rules more than boxes. The book's **double rule** (3px double ink at 70 percent) closes a chapter opening, heads every table and separates the results header from its review. **Hairline rules** (1px ink at 15 to 30 percent, or `hairline-rule`) divide lists and frame running heads. **Dot leaders** run from a contents entry to its folio. The cover label is a double frame: a 1.5px ink border with a 1px outline offset 3px outside it. Answer blanks are a single 2px rule with no box. Pen marks are hand-set SVG strokes with round caps, drawn once with `stroke-dashoffset`.
+
+## Components
+
+Printed and pressed: every control looks like something set on the page, square and quiet, with ink weight carrying emphasis.
+
+### Buttons
+
+- **Shape:** square with a hair radius (2px). BM Sans bold, 0.01em. Sizes: `sm` 32px, default 40px, `lg` 48px, `xl` 56px; the cover's Play bar is 64px to 72px and full width. Compact sizes get an invisible 44px hit area on coarse pointers.
+- **Primary:** solid black ink with book-paper text and a 1px press line underneath; yellow chalk with chalkboard text at night. One per view: the main action (Play, Play again, Start, Create room).
+- **Hover / Focus:** ink lightens to 85 percent (yellow chalk brightens); a 1px press-down on `:active`; the global focus ring (2px spot blue or yellow chalk, 2px offset). Transitions run at 120ms on `cubic-bezier(0.2, 0.8, 0.2, 1)`.
+- **Secondary:** a blue-screen tint fill, ink text; hover deepens to spot blue at 15 percent.
+- **Outline:** a ruled box (ink at 55 percent, 45 at night), transparent; hover firms the rule to full ink over the hover wash. The usual companion to a primary.
+- **Ghost:** no chrome until hover. Nav, toolbars, icon buttons, the cover chrome.
+- **Link:** spot-blue text with a 40 percent underline that firms on hover.
+- **Destructive:** red pen fill, white text. Irreversible actions only, always behind a confirm.
+- **Keycaps:** a primary button may carry its shortcut as an inverse `Kbd` (Enter), shown only on fine pointers.
+
+### Chips (Badges and Base Tags)
+
+- **Badge:** a 24px printed label in a hairline box, BM Sans 13px. Default and info are spot blue on the tint screen; `solid` is ink; success, warning and destructive use their ink at 10 percent fill and 35 percent edge.
+- **Base Tag:** the identity pill of a number base, BM Typewriter uppercase at 0.06em, sizes `xs` 18px to `lg` 28px. Soft (base ink at 10 percent fill, 30 percent edge), solid or outline; optional subscript radix (BIN₂). Carries a `title` with the full name.
+
+### Cards / Containers
+
+- **Corner Style:** 2px.
+- **Background:** fresh sheet on book paper (board panel at night).
+- **Shadow Strategy:** contact shadow at rest; the laid-sheet shadow only for sheets (see Elevation & Depth).
+- **Border:** 1px strong rule at 70 percent.
+- **Internal Padding:** 20px. Use a Card only for a discrete object (a room, a result, a form). Never nest cards.
+- **Tint boxes:** Example, Hint and Note boxes are the blue screen tint at 2px radius, 14px by 20px padding, with a small-caps spot-blue label ("Example 1.2", "Hint", "Note"). They sit directly on the page, one level deep.
+- **Worked solutions:** set on the page under a hairline rule, never in a box: numbered steps with spot-blue typewriter numbers, a bold serif step title, the working in typewriter lines, a plain note.
+
+### Inputs / Fields
+
+- **Style:** a form field printed on the page: fresh-sheet fill, a hairline box in the control outline at 70 percent, and a heavier bottom rule to write on (an inset 1px line in the full outline). 40px tall (32px `sm`), BM Sans, 16px text on touch so iOS does not zoom, 15px from `sm`.
+- **Focus:** the box turns spot blue, the bottom rule turns spot blue, and a 3px ring at 16 percent spot blue surrounds it.
+- **Error / Disabled:** `aria-invalid` turns the box and the rule red pen. Disabled drops to 50 percent and shows a not-allowed cursor.
+- **Answer blank** (`Input variant="answer"`): no box, one 2px ink rule at 70 percent, BM Typewriter at answer size, centred, 48px tall (56px from `sm`). A small-caps label and the answer's BaseTag sit above it; the base prefix (0b, 0o, 0x) is printed in pencil at the start of the line. Focus turns the rule spot blue; a correct answer flashes a 2px green-ink line that fades in 260ms; a rejected keystroke shakes the blank 5px for 200ms (skipped under reduced motion).
+
+### Navigation
+
+- **Running head (desktop):** sticky, 56px, book-paper ground with a 1px ink rule at 12 percent. Wordmark left; sections in BM Serif all small caps at 17px with 0.05em tracking; inactive in pencil, hover in ink, active in spot blue with a 2px spot-blue underline. Theme menu and Sign in (ghost) on the right.
+- **Mobile:** an outline Play button and a menu icon open a right-hand sheet: the wordmark, "Contents" in small caps, the five sections as a numbered list in 22px serif bold (typewriter numbers in pencil, active in spot blue), secondary links, a theme segmented control, and the account action at the foot. Rows are at least 44px.
+- **Segmented control:** a ruled 1px ink-at-40-percent box with 3px inset; the selected segment is a solid ink slab with paper text that slides between options (spring 520/40, instant under reduced motion). Arrow keys, Home and End move; one tab stop.
+
+### Running Head and Page Header
+
+`PageHeader` is a chapter opening: an optional running head (a small-caps line over a hairline rule, left text and a typewriter folio on the right), the page title with an optional spot-blue section number before it, a lede in `body-lg` pencil, actions right-aligned on desktop, and an optional double rule underneath. The running head carries folio data only (a date, a count, "Top 50", "2–10 seats", "Sheet No. n"), never a restatement of the nav item or the title.
+
+### Pen Marks (signature)
+
+`PenTick`, `PenCross`, `PenCircle`, `PenUnderline`: hand-set red-pen (red-chalk) SVG strokes drawn once on `cubic-bezier(0.65, 0, 0.35, 1)` (tick 260ms, cross two strokes of 180ms, circle 560ms, underline 300ms). Marks are permanent and never animate away. They are `aria-hidden`; the same fact is always present as text.
+
+### Contents Entry and Dot Leader
+
+Contents rows, report-card rows and the honour roll set a label, a dotted leader (`.leader`, 0.75px dots on a 0.4em pitch in ink at 45 percent) and a right-hand folio in typewriter, aligned on the last baseline.
+
+### Meter
+
+Timer, progress and lives. A 4px to 10px bar with a 1px radius on an ink-at-10-percent track; fills by `scaleX` only. The timer drains in neutral ink, turns ochre at 25 percent and red at 10 percent; lives are discrete pips. Always has an accessible name and spoken value.
+
+### Room Code Board
+
+The room code written on the board: a `dark` subtree so it is chalkboard in both themes, a 6px slate frame with a strong-rule ring and the lifted shadow, the code in BM Typewriter chalk at clamp 44px to 100px with 0.1em tracking, the join link and copy actions under a faint rule.
+
+## Do's and Don'ts
+
+### Do:
+
+- **Do** make the main action solid black ink (yellow chalk at night), and keep it to one per view; supporting actions are outline, secondary or ghost.
+- **Do** set every number in BM Typewriter with tabular figures, and colour a number in a base only through `Digits` or `BaseTag` with its BIN/OCT/DEC/HEX label present.
+- **Do** keep running heads to folio data: a date, a sheet number, a count, a seat range. Leave the running head out when all it would say is the page's name.
+- **Do** divide with rules: hairlines between rows, the double rule under a chapter opening and over table heads, dot leaders to a folio.
+- **Do** set worked solutions as ruled lines on the page (numbered steps under a hairline), and keep Example, Hint and Note tint boxes one level deep, directly on the page.
+- **Do** mark "you" in standings with the highlighter swipe, and mark results with pen ticks, crosses and a circled score.
+- **Do** put the `dark` class on a subtree when a panel must read as the chalkboard in both themes (the room code).
+- **Do** keep corners at 2px (1px for indicators, 3px for the cover label, 4px for dialogs) and reserve shadows for sheets laid on the page.
+- **Do** run `node scripts/check-contrast.mjs` after any token change and add the new pair to its table.
+
+### Don't:
+
+- **Don't** stack a small-caps label over a heading when it only repeats the nav item or the title; running heads carry folio data only.
+- **Don't** nest boxes: no card inside a card, no box inside a tint box, no boxed worked solution. Worked solutions are ruled lines on the page.
+- **Don't** use red for anything but marks (ticks, crosses, circled scores, corrections, invalid fields, irreversible actions); never for headings, icons, links, borders or emphasis.
+- **Don't** fill the main button with spot blue or colour a headline word; emphasis is italic.
+- **Don't** use the base inks outside digits and their tags, or let a base colour stand without its label.
+- **Don't** use glass or `backdrop-blur`, gradient text, or a coloured side stripe on a card, alert or list item.
+- **Don't** decorate with sticky notes, coffee rings, tape, paper clips or doodles; the school world is carried by type, rules and pen marks, not clip art.
+- **Don't** add pill shapes or large radii to boxes; circles are only for things that are round (radio dots, avatars, the pen circle).
+- **Don't** let anything compete with the prompt and the answer blank on the run page: no nav, no footer, no promotions, no layout shift.
+
+### Accessibility
+
+- Every text pair meets WCAG 2.2 AA in both themes, and controls meet 3:1; `node scripts/check-contrast.mjs` verifies it and exits non-zero on any failing pair (it is a manual check, not wired into the build).
+- Touch targets are at least 44px (compact buttons extend an invisible hit area on coarse pointers; menu rows and segments are 44px or more). Inputs are 16px on touch.
+- `prefers-reduced-motion` reduces every CSS animation and transition to 0.01ms, and framer-motion components branch on `useReducedMotion()`: pen marks simply appear, the cover does not swing open, the answer blank does not shake.
+- Colour is never the only signal: bases carry their tag, pen marks carry text for screen readers, timer warnings carry the remaining time, the highlighted name also carries a "You" tag or label.
+- Focus is one rule everywhere: a 2px spot-blue (yellow-chalk) outline at a 2px offset (1px on fields).

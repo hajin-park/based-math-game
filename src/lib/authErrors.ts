@@ -19,8 +19,14 @@ const MESSAGES: Record<string, Omit<FriendlyAuthError, "code">> = {
     message: "That doesn’t look like an email address.",
     field: "email",
   },
-  "auth/missing-email": { message: "Enter your email address.", field: "email" },
-  "auth/missing-password": { message: "Enter your password.", field: "password" },
+  "auth/missing-email": {
+    message: "Enter your email address.",
+    field: "email",
+  },
+  "auth/missing-password": {
+    message: "Enter your password.",
+    field: "password",
+  },
   "auth/user-not-found": {
     message: "Email or password is incorrect.",
     field: "password",
@@ -38,7 +44,8 @@ const MESSAGES: Record<string, Omit<FriendlyAuthError, "code">> = {
     field: "password",
   },
   "auth/user-disabled": {
-    message: "This account has been disabled. Open an issue on GitHub if you think that’s a mistake.",
+    message:
+      "This account has been disabled. Open an issue on GitHub if you think that’s a mistake.",
   },
   "auth/too-many-requests": {
     message: "Too many attempts. Wait a minute, then try again.",
@@ -51,10 +58,12 @@ const MESSAGES: Record<string, Omit<FriendlyAuthError, "code">> = {
     field: "email",
   },
   "auth/credential-already-in-use": {
-    message: "That account is already linked to another player. Sign in instead.",
+    message:
+      "That account is already linked to another player. Sign in instead.",
   },
   "auth/account-exists-with-different-credential": {
-    message: "This email is registered with a password. Sign in with email and password.",
+    message:
+      "This email is registered with a password. Sign in with email and password.",
   },
   "auth/weak-password": {
     message: "Use at least 8 characters for your password.",
@@ -65,7 +74,8 @@ const MESSAGES: Record<string, Omit<FriendlyAuthError, "code">> = {
     field: "password",
   },
   "auth/popup-blocked": {
-    message: "Your browser blocked the Google window. Allow pop-ups for this site and try again.",
+    message:
+      "Your browser blocked the Google window. Allow pop-ups for this site and try again.",
   },
   "auth/operation-not-allowed": {
     message: "This sign-in method isn’t available right now.",

@@ -103,6 +103,8 @@ export {
   listRankedModes,
   getMode,
   dailyModeFor,
+  dailyNumber,
+  DAILY_EPOCH,
   dailyDateOf,
   utcDateKey,
   isValidDateKey,

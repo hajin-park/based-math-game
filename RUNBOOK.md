@@ -123,6 +123,27 @@ Dependabot PRs can't reach repository secrets, so their "Deploy to Firebase Host
 
 ---
 
+## 13. Release: the Exercise Workbook redesign (October 2026)
+
+A visual redesign plus room, auth and daily fixes. **No console changes are needed:** no new rules, indexes, providers or environment variables. Merging to `main` deploys Hosting; open tabs pick up the new version through the service worker.
+
+After the "Deploy to Firebase Hosting on merge" workflow is green, check on https://based-math-game.web.app:
+
+1. **The cover.** `/` shows the blue workbook cover. Enter (or Play) swings it open and starts a run straight away; a first-time visitor gets Nibbles · Practice.
+2. **Both themes.** Switch Menu → Appearance → Chalkboard, and check the cover, `/play` and a run on a phone and a laptop. The browser bar is blue on the cover, paper elsewhere, slate in Chalkboard.
+3. **Red pen.** In a practice run, a correct answer gets a red tick under the answer line; Results circles the score in red.
+4. **Google upgrade (fixed in this release).** In a private window, play one sprint as a guest, then Sign in → Continue with Google. The page should finish signing in, `/stats` should show the guest run, and the guest's game settings should carry over.
+5. **Rooms.** Two browsers: create, join by link, ready, start, finish. Then close one browser's tab with the Back button mid-lobby: after about 10 seconds that player shows as away and no longer blocks Start.
+6. **Link preview.** Paste the site URL into Slack or iMessage; the preview shows the cover (`og.png`). Previews are cached by those services and can take a day to refresh.
+
+Known limits found in QA that need a product decision (not changed in this release):
+
+- **A ranked daily can be previewed.** The lock is claimed when a daily finishes, so a player can quit before the end, see the questions, and retry. Closing this needs the lock claimed at the start, which is a rules change.
+- **Reloading mid-round forfeits that round in a room.** The player becomes a spectator; their progress so far is kept.
+- **Removing a disconnected player also bans them.** It is the only way to free their seat; anything else needs a rules change.
+- **`userStats.bests` grows by one key per daily played.** After about 930 dailies, a player would hit the 1000-key rules limit. A clean-up or a separate daily-bests document is needed before then.
+- **A device clock more than 5 minutes fast fails run saves** (the `endedAt` bound in the rules).
+
 ## Not used in this project
 
 There is no YouTube, Spotify, Supabase, Vercel or Stripe integration; nothing needs configuring there. The only Supabase and Vercel projects on the connected accounts belong to a different app (`lyricai`).

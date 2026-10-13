@@ -1,3 +1,8 @@
+/**
+ * /multiplayer/create — the room worksheet: format and drill, seats, visual
+ * aids and your name, one line each between hairlines. The summary and the
+ * Create button stay pinned to the bottom edge while the drill list scrolls.
+ */
 import { useEffect, useId, useState, type FormEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, ArrowRight } from "lucide-react";
@@ -16,6 +21,7 @@ import {
   type ModePickerValue,
 } from "@/features/multiplayer/modeChoice";
 import { DisplayNameField } from "@/features/multiplayer/DisplayNameField";
+import { FIELD_LABEL, FormRow } from "@/features/multiplayer/FormRow";
 import { nameError } from "@/features/multiplayer/names";
 import { SeatStepper } from "@/features/multiplayer/SeatStepper";
 import { DEFAULT_ROOM_MODE, isRoomModeId } from "@/lib/roomMode";
@@ -77,87 +83,96 @@ export default function CreateRoom() {
   };
 
   return (
-    <div className="container max-w-3xl py-10 md:py-14">
+    <div className="container max-w-4xl pb-0 pt-8 md:pt-12">
       <Button
         asChild
         variant="ghost"
         size="sm"
-        className="-ml-3 mb-6 text-muted-foreground"
+        className="-ml-3 mb-5 text-muted-foreground"
       >
         <Link to="/multiplayer">
           <ArrowLeft aria-hidden />
-          Multiplayer
+          Rooms
         </Link>
       </Button>
       <PageHeader
         size="sm"
-        eyebrow="New room"
-        title={
-          <>
-            Set up a <em>room</em>
-          </>
-        }
+        title="Set up a room"
         lede="Everyone in the room gets the same questions, in the same order, starting at the same second."
       />
 
-      <form onSubmit={onSubmit} className="mt-10 flex flex-col gap-10">
+      <form onSubmit={onSubmit} className="mt-8 flex flex-col">
         <ModePicker value={mode} onChange={setMode} />
 
-        <div className="grid gap-8 border-t pt-8 sm:grid-cols-2">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor={seatsId}>Seats</Label>
-            <SeatStepper id={seatsId} value={seats} onChange={setSeats} />
-            <p className="text-[0.8125rem] text-muted-foreground">
-              Up to {seats} players, including you.
-            </p>
-          </div>
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center justify-between gap-4 sm:justify-start">
-              <Label htmlFor={aidsId}>Visual aids</Label>
-              <Switch
-                id={aidsId}
-                checked={visualAids}
-                onCheckedChange={setVisualAids}
-                aria-describedby={`${aidsId}-help`}
-              />
-            </div>
+        <FormRow
+          label={
+            <Label htmlFor={seatsId} className={FIELD_LABEL}>
+              Seats
+            </Label>
+          }
+          note="Including you."
+        >
+          <SeatStepper id={seatsId} value={seats} onChange={setSeats} />
+        </FormRow>
+
+        <FormRow
+          label={
+            <Label htmlFor={aidsId} className={FIELD_LABEL}>
+              Visual aids
+            </Label>
+          }
+        >
+          <div className="flex items-start gap-4">
+            <Switch
+              id={aidsId}
+              checked={visualAids}
+              onCheckedChange={setVisualAids}
+              aria-describedby={`${aidsId}-help`}
+              className="mt-0.5"
+            />
             <p
               id={`${aidsId}-help`}
-              className="text-[0.8125rem] text-muted-foreground"
+              className="max-w-md text-body-sm text-muted-foreground"
             >
-              Allow digit grouping and place-value hints for players who turned
-              them on.
+              {visualAids ? "Allowed." : "Off."} Digit grouping and place-value
+              hints, for players who turned them on.
             </p>
           </div>
-          <div className="sm:col-span-2 sm:max-w-sm">
-            <DisplayNameField
-              value={name}
-              onChange={(v) => {
-                setName(v);
-                setNameTouched(true);
-              }}
-              error={nameProblem}
-            />
-          </div>
-        </div>
+        </FormRow>
 
-        <div className="sticky bottom-0 z-10 -mx-4 flex flex-col gap-2 border-t bg-background/95 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 backdrop-blur-sm sm:bottom-4 sm:mx-0 sm:rounded-lg sm:border sm:bg-card/95 sm:p-4 sm:shadow-md">
+        <DisplayNameField
+          row
+          value={name}
+          onChange={(v) => {
+            setName(v);
+            setNameTouched(true);
+          }}
+          error={nameProblem}
+        />
+
+        {/* Pinned to the bottom edge: solid paper and a double rule, no glass. */}
+        <div className="sticky bottom-0 z-10 -mx-4 mt-2 border-t-[3px] border-double border-foreground/60 bg-background px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 sm:mx-0 sm:px-0">
           {error && (
-            <p role="alert" className="text-body-sm text-destructive">
+            <p role="alert" className="mb-3 text-body-sm text-destructive">
               {error}
             </p>
           )}
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p
-              className="text-body-sm text-muted-foreground"
+              className="font-sans text-label text-muted-foreground"
               aria-live="polite"
             >
-              <span className="font-medium text-foreground">
+              <span className="font-bold text-foreground">
                 {modeTitle(mode)}
               </span>{" "}
-              · {seats} seats
+              · <span className="font-mono">{seats}</span> seats
             </p>
-            <Button type="submit" size="lg" disabled={pending}>
+            <Button
+              type="submit"
+              size="lg"
+              disabled={pending}
+              className="justify-between sm:min-w-48"
+            >
               {pending ? "Creating room…" : "Create room"}
               {!pending && <ArrowRight aria-hidden />}
             </Button>

@@ -78,6 +78,22 @@ export function isValidDateKey(key: string): boolean {
   return utcDateKey(d) === key;
 }
 
+/** UTC date of daily sheet No. 1 (the day the daily challenge launched). */
+export const DAILY_EPOCH = "2026-10-09";
+
+/**
+ * The daily's sheet number, counting from No. 1 on DAILY_EPOCH. Display only:
+ * it never feeds the question stream.
+ */
+export function dailyNumber(date: Date | string = new Date()): number {
+  const key = typeof date === "string" ? date : utcDateKey(date);
+  if (!isValidDateKey(key)) throw new Error(`Invalid daily date: ${key}`);
+  const days =
+    (Date.parse(`${key}T00:00:00Z`) - Date.parse(`${DAILY_EPOCH}T00:00:00Z`)) /
+    86_400_000;
+  return Math.max(1, Math.round(days) + 1);
+}
+
 /** The daily mode for a UTC date (Date or "YYYY-MM-DD"). */
 export function dailyModeFor(date: Date | string = new Date()): GameMode {
   const key = typeof date === "string" ? date : utcDateKey(date);

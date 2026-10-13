@@ -29,6 +29,7 @@ const twMerge = extendTailwindMerge({
             "mono-lg",
             "mono-xl",
             "mono-2xl",
+            "mono-3xl",
             "fluid-xs",
             "fluid-sm",
             "fluid-base",

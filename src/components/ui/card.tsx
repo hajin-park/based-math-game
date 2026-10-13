@@ -3,9 +3,9 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * Card — a raised sheet of paper: hairline border, surface fill, almost no
- * shadow. Use sparingly; prefer hairline-divided lists and sections.
- * Add `interactive` styling yourself with `hover:border-border-strong`.
+ * Card — a separate sheet laid on the page: fresh-paper fill, hairline edge.
+ * Use for discrete objects (a room, a result, a form). Prefer ruled lists and
+ * plain sections for everything else; never nest cards.
  */
 const Card = React.forwardRef<
   HTMLDivElement,
@@ -14,7 +14,7 @@ const Card = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "rounded-lg border bg-card text-card-foreground shadow-xs",
+      "rounded-sm border border-border-strong/70 bg-card text-card-foreground shadow-sm",
       className,
     )}
     {...props}
@@ -40,10 +40,7 @@ const CardTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <h3
     ref={ref}
-    className={cn(
-      "font-sans text-title font-semibold text-foreground",
-      className,
-    )}
+    className={cn("font-serif text-title font-bold text-foreground", className)}
     {...props}
   />
 ));

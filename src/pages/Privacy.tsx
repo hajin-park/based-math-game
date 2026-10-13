@@ -5,7 +5,13 @@ import { LegalDocument, type LegalSection } from "@/components/LegalDocument";
 const REPO = "https://github.com/hajin-park/based-math-game";
 const ISSUES = `${REPO}/issues`;
 
-const Ext = ({ href, children }: { href: string; children: React.ReactNode }) => (
+const Ext = ({
+  href,
+  children,
+}: {
+  href: string;
+  children: React.ReactNode;
+}) => (
   <a className="link" href={href} target="_blank" rel="noopener noreferrer">
     {children}
   </a>
@@ -18,14 +24,28 @@ const Code = ({ children }: { children: React.ReactNode }) => (
 );
 
 const SUMMARY = [
-  <>You can play without giving us any personal information. Guests get a random, anonymous ID.</>,
-  <>If you create an account, we store your email address, display name, game settings, run history, stats and leaderboard entries.</>,
-  <>Your display name and best scores are public on the leaderboard. Your email address is never shown.</>,
-  <>No ads, no analytics, no tracking cookies. We don’t sell or share your data.</>,
+  <>
+    You can play without giving us any personal information. Guests get a
+    random, anonymous ID.
+  </>,
+  <>
+    If you create an account, we store your email address, display name, game
+    settings, run history, stats and leaderboard entries.
+  </>,
+  <>
+    Your display name and best scores are public on the leaderboard. Your email
+    address is never shown.
+  </>,
+  <>
+    No ads, no analytics, no tracking cookies. We don’t sell or share your data.
+  </>,
   <>Multiplayer rooms and their chat are temporary.</>,
   <>
-    You can delete your account and everything stored with it at any time
-    under <Link className="link" to="/profile/settings">Profile → Account</Link>.
+    You can delete your account and everything stored with it at any time under{" "}
+    <Link className="link" to="/profile/settings">
+      Profile → Account
+    </Link>
+    .
   </>,
 ];
 
@@ -73,9 +93,9 @@ const SECTIONS: LegalSection[] = [
           <li>
             <strong>Email address and password.</strong> Firebase Authentication
             stores your password securely; we never see it. If you sign in with
-            Google, Firebase stores the basic profile Google shares (email,
-            name and picture link) with your sign-in record. We don’t display
-            your Google name or picture.
+            Google, Firebase stores the basic profile Google shares (email, name
+            and picture link) with your sign-in record. We don’t display your
+            Google name or picture.
           </li>
           <li>
             <strong>Profile</strong>: your display name, game settings and when
@@ -103,16 +123,14 @@ const SECTIONS: LegalSection[] = [
           </li>
           <li>
             An online-status record (connected or not, which room, last seen)
-            that only you can read. It lets the game handle dropped
-            connections.
+            that only you can read. It lets the game handle dropped connections.
           </li>
         </ul>
         <h3>Technical data</h3>
         <p>
           Like any website, our hosting (Firebase Hosting, run by Google)
-          receives your IP address and browser details when it serves the
-          page. We don’t combine this with your game data or use it to profile
-          you.
+          receives your IP address and browser details when it serves the page.
+          We don’t combine this with your game data or use it to profile you.
         </p>
       </>
     ),
@@ -151,12 +169,18 @@ const SECTIONS: LegalSection[] = [
           We don’t use analytics, advertising, tracking pixels or
           fingerprinting, and we do not use analytics cookies.
         </li>
-        <li>We don’t sell, rent or share your data with advertisers or data brokers.</li>
         <li>
-          We don’t load third-party fonts or scripts for tracking. Our fonts
-          are served from our own site.
+          We don’t sell, rent or share your data with advertisers or data
+          brokers.
         </li>
-        <li>We don’t send marketing email. The only email you’ll get is a password reset you ask for.</li>
+        <li>
+          We don’t load third-party fonts or scripts for tracking. Our fonts are
+          served from our own site.
+        </li>
+        <li>
+          We don’t send marketing email. The only email you’ll get is a password
+          reset you ask for.
+        </li>
       </ul>
     ),
   },
@@ -186,14 +210,15 @@ const SECTIONS: LegalSection[] = [
             guest.
           </li>
           <li>
-            The app’s own files, cached by a service worker so it loads fast
-            and works on a flaky connection.
+            The app’s own files, cached by a service worker so it loads fast and
+            works on a flaky connection.
           </li>
         </ul>
         <p>
-          Earlier versions of the site may have saved a <Code>cookieConsent</Code>{" "}
-          entry or a <Code>theme</Code> cookie. They hold no personal data and
-          you can clear them with your browser’s site settings.
+          Earlier versions of the site may have saved a{" "}
+          <Code>cookieConsent</Code> entry or a <Code>theme</Code> cookie. They
+          hold no personal data and you can clear them with your browser’s site
+          settings.
         </p>
       </>
     ),
@@ -209,8 +234,14 @@ const SECTIONS: LegalSection[] = [
         </p>
         <ul>
           <li>Firebase Authentication: guest and account sign-in.</li>
-          <li>Cloud Firestore: profiles, settings, run history, stats and leaderboards.</li>
-          <li>Firebase Realtime Database: multiplayer rooms, chat and online status.</li>
+          <li>
+            Cloud Firestore: profiles, settings, run history, stats and
+            leaderboards.
+          </li>
+          <li>
+            Firebase Realtime Database: multiplayer rooms, chat and online
+            status.
+          </li>
           <li>Firebase Hosting: serving the website.</li>
           <li>
             If we turn on Firebase App Check to block automated abuse, Google
@@ -252,12 +283,12 @@ const SECTIONS: LegalSection[] = [
         </li>
         <li>
           <strong>Multiplayer rooms and chat</strong>: deleted when the last
-          player leaves the room. If everyone just closes the page instead,
-          the room stays stored (it can only be opened with its code) until it
-          has been idle for 6 hours. It then counts as expired: nobody can join
-          it, and it is deleted the next time anyone opens it. There is no
-          scheduled clean-up yet, so an expired room nobody opens again can
-          stay stored; contact us and we’ll delete it.
+          player leaves the room. If everyone just closes the page instead, the
+          room stays stored (it can only be opened with its code) until it has
+          been idle for 6 hours. It then counts as expired: nobody can join it,
+          and it is deleted the next time anyone opens it. There is no scheduled
+          clean-up yet, so an expired room nobody opens again can stay stored;
+          contact us and we’ll delete it.
         </li>
         <li>
           <strong>Online-status record</strong>: overwritten each time you join
@@ -279,10 +310,10 @@ const SECTIONS: LegalSection[] = [
           . This immediately deletes your profile, every saved run, your stats
           and personal bests, all your leaderboard entries, your online-status
           record and your sign-in account, and clears the game data in that
-          browser. If you played today’s daily challenge, an empty marker
-          that you used today’s ranked attempt is removed automatically after
-          the day ends, usually within a day. For your security we may ask for your password, or ask
-          Google to confirm it’s you, first.
+          browser. If you played today’s daily challenge, an empty marker that
+          you used today’s ranked attempt is removed automatically after the day
+          ends, usually within a day. For your security we may ask for your
+          password, or ask Google to confirm it’s you, first.
         </p>
         <p>
           Messages you sent in a room that is still open stay visible to that
@@ -309,7 +340,11 @@ const SECTIONS: LegalSection[] = [
         <ul>
           <li>
             <strong>See your data</strong>: your runs, bests and totals are on
-            the <Link className="link" to="/stats">Stats</Link> page.
+            the{" "}
+            <Link className="link" to="/stats">
+              Stats
+            </Link>{" "}
+            page.
           </li>
           <li>
             <strong>Correct it</strong>: change your display name under Profile
@@ -319,8 +354,8 @@ const SECTIONS: LegalSection[] = [
             <strong>Delete it</strong>: see above.
           </li>
           <li>
-            <strong>Get a copy</strong>: open an issue and we’ll help you
-            export your data.
+            <strong>Get a copy</strong>: open an issue and we’ll help you export
+            your data.
           </li>
         </ul>
         <p>
@@ -360,10 +395,10 @@ const SECTIONS: LegalSection[] = [
     body: (
       <p>
         All traffic uses HTTPS. Database security rules let only you read your
-        profile, run history and stats, and only you can change your
-        leaderboard entries. Passwords are handled by Firebase Authentication.
-        No system is perfectly secure; if you find a problem, please report it
-        through GitHub without posting exploit details publicly.
+        profile, run history and stats, and only you can change your leaderboard
+        entries. Passwords are handled by Firebase Authentication. No system is
+        perfectly secure; if you find a problem, please report it through GitHub
+        without posting exploit details publicly.
       </p>
     ),
   },
@@ -372,8 +407,8 @@ const SECTIONS: LegalSection[] = [
     title: "Changes to this notice",
     body: (
       <p>
-        When the way we handle data changes, we update this page and the date
-        at the top. The full history of this notice is public in the{" "}
+        When the way we handle data changes, we update this page and the date at
+        the top. The full history of this notice is public in the{" "}
         <Ext href={REPO}>project’s repository</Ext>.
       </p>
     ),
@@ -383,7 +418,8 @@ const SECTIONS: LegalSection[] = [
 export default function Privacy() {
   return (
     <LegalDocument
-      eyebrow="Privacy"
+      appendix="A"
+      eyebrow="Privacy notice"
       title={
         <>
           Your data, <em>plainly</em>
