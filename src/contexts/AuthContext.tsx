@@ -33,13 +33,18 @@ import { validateDisplayName } from "@/utils/displayNameValidator";
 import { generateGuestName } from "@/lib/guestName";
 import { ensureSignedIn } from "@/lib/ensureUser";
 import { clampDisplayName } from "@/data/names";
-import { clearLocalRuns, clearLocalSettings } from "@/data/localStore";
+import {
+  clearLocalRuns,
+  clearLocalSettings,
+  getLocalSettings,
+} from "@/data/localStore";
+import type { GameSettings } from "@/data/types";
 
 // Firestore and the Realtime Database are loaded on demand so the entry
 // bundle only carries Firebase Auth.
 const loadProfile = () => import("@/data/profile");
-const ensureUserProfile = async (user: User) =>
-  (await loadProfile()).ensureUserProfile(user);
+const ensureUserProfile = async (user: User, settings?: GameSettings) =>
+  (await loadProfile()).ensureUserProfile(user, settings);
 
 /**
  * Authentication model
@@ -186,7 +191,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Fresh ID token so security rules see the new sign-in provider
       // (Firestore writes require a non-anonymous token).
       await upgraded.getIdToken(true).catch(() => undefined);
-      await ensureUserProfile(upgraded).catch((error) =>
+      // The new profile starts with the settings the guest played with.
+      await ensureUserProfile(upgraded, getLocalSettings()).catch((error) =>
         console.error("Error creating user profile:", error),
       );
       await (await import("@/data/runs")).importLocalRuns(upgraded);
@@ -264,13 +270,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           provider,
           browserPopupRedirectResolver,
         );
-        // Keep the guest's friendly name; never use the Google photo.
+        // Keep the guest's friendly name (the app never shows the Google
+        // name or photo). Best effort: the account is linked already, so a
+        // failed rename must not skip importing the guest's runs.
         await updateProfile(result.user, {
           displayName: clampDisplayName(
             current.displayName || generateGuestName(),
           ),
-          photoURL: null,
-        });
+        }).catch((e) => console.warn("Keeping the guest name failed:", e));
         await finishUpgrade(result.user);
         return;
       } catch (error) {
@@ -304,8 +311,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (getAdditionalUserInfo(result)?.isNewUser) {
       await updateProfile(result.user, {
         displayName: generateGuestName(),
-        photoURL: null,
-      });
+      }).catch((e) => console.warn("Setting a display name failed:", e));
     }
     await ensureUserProfile(result.user).catch(() => undefined);
     refreshUser();
