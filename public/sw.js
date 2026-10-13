@@ -20,6 +20,24 @@ const MAX_ASSETS = 200;
 const OFFLINE_URL = "/index.html";
 const SHELL_FILES = ["/theme-init.js", "/icon.svg", "/manifest.json"];
 
+// Hosting's cleanUrls answers /index.html with a 301 to "/". A response that
+// went through a redirect may not be served for a navigation (Firefox and
+// Safari refuse it), so store a plain copy.
+async function precache(cache, url) {
+  const response = await fetch(new Request(url, { cache: "reload" }));
+  if (!response.ok) return;
+  await cache.put(
+    url,
+    response.redirected
+      ? new Response(await response.blob(), {
+          status: response.status,
+          statusText: response.statusText,
+          headers: response.headers,
+        })
+      : response,
+  );
+}
+
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches
@@ -28,9 +46,7 @@ self.addEventListener("install", (event) => {
         // One by one: a missing shell file must not cost us index.html.
         Promise.all(
           [OFFLINE_URL, ...SHELL_FILES].map((url) =>
-            cache
-              .add(new Request(url, { cache: "reload" }))
-              .catch(() => undefined),
+            precache(cache, url).catch(() => undefined),
           ),
         ),
       )
